@@ -1,3 +1,4 @@
+import { pendingSelectionWantsHandle } from './pending-session-selection'
 import { useEffect, useCallback } from 'react'
 import type { TerminalWebViewHandle } from '../terminal/terminal-webview-contract'
 import type { MobileSessionTabSwitchingModel } from './use-mobile-session-tab-switching'
@@ -16,7 +17,7 @@ export function useMobileSessionTerminalWebview(scope: MobileSessionTabSwitching
     webReadyHandlesRef,
     subscribedDocumentsRef,
     activeHandleRef,
-    pendingActiveTerminalHandleRef,
+    pendingSelectionRef,
     activeSessionTab,
     unsubscribeTerminal,
     subscribeToTerminal,
@@ -64,7 +65,8 @@ export function useMobileSessionTerminalWebview(scope: MobileSessionTabSwitching
       }
       // Why: a just-created tab can lose activeHandleRef to a lagging snapshot; honor the pending marker so its web-ready subscribe still fires.
       const isIntendedActive =
-        handle === activeHandleRef.current || handle === pendingActiveTerminalHandleRef.current
+        handle === activeHandleRef.current ||
+        pendingSelectionWantsHandle(pendingSelectionRef.current, handle)
       // Why: subscribeToTerminal measures the viewport first for a fresh document, so the dims ride this subscribe.
       if (isIntendedActive && !terminalUnsubsRef.current.has(handle)) {
         subscribeToTerminal(handle)

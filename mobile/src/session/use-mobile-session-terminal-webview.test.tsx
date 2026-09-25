@@ -39,7 +39,7 @@ function makeScope() {
     webReadyHandlesRef: { current: new Set<string>() },
     subscribedDocumentsRef: { current: new Set<string>() },
     activeHandleRef: { current: HANDLE },
-    pendingActiveTerminalHandleRef: { current: null },
+    pendingSelectionRef: { current: null },
     activeSessionTab: null,
     unsubscribeTerminal: vi.fn(),
     subscribeToTerminal: vi.fn(),
