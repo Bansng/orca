@@ -20,7 +20,6 @@ import { printHelp } from './help'
 import type { RuntimeClient } from './runtime-client'
 import { COMMAND_SPECS } from './specs'
 import { resolveOrchestrationCliExecutable } from './runtime/orchestration-recovery-command'
-import { runAsSessionCli } from './session-cli-reexec'
 import { refuseConflictingSessionCallerFlags } from './session-caller-flags'
 
 export { COMMAND_SPECS } from './specs'
@@ -239,7 +238,5 @@ async function runAgentTeamsTmuxShim(argv: string[]): Promise<void> {
 }
 
 if (require.main === module) {
-  // Why here and not in main(): main() is also called in-process by tests and by wrappers that
-  // require this module, where exiting or consuming process.env would hit the caller's process.
-  void runAsSessionCli(() => main())
+  void main()
 }

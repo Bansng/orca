@@ -24,6 +24,7 @@ import { findCommandSpec } from './args'
 import { COMMAND_SPECS } from './specs'
 import { refuseConflictingSessionCallerFlags } from './session-caller-flags'
 import { createOrchestrationCompatibilityEnvelope } from './runtime/orchestration-compatibility-envelope'
+import { getDefaultUserDataPath } from './runtime/metadata'
 import { formatCliError, reportCliError } from './cli-error'
 import { RuntimeRpcFailureError } from './runtime/types'
 
@@ -489,6 +490,26 @@ describe('the orchestration envelope', () => {
       terminalHandle: 'term_inherited_pane',
       agentSessionId: SESSION
     })
+  })
+
+  it('binds whichever current Orca CLI the agent reached, not only the one the session names', () => {
+    // A login shell can put another install's `orca` first, and the packaged Windows launcher
+    // rewrites ORCA_CLI_COMMAND in its own process. Neither matters: the id rides the envelope
+    // and the pinned instance is the one dialed.
+    vi.stubEnv('ORCA_USER_DATA_PATH', '/data/session-orca')
+    try {
+      const envelope = createOrchestrationCompatibilityEnvelope({
+        ORCA_AGENT_SESSION_ID: SESSION,
+        ORCA_CLI_COMMAND: 'orca',
+        ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER: '1',
+        ORCA_USER_DATA_PATH: '/data/session-orca'
+      })
+
+      expect(envelope.orchestrationCompatibilityEvidence).toEqual({ agentSessionId: SESSION })
+      expect(getDefaultUserDataPath('linux', '/home/u')).toBe('/data/session-orca')
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   it('claims no session without an injected id', () => {

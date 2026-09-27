@@ -18,7 +18,6 @@ const SESSION_ID = 'f7a1c0de-1111-4222-8333-444455556666'
 const USER_DATA = '/data/orca'
 const RESOURCES = '/app/Resources'
 const SHIM_DIR = join(USER_DATA, 'linux-orca-cli-shim')
-const PACKAGED_CLI_ENTRY = join(RESOURCES, 'app.asar.unpacked', 'out', 'cli', 'index.js')
 
 const platformDescriptor = Object.getOwnPropertyDescriptor(process, 'platform')!
 const resourcesDescriptor = Object.getOwnPropertyDescriptor(process, 'resourcesPath')
@@ -71,8 +70,6 @@ describe('structuredSessionChildIdentityEnv', () => {
       // For a CLI that predates the id, which refuses on it instead of guessing a sibling.
       ORCA_STRUCTURED_SESSION: '1',
       ORCA_CLI_COMMAND: join(SHIM_DIR, 'orca'),
-      // The entry the shim runs, so a global launcher of this same app never hands off to it.
-      ORCA_SESSION_CLI_ENTRY: PACKAGED_CLI_ENTRY,
       // The instance that minted the id, so any current CLI dials it rather than the default.
       ORCA_USER_DATA_PATH: USER_DATA
     })
@@ -115,7 +112,6 @@ describe('structuredSessionChildIdentityEnv', () => {
       installFakeAppEnvironment({ isPackaged: () => true, getPath: () => USER_DATA })
       const env = structuredSessionChildIdentityEnv(SESSION_ID, { PATH: '/usr/bin:/bin' })
       expect(env.ORCA_CLI_COMMAND).toBe(join(SHIM_DIR, 'orca'))
-      expect(env.ORCA_SESSION_CLI_ENTRY).toBe(PACKAGED_CLI_ENTRY)
       expect(env.PATH).toBe(`${SHIM_DIR}:/usr/bin:/bin`)
     })
 
@@ -125,7 +121,6 @@ describe('structuredSessionChildIdentityEnv', () => {
       const env = structuredSessionChildIdentityEnv(SESSION_ID, { PATH: '/usr/bin' })
       expect(env.PATH).toBe(`${join(RESOURCES, 'bin')}:/usr/bin`)
       expect(env.ORCA_CLI_COMMAND).toBe(join(RESOURCES, 'bin', 'orca'))
-      expect(env.ORCA_SESSION_CLI_ENTRY).toBe(PACKAGED_CLI_ENTRY)
     })
 
     it('on packaged Windows, through the bundled CLI dir under the env block spelling', () => {
@@ -136,20 +131,14 @@ describe('structuredSessionChildIdentityEnv', () => {
       expect(env.PATH).toBeUndefined()
       // The native launcher: `orca.cmd` refuses message bodies cmd.exe would mangle.
       expect(env.ORCA_CLI_COMMAND).toBe(join(RESOURCES, 'bin', 'orca.exe'))
-      expect(env.ORCA_SESSION_CLI_ENTRY).toBe(PACKAGED_CLI_ENTRY)
     })
 
     it('unpackaged, through the dev launcher dir', () => {
       pinPlatform('darwin')
-      installFakeAppEnvironment({
-        isPackaged: () => false,
-        getPath: () => USER_DATA,
-        getAppPath: () => '/repo'
-      })
+      installFakeAppEnvironment({ isPackaged: () => false, getPath: () => USER_DATA })
       const env = structuredSessionChildIdentityEnv(SESSION_ID, { PATH: '/usr/bin' })
       expect(env.PATH).toBe(`${join(USER_DATA, 'cli', 'bin')}:/usr/bin`)
       expect(env.ORCA_CLI_COMMAND).toBe(join(USER_DATA, 'cli', 'bin', 'orca-dev'))
-      expect(env.ORCA_SESSION_CLI_ENTRY).toBe(join('/repo', 'out', 'cli', 'index.js'))
     })
   })
 
@@ -163,11 +152,9 @@ describe('structuredSessionChildIdentityEnv', () => {
     const env = structuredSessionChildIdentityEnv(SESSION_ID, {
       PATH: '/usr/bin',
       ORCA_CLI_COMMAND: '/Applications/Other Orca.app/Contents/Resources/bin/orca',
-      ORCA_SESSION_CLI_ENTRY: '/Applications/Other Orca.app/Contents/Resources/cli.js',
       ORCA_USER_DATA_PATH: '/data/other-orca'
     })
     expect(env).not.toHaveProperty('ORCA_CLI_COMMAND')
-    expect(env).not.toHaveProperty('ORCA_SESSION_CLI_ENTRY')
     expect(env.PATH).toBe('/usr/bin')
     expect(env.ORCA_USER_DATA_PATH).toBe(USER_DATA)
     expect(console.warn).toHaveBeenCalledOnce()
