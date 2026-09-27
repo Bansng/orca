@@ -120,8 +120,12 @@ describe('mobile + Codex tab creation routing', () => {
       launchedSelection({ sessionId: 'codex_session_1' })
     )
     expect(scope.setActiveSessionTabId).not.toHaveBeenCalled()
-    expect(scope.setActiveHandle).toHaveBeenCalledWith(null)
-    expect(scope.unsubscribeTerminal).toHaveBeenCalledWith('existing-terminal')
+    // The open terminal stays live until the chat's tab lands, rather than blanking beside it.
+    expect(scope.setActiveHandle).not.toHaveBeenCalled()
+    expect(scope.unsubscribeTerminal).not.toHaveBeenCalled()
+    expect(scope.activeSessionTabTypeRef.current).toBe('terminal')
+    expect(scope.fetchSessionTabs).toHaveBeenCalledTimes(1)
+    expect(scope.scheduleDelayedAction).not.toHaveBeenCalled()
   })
 
   it('keeps the legacy terminal path when structured support is disabled', async () => {

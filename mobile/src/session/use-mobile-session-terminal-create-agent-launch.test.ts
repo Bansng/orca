@@ -139,7 +139,9 @@ describe('the + menu', () => {
     expect(launchParams(sendRequest)).not.toHaveProperty('prompt')
     expect(launchParams(sendRequest)).not.toHaveProperty('launchSource')
     expect(state.pendingSelectionRef.current).toEqual(launchedSelection({ handle: 'term_7' }))
-    expect(state.scheduleDelayedAction).toHaveBeenCalledWith(expect.any(Function), 500)
+    // Read at once: the host published the tab before replying.
+    expect(state.fetchSessionTabs).toHaveBeenCalledTimes(1)
+    expect(state.scheduleDelayedAction).not.toHaveBeenCalled()
   })
 
   it('waits for a chat by its session id, not a predicted tab id', async () => {

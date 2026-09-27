@@ -108,8 +108,8 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
               ? { sessionId: outcome.sessionId }
               : { handle: outcome.handle }
           )
-          // Refresh if the reply beats its published tab frame.
-          scheduleDelayedAction(() => void fetchSessionTabs(), 500)
+          // Why: the host publishes the tab before it replies, so read it now rather than after a delay.
+          void fetchSessionTabs()
           if (launched.promptDelivered === false) {
             triggerError()
             showToast(
@@ -142,18 +142,10 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
       if (isAgentSessionHandleProvider(agent) && options === undefined) {
         const structured = await createMobileStructuredAgentSession(client, worktreeId, agent)
         if (structured.kind === 'created') {
-          const previous = activeHandleRef.current
-          if (previous) {
-            unsubscribeTerminal(previous)
-            initializedHandlesRef.current.delete(previous)
-          }
-          // Found by session in the next snapshot, never by a predicted tab id.
+          // Found by session in the next snapshot, never by a predicted tab id; the current tab stays
+          // live until then, as on the launch path above.
           pendingSelectionRef.current = launchedSelection({ sessionId: structured.sessionId })
-          activeSessionTabTypeRef.current = 'agent-session'
-          activeHandleRef.current = null
-          setActiveHandle(null)
-          // Refresh if the create response beats its published tab frame.
-          scheduleDelayedAction(() => void fetchSessionTabs(), 500)
+          void fetchSessionTabs()
           return
         }
         if (structured.kind === 'unknown') {
