@@ -20,6 +20,7 @@ import {
 import type { SessionTabsApplyOutcome } from './mobile-session-tabs-stream-health'
 import { getActiveTabIdForHandle } from './mobile-session-route-helpers'
 import { resolveActiveSessionTab } from './active-session-tab'
+import { activateMobileSessionTab } from './mobile-session-tab-activation'
 import type { MobileSessionTab, SessionTabsResult } from './mobile-session-route-types'
 import type { MobileSessionTerminalListModel } from './use-mobile-session-terminal-list'
 
@@ -49,7 +50,8 @@ export function useMobileSessionTabApplication(scope: MobileSessionTerminalListM
     initialSessionAutoCreateRef,
     unsubscribeTerminal,
     subscribeToTerminal,
-    lastKnownTerminalCountRef
+    lastKnownTerminalCountRef,
+    clientRef
   } = scope
   const applySessionTabs = useCallback(
     (result: SessionTabsResult): SessionTabsApplyOutcome<MobileSessionTab> => {
@@ -120,10 +122,18 @@ export function useMobileSessionTabApplication(scope: MobileSessionTerminalListM
         )
         pendingBrowserFocusPageIdRef.current = null
       } else {
-        pendingSelectionRef.current = resolveLaunchedSelection(
-          pendingSelectionRef.current,
-          nextTabs
-        ).selection
+        const launch = resolveLaunchedSelection(pendingSelectionRef.current, nextTabs)
+        pendingSelectionRef.current = launch.selection
+        if (launch.landedTabId && clientRef.current) {
+          // Why: a launch carries no navigation, so record the pick as a tap does, or the host keeps this device on the old tab.
+          void activateMobileSessionTab(clientRef.current, {
+            worktree: `id:${result.worktree}`,
+            tabId: launch.landedTabId,
+            notifyClients: false,
+            navigation: 'caller',
+            intent: 'user'
+          }).catch(() => {})
+        }
       }
       const pendingActiveSessionTabId = pendingSelectionTabId(pendingSelectionRef.current)
       const pendingActiveTerminalHandle = pendingSelectionHandle(pendingSelectionRef.current)

@@ -57,15 +57,15 @@ export function withoutPendingHandle(
 }
 
 /**
- * Turns a launched surface into an ordinary pick once its tab is in the list. `missed` says the tab
- * was not there yet, so the caller can ask for the list again; the budget ends the wait.
+ * Turns a launched surface into an ordinary pick once its tab is in the list; `landedTabId` names
+ * that tab on the snapshot it arrives in. The budget ends the wait.
  */
 export function resolveLaunchedSelection(
   selection: PendingSessionSelection | null,
   tabs: readonly MobileSessionTab[]
-): { selection: PendingSessionSelection | null; missed: boolean } {
+): { selection: PendingSessionSelection | null; landedTabId: string | null } {
   if (selection?.kind !== 'launched') {
-    return { selection, missed: false }
+    return { selection, landedTabId: null }
   }
   const { surface } = selection
   if ('handle' in surface) {
@@ -76,7 +76,7 @@ export function resolveLaunchedSelection(
     if (terminal) {
       return {
         selection: { kind: 'terminal', handle: surface.handle, tabId: terminal.id },
-        missed: false
+        landedTabId: terminal.id
       }
     }
   } else {
@@ -84,13 +84,13 @@ export function resolveLaunchedSelection(
       (tab) => tab.type === 'agent-session' && tab.sessionId === surface.sessionId
     )
     if (chat) {
-      return { selection: { kind: 'tab', tabId: chat.id }, missed: false }
+      return { selection: { kind: 'tab', tabId: chat.id }, landedTabId: chat.id }
     }
   }
   const snapshotsLeft = selection.snapshotsLeft - 1
   return {
     selection: snapshotsLeft > 0 ? { ...selection, snapshotsLeft } : null,
-    missed: true
+    landedTabId: null
   }
 }
 

@@ -189,7 +189,7 @@ const HEAD_LEAF_JSX_SHA256 = 'c7e1a4b90197697f1eaa640c38da63281b4f7b84fb036ae215
 const HEAD_STYLE_REFERENCE_SHA256 =
   '56a005a1f65b30c11092e3422caef67810e1ec50f66fdd06471c370138b1eeb6'
 const HEAD_IDENTITY_FIELD_SHA256 =
-  '91146853930a34dd1f3d80e5c97fbacd7cf19fb93dd26fe8fc6f29169622f9d6'
+  '3996f701eceb723be18c2001e9ee770498bfd5b2ddcacae510c380eb0adae80a'
 const HEAD_NAVIGATION_SHA256 = '9d96f5dad7de555d6553eac39c0fab00efad507470fd562cb9beaa32db16f512'
 // Moved when structured-session features became one helper call; the capability strings it reads
 // are pinned by that helper's own test.
@@ -617,7 +617,7 @@ describe('mobile session route extraction parity', () => {
     )
     expect(hash(native.cleanups)).toBe(HEAD_TIMER_CLEANUP_SHA256)
     const compatibility = readCompatibilityFacts(definitions)
-    expect(compatibility.identityFields).toHaveLength(14)
+    expect(compatibility.identityFields).toHaveLength(15)
     expect(hash(compatibility.identityFields)).toBe(HEAD_IDENTITY_FIELD_SHA256)
     expect(compatibility.navigation).toHaveLength(6)
     expect(hash(compatibility.navigation)).toBe(HEAD_NAVIGATION_SHA256)

@@ -42,7 +42,7 @@ describe('resolveLaunchedSelection', () => {
     const tabs = [chatTab('opaque-tab-7', 'claude_s1')]
     expect(resolveLaunchedSelection(launchedSelection({ sessionId: 'claude_s1' }), tabs)).toEqual({
       selection: { kind: 'tab', tabId: 'opaque-tab-7' },
-      missed: false
+      landedTabId: 'opaque-tab-7'
     })
   })
 
@@ -50,7 +50,7 @@ describe('resolveLaunchedSelection', () => {
     const tabs = [terminalTab('tab-2', 'term_9')]
     expect(resolveLaunchedSelection(launchedSelection({ handle: 'term_9' }), tabs)).toEqual({
       selection: { kind: 'terminal', handle: 'term_9', tabId: 'tab-2' },
-      missed: false
+      landedTabId: 'tab-2'
     })
   })
 
@@ -58,7 +58,7 @@ describe('resolveLaunchedSelection', () => {
     let selection: PendingSessionSelection | null = launchedSelection({ sessionId: 'claude_s1' })
     for (let snapshot = 1; snapshot < LAUNCHED_SELECTION_SNAPSHOT_BUDGET; snapshot += 1) {
       const next = resolveLaunchedSelection(selection, [chatTab('other', 'claude_other')])
-      expect(next.missed).toBe(true)
+      expect(next.landedTabId).toBeNull()
       expect(next.selection?.kind).toBe('launched')
       selection = next.selection
     }
@@ -67,7 +67,7 @@ describe('resolveLaunchedSelection', () => {
 
   it('leaves an ordinary pick alone', () => {
     const pick: PendingSessionSelection = { kind: 'tab', tabId: 'tab-1' }
-    expect(resolveLaunchedSelection(pick, [])).toEqual({ selection: pick, missed: false })
+    expect(resolveLaunchedSelection(pick, [])).toEqual({ selection: pick, landedTabId: null })
   })
 })
 
