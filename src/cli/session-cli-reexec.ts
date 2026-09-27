@@ -1,27 +1,32 @@
 /**
- * Hands a command to the CLI the session named, when a different Orca CLI was the one invoked.
+ * Hands a structured session's command to the CLI the session named, when a different Orca CLI was
+ * the one invoked.
  *
- * Orca puts the absolute launcher of its own CLI in `ORCA_CLI_COMMAND` for every local terminal and
- * structured session. An agent may still reach another install — a login shell reorders PATH behind
- * a global `orca`, a helper script hardcodes `orca`, a user types `/usr/local/bin/orca` — and that
- * CLI can be older than the session's identity or dial a different instance. So a current CLI that
- * is not the named launcher re-runs the command through it, once, and exits with its status. Which
- * binary answers stops depending on the agent following instructions.
+ * Orca puts the absolute launcher of its own CLI in a structured session's `ORCA_CLI_COMMAND`. The
+ * agent may still reach another install — a login shell reorders PATH behind a global `orca`, a
+ * helper script hardcodes `orca`, a user types `/usr/local/bin/orca` — and that CLI can be older than
+ * the session's identity or dial a different instance. So a current CLI that is not the named
+ * launcher re-runs the command through it, once, and exits with its status. Which binary answers
+ * stops depending on the agent following instructions.
+ *
+ * Only a process carrying the injected session id qualifies: the handoff exists to deliver that
+ * identity. Anywhere else — a terminal, a script — the CLI the user ran is the one that answers.
  *
  * Identity comes from `ORCA_CLI_SELF`, which Orca's packaged launchers and bare-`orca` shims export
  * (the outermost one wins); this entry's own argv names the JS file, never a launcher. A dev launcher
  * exports none on purpose: it pins its own instance, so running one is a deliberate choice of
- * instance, often from another instance's terminal. `ORCA_CLI_REEXEC=1` bounds the handoff to one
- * hop and is also the escape hatch. Both variables are consumed here, so no child of the CLI — an
- * Orca app it starts, a terminal that app opens — inherits a stale identity or a disabled handoff.
+ * instance. `ORCA_CLI_REEXEC=1` bounds the handoff to one hop and is also the escape hatch. Both
+ * variables are consumed here, in every process, so no child of the CLI — an Orca app it starts, a
+ * session that app spawns — inherits a stale identity or a disabled handoff.
  *
- * WSL and SSH never qualify: they carry a guest command name or `orca`, not a host path, and a
- * relative command is never resolved against the working directory.
+ * A relative command (a WSL guest name, the SSH relay's `orca`) never qualifies, and is never
+ * resolved against the working directory.
  */
 
 import { realpathSync } from 'node:fs'
 import { constants as osConstants } from 'node:os'
 import { posix, resolve, win32 } from 'node:path'
+import { readInjectedAgentSessionId } from '../shared/agent-session-caller-env'
 
 export const ORCA_CLI_SELF_ENV = 'ORCA_CLI_SELF'
 export const ORCA_CLI_REEXEC_ENV = 'ORCA_CLI_REEXEC'
@@ -69,7 +74,7 @@ export function takeSessionCliReexec(options: ReexecOptions = {}): SessionCliRee
   const alreadyHandedOff = env[ORCA_CLI_REEXEC_ENV] === '1'
   delete env[ORCA_CLI_SELF_ENV]
   delete env[ORCA_CLI_REEXEC_ENV]
-  if (alreadyHandedOff || !self) {
+  if (alreadyHandedOff || !self || !readInjectedAgentSessionId(env)) {
     return null
   }
   const named = env.ORCA_CLI_COMMAND?.trim()

@@ -33,6 +33,9 @@ class Exited extends Error {
   }
 }
 
+/** A structured session's own child: the only process the handoff applies to. */
+const SESSION = { ORCA_AGENT_SESSION_ID: 'session-1' } as const
+
 function exitSpy(): (code: number) => never {
   return (code: number) => {
     throw new Exited(code)
@@ -70,18 +73,34 @@ describe('takeSessionCliReexec', () => {
     expect(env).not.toHaveProperty(ORCA_CLI_SELF_ENV)
   })
 
+  it('runs the invoked CLI without a session id, and still consumes the handoff variables', () => {
+    // A terminal, a script, or a marker-only child of an older host gets the CLI the user ran: a
+    // beta or ad hoc Orca's `orca`, and its --version, must not silently become another install's.
+    const env: NodeJS.ProcessEnv = {
+      ORCA_CLI_COMMAND: writeScript('session-orca', 'exit 0\n'),
+      [ORCA_CLI_SELF_ENV]: writeScript('beta-orca', 'exit 0\n'),
+      ORCA_STRUCTURED_SESSION: '1'
+    }
+
+    expect(takeSessionCliReexec({ env })).toBeNull()
+    expect(env).not.toHaveProperty(ORCA_CLI_SELF_ENV)
+  })
+
   it('stays when the invoked launcher is the named one, through a symlink', () => {
     const named = writeScript('session-orca', 'exit 0\n')
     const link = join(dir, 'usr-local-bin-orca')
     symlinkSync(named, link)
 
     expect(
-      takeSessionCliReexec({ env: { ORCA_CLI_COMMAND: named, [ORCA_CLI_SELF_ENV]: link } })
+      takeSessionCliReexec({
+        env: { ...SESSION, ORCA_CLI_COMMAND: named, [ORCA_CLI_SELF_ENV]: link }
+      })
     ).toBeNull()
   })
 
   it('makes at most one hop, and consumes the guard so no child inherits it', () => {
     const env: NodeJS.ProcessEnv = {
+      ...SESSION,
       ORCA_CLI_COMMAND: writeScript('session-orca', 'exit 0\n'),
       [ORCA_CLI_SELF_ENV]: writeScript('global-orca', 'exit 0\n'),
       [ORCA_CLI_REEXEC_ENV]: '1'
@@ -94,7 +113,9 @@ describe('takeSessionCliReexec', () => {
 
   it('stays when no Orca launcher named itself: a dev launcher, or an older one', () => {
     expect(
-      takeSessionCliReexec({ env: { ORCA_CLI_COMMAND: writeScript('session-orca', 'exit 0\n') } })
+      takeSessionCliReexec({
+        env: { ...SESSION, ORCA_CLI_COMMAND: writeScript('session-orca', 'exit 0\n') }
+      })
     ).toBeNull()
   })
 
@@ -107,7 +128,11 @@ describe('takeSessionCliReexec', () => {
 
     expect(
       takeSessionCliReexec({
-        env: { ORCA_CLI_COMMAND: command, [ORCA_CLI_SELF_ENV]: writeScript('global', 'exit 0\n') }
+        env: {
+          ...SESSION,
+          ORCA_CLI_COMMAND: command,
+          [ORCA_CLI_SELF_ENV]: writeScript('global', 'exit 0\n')
+        }
       })
     ).toBeNull()
   })
@@ -116,6 +141,7 @@ describe('takeSessionCliReexec', () => {
     expect(
       takeSessionCliReexec({
         env: {
+          ...SESSION,
           ORCA_CLI_COMMAND: join(dir, 'gone', 'orca'),
           [ORCA_CLI_SELF_ENV]: writeScript('global-orca', 'exit 0\n')
         }
@@ -137,6 +163,7 @@ describe.skipIf(process.platform === 'win32')('runAsSessionCli', () => {
       runAsSessionCli(run, {
         env: {
           ...process.env,
+          ...SESSION,
           ORCA_CLI_COMMAND: named,
           [ORCA_CLI_SELF_ENV]: writeScript('global-orca', 'exit 0\n'),
           ORCA_NODE_OPTIONS: '--no-warnings'
@@ -155,7 +182,7 @@ describe.skipIf(process.platform === 'win32')('runAsSessionCli', () => {
     const run = vi.fn(async () => {})
 
     await runAsSessionCli(run, {
-      env: { ORCA_CLI_COMMAND: named, [ORCA_CLI_SELF_ENV]: named },
+      env: { ...SESSION, ORCA_CLI_COMMAND: named, [ORCA_CLI_SELF_ENV]: named },
       exit: exitSpy()
     })
 
@@ -170,6 +197,7 @@ describe.skipIf(process.platform === 'win32')('runAsSessionCli', () => {
 
     await runAsSessionCli(run, {
       env: {
+        ...SESSION,
         ORCA_CLI_COMMAND: named,
         [ORCA_CLI_SELF_ENV]: writeScript('global-orca', 'exit 0\n')
       },
