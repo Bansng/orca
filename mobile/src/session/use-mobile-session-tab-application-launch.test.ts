@@ -10,6 +10,23 @@ function terminalTab(id: string, terminal: string, isActive = false): MobileSess
   return { type: 'terminal', id, parentTabId: id, leafId: 'leaf', title: 'T', terminal, isActive }
 }
 
+const PANE = {
+  tabId: 'b1d3c0de-0000-4000-8000-000000000001',
+  leafId: 'b1d3c0de-0000-4000-8000-000000000002'
+}
+
+function reservedTerminalTab(terminal: string, isActive = false): MobileSessionTab {
+  return {
+    type: 'terminal',
+    id: `${PANE.tabId}::${PANE.leafId}`,
+    parentTabId: PANE.tabId,
+    leafId: PANE.leafId,
+    title: 'Claude',
+    terminal,
+    isActive
+  }
+}
+
 function chatTab(id: string, sessionId: string): MobileSessionTab {
   return { type: 'agent-session', id, title: 'Claude', sessionId, agent: 'claude', isActive: false }
 }
@@ -27,6 +44,10 @@ function snapshot(tabs: MobileSessionTab[], extra: Partial<SessionTabsResult> = 
     activeTabType: active?.type ?? null,
     ...extra
   }
+}
+
+function mutableRef<T>(current: T): { current: T } {
+  return { current }
 }
 
 function scope(pending: PendingSessionSelection | null) {
@@ -52,12 +73,12 @@ function scope(pending: PendingSessionSelection | null) {
       defaultTerminalHandlesToLiveInput: vi.fn(),
       setActiveHandle: vi.fn(),
       setActiveSessionTabId: vi.fn(),
-      activeSessionTabIdRef: { current: 'tab-old' },
-      selectedSessionTabIdRef: { current: 'tab-old' },
+      activeSessionTabIdRef: mutableRef<string | null>('tab-old'),
+      selectedSessionTabIdRef: mutableRef<string | null>('tab-old'),
       markdownDocsRef: { current: new Map() },
       initializedHandlesRef: { current: new Set<string>() },
       terminalDiagnosticsRef: { current: { tabsApplied: vi.fn() } },
-      activeHandleRef: { current: 'term_old' },
+      activeHandleRef: mutableRef<string | null>('term_old'),
       activeSessionTabTypeRef: { current: 'terminal' },
       pendingSelectionRef: { current: pending },
       pendingBrowserFocusPageIdRef: { current: null },
@@ -65,7 +86,9 @@ function scope(pending: PendingSessionSelection | null) {
       unsubscribeTerminal: vi.fn(),
       subscribeToTerminal: vi.fn(),
       lastKnownTerminalCountRef: { current: 0 },
-      clientRef: { current: client }
+      clientRef: { current: client },
+      creatingTerminalRef: mutableRef<string | null>('l1'),
+      setCreating: vi.fn()
     }
   }
 }
@@ -97,7 +120,7 @@ function activations(sendRequest: ReturnType<typeof scope>['sendRequest']): unkn
 
 describe('landing on a launched tab', () => {
   it('records a launched terminal as this device’s pick on the host once its tab arrives', () => {
-    const { state, sendRequest } = scope(launchedSelection({ handle: 'term_new' }))
+    const { state, sendRequest } = scope(launchedSelection('l1', { handle: 'term_new' }))
     const apply = mount(state)
     const old = terminalTab('tab-old', 'term_old', true)
 
@@ -124,7 +147,7 @@ describe('landing on a launched tab', () => {
   })
 
   it('records a launched chat, found by its session, by the tab id the host gave it', () => {
-    const { state, sendRequest } = scope(launchedSelection({ sessionId: 'claude_s1' }))
+    const { state, sendRequest } = scope(launchedSelection('l1', { sessionId: 'claude_s1' }))
     const apply = mount(state)
 
     apply(snapshot([terminalTab('tab-old', 'term_old', true), chatTab('opaque-7', 'claude_s1')]))
@@ -134,7 +157,7 @@ describe('landing on a launched tab', () => {
   })
 
   it('leaves the host’s choice alone when it moved this device itself', () => {
-    const { state, sendRequest } = scope(launchedSelection({ handle: 'term_new' }))
+    const { state, sendRequest } = scope(launchedSelection('l1', { handle: 'term_new' }))
     const apply = mount(state)
 
     apply(
@@ -145,5 +168,47 @@ describe('landing on a launched tab', () => {
 
     expect(activations(sendRequest)).toEqual([])
     expect(state.setActiveSessionTabId).toHaveBeenLastCalledWith('tab-old')
+  })
+
+  it('frees the + lock when the tab lands, not when the host replies', () => {
+    const { state } = scope(launchedSelection('l1', { pane: PANE }, null))
+    const apply = mount(state)
+    const old = terminalTab('tab-old', 'term_old', true)
+
+    apply(snapshot([old]))
+    expect(state.creatingTerminalRef.current).toBe('l1')
+    expect(state.setCreating).not.toHaveBeenCalled()
+
+    apply(snapshot([old, reservedTerminalTab('term_new')]))
+    expect(state.creatingTerminalRef.current).toBeNull()
+    expect(state.setCreating).toHaveBeenCalledWith(false)
+  })
+
+  it("leaves a newer launch's lock alone", () => {
+    const { state } = scope(launchedSelection('l1', { pane: PANE }, null))
+    state.creatingTerminalRef.current = 'l2'
+    const apply = mount(state)
+
+    apply(snapshot([terminalTab('tab-old', 'term_old', true), reservedTerminalTab('term_new')]))
+
+    expect(state.creatingTerminalRef.current).toBe('l2')
+    expect(state.setCreating).not.toHaveBeenCalled()
+  })
+
+  it('lands in an empty session whose only tab the host selected before replying', () => {
+    const { state, sendRequest } = scope(launchedSelection('l1', { pane: PANE }, null))
+    state.activeSessionTabIdRef.current = null
+    state.selectedSessionTabIdRef.current = null
+    state.activeHandleRef.current = null
+    const apply = mount(state)
+
+    apply(snapshot([reservedTerminalTab('term_new', true)]))
+
+    expect(activations(sendRequest)).toEqual([
+      expect.objectContaining({ tabId: `${PANE.tabId}::${PANE.leafId}` })
+    ])
+    expect(state.setActiveSessionTabId).toHaveBeenLastCalledWith(`${PANE.tabId}::${PANE.leafId}`)
+    expect(state.subscribeToTerminal).toHaveBeenLastCalledWith('term_new')
+    expect(state.creatingTerminalRef.current).toBeNull()
   })
 })

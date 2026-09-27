@@ -13,19 +13,16 @@ import type { MobileSessionTab, Terminal } from './mobile-session-route-types'
 import type { MobileSessionAttachmentsModel } from './use-mobile-session-attachments'
 import { isAgentSessionHandleProvider } from '../../../src/shared/agent-session-provider-handle'
 import { createMobileStructuredAgentSession } from './mobile-structured-agent-session-launch'
-import { launchAgentInExistingWorkspace } from './mobile-existing-agent-launch'
-import { AGENT_PROMPT_NOT_SENT_MESSAGE } from './pr-ai-triage-launch'
-import { launchedSelection, withoutPendingHandle } from './pending-session-selection'
+import { launchesThroughHost, launchNewTabAgentThroughHost } from './new-tab-agent-host-launch'
+import {
+  launchedSelection,
+  withLaunchReply,
+  withoutUnansweredLaunch,
+  withoutPendingHandle
+} from './pending-session-selection'
+import { releaseTerminalCreateLock } from './terminal-create-lock'
 import { placeCreatedSessionTab } from '../../../src/shared/session-tab-placement'
 import { SESSION_TABS_SPLIT_GROUP_PLACEMENT_RUNTIME_CAPABILITY } from '../../../src/shared/protocol-version'
-
-const NOTES_NOT_SENT_MESSAGE = "The agent started, but the notes weren't sent."
-
-/** Agent launches that `agent.launch` can carry: bare, or with a prompt to submit. A shell command
- *  or an unsent draft stays a plain terminal. */
-function launchesThroughHost(options: MobileQuickCommandLaunch['options'] | undefined): boolean {
-  return options?.startupCommand === undefined && options?.enter !== false
-}
 
 export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttachmentsModel) {
   const {
@@ -39,7 +36,6 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
     defaultTerminalHandlesToLiveInput,
     setActiveHandle,
     activeSessionTabId,
-    activeSessionTabIdRef,
     setActiveSessionTabId,
     setCreating,
     creatingTerminalRef,
@@ -67,15 +63,15 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
     if (!client || creatingTerminalRef.current) {
       return
     }
-    creatingTerminalRef.current = true
-
-    setCreating(true)
-    setCreateError('')
-
     // Why: idempotency key so a transport retry (reconnect replay) resolves to the same terminal, not a duplicate; kept compact (no worktree id) for the schema length cap.
     const clientMutationId = `mobile-create:${Date.now().toString(36)}-${Math.random()
       .toString(36)
       .slice(2, 10)}`
+    // Also names the "+" lock, which a launch frees when its tab lands.
+    creatingTerminalRef.current = clientMutationId
+
+    setCreating(true)
+    setCreateError('')
 
     // Why: the host names the real cause (pty exhaustion, disabled agent, unresolved worktree);
     // collapsing every failure to 'Failed to create terminal' left the phone undiagnosable.
@@ -87,73 +83,41 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
       showToast(options?.errorToast ?? reason, 1800)
     }
 
-    // Why: a prompted launch can take a minute to reply; a tab the user picked meanwhile beats it.
-    const launchedFromTabId = activeSessionTabIdRef.current
-    function selectLaunchedSurface(surface: { handle: string } | { sessionId: string }): void {
-      if (activeSessionTabIdRef.current === launchedFromTabId) {
-        pendingSelectionRef.current = launchedSelection(surface)
-      }
-    }
-
     try {
-      if (agent && launchesThroughHost(options)) {
-        const prompt = options?.agentPrompt ?? options?.initialPrompt
-        const launched = await launchAgentInExistingWorkspace({
+      if (
+        agent &&
+        launchesThroughHost(options) &&
+        (await launchNewTabAgentThroughHost({
           client,
           hostCapabilities,
           worktreeId,
           agent,
-          ...(prompt?.trim() ? { prompt: { text: prompt, delivery: 'submit' as const } } : {}),
-          ...(options?.agentPrompt
-            ? { launchSource: 'quick_command' }
-            : options?.initialPrompt
-              ? { launchSource: 'diff_notes_send' }
-              : {})
-        })
-        if (launched.kind === 'launched') {
-          const { outcome, warning } = launched.result
-          selectLaunchedSurface(
-            outcome.kind === 'structured'
-              ? { sessionId: outcome.sessionId }
-              : { handle: outcome.handle }
-          )
-          // Why: the host publishes the tab before it replies, so read it now rather than after a delay.
-          void fetchSessionTabs()
-          if (launched.promptDelivered === false) {
-            triggerError()
-            showToast(
-              options?.initialPrompt ? NOTES_NOT_SENT_MESSAGE : AGENT_PROMPT_NOT_SENT_MESSAGE,
-              2400
-            )
-          } else if (launched.promptDelivered && options?.initialPrompt) {
-            triggerSuccess()
-            showToast(options.successToast ?? 'Notes sent')
-            options.onPromptSent?.()
-          } else if (warning?.trim()) {
-            showToast(warning.trim(), 2400)
-          }
-          return
-        }
-        if (launched.kind === 'failed') {
-          reportCreateFailure(launched.message)
-          return
-        }
-        if (launched.kind === 'unknown') {
-          // Never start a second agent when the first may already be running.
-          setCreateError(launched.message)
-          triggerError()
-          showToast(launched.message, 1800)
-          return
-        }
-        // COMPAT(agent.launch.v2): hosts before v1.4.206 keep the paths below; remove once none remain.
+          options,
+          lock: clientMutationId,
+          pendingSelectionRef,
+          fetchSessionTabs,
+          showToast,
+          reportCreateFailure,
+          setCreateError
+        }))
+      ) {
+        return
       }
+      // COMPAT(agent.launch.v2): hosts before v1.4.206 keep the paths below; remove once none remain.
       // Bare structured-provider launches follow host createSupport; prompted launches keep their startup semantics.
       if (isAgentSessionHandleProvider(agent) && options === undefined) {
+        // Armed before asking with nothing to match yet, so a tab picked meanwhile still wins.
+        pendingSelectionRef.current = launchedSelection(clientMutationId, {}, null)
         const structured = await createMobileStructuredAgentSession(client, worktreeId, agent)
         if (structured.kind === 'created') {
           // Found by session in the next snapshot, never by a predicted tab id; the current tab stays
           // live until then, as on the launch path above.
-          selectLaunchedSurface({ sessionId: structured.sessionId })
+          const reply = { sessionId: structured.sessionId }
+          pendingSelectionRef.current = withLaunchReply(
+            pendingSelectionRef.current,
+            clientMutationId,
+            reply
+          )
           void fetchSessionTabs()
           return
         }
@@ -285,8 +249,11 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
     } catch (error) {
       reportCreateFailure(error instanceof Error ? error.message : '')
     } finally {
-      creatingTerminalRef.current = false
-      setCreating(false)
+      pendingSelectionRef.current = withoutUnansweredLaunch(
+        pendingSelectionRef.current,
+        clientMutationId
+      )
+      releaseTerminalCreateLock({ creatingTerminalRef, setCreating }, clientMutationId)
     }
   }
 

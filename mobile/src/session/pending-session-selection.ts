@@ -7,25 +7,73 @@ import type { MobileSessionTab } from './mobile-session-route-types'
  * cannot each leave a stale pick behind for the next snapshot to act on.
  * - `tab`: a tab the user picked, by the host's tab id.
  * - `terminal`: a terminal by its handle; its tab id when the phone already knew it.
- * - `launched`: a surface a launch just started, which may not be in the tab list yet: a terminal by
- *   handle, a chat by session id (never a predicted tab id). It waits a bounded number of snapshots.
+ * - `launched`: the tab a launch is creating, which may not be in the tab list yet. `lock` names the
+ *   launch, so only its own reply or landing acts on it and a pick made meanwhile replaces it.
  */
 export type PendingSessionSelection =
   | { kind: 'tab'; tabId: string }
   | { kind: 'terminal'; handle: string; tabId: string | null }
   | {
       kind: 'launched'
-      surface: { handle: string } | { sessionId: string }
-      snapshotsLeft: number
+      lock: string
+      surface: LaunchedSurface
+      /** Null until the reply: before it, the tab is still being built. */
+      snapshotsLeft: number | null
     }
+
+/**
+ * How a launched tab is recognised, never by a predicted tab id: a terminal by the pane this device
+ * reserved or the handle the reply named, a chat by the session id this device minted or the reply
+ * named (a chat is listed under its session, not the reserved tab).
+ */
+export type LaunchedSurface = {
+  pane: { tabId: string; leafId: string } | null
+  sessionId: string | null
+  handle: string | null
+}
 
 // Why: a launch reply can beat its tab's publication; a few snapshots cover that without a timer.
 export const LAUNCHED_SELECTION_SNAPSHOT_BUDGET = 5
 
 export function launchedSelection(
-  surface: { handle: string } | { sessionId: string }
+  lock: string,
+  surface: Partial<LaunchedSurface>,
+  snapshotsLeft: number | null = LAUNCHED_SELECTION_SNAPSHOT_BUDGET
 ): PendingSessionSelection {
-  return { kind: 'launched', surface, snapshotsLeft: LAUNCHED_SELECTION_SNAPSHOT_BUDGET }
+  return {
+    kind: 'launched',
+    lock,
+    surface: { pane: null, sessionId: null, handle: null, ...surface },
+    snapshotsLeft
+  }
+}
+
+/** Adds what the launch's reply named and starts the fallback countdown; a pick made since stays. */
+export function withLaunchReply(
+  selection: PendingSessionSelection | null,
+  lock: string,
+  reply: { handle: string } | { sessionId: string }
+): PendingSessionSelection | null {
+  if (selection?.kind !== 'launched' || selection.lock !== lock) {
+    return selection
+  }
+  return {
+    ...selection,
+    surface: { ...selection.surface, ...reply },
+    snapshotsLeft: LAUNCHED_SELECTION_SNAPSHOT_BUDGET
+  }
+}
+
+/** Drops a launch's wait when it ended without a reply naming a surface; a pick made since stays. */
+export function withoutUnansweredLaunch(
+  selection: PendingSessionSelection | null,
+  lock: string
+): PendingSessionSelection | null {
+  return selection?.kind === 'launched' &&
+    selection.lock === lock &&
+    selection.snapshotsLeft === null
+    ? null
+    : selection
 }
 
 export function pendingSelectionTabId(selection: PendingSessionSelection | null): string | null {
@@ -67,31 +115,39 @@ export function resolveLaunchedSelection(
   if (selection?.kind !== 'launched') {
     return { selection, landedTabId: null }
   }
-  const { surface } = selection
-  if ('handle' in surface) {
-    const terminal = tabs.find(
-      (tab): tab is Extract<MobileSessionTab, { type: 'terminal' }> =>
-        tab.type === 'terminal' && tab.terminal === surface.handle
-    )
-    if (terminal) {
-      return {
-        selection: { kind: 'terminal', handle: surface.handle, tabId: terminal.id },
-        landedTabId: terminal.id
-      }
+  const landed = tabs.find((tab) => isLaunchedTab(tab, selection.surface))
+  if (landed) {
+    return {
+      selection:
+        landed.type === 'terminal' && landed.terminal
+          ? { kind: 'terminal', handle: landed.terminal, tabId: landed.id }
+          : { kind: 'tab', tabId: landed.id },
+      landedTabId: landed.id
     }
-  } else {
-    const chat = tabs.find(
-      (tab) => tab.type === 'agent-session' && tab.sessionId === surface.sessionId
-    )
-    if (chat) {
-      return { selection: { kind: 'tab', tabId: chat.id }, landedTabId: chat.id }
-    }
+  }
+  if (selection.snapshotsLeft === null) {
+    return { selection, landedTabId: null }
   }
   const snapshotsLeft = selection.snapshotsLeft - 1
   return {
     selection: snapshotsLeft > 0 ? { ...selection, snapshotsLeft } : null,
     landedTabId: null
   }
+}
+
+function isLaunchedTab(tab: MobileSessionTab, surface: LaunchedSurface): boolean {
+  if (tab.type === 'agent-session') {
+    return surface.sessionId !== null && tab.sessionId === surface.sessionId
+  }
+  if (tab.type !== 'terminal') {
+    return false
+  }
+  return (
+    (surface.pane !== null &&
+      tab.parentTabId === surface.pane.tabId &&
+      tab.leafId === surface.pane.leafId) ||
+    (surface.handle !== null && tab.terminal === surface.handle)
+  )
 }
 
 /** Whether a terminal's webview should subscribe as the intended pane: picked or just launched. */
@@ -102,9 +158,5 @@ export function pendingSelectionWantsHandle(
   if (selection?.kind === 'terminal') {
     return selection.handle === handle
   }
-  return (
-    selection?.kind === 'launched' &&
-    'handle' in selection.surface &&
-    selection.surface.handle === handle
-  )
+  return selection?.kind === 'launched' && selection.surface.handle === handle
 }

@@ -21,6 +21,7 @@ import type { SessionTabsApplyOutcome } from './mobile-session-tabs-stream-healt
 import { getActiveTabIdForHandle } from './mobile-session-route-helpers'
 import { resolveActiveSessionTab } from './active-session-tab'
 import { activateMobileSessionTab } from './mobile-session-tab-activation'
+import { releaseTerminalCreateLock } from './terminal-create-lock'
 import type { MobileSessionTab, SessionTabsResult } from './mobile-session-route-types'
 import type { MobileSessionTerminalListModel } from './use-mobile-session-terminal-list'
 
@@ -51,7 +52,9 @@ export function useMobileSessionTabApplication(scope: MobileSessionTerminalListM
     unsubscribeTerminal,
     subscribeToTerminal,
     lastKnownTerminalCountRef,
-    clientRef
+    clientRef,
+    creatingTerminalRef,
+    setCreating
   } = scope
   const applySessionTabs = useCallback(
     (result: SessionTabsResult): SessionTabsApplyOutcome<MobileSessionTab> => {
@@ -122,8 +125,13 @@ export function useMobileSessionTabApplication(scope: MobileSessionTerminalListM
         )
         pendingBrowserFocusPageIdRef.current = null
       } else {
-        const launch = resolveLaunchedSelection(pendingSelectionRef.current, nextTabs)
+        const pending = pendingSelectionRef.current
+        const launch = resolveLaunchedSelection(pending, nextTabs)
         pendingSelectionRef.current = launch.selection
+        if (launch.landedTabId && pending?.kind === 'launched') {
+          // Why: the reply can wait a minute on prompt delivery; the tab is what the lock waited for.
+          releaseTerminalCreateLock({ creatingTerminalRef, setCreating }, pending.lock)
+        }
         if (launch.landedTabId && clientRef.current) {
           // Why: a launch carries no navigation, so record the pick as a tap does, or the host keeps this device on the old tab.
           void activateMobileSessionTab(clientRef.current, {

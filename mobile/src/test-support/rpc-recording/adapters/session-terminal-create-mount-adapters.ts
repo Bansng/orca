@@ -89,7 +89,7 @@ export function sessionTerminalCreateMountAdapters(
         current: 'terminal'
       }
       const pendingSelectionRef: { current: PendingSessionSelection | null } = { current: null }
-      const creatingTerminalRef = { current: false }
+      const creatingTerminalRef: { current: string | null } = { current: null }
       const initializedHandlesRef = { current: new Set([PREVIOUS_HANDLE]) }
       const deviceTokenRef: { current: string | null } = { current: null }
 

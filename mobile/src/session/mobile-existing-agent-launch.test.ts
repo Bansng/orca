@@ -1,4 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
+import {
+  AgentLaunchFields,
+  AgentLaunchReplay
+} from '../../../src/shared/rpc-contract/agent-launch-params'
+import { isTerminalLeafId } from '../../../src/shared/stable-pane-id'
+import { isValidHostTerminalTabId } from '../../../src/shared/terminal-tab-id'
+import { structuredSessionOperationId } from './structured-session-operation-id'
 import type { RpcClient } from '../transport/rpc-client'
 import { markRpcDeliveryUnknown } from '../transport/rpc-delivery-ambiguity'
 import type { RpcResponse } from '../transport/types'
@@ -6,6 +13,7 @@ import {
   AGENT_LAUNCH_UNCONFIRMED_MESSAGE,
   PROMPTED_AGENT_LAUNCH_TIMEOUT_MS,
   launchAgentInExistingWorkspace,
+  reserveMobileAgentLaunch,
   supportsMobileExistingAgentLaunch
 } from './mobile-existing-agent-launch'
 
@@ -93,6 +101,44 @@ describe('supportsMobileExistingAgentLaunch', () => {
     expect(supportsMobileExistingAgentLaunch(['agent.launch.v2'])).toBe(false)
     expect(supportsMobileExistingAgentLaunch([])).toBe(false)
     expect(supportsMobileExistingAgentLaunch(undefined)).toBe(false)
+  })
+})
+
+describe('reserveMobileAgentLaunch', () => {
+  it('names a pane and chat the host adopts as sent, and an older host ignores', async () => {
+    const { client, sendRequest } = scriptedClient(launched({}))
+    const reservation = reserveMobileAgentLaunch('claude')
+    await launch(client, { reservation, mintOperationId: () => '1790000000000-' + 'a'.repeat(32) })
+    const params = sendRequest.mock.calls[0]![1]
+
+    expect(params).toMatchObject({
+      paneKey: `${reservation.pane.tabId}:${reservation.pane.leafId}`,
+      sessionId: reservation.sessionId
+    })
+    expect(AgentLaunchReplay.safeParse(params).success).toBe(true)
+    // A host from before either field parses the same launch and drops them, never refuses it.
+    const olderHost = AgentLaunchFields.omit({ paneKey: true, sessionId: true }).required({
+      operationId: true
+    })
+    const parsed = olderHost.safeParse(params)
+    expect(parsed.success && parsed.data).not.toHaveProperty('paneKey')
+    expect(parsed.success && parsed.data).not.toHaveProperty('sessionId')
+  })
+
+  it('mints a pane the host adopts even where the runtime has no crypto.randomUUID', () => {
+    const native = Object.getOwnPropertyDescriptor(globalThis.crypto, 'randomUUID')
+    Object.defineProperty(globalThis.crypto, 'randomUUID', { value: undefined, configurable: true })
+    try {
+      const { pane } = reserveMobileAgentLaunch('aider')
+      expect(isTerminalLeafId(pane.leafId)).toBe(true)
+      expect(isValidHostTerminalTabId(pane.tabId)).toBe(true)
+      // The same fallback still yields a durable operation id.
+      expect(structuredSessionOperationId(1790000000000)).toMatch(/^1790000000000-[0-9a-f]{32}$/)
+    } finally {
+      if (native) {
+        Object.defineProperty(globalThis.crypto, 'randomUUID', native)
+      }
+    }
   })
 })
 

@@ -141,8 +141,10 @@ const HEAD_CONTENT_HOOK_SHA256 = '9c3b612fef3f370d66873aefdbe1d701f20cb64ded31fe
 // `reportCreateFailure`, which now always shows a toast. Refreshed when both launch paths read the
 // tab list at once and the older-host chat path stopped tearing down the open terminal early.
 // Refreshed when a launch's late reply stopped taking focus from a tab the user picked meanwhile.
+// Refreshed when the + menu's host launch moved to `new-tab-agent-host-launch.ts` and the phone began
+// naming the launched tab before asking, with the "+" lock held by the create's own id.
 const HEAD_NESTED_FUNCTION_SHA256 =
-  '4b451ed1a3838fda42f3c6cd9ecbee2d170552a1feac74c28a8389fb0e89404c'
+  '7782e4f0ab79dff73bfcd8b2ce064d0e074047e79b5c623f1879abb5bd181373'
 // -1 registration and -1 removal: the Markdown actions' `BackHandler` pair is `useBackClaim`'s.
 const HEAD_NATIVE_REGISTRATION_SHA256 =
   '87d4599f475575131d4d5daa20f0dac579ca6c829353cbb654206ea6965dadae'

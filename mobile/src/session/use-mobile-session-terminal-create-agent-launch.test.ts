@@ -5,10 +5,22 @@ import type {
   AgentLaunchOutcome,
   AgentLaunchPromptReceipt
 } from '../../../src/shared/agent-launch-intent'
+import { parsePaneKey } from '../../../src/shared/stable-pane-id'
 import type { RpcClient } from '../transport/rpc-client'
+import { markRpcDeliveryUnknown } from '../transport/rpc-delivery-ambiguity'
 import type { RpcResponse } from '../transport/types'
-import { launchedSelection, type PendingSessionSelection } from './pending-session-selection'
+import {
+  AGENT_LAUNCH_RESERVATION_TAKEN_MESSAGE,
+  AGENT_LAUNCH_UNCONFIRMED_MESSAGE
+} from './mobile-existing-agent-launch'
+import type { MobileSessionTab } from './mobile-session-route-types'
+import {
+  LAUNCHED_SELECTION_SNAPSHOT_BUDGET,
+  resolveLaunchedSelection,
+  type PendingSessionSelection
+} from './pending-session-selection'
 import { AGENT_PROMPT_NOT_SENT_MESSAGE } from './pr-ai-triage-launch'
+import { releaseTerminalCreateLock } from './terminal-create-lock'
 import { useMobileSessionTerminalCreateActions } from './use-mobile-session-terminal-create-actions'
 
 vi.mock('../platform/haptics', () => ({ triggerSuccess: vi.fn(), triggerError: vi.fn() }))
@@ -72,7 +84,7 @@ function scope(client: RpcClient, hostCapabilities: string[] = LAUNCH_CAPABILITI
     activeSessionTabIdRef: mutableRef<string | null>('existing-tab'),
     setActiveSessionTabId: vi.fn(),
     setCreating: vi.fn(),
-    creatingTerminalRef: { current: false },
+    creatingTerminalRef: mutableRef<string | null>(null),
     creatingBrowser: false,
     creatingMarkdown: false,
     setCreateError: vi.fn(),
@@ -123,6 +135,46 @@ function launchParams(sendRequest: ReturnType<typeof scriptedClient>['sendReques
   return sendRequest.mock.calls.find(([method]) => method === 'agent.launchReplay')?.[1]
 }
 
+function refusal(code: string): RpcResponse {
+  return { id: 'x', ok: false, error: { code, message: code }, _meta: { runtimeId: 'r' } }
+}
+
+/** The reservation a launch sent: its pane halves and session id. */
+function sentReservation(params: unknown): { tabId: string; leafId: string; sessionId?: string } {
+  const field = (name: string): string | undefined => {
+    const value: unknown = params && typeof params === 'object' ? Reflect.get(params, name) : null
+    return typeof value === 'string' ? value : undefined
+  }
+  const pane = parsePaneKey(field('paneKey') ?? '')
+  if (!pane) {
+    throw new Error('launch sent no pane key')
+  }
+  const sessionId = field('sessionId')
+  return { tabId: pane.tabId, leafId: pane.leafId, ...(sessionId ? { sessionId } : {}) }
+}
+
+/** The terminal tab the host lists for a reserved pane. */
+function reservedTab(params: unknown, terminal: string): MobileSessionTab {
+  const { tabId, leafId } = sentReservation(params)
+  return {
+    type: 'terminal',
+    id: `${tabId}::${leafId}`,
+    parentTabId: tabId,
+    leafId,
+    title: 'Aider',
+    terminal,
+    isActive: false
+  }
+}
+
+function awaitingReply(surface: Record<string, unknown>): unknown {
+  return expect.objectContaining({
+    kind: 'launched',
+    surface: expect.objectContaining(surface),
+    snapshotsLeft: LAUNCHED_SELECTION_SNAPSHOT_BUDGET
+  })
+}
+
 describe('the + menu', () => {
   it('asks the host to start the agent and waits for its terminal by handle', async () => {
     const { client, sendRequest } = scriptedClient(
@@ -139,7 +191,7 @@ describe('the + menu', () => {
     })
     expect(launchParams(sendRequest)).not.toHaveProperty('prompt')
     expect(launchParams(sendRequest)).not.toHaveProperty('launchSource')
-    expect(state.pendingSelectionRef.current).toEqual(launchedSelection({ handle: 'term_7' }))
+    expect(state.pendingSelectionRef.current).toEqual(awaitingReply({ handle: 'term_7' }))
     // Read at once: the host published the tab before replying.
     expect(state.fetchSessionTabs).toHaveBeenCalledTimes(1)
     expect(state.scheduleDelayedAction).not.toHaveBeenCalled()
@@ -153,8 +205,95 @@ describe('the + menu', () => {
 
     await create_(state, 'claude')
 
-    expect(state.pendingSelectionRef.current).toEqual(launchedSelection({ sessionId: 'claude_s1' }))
+    expect(state.pendingSelectionRef.current).toEqual(awaitingReply({ sessionId: 'claude_s1' }))
     expect(state.setActiveSessionTabId).not.toHaveBeenCalled()
+  })
+
+  it('names the pane and chat it will create, and resends the same ids on a replay', async () => {
+    const reply = launchReply({ kind: 'terminal', handle: 'term_7' })
+    const sendRequest = vi.fn(
+      async (_method: string, _params?: unknown, _options?: unknown) => reply
+    )
+    sendRequest.mockRejectedValueOnce(markRpcDeliveryUnknown(new Error('response lost')))
+    const state = scope(requestPortRpcClient(sendRequest))
+
+    await create_(state, 'claude')
+
+    const sends = sendRequest.mock.calls.filter(([method]) => method === 'agent.launchReplay')
+    expect(sends).toHaveLength(2)
+    expect(sends[1]![1]).toEqual(sends[0]![1])
+    const reserved = sentReservation(sends[0]![1])
+    expect(reserved.tabId).not.toContain(':')
+    expect(reserved.sessionId).toMatch(/^claude_[A-Za-z0-9_]+$/)
+    expect(state.pendingSelectionRef.current).toEqual(
+      awaitingReply({
+        pane: { tabId: reserved.tabId, leafId: reserved.leafId },
+        sessionId: reserved.sessionId,
+        handle: 'term_7'
+      })
+    )
+  })
+
+  it('reserves a new pane for every tap', async () => {
+    const { client, sendRequest } = scriptedClient(
+      launchReply({ kind: 'terminal', handle: 'term_7' })
+    )
+    const state = scope(client)
+
+    await create_(state, 'aider')
+    await create_(state, 'aider')
+
+    const [first, second] = sendRequest.mock.calls.map(([, params]) => params)
+    expect(sentReservation(first).tabId).not.toBe(sentReservation(second).tabId)
+    // Only an agent the host may start as a chat names a session.
+    expect(first).not.toHaveProperty('sessionId')
+  })
+
+  it("lands by the reply's ids when an older host ignored the reservation", async () => {
+    const { client } = scriptedClient(launchReply({ kind: 'terminal', handle: 'term_host' }))
+    const state = scope(client)
+
+    await create_(state, 'aider')
+
+    const hostMinted: MobileSessionTab = {
+      type: 'terminal',
+      id: 'host-tab::host-leaf',
+      parentTabId: 'host-tab',
+      leafId: 'host-leaf',
+      title: 'Aider',
+      terminal: 'term_host',
+      isActive: false
+    }
+    expect(resolveLaunchedSelection(state.pendingSelectionRef.current, [hostMinted])).toEqual({
+      selection: { kind: 'terminal', handle: 'term_host', tabId: 'host-tab::host-leaf' },
+      landedTabId: 'host-tab::host-leaf'
+    })
+  })
+
+  it.each(['agent_launch_pane_already_live', 'agent_launch_session_already_exists'])(
+    'says plainly that nothing started when the host refuses the reservation (%s)',
+    async (code) => {
+      const { client } = scriptedClient(refusal(code))
+      const state = scope(client)
+
+      await create_(state, 'claude')
+
+      expect(state.showToast).toHaveBeenCalledWith(AGENT_LAUNCH_RESERVATION_TAKEN_MESSAGE, 1800)
+      expect(state.pendingSelectionRef.current).toBeNull()
+      expect(state.creatingTerminalRef.current).toBeNull()
+    }
+  )
+
+  it('never calls a taken reservation a clean failure after a replay: it may be this launch', async () => {
+    const sendRequest = vi.fn(async (_method: string, _params?: unknown, _options?: unknown) =>
+      refusal('agent_launch_pane_already_live')
+    )
+    sendRequest.mockRejectedValueOnce(markRpcDeliveryUnknown(new Error('response lost')))
+    const state = scope(requestPortRpcClient(sendRequest))
+
+    await create_(state, 'claude')
+
+    expect(state.showToast).toHaveBeenCalledWith(AGENT_LAUNCH_UNCONFIRMED_MESSAGE, 1800)
   })
 
   it("keeps today's path on a host without the launch capabilities", async () => {
@@ -242,6 +381,54 @@ describe('launches that carry a prompt', () => {
       prompt: { text: 'run the tests', delivery: 'submit' },
       launchSource: 'quick_command'
     })
+  })
+
+  it('lands on the tab and frees the + lock before a paste-after-start agent replies', async () => {
+    const reply = launchReply(
+      { kind: 'terminal', handle: 'term_7' },
+      { delivery: 'submit', outcome: 'handed-to-terminal' }
+    )
+    const state = scope(scriptedClient(reply).client)
+    let landedBeforeReply: PendingSessionSelection | null = null
+    state.client = requestPortRpcClient(async (_method, params) => {
+      // The host lists the tab as soon as it exists, then waits for the agent to paste into it.
+      const pending = state.pendingSelectionRef.current
+      const landed = resolveLaunchedSelection(pending, [reservedTab(params, 'term_7')])
+      state.pendingSelectionRef.current = landed.selection
+      if (landed.landedTabId && pending?.kind === 'launched') {
+        releaseTerminalCreateLock(state, pending.lock)
+      }
+      landedBeforeReply = state.pendingSelectionRef.current
+      expect(state.creatingTerminalRef.current).toBeNull()
+      return reply
+    })
+
+    await create_(state, 'aider', { agentPrompt: 'run the tests' })
+
+    expect(landedBeforeReply).toEqual(
+      expect.objectContaining({ kind: 'terminal', handle: 'term_7' })
+    )
+    // The late reply leaves the landed pick alone.
+    expect(state.pendingSelectionRef.current).toBe(landedBeforeReply)
+    expect(state.setCreating).toHaveBeenCalledTimes(2)
+  })
+
+  it("keeps a second launch's + lock when the first one's reply comes in", async () => {
+    const reply = launchReply(
+      { kind: 'terminal', handle: 'term_7' },
+      { delivery: 'submit', outcome: 'handed-to-terminal' }
+    )
+    const state = scope(scriptedClient(reply).client)
+    state.client = requestPortRpcClient(async () => {
+      // The first tab landed and freed the lock; the user started another launch.
+      state.creatingTerminalRef.current = 'mobile-create:second'
+      return reply
+    })
+
+    await create_(state, 'aider', { agentPrompt: 'run the tests' })
+
+    expect(state.creatingTerminalRef.current).toBe('mobile-create:second')
+    expect(state.setCreating).not.toHaveBeenCalledWith(false)
   })
 
   it('leaves the user on a tab they picked while the prompt was being delivered', async () => {

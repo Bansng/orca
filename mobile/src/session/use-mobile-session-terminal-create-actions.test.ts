@@ -19,6 +19,10 @@ function noPendingSelection(): { current: PendingSessionSelection | null } {
   return { current: null }
 }
 
+function noCreateLock(): { current: string | null } {
+  return { current: null }
+}
+
 function clientReturning(...responses: unknown[]): RpcClient {
   let responseIndex = 0
   return {
@@ -56,7 +60,7 @@ function createScope(client: RpcClient) {
     activeSessionTabIdRef: { current: 'existing-tab' },
     setActiveSessionTabId: vi.fn(),
     setCreating: vi.fn(),
-    creatingTerminalRef: { current: false },
+    creatingTerminalRef: noCreateLock(),
     creatingBrowser: false,
     creatingMarkdown: false,
     setCreateError: vi.fn(),
@@ -117,7 +121,7 @@ describe('mobile + Codex tab creation routing', () => {
     )
     // The chat's tab is found by its session in the next snapshot, never by a predicted id.
     expect(scope.pendingSelectionRef.current).toEqual(
-      launchedSelection({ sessionId: 'codex_session_1' })
+      launchedSelection(expect.any(String), { sessionId: 'codex_session_1' })
     )
     expect(scope.setActiveSessionTabId).not.toHaveBeenCalled()
     // The open terminal stays live until the chat's tab lands, rather than blanking beside it.
