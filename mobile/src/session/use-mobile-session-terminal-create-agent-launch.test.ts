@@ -1,6 +1,10 @@
 import { createElement } from 'react'
 import { act, create, type ReactTestRenderer } from 'react-test-renderer'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type {
+  AgentLaunchOutcome,
+  AgentLaunchPromptReceipt
+} from '../../../src/shared/agent-launch-intent'
 import type { RpcClient } from '../transport/rpc-client'
 import type { RpcResponse } from '../transport/types'
 import { launchedSelection, type PendingSessionSelection } from './pending-session-selection'
@@ -20,7 +24,7 @@ function ok(result: unknown): RpcResponse {
   return { id: 'x', ok: true, result, _meta: { runtimeId: 'r' } }
 }
 
-function launchReply(outcome: object, prompt?: object): RpcResponse {
+function launchReply(outcome: AgentLaunchOutcome, prompt?: AgentLaunchPromptReceipt): RpcResponse {
   return ok({ outcome, worktreeId: 'workspace-1', receipt: RECEIPT, ...(prompt ? { prompt } : {}) })
 }
 
