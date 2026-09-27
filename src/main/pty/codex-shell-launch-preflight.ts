@@ -14,8 +14,6 @@ export type CodexShellLaunchPreflightCommandOptions = {
   userDataPath: string
   /** Packaged app resources root; the bundled launcher lives under it. */
   resourcesPath?: string | null
-  /** The launcher this terminal names in `ORCA_CLI_COMMAND`; the preflight runs that same one so it never hands off to it (Linux names a shim in front of the bundled launcher). */
-  cliLauncher?: string | null
   /** Test seam. */
   platform?: NodeJS.Platform
 }
@@ -35,18 +33,15 @@ export function resolveCodexShellLaunchPreflightCommand(
     return null
   }
   const platform = options.platform ?? process.platform
-  const candidate =
-    options.cliLauncher && !options.isWsl
-      ? options.cliLauncher
-      : options.isPackaged
-        ? options.resourcesPath
-          ? getBundledLauncherPath(platform, options.resourcesPath)
-          : null
-        : join(
-            options.userDataPath,
-            ...DEV_LAUNCHER_DIR,
-            platform === 'win32' ? `${DEV_COMMAND_NAME}.cmd` : DEV_COMMAND_NAME
-          )
+  const candidate = options.isPackaged
+    ? options.resourcesPath
+      ? getBundledLauncherPath(platform, options.resourcesPath)
+      : null
+    : join(
+        options.userDataPath,
+        ...DEV_LAUNCHER_DIR,
+        platform === 'win32' ? `${DEV_COMMAND_NAME}.cmd` : DEV_COMMAND_NAME
+      )
   if (!candidate || !isExecutableFileOnDisk(candidate, platform)) {
     return null
   }

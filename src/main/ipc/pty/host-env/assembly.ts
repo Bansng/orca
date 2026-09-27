@@ -251,34 +251,6 @@ export function buildPtyHostEnv(
     }
   }
 
-  // Why: an inherited copy (e.g. Orca launched from a WSL pane) names another launch's CLI.
-  delete baseEnv.ORCA_WSL_CLI_DIR
-  // Why: WSL shells need the managed userData root for shell-ready wrappers; dev-mode terminals need the same export so `orca` targets the live dev instance.
-  if (opts.isWsl) {
-    baseEnv.ORCA_USER_DATA_PATH = opts.userDataPath
-    const managedCliDir = getManagedWslCliDir(opts)
-    if (managedCliDir) {
-      baseEnv.ORCA_WSL_CLI_DIR = managedCliDir
-    }
-  } else if (!opts.isPackaged) {
-    baseEnv.ORCA_USER_DATA_PATH ??= opts.userDataPath
-  }
-  const launcher = prependOrcaCliDirToChildPath(baseEnv, {
-    isPackaged: opts.isPackaged,
-    userDataPath: opts.userDataPath,
-    resourcesPath: opts.resourcesPath
-  })
-  if (opts.isWsl) {
-    // Why: managed WSL registration uses `orca-ide`; a guest cannot run the host launcher's path.
-    baseEnv.ORCA_CLI_COMMAND = getWslCliCommandName(opts.isPackaged)
-  } else if (launcher) {
-    // Why the absolute launcher, the same spelling a structured session gets: a login shell can
-    // reorder PATH behind a global install, and a current CLI re-runs itself as this one.
-    baseEnv.ORCA_CLI_COMMAND = launcher
-  } else {
-    delete baseEnv.ORCA_CLI_COMMAND
-  }
-
   // Why: keep the Codex home override PTY-scoped so dev/prod Orcas don't share hooks through ~/.codex.
   if (opts.skipCodexHomeEnv) {
     delete baseEnv.CODEX_HOME
@@ -294,8 +266,7 @@ export function buildPtyHostEnv(
       isWsl: opts.isWsl,
       managedHomePath: opts.selectedCodexHomePath,
       userDataPath: opts.userDataPath,
-      resourcesPath: opts.resourcesPath,
-      cliLauncher: launcher
+      resourcesPath: opts.resourcesPath
     })
     if (preflightCommand) {
       baseEnv.ORCA_CODEX_LAUNCH_PREFLIGHT = preflightCommand
@@ -308,6 +279,29 @@ export function buildPtyHostEnv(
   } else {
     delete baseEnv.ORCA_CODEX_LAUNCH_PREFLIGHT
   }
+
+  // Why: an inherited copy (e.g. Orca launched from a WSL pane) names another launch's CLI.
+  delete baseEnv.ORCA_WSL_CLI_DIR
+  // Why: WSL shells need the managed userData root for shell-ready wrappers; dev-mode terminals need the same export so `orca` targets the live dev instance.
+  if (opts.isWsl) {
+    baseEnv.ORCA_USER_DATA_PATH = opts.userDataPath
+    // Why: managed WSL registration uses `orca-ide`; exposing that literal scopes agent guidance to WSL without a bare-orca shim.
+    baseEnv.ORCA_CLI_COMMAND = getWslCliCommandName(opts.isPackaged)
+    const managedCliDir = getManagedWslCliDir(opts)
+    if (managedCliDir) {
+      baseEnv.ORCA_WSL_CLI_DIR = managedCliDir
+    }
+  } else {
+    if (!opts.isPackaged) {
+      baseEnv.ORCA_USER_DATA_PATH ??= opts.userDataPath
+    }
+    delete baseEnv.ORCA_CLI_COMMAND
+  }
+  prependOrcaCliDirToChildPath(baseEnv, {
+    isPackaged: opts.isPackaged,
+    userDataPath: opts.userDataPath,
+    resourcesPath: opts.resourcesPath
+  })
 
   if (
     opts.routeBrowserOpensToClient === true &&
