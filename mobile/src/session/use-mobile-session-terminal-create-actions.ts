@@ -39,6 +39,7 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
     defaultTerminalHandlesToLiveInput,
     setActiveHandle,
     activeSessionTabId,
+    activeSessionTabIdRef,
     setActiveSessionTabId,
     setCreating,
     creatingTerminalRef,
@@ -86,6 +87,14 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
       showToast(options?.errorToast ?? reason, 1800)
     }
 
+    // Why: a prompted launch can take a minute to reply; a tab the user picked meanwhile beats it.
+    const launchedFromTabId = activeSessionTabIdRef.current
+    function selectLaunchedSurface(surface: { handle: string } | { sessionId: string }): void {
+      if (activeSessionTabIdRef.current === launchedFromTabId) {
+        pendingSelectionRef.current = launchedSelection(surface)
+      }
+    }
+
     try {
       if (agent && launchesThroughHost(options)) {
         const prompt = options?.agentPrompt ?? options?.initialPrompt
@@ -103,7 +112,7 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
         })
         if (launched.kind === 'launched') {
           const { outcome, warning } = launched.result
-          pendingSelectionRef.current = launchedSelection(
+          selectLaunchedSurface(
             outcome.kind === 'structured'
               ? { sessionId: outcome.sessionId }
               : { handle: outcome.handle }
@@ -144,7 +153,7 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
         if (structured.kind === 'created') {
           // Found by session in the next snapshot, never by a predicted tab id; the current tab stays
           // live until then, as on the launch path above.
-          pendingSelectionRef.current = launchedSelection({ sessionId: structured.sessionId })
+          selectLaunchedSurface({ sessionId: structured.sessionId })
           void fetchSessionTabs()
           return
         }

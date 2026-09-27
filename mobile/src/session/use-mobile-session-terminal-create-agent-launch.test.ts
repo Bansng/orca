@@ -69,6 +69,7 @@ function scope(client: RpcClient, hostCapabilities: string[] = LAUNCH_CAPABILITI
     defaultTerminalHandlesToLiveInput: vi.fn(),
     setActiveHandle: vi.fn(),
     activeSessionTabId: 'existing-tab',
+    activeSessionTabIdRef: mutableRef<string | null>('existing-tab'),
     setActiveSessionTabId: vi.fn(),
     setCreating: vi.fn(),
     creatingTerminalRef: { current: false },
@@ -241,6 +242,26 @@ describe('launches that carry a prompt', () => {
       prompt: { text: 'run the tests', delivery: 'submit' },
       launchSource: 'quick_command'
     })
+  })
+
+  it('leaves the user on a tab they picked while the prompt was being delivered', async () => {
+    const reply = launchReply(
+      { kind: 'terminal', handle: 'term_7' },
+      { delivery: 'submit', outcome: 'handed-to-terminal' }
+    )
+    const userPick: PendingSessionSelection = { kind: 'tab', tabId: 'other-tab' }
+    const state = scope(scriptedClient(reply).client)
+    state.client = requestPortRpcClient(async () => {
+      // The user taps another tab before the host replies.
+      state.activeSessionTabIdRef.current = 'other-tab'
+      state.pendingSelectionRef.current = userPick
+      return reply
+    })
+
+    await create_(state, 'claude', { agentPrompt: 'run the tests' })
+
+    expect(state.pendingSelectionRef.current).toBe(userPick)
+    expect(state.fetchSessionTabs).toHaveBeenCalledOnce()
   })
 
   it('marks review notes sent only when the host delivered them', async () => {
