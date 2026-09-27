@@ -2,8 +2,9 @@
 import { app } from 'electron'
 import { spawn as nodeSpawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { join } from 'node:path'
 import { getCanonicalUserDataPath } from '../persistence'
+import { resolveHostCliEntryPath } from '../cli/cli-entry-path'
+export { resolveHostCliEntryPath } from '../cli/cli-entry-path'
 import { resolveHostCliKillTimeoutMs } from './ssh-host-cli-deadline'
 export { resolveHostCliKillTimeoutMs } from './ssh-host-cli-deadline'
 import { MAX_TIMER_DELAY_MS, isSafeTimerDelayMs } from '../../shared/timer-delay'
@@ -84,19 +85,6 @@ const REMOTE_CONTEXT_ENV_VARS = [
 
 // Bound output retained for the relay response.
 const MAX_CAPTURED_OUTPUT_BYTES = 8 * 1024 * 1024
-
-export function resolveHostCliEntryPath(app: {
-  isPackaged: boolean
-  resourcesPath: string
-  appPath: string
-}): string {
-  // Why: mirrors the packaged launcher scripts (resources/*/bin) and the dev
-  // launcher in cli-installer.ts — packaged builds ship the CLI entry outside
-  // app.asar so Electron node mode can execute it directly.
-  return app.isPackaged
-    ? join(app.resourcesPath, 'app.asar.unpacked', 'out', 'cli', 'index.js')
-    : join(app.appPath, 'out', 'cli', 'index.js')
-}
 
 export function buildHostCliEnv(args: {
   hostEnv: NodeJS.ProcessEnv

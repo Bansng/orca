@@ -11,7 +11,6 @@ vi.mock('electron', () => ({
 
 import { resolveAppImageLauncherEndpointPath } from './appimage-stable-launcher'
 import { ensureLinuxTerminalOrcaCliShimDir } from './linux-terminal-orca-cli-shim'
-import { ORCA_CLI_SELF_EXPORT } from './cli-self-export'
 
 const created: string[] = []
 const canFenceAppImageRuntime = process.platform === 'linux' && existsSync('/proc/self/stat')
@@ -58,8 +57,6 @@ describe('ensureLinuxTerminalOrcaCliShimDir', () => {
     const content = readFileSync(join(shimDir!, 'orca'), 'utf8')
     // Single-quoted so a resources path with shell metacharacters can't break out.
     expect(content).toContain(`exec '${join(resourcesPath, 'bin', 'orca-ide')}' "$@"`)
-    // A session names this shim as its CLI, so the shim, not the launcher behind it, is the entry.
-    expect(content).toContain(ORCA_CLI_SELF_EXPORT)
     const mode = statSync(join(shimDir!, 'orca')).mode & 0o777
     expect(mode & 0o111).not.toBe(0)
   })
@@ -118,7 +115,6 @@ describe('ensureLinuxTerminalOrcaCliShimDir', () => {
       expect(content).toContain(liveLauncherPath)
       expect(content).toContain('runtime_pid=')
       expect(content).toContain('/proc/$runtime_pid/stat')
-      expect(content).toContain(ORCA_CLI_SELF_EXPORT)
       expect(existsSync(resolveAppImageLauncherEndpointPath(cacheRootPath, 'live'))).toBe(false)
       await expect(
         runProcess({ program: shimPath, args: [], timeoutMs: 3_000 })

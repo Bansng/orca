@@ -48,15 +48,8 @@ internal static class OrcaCliLauncher
             MoveEnvironmentVariable("NODE_REPL_EXTERNAL_MODULE", "ORCA_NODE_REPL_EXTERNAL_MODULE");
             Environment.SetEnvironmentVariable("ELECTRON_RUN_AS_NODE", "1");
             Environment.SetEnvironmentVariable("ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER", "1");
-            // Why: names this launcher as the entry the caller ran. ORCA_CLI_COMMAND is left as
-            // the session set it; the CLI names it `orca`/`orca-ide` after its handoff decision.
-            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ORCA_CLI_SELF")))
-            {
-                Environment.SetEnvironmentVariable(
-                    "ORCA_CLI_SELF",
-                    typeof(OrcaCliLauncher).Assembly.Location
-                );
-            }
+            // Why: ORCA_CLI_COMMAND is left as the session set it; the CLI names it
+            // `orca`/`orca-ide` itself after deciding whether to hand off to that launcher.
 
             using (Process child = Process.Start(startInfo))
             {

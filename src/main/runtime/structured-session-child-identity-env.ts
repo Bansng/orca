@@ -21,9 +21,12 @@
  * `ORCA_CLI_COMMAND` is the absolute launcher in that directory, because a provider can run each
  * command in a login shell (Codex runs `zsh -lc`), whose profile rebuilds PATH and puts a global
  * install — possibly an older Orca — ahead of this app's. A current CLI reached that way re-runs
- * itself as this launcher (`src/cli/session-cli-reexec.ts`), so an agent that types bare `orca` still acts
- * through this app's CLI. When no launcher resolves the key is omitted rather than set to a bare
- * name: on Linux a bare `orca` is GNOME's screen reader, and an inherited value names another app.
+ * itself as this launcher (`src/cli/session-cli-reexec.ts`), so an agent that types bare `orca`
+ * still acts through this app's CLI. `ORCA_SESSION_CLI_ENTRY` names the JS entry that launcher
+ * runs; the CLI compares its own entry with it, so any launcher of this same app (the shim, a
+ * global symlink) never hands off. When no launcher resolves both keys are omitted rather than
+ * naming a bare `orca`: on Linux that is GNOME's screen reader, and an inherited value names
+ * another app.
  *
  * `ORCA_USER_DATA_PATH` pins this instance beside the identity, so any current CLI — the session's
  * own or a global one — dials the Orca that minted the id instead of the production default.
@@ -44,8 +47,12 @@
  */
 
 import { getAppEnvironment, hasAppEnvironment } from '../../shared/app-environment'
-import { ORCA_AGENT_SESSION_ID_ENV } from '../../shared/agent-session-caller-env'
+import {
+  ORCA_AGENT_SESSION_ID_ENV,
+  ORCA_SESSION_CLI_ENTRY_ENV
+} from '../../shared/agent-session-caller-env'
 import { ORCA_STRUCTURED_SESSION_ENV } from '../../shared/structured-session-marker'
+import { resolveHostCliEntryPath } from '../cli/cli-entry-path'
 import { prependOrcaCliDirToChildPath } from '../cli/orca-cli-child-path'
 import { structuredWorkerIdentities } from './structured-worker-identity'
 
@@ -70,19 +77,26 @@ export function structuredSessionChildIdentityEnv(
  */
 function applyThisAppCli(env: Record<string, string>): void {
   delete env.ORCA_CLI_COMMAND
+  delete env[ORCA_SESSION_CLI_ENTRY_ENV]
   if (!hasAppEnvironment()) {
     return
   }
   const app = getAppEnvironment()
   const userDataPath = app.getPath('userData')
+  const isPackaged = app.isPackaged()
   env.ORCA_USER_DATA_PATH = userDataPath
   const launcher = prependOrcaCliDirToChildPath(env, {
-    isPackaged: app.isPackaged(),
+    isPackaged,
     userDataPath,
     resourcesPath: process.resourcesPath ?? null
   })
   if (launcher) {
     env.ORCA_CLI_COMMAND = launcher
+    env[ORCA_SESSION_CLI_ENTRY_ENV] = resolveHostCliEntryPath({
+      isPackaged,
+      resourcesPath: process.resourcesPath ?? '',
+      appPath: app.getAppPath()
+    })
   } else {
     console.warn(
       "[structured-session] This app's CLI launcher did not resolve; the session's child has no ORCA_CLI_COMMAND."

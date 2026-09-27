@@ -35,6 +35,7 @@ describe('buildCodexStructuredChildEnvironment', () => {
       ORCA_AGENT_SESSION_ID: 'session-not-a-worker',
       ORCA_STRUCTURED_SESSION: '1',
       ORCA_CLI_COMMAND: expect.stringMatching(DEV_CLI_LAUNCHER),
+      ORCA_SESSION_CLI_ENTRY: expect.stringMatching(/[\\/]out[\\/]cli[\\/]index\.js$/),
       ORCA_USER_DATA_PATH: expect.any(String),
       // The test host is unpackaged, so this app's CLI is the dev launcher dir, first on PATH.
       PATH: expect.stringMatching(DEV_CLI_BIN_FIRST)
@@ -57,6 +58,7 @@ describe('buildCodexStructuredChildEnvironment', () => {
       ORCA_AGENT_SESSION_ID: sessionId,
       ORCA_STRUCTURED_SESSION: '1',
       ORCA_CLI_COMMAND: expect.stringMatching(DEV_CLI_LAUNCHER),
+      ORCA_SESSION_CLI_ENTRY: expect.stringMatching(/[\\/]out[\\/]cli[\\/]index\.js$/),
       ORCA_USER_DATA_PATH: expect.any(String),
       PATH: expect.stringMatching(DEV_CLI_BIN_FIRST)
     })

@@ -2,22 +2,19 @@
  * Hands a structured session's command to the CLI the session named, when a different Orca CLI was
  * the one invoked.
  *
- * Orca puts the absolute launcher of its own CLI in a structured session's `ORCA_CLI_COMMAND`. The
- * agent may still reach another install — a login shell reorders PATH behind a global `orca`, a
- * helper script hardcodes `orca`, a user types `/usr/local/bin/orca` — and that CLI can be older than
- * the session's identity or dial a different instance. So a current CLI that is not the named
- * launcher re-runs the command through it, once, and exits with its status. Which binary answers
- * stops depending on the agent following instructions.
+ * Orca puts the absolute launcher of its own CLI in a structured session's `ORCA_CLI_COMMAND`, and
+ * the JS entry that launcher runs in `ORCA_SESSION_CLI_ENTRY`. The agent may still reach another
+ * install — a login shell reorders PATH behind a global `orca`, a helper script hardcodes `orca`, a
+ * user types `/usr/local/bin/orca` — and that CLI can be older than the session's identity or dial a
+ * different instance. So a current CLI whose own entry is not the session's re-runs the command
+ * through the named launcher, once, and exits with its status. Which binary answers stops depending
+ * on the agent following instructions, and any launcher of the same app (a shim, a global symlink)
+ * runs the same entry, so it never hands off.
  *
  * Only a process carrying the injected session id qualifies: the handoff exists to deliver that
  * identity. Anywhere else — a terminal, a script — the CLI the user ran is the one that answers.
- *
- * Identity comes from `ORCA_CLI_SELF`, which Orca's packaged launchers and bare-`orca` shims export
- * (the outermost one wins); this entry's own argv names the JS file, never a launcher. A dev launcher
- * exports none on purpose: it pins its own instance, so running one is a deliberate choice of
- * instance. `ORCA_CLI_REEXEC=1` bounds the handoff to one hop and is also the escape hatch. Both
- * variables are consumed here, in every process, so no child of the CLI — an Orca app it starts, a
- * session that app spawns — inherits a stale identity or a disabled handoff.
+ * `ORCA_CLI_REEXEC=1` bounds the handoff to one hop and is also the escape hatch; it is consumed
+ * here so nothing the CLI starts inherits a disabled handoff.
  *
  * A relative command (a WSL guest name, the SSH relay's `orca`) never qualifies, and is never
  * resolved against the working directory.
@@ -26,9 +23,11 @@
 import { realpathSync } from 'node:fs'
 import { constants as osConstants } from 'node:os'
 import { posix, resolve, win32 } from 'node:path'
-import { readInjectedAgentSessionId } from '../shared/agent-session-caller-env'
+import {
+  ORCA_SESSION_CLI_ENTRY_ENV,
+  readInjectedAgentSessionId
+} from '../shared/agent-session-caller-env'
 
-export const ORCA_CLI_SELF_ENV = 'ORCA_CLI_SELF'
 export const ORCA_CLI_REEXEC_ENV = 'ORCA_CLI_REEXEC'
 
 /** Set by the launcher that started this process; the next launcher sets them again itself. */
@@ -47,6 +46,7 @@ export type SessionCliReexec = {
 
 type ReexecOptions = {
   env?: NodeJS.ProcessEnv
+  /** This process's argv; `[1]` is the CLI entry its launcher ran. */
   argv?: readonly string[]
   platform?: NodeJS.Platform
 }
@@ -75,31 +75,38 @@ function applyPackagedWindowsCliCommand(env: NodeJS.ProcessEnv): void {
 }
 
 /**
- * Removes the launcher handoff variables from `env` and returns the re-exec this process owes, or
- * null when it is already the named CLI, cannot tell, or is itself the one hop.
+ * Consumes the one-hop guard and returns the re-exec this process owes, or null when it already runs
+ * the session's CLI entry, cannot tell, or is itself the one hop.
  */
 export function takeSessionCliReexec(options: ReexecOptions = {}): SessionCliReexec | null {
   const env = options.env ?? process.env
   const platform = options.platform ?? process.platform
-  const self = env[ORCA_CLI_SELF_ENV]?.trim()
+  const processArgv = options.argv ?? process.argv
   const alreadyHandedOff = env[ORCA_CLI_REEXEC_ENV] === '1'
-  delete env[ORCA_CLI_SELF_ENV]
   delete env[ORCA_CLI_REEXEC_ENV]
-  if (alreadyHandedOff || !self || !readInjectedAgentSessionId(env)) {
+  if (alreadyHandedOff || !readInjectedAgentSessionId(env)) {
     return null
   }
+  const isAbsolute = (platform === 'win32' ? win32 : posix).isAbsolute
   const named = env.ORCA_CLI_COMMAND?.trim()
-  if (!named || !(platform === 'win32' ? win32 : posix).isAbsolute(named)) {
+  const sessionEntry = env[ORCA_SESSION_CLI_ENTRY_ENV]?.trim()
+  const ownEntry = processArgv[1]
+  if (!named || !sessionEntry || !ownEntry || !isAbsolute(named) || !isAbsolute(sessionEntry)) {
     return null
   }
-  const target = tryRealpath(named)
-  const current = tryRealpath(self)
-  if (target === null || current === null || samePath(target, current, platform)) {
+  const sessionEntryPath = tryRealpath(sessionEntry)
+  const ownEntryPath = tryRealpath(ownEntry)
+  if (
+    sessionEntryPath === null ||
+    ownEntryPath === null ||
+    samePath(sessionEntryPath, ownEntryPath, platform) ||
+    tryRealpath(named) === null
+  ) {
     return null
   }
   return {
     target: named,
-    argv: [...(options.argv ?? process.argv.slice(2))],
+    argv: processArgv.slice(2),
     env: buildHandoffEnv(env)
   }
 }

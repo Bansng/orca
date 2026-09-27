@@ -2,12 +2,7 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSyn
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  ORCA_CLI_REEXEC_ENV,
-  ORCA_CLI_SELF_ENV,
-  runAsSessionCli,
-  takeSessionCliReexec
-} from './session-cli-reexec'
+import { ORCA_CLI_REEXEC_ENV, runAsSessionCli, takeSessionCliReexec } from './session-cli-reexec'
 
 let dir: string
 
@@ -27,14 +22,22 @@ function writeScript(name: string, body: string): string {
   return path
 }
 
+function writeEntry(name: string): string {
+  const path = join(dir, name)
+  writeFileSync(path, '')
+  return path
+}
+
+/** The argv a launcher gives the CLI: the runtime, the entry it ran, then the command. */
+function argvFor(entry: string, ...args: string[]): string[] {
+  return ['/electron', entry, ...args]
+}
+
 class Exited extends Error {
   constructor(readonly code: number) {
     super(`exit ${code}`)
   }
 }
-
-/** A structured session's own child: the only process the handoff applies to. */
-const SESSION = { ORCA_AGENT_SESSION_ID: 'session-1' } as const
 
 function exitSpy(): (code: number) => never {
   return (code: number) => {
@@ -42,81 +45,81 @@ function exitSpy(): (code: number) => never {
   }
 }
 
+/** A structured session's own child, which names its launcher and the entry that launcher runs. */
+function sessionEnv(launcher: string, entry: string): NodeJS.ProcessEnv {
+  return {
+    ORCA_AGENT_SESSION_ID: 'session-1',
+    ORCA_CLI_COMMAND: launcher,
+    ORCA_SESSION_CLI_ENTRY: entry
+  }
+}
+
 describe('takeSessionCliReexec', () => {
-  it('hands off when the invoked CLI is not the launcher the session named', () => {
-    const invoked = writeScript('global-orca', 'exit 0\n')
+  it("hands off when the invoked CLI runs another entry than the session's", () => {
     const named = writeScript('session-orca', 'exit 0\n')
     const env: NodeJS.ProcessEnv = {
-      ORCA_CLI_COMMAND: named,
-      [ORCA_CLI_SELF_ENV]: invoked,
-      ORCA_AGENT_SESSION_ID: 'session-1',
+      ...sessionEnv(named, writeEntry('session-index.js')),
       ELECTRON_RUN_AS_NODE: '1',
       ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER: '1',
       ORCA_NODE_OPTIONS: '--max-old-space-size=4096',
       ORCA_NODE_REPL_EXTERNAL_MODULE: ''
     }
 
-    const reexec = takeSessionCliReexec({ env, argv: ['orchestration', 'check'] })
+    const reexec = takeSessionCliReexec({
+      env,
+      argv: argvFor(writeEntry('global-index.js'), 'orchestration', 'check')
+    })
 
     expect(reexec).toEqual({
       target: named,
       argv: ['orchestration', 'check'],
       // What the invoked launcher was handed, so the named one sees the caller's own environment.
       env: {
-        ORCA_CLI_COMMAND: named,
-        ORCA_AGENT_SESSION_ID: 'session-1',
+        ...sessionEnv(named, join(dir, 'session-index.js')),
         NODE_OPTIONS: '--max-old-space-size=4096',
         [ORCA_CLI_REEXEC_ENV]: '1'
       }
     })
-    // Consumed: nothing this CLI starts inherits the identity of the launcher that ran it.
-    expect(env).not.toHaveProperty(ORCA_CLI_SELF_ENV)
   })
 
-  it('runs the invoked CLI without a session id, and still consumes the handoff variables', () => {
-    // A terminal, a script, or a marker-only child of an older host gets the CLI the user ran: a
-    // beta or ad hoc Orca's `orca`, and its --version, must not silently become another install's.
-    const env: NodeJS.ProcessEnv = {
-      ORCA_CLI_COMMAND: writeScript('session-orca', 'exit 0\n'),
-      [ORCA_CLI_SELF_ENV]: writeScript('beta-orca', 'exit 0\n'),
-      ORCA_STRUCTURED_SESSION: '1'
-    }
-
-    expect(takeSessionCliReexec({ env })).toBeNull()
-    expect(env).not.toHaveProperty(ORCA_CLI_SELF_ENV)
-  })
-
-  it('stays when the invoked launcher is the named one, through a symlink', () => {
-    const named = writeScript('session-orca', 'exit 0\n')
-    const link = join(dir, 'usr-local-bin-orca')
-    symlinkSync(named, link)
+  it('stays when another launcher of the same app ran the same entry, through a symlink', () => {
+    // A shim or a global symlink in front of the session's launcher runs the session's own CLI.
+    const entry = writeEntry('index.js')
+    const link = join(dir, 'linked-index.js')
+    symlinkSync(entry, link)
 
     expect(
       takeSessionCliReexec({
-        env: { ...SESSION, ORCA_CLI_COMMAND: named, [ORCA_CLI_SELF_ENV]: link }
+        env: sessionEnv(writeScript('session-orca', 'exit 0\n'), entry),
+        argv: argvFor(link, 'orchestration', 'check')
       })
     ).toBeNull()
+  })
+
+  it('runs the invoked CLI without a session id', () => {
+    // A terminal, a script, or a marker-only child of an older host gets the CLI the user ran: a
+    // beta or ad hoc Orca's `orca`, and its --version, must not silently become another install's.
+    const env = sessionEnv(writeScript('session-orca', 'exit 0\n'), writeEntry('session-index.js'))
+    delete env.ORCA_AGENT_SESSION_ID
+    env.ORCA_STRUCTURED_SESSION = '1'
+
+    expect(takeSessionCliReexec({ env, argv: argvFor(writeEntry('beta-index.js')) })).toBeNull()
   })
 
   it('makes at most one hop, and consumes the guard so no child inherits it', () => {
     const env: NodeJS.ProcessEnv = {
-      ...SESSION,
-      ORCA_CLI_COMMAND: writeScript('session-orca', 'exit 0\n'),
-      [ORCA_CLI_SELF_ENV]: writeScript('global-orca', 'exit 0\n'),
+      ...sessionEnv(writeScript('session-orca', 'exit 0\n'), writeEntry('session-index.js')),
       [ORCA_CLI_REEXEC_ENV]: '1'
     }
 
-    expect(takeSessionCliReexec({ env })).toBeNull()
+    expect(takeSessionCliReexec({ env, argv: argvFor(writeEntry('global-index.js')) })).toBeNull()
     expect(env).not.toHaveProperty(ORCA_CLI_REEXEC_ENV)
-    expect(env).not.toHaveProperty(ORCA_CLI_SELF_ENV)
   })
 
-  it('stays when no Orca launcher named itself: a dev launcher, or an older one', () => {
-    expect(
-      takeSessionCliReexec({
-        env: { ...SESSION, ORCA_CLI_COMMAND: writeScript('session-orca', 'exit 0\n') }
-      })
-    ).toBeNull()
+  it('stays when the session names no entry: a child of a host that predates it', () => {
+    const env = sessionEnv(writeScript('session-orca', 'exit 0\n'), '')
+
+    expect(takeSessionCliReexec({ env, argv: argvFor(writeEntry('global-index.js')) })).toBeNull()
   })
 
   it.each([
@@ -128,11 +131,8 @@ describe('takeSessionCliReexec', () => {
 
     expect(
       takeSessionCliReexec({
-        env: {
-          ...SESSION,
-          ORCA_CLI_COMMAND: command,
-          [ORCA_CLI_SELF_ENV]: writeScript('global', 'exit 0\n')
-        }
+        env: sessionEnv(command, writeEntry('session-index.js')),
+        argv: argvFor(writeEntry('global-index.js'))
       })
     ).toBeNull()
   })
@@ -140,11 +140,8 @@ describe('takeSessionCliReexec', () => {
   it('stays when the named launcher no longer exists', () => {
     expect(
       takeSessionCliReexec({
-        env: {
-          ...SESSION,
-          ORCA_CLI_COMMAND: join(dir, 'gone', 'orca'),
-          [ORCA_CLI_SELF_ENV]: writeScript('global-orca', 'exit 0\n')
-        }
+        env: sessionEnv(join(dir, 'gone', 'orca'), writeEntry('session-index.js')),
+        argv: argvFor(writeEntry('global-index.js'))
       })
     ).toBeNull()
   })
@@ -163,12 +160,10 @@ describe.skipIf(process.platform === 'win32')('runAsSessionCli', () => {
       runAsSessionCli(run, {
         env: {
           ...process.env,
-          ...SESSION,
-          ORCA_CLI_COMMAND: named,
-          [ORCA_CLI_SELF_ENV]: writeScript('global-orca', 'exit 0\n'),
+          ...sessionEnv(named, writeEntry('session-index.js')),
           ORCA_NODE_OPTIONS: '--no-warnings'
         },
-        argv: ['orchestration', 'check', '--wait'],
+        argv: argvFor(writeEntry('global-index.js'), 'orchestration', 'check', '--wait'),
         exit: exitSpy()
       })
     ).rejects.toEqual(new Exited(7))
@@ -177,12 +172,13 @@ describe.skipIf(process.platform === 'win32')('runAsSessionCli', () => {
     expect(run).not.toHaveBeenCalled()
   })
 
-  it('runs the command here when it is already the named CLI', async () => {
-    const named = writeScript('session-orca', 'exit 0\n')
+  it("runs the command here when it already runs the session's entry", async () => {
+    const entry = writeEntry('index.js')
     const run = vi.fn(async () => {})
 
     await runAsSessionCli(run, {
-      env: { ...SESSION, ORCA_CLI_COMMAND: named, [ORCA_CLI_SELF_ENV]: named },
+      env: sessionEnv(writeScript('session-orca', 'exit 0\n'), entry),
+      argv: argvFor(entry),
       exit: exitSpy()
     })
 
@@ -196,11 +192,8 @@ describe.skipIf(process.platform === 'win32')('runAsSessionCli', () => {
     const run = vi.fn(async () => {})
 
     await runAsSessionCli(run, {
-      env: {
-        ...SESSION,
-        ORCA_CLI_COMMAND: named,
-        [ORCA_CLI_SELF_ENV]: writeScript('global-orca', 'exit 0\n')
-      },
+      env: sessionEnv(named, writeEntry('session-index.js')),
+      argv: argvFor(writeEntry('global-index.js')),
       exit: exitSpy()
     })
 
@@ -215,7 +208,10 @@ describe('packaged Windows launcher command name', () => {
     ['a WSL-registered name', { ORCA_CLI_COMMAND: 'orca-ide' }, 'orca-ide'],
     [
       "a session's launcher once it is the named CLI",
-      { ...SESSION, ORCA_CLI_COMMAND: 'C:\\Orca\\resources\\bin\\orca.exe' },
+      {
+        ORCA_AGENT_SESSION_ID: 'session-1',
+        ORCA_CLI_COMMAND: 'C:\\Orca\\resources\\bin\\orca.exe'
+      },
       'orca'
     ]
   ])('names %s as the launcher did before the handoff existed', async (_label, extra, expected) => {
@@ -225,7 +221,7 @@ describe('packaged Windows launcher command name', () => {
       async () => {
         seen = env.ORCA_CLI_COMMAND
       },
-      { env, platform: 'win32', exit: exitSpy() }
+      { env, argv: argvFor('C:\\Orca\\index.js'), platform: 'win32', exit: exitSpy() }
     )
 
     expect(seen).toBe(expected)
@@ -233,7 +229,11 @@ describe('packaged Windows launcher command name', () => {
 
   it("leaves every other launcher's command alone", async () => {
     const env: NodeJS.ProcessEnv = { ORCA_CLI_COMMAND: '/opt/Orca/resources/bin/orca' }
-    await runAsSessionCli(async () => {}, { env, exit: exitSpy() })
+    await runAsSessionCli(async () => {}, {
+      env,
+      argv: argvFor('/opt/Orca/index.js'),
+      exit: exitSpy()
+    })
 
     expect(env.ORCA_CLI_COMMAND).toBe('/opt/Orca/resources/bin/orca')
   })

@@ -12,6 +12,9 @@ import { isStructuredWorkerHandle } from './structured-worker-handle'
 
 export const ORCA_AGENT_SESSION_ID_ENV = 'ORCA_AGENT_SESSION_ID'
 
+/** The CLI entry the session's `ORCA_CLI_COMMAND` runs; a CLI started from any other hands off. */
+export const ORCA_SESSION_CLI_ENTRY_ENV = 'ORCA_SESSION_CLI_ENTRY'
+
 export function readInjectedAgentSessionId(
   env: Readonly<Record<string, string | undefined>> = process.env
 ): string | undefined {
