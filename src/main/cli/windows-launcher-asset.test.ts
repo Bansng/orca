@@ -22,7 +22,7 @@ describe('packaged Windows CLI launcher asset', () => {
       'Environment.SetEnvironmentVariable("ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER", "1");'
     )
     // It names itself as the CLI entry and leaves the session's ORCA_CLI_COMMAND untouched, so the
-    // CLI can compare the two and hand off to the session's own launcher.
+    // CLI can compare the two before it applies the launcher's command name.
     expect(source).toContain('"ORCA_CLI_SELF",')
     expect(source).toContain('typeof(OrcaCliLauncher).Assembly.Location')
     expect(source).not.toMatch(/SetEnvironmentVariable\(\s*"ORCA_CLI_COMMAND"/)

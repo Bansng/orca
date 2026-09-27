@@ -60,7 +60,18 @@ export async function runAsSessionCli(
   if (reexec) {
     await runSessionCliReexec(reexec, options.exit)
   }
+  applyPackagedWindowsCliCommand(options.env ?? process.env)
   await run()
+}
+
+/**
+ * The command name the packaged Windows launcher used to write over `ORCA_CLI_COMMAND` itself; it
+ * now runs after the handoff decision, which needs a session's absolute launcher.
+ */
+function applyPackagedWindowsCliCommand(env: NodeJS.ProcessEnv): void {
+  if (env.ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER === '1') {
+    env.ORCA_CLI_COMMAND = env.ORCA_CLI_COMMAND === 'orca-ide' ? 'orca-ide' : 'orca'
+  }
 }
 
 /**

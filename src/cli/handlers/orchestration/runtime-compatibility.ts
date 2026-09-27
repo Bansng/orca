@@ -1,3 +1,5 @@
+import { RuntimeClientError } from '../../runtime-client'
+
 export function resolveCompatibilityCliCommand(): 'orca' | 'orca-ide' | 'orca-dev' {
   const configured = process.env.ORCA_CLI_COMMAND
   if (configured === 'orca' || configured === 'orca-ide' || configured === 'orca-dev') {
@@ -6,12 +8,18 @@ export function resolveCompatibilityCliCommand(): 'orca' | 'orca-ide' | 'orca-de
   return process.platform === 'linux' ? 'orca-ide' : 'orca'
 }
 
-/** The resume command a legacy host prints: `orca-ide` only when WSL asked for it, else `orca`. */
 export function resolvePackagedWindowsCompatibilityCommand(): 'orca' | 'orca-ide' | undefined {
   if (process.env.ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER !== '1') {
     return undefined
   }
-  return process.env.ORCA_CLI_COMMAND === 'orca-ide' ? 'orca-ide' : 'orca'
+  const command = process.env.ORCA_CLI_COMMAND
+  if (command === 'orca' || command === 'orca-ide') {
+    return command
+  }
+  throw new RuntimeClientError(
+    'invalid_argument',
+    'The packaged Orca launcher did not provide a valid resume command. No question was created.'
+  )
 }
 
 export async function flushOrchestrationStdout(): Promise<void> {

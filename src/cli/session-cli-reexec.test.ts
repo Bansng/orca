@@ -208,3 +208,33 @@ describe.skipIf(process.platform === 'win32')('runAsSessionCli', () => {
     expect(String(stderr.mock.calls[0]?.[0])).toContain("could not run this session's CLI")
   })
 })
+
+describe('packaged Windows launcher command name', () => {
+  it.each([
+    ['a terminal with none', {}, 'orca'],
+    ['a WSL-registered name', { ORCA_CLI_COMMAND: 'orca-ide' }, 'orca-ide'],
+    [
+      "a session's launcher once it is the named CLI",
+      { ...SESSION, ORCA_CLI_COMMAND: 'C:\\Orca\\resources\\bin\\orca.exe' },
+      'orca'
+    ]
+  ])('names %s as the launcher did before the handoff existed', async (_label, extra, expected) => {
+    const env: NodeJS.ProcessEnv = { ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER: '1', ...extra }
+    let seen: string | undefined
+    await runAsSessionCli(
+      async () => {
+        seen = env.ORCA_CLI_COMMAND
+      },
+      { env, platform: 'win32', exit: exitSpy() }
+    )
+
+    expect(seen).toBe(expected)
+  })
+
+  it("leaves every other launcher's command alone", async () => {
+    const env: NodeJS.ProcessEnv = { ORCA_CLI_COMMAND: '/opt/Orca/resources/bin/orca' }
+    await runAsSessionCli(async () => {}, { env, exit: exitSpy() })
+
+    expect(env.ORCA_CLI_COMMAND).toBe('/opt/Orca/resources/bin/orca')
+  })
+})
