@@ -60,6 +60,11 @@
       "sessionTabs": [],
       "terminals": []
     },
+    "6248a3dd0710": {
+      "name": "fetch-session-tabs",
+      "ordinal": 3,
+      "value": {}
+    },
     "6275ace50da2": {
       "activeHandle": "terminal-0",
       "activeSessionTabId": "tab-0",
@@ -71,18 +76,6 @@
       },
       "sessionTabs": [],
       "terminals": []
-    },
-    "6b0827bd0aa9": {
-      "name": "fetch-session-tabs",
-      "ordinal": 4,
-      "value": {}
-    },
-    "6c91cd9369cd": {
-      "name": "schedule-delayed-action",
-      "ordinal": 3,
-      "value": {
-        "delayMs": 500
-      }
     },
     "9270aeb7d9c6": {
       "status": "pending",
@@ -177,7 +170,7 @@
             "create": "eb79a9b3682a"
           },
           "state": "426e1e26b80f",
-          "effects": ["6c91cd9369cd"]
+          "effects": ["6248a3dd0710"]
         }
       },
       {
@@ -190,7 +183,7 @@
             "create": "eb79a9b3682a"
           },
           "state": "426e1e26b80f",
-          "effects": ["6c91cd9369cd", "6b0827bd0aa9"]
+          "effects": ["6248a3dd0710"]
         }
       }
     ]

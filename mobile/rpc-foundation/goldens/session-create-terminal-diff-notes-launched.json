@@ -23,11 +23,6 @@
         "message": "Notes sent"
       }
     },
-    "21e2b9cf755e": {
-      "name": "fetch-session-tabs",
-      "ordinal": 5,
-      "value": {}
-    },
     "426e1e26b80f": {
       "activeHandle": "terminal-0",
       "activeSessionTabId": "tab-0",
@@ -138,6 +133,11 @@
         }
       }
     },
+    "6248a3dd0710": {
+      "name": "fetch-session-tabs",
+      "ordinal": 3,
+      "value": {}
+    },
     "6275ace50da2": {
       "activeHandle": "terminal-0",
       "activeSessionTabId": "tab-0",
@@ -149,13 +149,6 @@
       },
       "sessionTabs": [],
       "terminals": []
-    },
-    "6c91cd9369cd": {
-      "name": "schedule-delayed-action",
-      "ordinal": 3,
-      "value": {
-        "delayMs": 500
-      }
     },
     "9270aeb7d9c6": {
       "status": "pending",
@@ -201,7 +194,7 @@
             "create": "eb79a9b3682a"
           },
           "state": "426e1e26b80f",
-          "effects": ["6c91cd9369cd", "0e3a24adf091"]
+          "effects": ["6248a3dd0710", "0e3a24adf091"]
         }
       },
       {
@@ -214,7 +207,7 @@
             "create": "eb79a9b3682a"
           },
           "state": "426e1e26b80f",
-          "effects": ["6c91cd9369cd", "0e3a24adf091", "21e2b9cf755e"]
+          "effects": ["6248a3dd0710", "0e3a24adf091"]
         }
       }
     ]
