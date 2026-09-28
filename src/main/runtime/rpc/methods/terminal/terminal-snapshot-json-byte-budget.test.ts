@@ -4,7 +4,8 @@ import { terminalSnapshotPayloadJsonBytes } from './terminal-snapshot-payload'
 import {
   serializeBudgetedMobileSnapshot,
   serializeStableMobileRendererSnapshot,
-  type MobileSnapshotByteBudget
+  type MobileSnapshotByteBudget,
+  type StableRendererSnapshot
 } from './terminal-snapshot-publication'
 import type { OrcaRuntimeService } from '../../../orca-runtime'
 import type { SerializedSnapshot } from './terminal-stream-types'
@@ -365,12 +366,14 @@ function stableRendererRuntime(): Pick<
   }
 }
 
+function settledSnapshot(stable: StableRendererSnapshot) {
+  return stable.kind === 'settled' ? stable.snapshot : null
+}
+
 describe('the renderer snapshot the page receives', () => {
   it('empties the text of a zero-row candidate it cannot fit', async () => {
-    const serialized = await serializeStableMobileRendererSnapshot(
-      stableRendererRuntime(),
-      'pty-1',
-      budget(4096)
+    const serialized = settledSnapshot(
+      await serializeStableMobileRendererSnapshot(stableRendererRuntime(), 'pty-1', budget(4096))
     )
     expect(serialized?.scrollbackRows).toBe(0)
     expect(serialized?.data).toBe('')
@@ -379,7 +382,9 @@ describe('the renderer snapshot the page receives', () => {
   })
 
   it('leaves an unbudgeted subscriber its screen', async () => {
-    const serialized = await serializeStableMobileRendererSnapshot(stableRendererRuntime(), 'pty-1')
+    const serialized = settledSnapshot(
+      await serializeStableMobileRendererSnapshot(stableRendererRuntime(), 'pty-1')
+    )
     expect(serialized?.data.length).toBeGreaterThan(0)
   })
 })

@@ -62,21 +62,23 @@ export async function publishLegacyBinaryInitialSnapshot(
     return
   }
   // Same frame as the scrollback send below, which publishes whichever snapshot this adopts.
-  // Returns whether a renderer serializer answered at all; only a non-blank screen replaces `serialized`.
+  // Returns whether a renderer serializer answered at all; only a settled, non-blank screen replaces `serialized`.
   const adoptStableRendererSnapshot = async (): Promise<boolean> => {
     const rendererRead = await runtime.readTerminal(params.terminal)
-    const stableRendererSnapshot = await serializeStableMobileRendererSnapshot(
+    const stable = await serializeStableMobileRendererSnapshot(
       runtime,
       ptyId,
       mobileSnapshotByteBudget(params.snapshotByteBudget, state.streamId, scrollbackFrame)
     )
-    if (state.closed || !stableRendererSnapshot) {
+    if (state.closed || stable.kind === 'absent') {
       return false
     }
-    // Why: parked panes register before hydrating; a blank screen must not erase provider history.
-    if (!stableRendererSnapshot.data.length) {
+    // Why: an unsettled screen has no exact seam against buffered output, and parked panes register
+    // before hydrating, so neither a moving nor a blank screen may replace the chosen snapshot.
+    if (stable.kind === 'moving' || !stable.snapshot.data.length) {
       return true
     }
+    const stableRendererSnapshot = stable.snapshot
     read = rendererRead
     serialized = stableRendererSnapshot
     const trailingOutput = state.pendingOutput.flatMap((item) => {
@@ -92,7 +94,7 @@ export async function publishLegacyBinaryInitialSnapshot(
     return true
   }
   // Why: missing model state (not blank snapshot text) signals a never-attached PTY. Any renderer answer,
-  // even a blank one, proves attachment; the renderer ignores mount requests for mounted tabs.
+  // even a blank or moving one, proves attachment; the renderer ignores mount requests for mounted tabs.
   const rendererAttached =
     missingHeadlessStateBeforeMobileFit &&
     (serialized?.source === 'renderer' || (await adoptStableRendererSnapshot()))

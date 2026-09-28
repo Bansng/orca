@@ -30,6 +30,8 @@ function asRuntime(double: Record<string, unknown>): OrcaRuntimeService {
 type PaneDouble = {
   /** What the desktop renderer's serializer answers; null when no pane is registered. */
   rendererScreen: () => string | null
+  /** PTY output high-water; a pane printing continuously advances it on every read. */
+  outputSequence?: () => number
   waitForRendererTerminalSerializer: OrcaRuntimeService['waitForRendererTerminalSerializer']
 }
 
@@ -45,7 +47,7 @@ function subscribeMobile(pane: PaneDouble) {
     requestRendererTerminalTabMount: vi.fn(() => true),
     getRendererTerminalSerializerGenerationForHandle: vi.fn(() => 1),
     getRendererTerminalSerializerGeneration: vi.fn(() => 1),
-    getPtyOutputSequence: vi.fn(() => 4),
+    getPtyOutputSequence: vi.fn(pane.outputSequence ?? (() => 4)),
     replaceHeadlessTerminalFromRendererSnapshotForRecovery: vi.fn(),
     waitForRendererTerminalSerializer: vi.fn(pane.waitForRendererTerminalSerializer),
     handleMobileSubscribe: vi.fn().mockResolvedValue(true),
@@ -140,6 +142,30 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
 
     expect(subscription.runtime.requestRendererTerminalTabMount).not.toHaveBeenCalled()
     // A blank renderer must not erase history the chosen snapshot already carries.
+    expect(subscription.snapshotText()).toContain('restored provider history')
+    expect(
+      subscription.runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery
+    ).not.toHaveBeenCalled()
+    await subscription.close()
+  })
+
+  it('answers at once for a mounted pane whose output never settles', async () => {
+    // A desktop agent printing continuously: every renderer serialize races a new byte.
+    let sequence = 4
+    const subscription = subscribeMobile({
+      rendererScreen: () => `agent frame ${sequence}`,
+      outputSequence: () => (sequence += 1),
+      waitForRendererTerminalSerializer: (_ptyId, _after, _timeout, signal) =>
+        new Promise<boolean>((resolve) => {
+          signal?.addEventListener('abort', () => resolve(false), { once: true })
+        })
+    })
+
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(subscription.runtime.requestRendererTerminalTabMount).not.toHaveBeenCalled()
+    expect(subscription.runtime.waitForRendererTerminalSerializer).not.toHaveBeenCalled()
+    // An unsettled screen has no exact seam against buffered output, so the chosen snapshot goes out.
     expect(subscription.snapshotText()).toContain('restored provider history')
     expect(
       subscription.runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery

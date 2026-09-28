@@ -278,13 +278,20 @@ type RendererBufferSource = Pick<
   'getPtyOutputSequence' | 'serializeRendererTerminalBuffer'
 >
 
+/** `moving`: a renderer answered but output advanced under every attempt, so no screen has an exact seam. */
+export type StableRendererSnapshot =
+  | { kind: 'settled'; snapshot: NonNullable<SerializedSnapshot> }
+  | { kind: 'moving' }
+  | { kind: 'absent' }
+
 export async function serializeStableMobileRendererSnapshot(
   runtime: RendererBufferSource,
   ptyId: string,
   snapshotByteBudget?: MobileSnapshotByteBudget
-): Promise<SerializedSnapshot> {
+): Promise<StableRendererSnapshot> {
   const candidates = [MOBILE_SUBSCRIBE_SCROLLBACK_ROWS, 500, 250, 100, 25, 0]
   let candidateIndex = 0
+  let rendererAnswered = false
   for (let attempt = 0; attempt < candidates.length; attempt += 1) {
     // Why: advance toward zero scrollback each retry so the final attempt always has a bounded payload.
     candidateIndex = Math.max(candidateIndex, attempt)
@@ -294,25 +301,29 @@ export async function serializeStableMobileRendererSnapshot(
       scrollbackRows: rows
     })
     const outputSequenceAfter = runtime.getPtyOutputSequence(ptyId)
+    rendererAnswered ||= serialized !== null
     if (outputSequenceBefore !== outputSequenceAfter) {
       continue
     }
     if (!serialized) {
-      return null
+      return { kind: 'absent' }
     }
     const overByteBudget = overMobileSnapshotBudget(serialized.data, serialized, snapshotByteBudget)
     if (!overByteBudget || rows === 0) {
-      return publishedCandidate(
-        serialized,
-        serialized.data,
-        rows,
-        overByteBudget,
-        snapshotByteBudget
-      )
+      return {
+        kind: 'settled',
+        snapshot: publishedCandidate(
+          serialized,
+          serialized.data,
+          rows,
+          overByteBudget,
+          snapshotByteBudget
+        )
+      }
     }
     candidateIndex += 1
   }
-  return null
+  return rendererAnswered ? { kind: 'moving' } : { kind: 'absent' }
 }
 
 // Why: mobile xterm can't rewrap the HARD newlines baked into a restored snapshot, so a real reflow re-serializes and replays the FULL buffer at the new cols.

@@ -32,17 +32,15 @@ export function activateLegacyBinarySubscription(
         // `pending-output-overflow` while the send below named `renderer-mount-ready`, which is
         // four bytes the approving number never counted.
         const recoveryFrame = { kind: 'resized', reason: 'renderer-mount-ready' } as const
-        const recovery = await serializeStableMobileRendererSnapshot(
+        const stable = await serializeStableMobileRendererSnapshot(
           runtime,
           ptyId,
           mobileSnapshotByteBudget(params.snapshotByteBudget, state.streamId, recoveryFrame)
         )
-        if (state.closed) {
+        if (state.closed || stable.kind !== 'settled' || !stable.snapshot.data.length) {
           return
         }
-        if (!recovery?.data.length) {
-          return
-        }
+        const recovery = stable.snapshot
         // Why: late recovery has no buffered-output gate, so only an exact renderer high-water may reset mobile without erasing live bytes.
         if (recovery.seq !== runtime.getPtyOutputSequence(ptyId)) {
           return
