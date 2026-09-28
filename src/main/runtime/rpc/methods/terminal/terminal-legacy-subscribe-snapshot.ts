@@ -62,6 +62,7 @@ export async function publishLegacyBinaryInitialSnapshot(
     return
   }
   // Same frame as the scrollback send below, which publishes whichever snapshot this adopts.
+  // Returns whether a renderer serializer answered at all; only a non-blank screen replaces `serialized`.
   const adoptStableRendererSnapshot = async (): Promise<boolean> => {
     const rendererRead = await runtime.readTerminal(params.terminal)
     const stableRendererSnapshot = await serializeStableMobileRendererSnapshot(
@@ -69,8 +70,12 @@ export async function publishLegacyBinaryInitialSnapshot(
       ptyId,
       mobileSnapshotByteBudget(params.snapshotByteBudget, state.streamId, scrollbackFrame)
     )
-    if (state.closed || !stableRendererSnapshot?.data.length) {
+    if (state.closed || !stableRendererSnapshot) {
       return false
+    }
+    // Why: parked panes register before hydrating; a blank screen must not erase provider history.
+    if (!stableRendererSnapshot.data.length) {
+      return true
     }
     read = rendererRead
     serialized = stableRendererSnapshot
@@ -86,8 +91,8 @@ export async function publishLegacyBinaryInitialSnapshot(
     )
     return true
   }
-  // Why: missing model state (not blank snapshot text) signals a never-attached PTY. A live renderer
-  // screen proves attachment; the renderer ignores mount requests for mounted tabs, so none would settle.
+  // Why: missing model state (not blank snapshot text) signals a never-attached PTY. Any renderer answer,
+  // even a blank one, proves attachment; the renderer ignores mount requests for mounted tabs.
   const rendererAttached =
     missingHeadlessStateBeforeMobileFit &&
     (serialized?.source === 'renderer' || (await adoptStableRendererSnapshot()))

@@ -126,6 +126,27 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     await subscription.close()
   })
 
+  it('answers at once for a mounted pane whose screen is still empty', async () => {
+    // A fresh shell that has printed nothing: the serializer is registered but its screen is blank.
+    const subscription = subscribeMobile({
+      rendererScreen: () => '',
+      waitForRendererTerminalSerializer: (_ptyId, _after, _timeout, signal) =>
+        new Promise<boolean>((resolve) => {
+          signal?.addEventListener('abort', () => resolve(false), { once: true })
+        })
+    })
+
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(subscription.runtime.requestRendererTerminalTabMount).not.toHaveBeenCalled()
+    // A blank renderer must not erase history the chosen snapshot already carries.
+    expect(subscription.snapshotText()).toContain('restored provider history')
+    expect(
+      subscription.runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery
+    ).not.toHaveBeenCalled()
+    await subscription.close()
+  })
+
   it('still requests the mount and waits for its settle when no pane is registered', async () => {
     let mounted = false
     const subscription = subscribeMobile({
