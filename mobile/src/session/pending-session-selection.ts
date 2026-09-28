@@ -135,6 +135,15 @@ export function resolveLaunchedSelection(
   }
 }
 
+/** Whether the host lists a launch's tab, which proves the agent started. */
+export function isLaunchedSurfaceListed(
+  tabs: readonly MobileSessionTab[],
+  surface: Partial<LaunchedSurface>
+): boolean {
+  const known: LaunchedSurface = { pane: null, sessionId: null, handle: null, ...surface }
+  return tabs.some((tab) => isLaunchedTab(tab, known))
+}
+
 function isLaunchedTab(tab: MobileSessionTab, surface: LaunchedSurface): boolean {
   if (tab.type === 'agent-session') {
     return surface.sessionId !== null && tab.sessionId === surface.sessionId

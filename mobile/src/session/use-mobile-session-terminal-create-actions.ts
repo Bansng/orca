@@ -33,6 +33,7 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
     setTerminals,
     terminalsRef,
     setSessionTabs,
+    sessionTabsRef,
     defaultTerminalHandlesToLiveInput,
     setActiveHandle,
     activeSessionTabId,
@@ -96,6 +97,7 @@ export function useMobileSessionTerminalCreateActions(scope: MobileSessionAttach
           lock: clientMutationId,
           pendingSelectionRef,
           fetchSessionTabs,
+          getSessionTabs: () => sessionTabsRef.current,
           showToast,
           reportCreateFailure,
           setCreateError

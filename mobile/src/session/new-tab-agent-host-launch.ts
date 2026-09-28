@@ -1,4 +1,5 @@
 import type { MobileQuickCommandLaunch } from '../terminal/quick-commands'
+import type { MobileSessionTab } from './mobile-session-route-types'
 import type { TuiAgent } from '../../../src/shared/tui-agent'
 import type { RpcClient } from '../transport/rpc-client'
 import { triggerError, triggerSuccess } from '../platform/haptics'
@@ -8,6 +9,7 @@ import {
 } from './mobile-existing-agent-launch'
 import { AGENT_PROMPT_NOT_SENT_MESSAGE } from './pr-ai-triage-launch'
 import {
+  isLaunchedSurfaceListed,
   launchedSelection,
   withLaunchReply,
   withoutUnansweredLaunch,
@@ -15,6 +17,10 @@ import {
 } from './pending-session-selection'
 
 const NOTES_NOT_SENT_MESSAGE = "The agent started, but the notes weren't sent."
+export const PROMPT_UNCONFIRMED_MESSAGE =
+  "The agent started, but couldn't confirm the prompt was sent."
+export const NOTES_UNCONFIRMED_MESSAGE =
+  "The agent started, but couldn't confirm the notes were sent."
 
 export type NewTabAgentLaunchOptions = MobileQuickCommandLaunch['options'] & {
   onPromptSent?: () => void
@@ -41,6 +47,7 @@ export async function launchNewTabAgentThroughHost(args: {
   lock: string
   pendingSelectionRef: { current: PendingSessionSelection | null }
   fetchSessionTabs: () => Promise<void>
+  getSessionTabs: () => readonly MobileSessionTab[]
   showToast: (message: string, durationMs?: number) => void
   reportCreateFailure: (hostReason: string) => void
   setCreateError: (message: string) => void
@@ -73,6 +80,17 @@ export async function launchNewTabAgentThroughHost(args: {
     return true
   }
   if (launched.kind === 'unknown') {
+    // Why: a listed tab proves the agent started, so only the prompt is in doubt; notes stay unsent.
+    if (isLaunchedSurfaceListed(args.getSessionTabs(), reservation)) {
+      if (prompt?.trim()) {
+        triggerError()
+        showToast(
+          options?.initialPrompt ? NOTES_UNCONFIRMED_MESSAGE : PROMPT_UNCONFIRMED_MESSAGE,
+          2400
+        )
+      }
+      return true
+    }
     // Never start a second agent when the first may already be running.
     args.setCreateError(launched.message)
     triggerError()

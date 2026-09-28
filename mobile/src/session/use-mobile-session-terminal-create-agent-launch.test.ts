@@ -19,6 +19,7 @@ import {
   resolveLaunchedSelection,
   type PendingSessionSelection
 } from './pending-session-selection'
+import { NOTES_UNCONFIRMED_MESSAGE, PROMPT_UNCONFIRMED_MESSAGE } from './new-tab-agent-host-launch'
 import { AGENT_PROMPT_NOT_SENT_MESSAGE } from './pr-ai-triage-launch'
 import { releaseTerminalCreateLock } from './terminal-create-lock'
 import { useMobileSessionTerminalCreateActions } from './use-mobile-session-terminal-create-actions'
@@ -78,6 +79,7 @@ function scope(client: RpcClient, hostCapabilities: string[] = LAUNCH_CAPABILITI
     setTerminals: vi.fn(),
     terminalsRef: { current: [] },
     setSessionTabs: vi.fn(),
+    sessionTabsRef: mutableRef<MobileSessionTab[]>([]),
     defaultTerminalHandlesToLiveInput: vi.fn(),
     setActiveHandle: vi.fn(),
     activeSessionTabId: 'existing-tab',
@@ -449,6 +451,40 @@ describe('launches that carry a prompt', () => {
 
     expect(state.pendingSelectionRef.current).toBe(userPick)
     expect(state.fetchSessionTabs).toHaveBeenCalledOnce()
+  })
+
+  it.each([
+    [{ initialPrompt: 'the notes' }, NOTES_UNCONFIRMED_MESSAGE],
+    [{ agentPrompt: 'run the tests' }, PROMPT_UNCONFIRMED_MESSAGE]
+  ])(
+    'says only the prompt is in doubt when the reply is lost after the tab landed (%o)',
+    async (options, message) => {
+      const state = scope(scriptedClient().client)
+      const onPromptSent = vi.fn()
+      state.client = requestPortRpcClient(async (_method, params) => {
+        // The tab is listed, then the answer never arrives.
+        state.sessionTabsRef.current = [reservedTab(params, 'term_7')]
+        throw markRpcDeliveryUnknown(new Error('response lost'))
+      })
+
+      await create_(state, 'aider', { ...options, onPromptSent })
+
+      expect(state.showToast).toHaveBeenCalledExactlyOnceWith(message, 2400)
+      expect(state.setCreateError).not.toHaveBeenCalledWith(AGENT_LAUNCH_UNCONFIRMED_MESSAGE)
+      expect(onPromptSent).not.toHaveBeenCalled()
+    }
+  )
+
+  it('says nothing when a bare launch lost its reply after its tab landed', async () => {
+    const state = scope(scriptedClient().client)
+    state.client = requestPortRpcClient(async (_method, params) => {
+      state.sessionTabsRef.current = [reservedTab(params, 'term_7')]
+      throw markRpcDeliveryUnknown(new Error('response lost'))
+    })
+
+    await create_(state, 'aider')
+
+    expect(state.showToast).not.toHaveBeenCalled()
   })
 
   it('marks review notes sent only when the host delivered them', async () => {

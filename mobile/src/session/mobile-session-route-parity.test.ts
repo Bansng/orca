@@ -143,8 +143,9 @@ const HEAD_CONTENT_HOOK_SHA256 = '9c3b612fef3f370d66873aefdbe1d701f20cb64ded31fe
 // Refreshed when a launch's late reply stopped taking focus from a tab the user picked meanwhile.
 // Refreshed when the + menu's host launch moved to `new-tab-agent-host-launch.ts` and the phone began
 // naming the launched tab before asking, with the "+" lock held by the create's own id.
+// Refreshed when that launch began reading the tab list to tell a lost reply from an unstarted agent.
 const HEAD_NESTED_FUNCTION_SHA256 =
-  '7782e4f0ab79dff73bfcd8b2ce064d0e074047e79b5c623f1879abb5bd181373'
+  '4c8b919fc70ac9292e63f0b47ff39e63ba19b06c69d36476e81d28bafa2a236b'
 // -1 registration and -1 removal: the Markdown actions' `BackHandler` pair is `useBackClaim`'s.
 const HEAD_NATIVE_REGISTRATION_SHA256 =
   '87d4599f475575131d4d5daa20f0dac579ca6c829353cbb654206ea6965dadae'
