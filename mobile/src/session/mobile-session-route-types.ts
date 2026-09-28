@@ -106,6 +106,8 @@ export type RenderableDiffLine = MobileHighlightedDiffLine<MobileDiffLine>
 
 export type DiffCommentActions = {
   comments: DiffComment[]
+  /** Notes a new agent session is still being started with. */
+  sendingCommentIds: ReadonlySet<string>
   busy: boolean
   onAdd: (filePath: string, lineNumber: number, body: string) => Promise<boolean>
   onDelete: (commentId: string) => Promise<void>

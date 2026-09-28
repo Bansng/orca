@@ -96,7 +96,7 @@ const HEAD_MAIN_HOOK_SHA256 = 'f161e14a9c53d80c3dc75f51dd8ecb339b59b7239c9c3e067
 // Moved when the prompt-cancel flag became one structured-session host support object.
 const HEAD_HOOK_BINDING_SHA256 = 'db9f32cc60fc68adbcbb2acf9f9384ad0d78bbc6feef5d581449fadb647405fc'
 const HEAD_CALLBACK_IDENTITY_SHA256 =
-  '373dca17a060e63d8cb4e32416ca2889b8404cee78f7b47e632940a9980baf23'
+  '05c0fd9ec69e0a6cc18c46bf3dc324a9715dba3adc532eb6188be6c2ad5ca93e'
 // Pins that no callback body in the route changed unnoticed. Body text, not behaviour: the sends
 // and repo reads inside them now name their `RpcOperation` instead of the raw `sendRequest` port.
 // Refreshed in step 6 for the gesture flush, whose `terminal.send` became `terminalInputSend` and
@@ -587,10 +587,10 @@ describe('mobile session route extraction parity', () => {
     const contentBindings = CONTENT_COMPONENT_NAMES.flatMap(
       (name) => readHookFacts(name, definitions).bindings
     )
-    expect(main.hooks).toHaveLength(281)
+    expect(main.hooks).toHaveLength(284)
     expect(hash(main.hooks)).toBe(HEAD_MAIN_HOOK_SHA256)
     expect(hash(main.bindings)).toBe(HEAD_HOOK_BINDING_SHA256)
-    expect(main.callbacks).toHaveLength(79)
+    expect(main.callbacks).toHaveLength(80)
     expect(hash(main.callbacks)).toBe(HEAD_CALLBACK_IDENTITY_SHA256)
     expect(hash(main.callbackBodies)).toBe(HEAD_CALLBACK_BODY_SHA256)
     expect(main.effects).toHaveLength(24)
