@@ -61,12 +61,44 @@ export async function publishLegacyBinaryInitialSnapshot(
   if (state.closed) {
     return
   }
-  // Why: missing model state (not blank snapshot text) signals a never-attached PTY; a renderer-sourced snapshot already proves attachment, so skip the remount.
+  // Same frame as the scrollback send below, which publishes whichever snapshot this adopts.
+  const adoptStableRendererSnapshot = async (): Promise<boolean> => {
+    const rendererRead = await runtime.readTerminal(params.terminal)
+    const stableRendererSnapshot = await serializeStableMobileRendererSnapshot(
+      runtime,
+      ptyId,
+      mobileSnapshotByteBudget(params.snapshotByteBudget, state.streamId, scrollbackFrame)
+    )
+    if (state.closed || !stableRendererSnapshot?.data.length) {
+      return false
+    }
+    read = rendererRead
+    serialized = stableRendererSnapshot
+    const trailingOutput = state.pendingOutput.flatMap((item) => {
+      const output = getOutputAfterSnapshotSeq(item, stableRendererSnapshot.seq)
+      const seq = item.meta?.seq
+      return output && typeof seq === 'number' ? [{ data: output.data, seq }] : []
+    })
+    runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery(
+      ptyId,
+      stableRendererSnapshot,
+      trailingOutput
+    )
+    return true
+  }
+  // Why: missing model state (not blank snapshot text) signals a never-attached PTY. A live renderer
+  // screen proves attachment; the renderer ignores mount requests for mounted tabs, so none would settle.
+  const rendererAttached =
+    missingHeadlessStateBeforeMobileFit &&
+    (serialized?.source === 'renderer' || (await adoptStableRendererSnapshot()))
+  if (state.closed) {
+    return
+  }
   const mountRequested =
     missingHeadlessStateBeforeMobileFit &&
-    serialized?.source !== 'renderer' &&
+    !rendererAttached &&
     (rendererMountRequestedBeforePty || runtime.requestRendererTerminalTabMount(params.terminal))
-  if (missingHeadlessStateBeforeMobileFit && mountRequested) {
+  if (mountRequested) {
     // Why: an idle legacy PTY emits no later byte, so wait for a settle proving this remount completed before replaying its screen.
     const mountWaitController = new AbortController()
     const abortMountWait = (): void => mountWaitController.abort()
@@ -106,29 +138,9 @@ export async function publishLegacyBinaryInitialSnapshot(
       return
     }
     if (rendererReady) {
-      read = await runtime.readTerminal(params.terminal)
-      const stableRendererSnapshot = await serializeStableMobileRendererSnapshot(
-        runtime,
-        ptyId,
-        // The same frame, because this snapshot is published by the scrollback send below rather
-        // than by one of its own: the `resized` it used to name is a frame nothing here sends.
-        mobileSnapshotByteBudget(params.snapshotByteBudget, state.streamId, scrollbackFrame)
-      )
+      await adoptStableRendererSnapshot()
       if (state.closed) {
         return
-      }
-      if (stableRendererSnapshot?.data.length) {
-        serialized = stableRendererSnapshot
-        const trailingOutput = state.pendingOutput.flatMap((item) => {
-          const output = getOutputAfterSnapshotSeq(item, stableRendererSnapshot.seq)
-          const seq = item.meta?.seq
-          return output && typeof seq === 'number' ? [{ data: output.data, seq }] : []
-        })
-        runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery(
-          ptyId,
-          stableRendererSnapshot,
-          trailingOutput
-        )
       }
     } else {
       // Why: a renderer can settle after the bounded initial response; keep observing so an idle PTY self-heals without bytes.
