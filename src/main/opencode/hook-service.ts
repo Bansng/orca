@@ -22,11 +22,14 @@ import { getStatusPluginOwnershipSource } from './status-plugin-ownership-source
 import { getStatusPluginLifecycleSource } from './status-plugin-lifecycle-source'
 import { getStatusPluginFactorySource } from './status-plugin-factory-source'
 import { resolveOpenCodeConfigDirectory } from '../../shared/opencode-config-directory'
+import {
+  getOpenCodeLegacySharedConfigDir,
+  OPENCODE2_LEGACY_HOOKS_DIR,
+  OPENCODE_LEGACY_HOOKS_DIR
+} from './legacy-shared-config-dir'
 
 const ORCA_OPENCODE_PLUGIN_FILE = 'orca-opencode-status.js'
-const OPENCODE_LEGACY_HOOKS_DIR = 'opencode-hooks'
 const OPENCODE_OVERLAY_DIR = 'opencode-config-overlays'
-const OPENCODE_SHARED_CONFIG_DIR = 'shared'
 const OPENCODE_OVERLAY_MANIFEST_FILE = '.orca-opencode-overlay-manifest.json'
 
 type OpenCodeOverlayManifest = {
@@ -95,6 +98,7 @@ export class OpenCodeHookService {
   private readonly pluginFileName: string
   private readonly legacyHooksDir: string
   private readonly overlayDir: string
+  private legacySharedPluginChecked = false
 
   constructor(variant?: OpenCodeHookVariant | (() => string)) {
     const config: OpenCodeHookVariant =
@@ -127,6 +131,7 @@ export class OpenCodeHookService {
       return existingConfigDir ? { OPENCODE_CONFIG_DIR: existingConfigDir } : {}
     }
 
+    this.refreshLegacySharedPlugin()
     const managedConfigDir = this.getSharedConfigDir()
     if (!existingConfigDir || existingConfigDir === managedConfigDir) {
       try {
@@ -150,6 +155,27 @@ export class OpenCodeHookService {
     }
   }
 
+  // Why: pre-1.4.209 Orca left a server()-only plugin here that OpenCode 2 rejects. Only helps
+  // processes that load it later; a running OpenCode 2 service keeps its cached module until restarted.
+  refreshLegacySharedPlugin(): void {
+    if (this.legacySharedPluginChecked) {
+      return
+    }
+    const pluginPath = join(this.getSharedConfigDir(), 'plugins', this.pluginFileName)
+    try {
+      const source = this.pluginSource()
+      if (readFileSync(pluginPath, 'utf8') !== source) {
+        writeFileSync(pluginPath, source)
+      }
+      this.legacySharedPluginChecked = true
+    } catch (error) {
+      // Why: ENOENT means this install never used the shared dir; retry other failures on the next spawn.
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+        this.legacySharedPluginChecked = true
+      }
+    }
+  }
+
   private getOverlayRoot(): string {
     return join(getAppEnvironment().getPath('userData'), this.overlayDir)
   }
@@ -159,10 +185,9 @@ export class OpenCodeHookService {
   }
 
   private getSharedConfigDir(): string {
-    return join(
+    return getOpenCodeLegacySharedConfigDir(
       getAppEnvironment().getPath('userData'),
-      this.legacyHooksDir,
-      OPENCODE_SHARED_CONFIG_DIR
+      this.legacyHooksDir
     )
   }
 
@@ -275,7 +300,7 @@ export class OpenCodeHookService {
 export const openCodeHookService = new OpenCodeHookService()
 export const openCode2HookService = new OpenCodeHookService({
   pluginFileName: 'orca-opencode2-status.js',
-  legacyHooksDir: 'opencode2-hooks',
+  legacyHooksDir: OPENCODE2_LEGACY_HOOKS_DIR,
   overlayDir: 'opencode2-config-overlays',
   pluginSource: getOpenCode2PluginSource
 })
