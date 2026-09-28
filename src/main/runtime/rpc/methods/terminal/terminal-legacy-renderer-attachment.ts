@@ -39,6 +39,11 @@ export async function settleRendererAttachment(
       ptyId,
       mobileSnapshotByteBudget(params.snapshotByteBudget, state.streamId, scrollbackFrame)
     )
+  // Why: a blank screen may be a parked pane that has not hydrated, and a seq-less screen has no
+  // seam against buffered output, so it is safe only when nothing is pending to replay twice.
+  const canAdopt = (snapshot: NonNullable<SerializedSnapshot>): boolean =>
+    snapshot.data.length > 0 &&
+    (typeof snapshot.seq === 'number' || state.pendingOutput.length === 0)
   const adoptRendererSnapshot = async (
     stableRendererSnapshot: NonNullable<SerializedSnapshot>
   ): Promise<void> => {
@@ -67,14 +72,7 @@ export async function settleRendererAttachment(
       return null
     }
     rendererAttached = probe.kind !== 'absent'
-    // Why: only a settled, non-blank, renderer-ordered screen may replace the chosen one: a moving
-    // screen has no exact seam, a parked pane is blank before hydrating, and without a seq every
-    // buffered chunk would replay on top of a screen that already holds it.
-    if (
-      probe.kind === 'settled' &&
-      probe.snapshot.data.length > 0 &&
-      typeof probe.snapshot.seq === 'number'
-    ) {
+    if (probe.kind === 'settled' && canAdopt(probe.snapshot)) {
       await adoptRendererSnapshot(probe.snapshot)
       if (state.closed) {
         return null
@@ -129,7 +127,7 @@ export async function settleRendererAttachment(
       if (state.closed) {
         return null
       }
-      if (stable.kind === 'settled' && stable.snapshot.data.length > 0) {
+      if (stable.kind === 'settled' && canAdopt(stable.snapshot)) {
         await adoptRendererSnapshot(stable.snapshot)
         if (state.closed) {
           return null
