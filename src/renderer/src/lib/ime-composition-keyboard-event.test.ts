@@ -6,7 +6,8 @@ import {
   isImeCompositionKeyDown,
   isImeOwnedKeyboardEvent,
   resolveImeModifierGesture,
-  useImeEnterGestureOwnership
+  useImeEnterGestureOwnership,
+  useImeKeyGestureOwnership
 } from './ime-composition-keyboard-event'
 
 type ImeEnterGestureEventForTest = Pick<
@@ -120,6 +121,21 @@ describe('useImeEnterGestureOwnership', () => {
       }
     }
   }
+
+  it('owns the macOS Korean Escape pair once, then lets the next Escape through', () => {
+    const { result } = renderHook(() => useImeKeyGestureOwnership('Escape'))
+
+    expect(
+      result.current.ownsKeyDown(gestureEvent({ key: 'Escape', keyCode: 229, isComposing: true }))
+    ).toBe(true)
+    const redispatch = gestureEvent({ key: 'Escape', keyCode: 27 })
+    expect(result.current.ownsKeyDown(redispatch)).toBe(true)
+    expect(redispatch.prevented).toBe(true)
+
+    const deliberate = gestureEvent({ key: 'Escape', keyCode: 27 })
+    expect(result.current.ownsKeyDown(deliberate)).toBe(false)
+    expect(deliberate.prevented).toBe(false)
+  })
 
   // Regression: Shift+Enter is a newline, never a submit. Owning it swallowed the
   // newline in multi-line comment boxes after a composition (DiffCommentPopover).

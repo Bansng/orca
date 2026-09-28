@@ -249,6 +249,19 @@ describe('useBrowserPageChromeFocus', () => {
     expect(chromeFocus?.keepAddressBarFocusRef.current).toBe(false)
   })
 
+  it('keeps the page when the bar is left for it mid-grab', () => {
+    queuePendingAddressBarFocus()
+    render(<ChromeHarness />)
+    act(() => flushFrames(1))
+    expect(document.activeElement).toBe(addressBar())
+
+    act(() => chromeFocus?.leaveAddressBarForPage())
+    act(() => flushFrames())
+
+    expect(document.activeElement).toBe(guest())
+    expect(chromeFocus?.keepAddressBarFocusRef.current).toBe(false)
+  })
+
   it('leaves the page alone when a palette request aims at the guest mid-grab', () => {
     queuePendingAddressBarFocus()
     render(<ChromeHarness />)
