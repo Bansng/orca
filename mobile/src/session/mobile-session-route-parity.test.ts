@@ -92,9 +92,12 @@ const HOST_COMPONENT_NAMES = new Set([
 // never pass it. Found by pullfrog on #22300.
 // Moved, count unchanged, when the Markdown actions' Back `useEffect` became `useBackClaim`, the
 // seam that also claims the key on the page while a draft is dirty.
-const HEAD_MAIN_HOOK_SHA256 = 'f161e14a9c53d80c3dc75f51dd8ecb339b59b7239c9c3e067791b8612f51ede2'
+// +3 hooks and +1 callback in the diff-note actions: the ref and state holding the notes a new agent
+// session is still being started with, and `sendDiffNotesToNewAgent`, which holds them until the
+// launch's reply so a second send can't start another agent with them.
+const HEAD_MAIN_HOOK_SHA256 = 'dfeaada3c65becafba8540ac61a7dd83227685a73629aa807e5c1a77089a5d5c'
 // Moved when the prompt-cancel flag became one structured-session host support object.
-const HEAD_HOOK_BINDING_SHA256 = 'db9f32cc60fc68adbcbb2acf9f9384ad0d78bbc6feef5d581449fadb647405fc'
+const HEAD_HOOK_BINDING_SHA256 = 'c37fa65ab8673be5ed4e5b721346ec1db6a780e58ee414f1768a8118ef730ef1'
 const HEAD_CALLBACK_IDENTITY_SHA256 =
   '05c0fd9ec69e0a6cc18c46bf3dc324a9715dba3adc532eb6188be6c2ad5ca93e'
 // Pins that no callback body in the route changed unnoticed. Body text, not behaviour: the sends
@@ -117,7 +120,10 @@ const HEAD_CALLBACK_IDENTITY_SHA256 =
 // Refreshed once more for the two dictation failure handlers, which now both call
 // `reportDictationFailure` instead of each choosing between the setup sheet and a toast.
 // Moved when the metrics handler compared every field, the row pitch included.
-const HEAD_CALLBACK_BODY_SHA256 = '65f5c1274967cecef39660430169dcfde81b362e8aa5878833b9f20bc8e43a6a'
+// Refreshed when `applySessionTabs` began recording a landed launch's tab on the host, and when it
+// began freeing the "+" lock as that tab lands. Refreshed when "Send review notes to AI" stopped
+// offering notes a new agent session is still being started with.
+const HEAD_CALLBACK_BODY_SHA256 = '02c07a444a2133d0109441548ecb264e96c723c995a519fd45d5fd3df53f957a'
 // Refreshed for the startup effect: both `worktree.activate` sends became `worktreeActivate`, and
 // the sleeping-agent check reads that operation's verdict instead of the reply envelope. Refreshed
 // again when the reporter took the reply and interpreted it itself, retiring the hand-built
@@ -128,7 +134,7 @@ const HEAD_CALLBACK_BODY_SHA256 = '65f5c1274967cecef39660430169dcfde81b362e8aa58
 // Moved again by the keyboard seam above, which is the +1 effect.
 // -1 effect for the Markdown actions' Back registration, which is `useBackClaim`'s own now.
 // Moved by the capability probe setting that host support object.
-const HEAD_EFFECT_SHA256 = '9b045a547ed269acf95db16cc87e33a9035a20c6888fd30e0363e58bb6b7d883'
+const HEAD_EFFECT_SHA256 = 'c71e60957c6491521440caa4faea091f8df510a90aea0eea41c30cb95c2e0305'
 const HEAD_CONTENT_HOOK_SHA256 = '9c3b612fef3f370d66873aefdbe1d701f20cb64ded31fef5cc45fde6f8189581'
 // Same pin for the 12 bodies that sit in nested functions rather than callbacks, moved by the same
 // rewrite of those send and read expressions. Count unchanged. Refreshed again in step 6 for
@@ -186,13 +192,19 @@ const HEAD_TIMER_CLEANUP_SHA256 = 'c73f1d1c2cc89642f3d727d6f3b6b81860a9d6f342345
 // every branch and carries the frame's onLayout, so the page's frame mounts with it. The page measured
 // 47 rows before and after; native was measured only on main's bundle (47), and the wrapper is a
 // flex:1 View around the same flex:1 frame, so its box is the frame's.
+// +4 for the same activation's params; -1 for the older-host chat path's early `'agent-session'`.
+// -9 as the + menu's host launch left for `new-tab-agent-host-launch.ts` (the notes toasts, both
+// launch sources, `'submit'`, four outcome kinds); +1 `'launched'` for the landing that frees the
+// "+" lock. Net +9 over the base branch: 530 -> 539.
 const HEAD_RUNTIME_STRING_SHA256 =
-  '7dd03af1ad61e2f394b8cba35a422f7195de60ae5d608923b52575a56a4dbe42'
+  'ead2541e63ca05629826cb12b1b34dd655a22ec1a8cfb8f7cd580a3166450169'
 // Moved by both of the dock's fields: their refs, and the live one's submit handler, are the seam's now.
 const HEAD_HOST_JSX_SHA256 = '1478283a1597c88920aedfea9f6ed13d119ea8f93546e1628d0918cd0a5248ef'
-const HEAD_LEAF_JSX_SHA256 = 'c7e1a4b90197697f1eaa640c38da63281b4f7b84fb036ae2152f00c2f7d7cb77'
+// Moved when the diff view's note actions began carrying the notes still being sent.
+const HEAD_LEAF_JSX_SHA256 = '0eef3250e3993e7c583819fd6137ec29c89f062d684a70c51b8b01e99188ba22'
 const HEAD_STYLE_REFERENCE_SHA256 =
   '56a005a1f65b30c11092e3422caef67810e1ec50f66fdd06471c370138b1eeb6'
+// +1 for that activation's identity payload.
 const HEAD_IDENTITY_FIELD_SHA256 =
   '3996f701eceb723be18c2001e9ee770498bfd5b2ddcacae510c380eb0adae80a'
 const HEAD_NAVIGATION_SHA256 = '9d96f5dad7de555d6553eac39c0fab00efad507470fd562cb9beaa32db16f512'
@@ -632,7 +644,7 @@ describe('mobile session route extraction parity', () => {
 
   it('preserves runtime strings, styles, and the expanded JSX tree', () => {
     const strings = readRuntimeStrings()
-    expect(strings).toHaveLength(530)
+    expect(strings).toHaveLength(539)
     expect(hash(strings)).toBe(HEAD_RUNTIME_STRING_SHA256)
     const jsx = readJsxFacts(readDefinitions())
     expect(jsx.host).toHaveLength(125)
