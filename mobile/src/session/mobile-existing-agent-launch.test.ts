@@ -1,8 +1,4 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  AgentLaunchFields,
-  AgentLaunchReplay
-} from '../../../src/shared/rpc-contract/agent-launch-params'
 import { isTerminalLeafId } from '../../../src/shared/stable-pane-id'
 import { isValidHostTerminalTabId } from '../../../src/shared/terminal-tab-id'
 import { structuredSessionOperationId } from './structured-session-operation-id'
@@ -105,7 +101,9 @@ describe('supportsMobileExistingAgentLaunch', () => {
 })
 
 describe('reserveMobileAgentLaunch', () => {
-  it('names a pane and chat the host adopts as sent, and an older host ignores', async () => {
+  // The host's schema accepting these, and an older one dropping them, is pinned host-side
+  // (agent-launch-params.test.ts) and through the real dispatcher (agent-launch-mobile-replay).
+  it('sends the pane and chat it reserved as the launch params', async () => {
     const { client, sendRequest } = scriptedClient(launched({}))
     const reservation = reserveMobileAgentLaunch('claude')
     await launch(client, { reservation, mintOperationId: () => '1790000000000-' + 'a'.repeat(32) })
@@ -115,14 +113,6 @@ describe('reserveMobileAgentLaunch', () => {
       paneKey: `${reservation.pane.tabId}:${reservation.pane.leafId}`,
       sessionId: reservation.sessionId
     })
-    expect(AgentLaunchReplay.safeParse(params).success).toBe(true)
-    // A host from before either field parses the same launch and drops them, never refuses it.
-    const olderHost = AgentLaunchFields.omit({ paneKey: true, sessionId: true }).required({
-      operationId: true
-    })
-    const parsed = olderHost.safeParse(params)
-    expect(parsed.success && parsed.data).not.toHaveProperty('paneKey')
-    expect(parsed.success && parsed.data).not.toHaveProperty('sessionId')
   })
 
   it('mints a pane the host adopts even where the runtime has no crypto.randomUUID', () => {

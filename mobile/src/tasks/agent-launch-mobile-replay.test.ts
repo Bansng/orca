@@ -224,4 +224,34 @@ describe('a + menu launch into an open workspace', () => {
       requireFreshPane: true
     })
   })
+
+  it('reaches the host with a chat reservation its schema accepts', async () => {
+    const runtime = { ...runtimeStub(), getRuntimeId: () => 'runtime-1' }
+    const dispatcher = new RpcDispatcher({
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this fixture implements the launch handler and dispatcher metadata dependencies.
+      runtime: runtime as unknown as OrcaRuntimeService,
+      methods: AGENT_LAUNCH_METHODS
+    })
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the launch reaches only these transport members; requests use the real host dispatcher.
+    const client = {
+      getState: () => 'connected',
+      sendRequest: async (method: string, params: unknown) =>
+        dispatcher.dispatch({ id: 'request-1', authToken: 'token', method, params })
+    } as unknown as RpcClient
+    const reservation = reserveMobileAgentLaunch('claude')
+
+    const launched = await launchAgentInExistingWorkspace({
+      client,
+      hostCapabilities: [
+        AGENT_LAUNCH_RUNTIME_CAPABILITY,
+        AGENT_LAUNCH_REPLAY_REQUIRED_RUNTIME_CAPABILITY
+      ],
+      worktreeId: 'wt-7',
+      agent: 'claude',
+      reservation
+    })
+
+    expect(reservation.sessionId).toMatch(/^claude_/)
+    expect(launched).toMatchObject({ kind: 'launched' })
+  })
 })

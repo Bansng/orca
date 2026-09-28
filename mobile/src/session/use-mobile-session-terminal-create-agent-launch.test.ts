@@ -5,7 +5,6 @@ import type {
   AgentLaunchOutcome,
   AgentLaunchPromptReceipt
 } from '../../../src/shared/agent-launch-intent'
-import { AgentLaunchReplay } from '../../../src/shared/rpc-contract/agent-launch-params'
 import { parsePaneKey } from '../../../src/shared/stable-pane-id'
 import type { RpcClient } from '../transport/rpc-client'
 import { markRpcDeliveryUnknown } from '../transport/rpc-delivery-ambiguity'
@@ -144,11 +143,14 @@ function refusal(code: string): RpcResponse {
 
 /** The reservation a launch sent: its pane halves and session id. */
 function sentReservation(params: unknown): { tabId: string; leafId: string; sessionId?: string } {
-  const { paneKey, sessionId } = AgentLaunchReplay.parse(params)
-  const pane = parsePaneKey(paneKey ?? '')
+  const sent = params !== null && typeof params === 'object' ? params : {}
+  const pane =
+    'paneKey' in sent && typeof sent.paneKey === 'string' ? parsePaneKey(sent.paneKey) : null
   if (!pane) {
     throw new Error('launch sent no pane key')
   }
+  const sessionId =
+    'sessionId' in sent && typeof sent.sessionId === 'string' ? sent.sessionId : undefined
   return { tabId: pane.tabId, leafId: pane.leafId, ...(sessionId ? { sessionId } : {}) }
 }
 
