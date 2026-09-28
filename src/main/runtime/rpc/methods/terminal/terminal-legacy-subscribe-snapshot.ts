@@ -1,9 +1,9 @@
 import {
   mobileSnapshotByteBudget,
   sendSnapshotFrames,
-  serializeBudgetedMobileSnapshot
+  serializeBudgetedMobileSnapshot,
+  serializeStableMobileRendererSnapshot
 } from './terminal-snapshot-publication'
-import { settleRendererAttachment } from './terminal-legacy-renderer-attachment'
 import {
   getOutputAfterSnapshotSeq,
   isTerminalReadPayloadIncomplete,
@@ -15,11 +15,26 @@ import type {
   TerminalSubscriptionArgs
 } from './terminal-legacy-subscription-types'
 
+const MOBILE_RENDERER_MOUNT_READY_TIMEOUT_MS = 3_000
+
 export async function publishLegacyBinaryInitialSnapshot(
   args: TerminalSubscriptionArgs,
   state: LegacyBinarySubscriptionState
 ): Promise<void> {
-  const { params, runtime, registration, sendBinary, emit, ptyId, clientId, isMobile } = args
+  const {
+    params,
+    runtime,
+    registration,
+    sendBinary,
+    emit,
+    ptyId,
+    clientId,
+    isMobile,
+    missingHeadlessStateBeforeMobileFit,
+    rendererMountRequestedBeforePty,
+    serializerGenerationBeforeMobileFit
+  } = args
+  const { signal } = registration
   if (isMobile && clientId) {
     await registration.addMobilePresence(ptyId, clientId, params.viewport)
   } else if (clientId && params.viewport) {
@@ -46,16 +61,97 @@ export async function publishLegacyBinaryInitialSnapshot(
   if (state.closed) {
     return
   }
-  const initialScreen = await settleRendererAttachment(
-    args,
-    state,
-    { read, serialized },
-    scrollbackFrame
-  )
-  if (!initialScreen) {
+  // Why: missing model state (not blank snapshot text) signals a never-attached PTY; a renderer-sourced snapshot already proves attachment, so skip the remount.
+  const needsRendererScreen =
+    missingHeadlessStateBeforeMobileFit && serialized?.source !== 'renderer'
+  // Why: the host's flag is the attachment fact, but nothing clears it when a pane closes over a live
+  // PTY, so one null answer (the IPC's 750 ms deadline at worst) falls back to the mount wait.
+  let rendererReady =
+    needsRendererScreen &&
+    runtime.hasRendererTerminalSerializer?.(ptyId) === true &&
+    (await runtime.serializeRendererTerminalBuffer(ptyId, { scrollbackRows: 0 })) !== null
+  if (state.closed) {
     return
   }
-  ;({ read, serialized } = initialScreen)
+  const mountRequested =
+    needsRendererScreen &&
+    !rendererReady &&
+    (rendererMountRequestedBeforePty || runtime.requestRendererTerminalTabMount(params.terminal))
+  if (mountRequested) {
+    // Why: an idle legacy PTY emits no later byte, so wait for a settle proving this remount completed before replaying its screen.
+    const mountWaitController = new AbortController()
+    const abortMountWait = (): void => mountWaitController.abort()
+    state.abortRendererMountWait = abortMountWait
+    if (signal.aborted) {
+      abortMountWait()
+    } else {
+      signal.addEventListener('abort', abortMountWait, { once: true })
+    }
+    const rendererReadyPromise = runtime
+      .waitForRendererTerminalSerializer(
+        ptyId,
+        serializerGenerationBeforeMobileFit,
+        undefined,
+        mountWaitController.signal
+      )
+      .catch(() => false)
+    const finishMountWait = (): void => {
+      signal.removeEventListener('abort', abortMountWait)
+      if (state.abortRendererMountWait === abortMountWait) {
+        state.abortRendererMountWait = () => {}
+      }
+    }
+    void rendererReadyPromise.then(finishMountWait, finishMountWait)
+    let deadlineTimer: ReturnType<typeof setTimeout> | null = null
+    const initialDeadline = new Promise<boolean>((resolve) => {
+      deadlineTimer = setTimeout(() => resolve(false), MOBILE_RENDERER_MOUNT_READY_TIMEOUT_MS)
+      if (typeof deadlineTimer.unref === 'function') {
+        deadlineTimer.unref()
+      }
+    })
+    rendererReady = await Promise.race([rendererReadyPromise, initialDeadline])
+    if (deadlineTimer) {
+      clearTimeout(deadlineTimer)
+    }
+    if (state.closed || signal.aborted) {
+      return
+    }
+    if (!rendererReady) {
+      // Why: a renderer can settle after the bounded initial response; keep observing so an idle PTY self-heals without bytes.
+      state.lateRendererReadyPromise = rendererReadyPromise
+    }
+  }
+  if (rendererReady) {
+    read = await runtime.readTerminal(params.terminal)
+    const stableRendererSnapshot = await serializeStableMobileRendererSnapshot(
+      runtime,
+      ptyId,
+      // The same frame, because this snapshot is published by the scrollback send below rather
+      // than by one of its own: the `resized` it used to name is a frame nothing here sends.
+      mobileSnapshotByteBudget(params.snapshotByteBudget, state.streamId, scrollbackFrame)
+    )
+    if (state.closed) {
+      return
+    }
+    // Why: a blank screen may be a parked pane that has not hydrated, and a seq-less screen has no
+    // seam against buffered output, so it is safe only when nothing is pending to replay twice.
+    if (
+      stableRendererSnapshot?.data.length &&
+      (typeof stableRendererSnapshot.seq === 'number' || state.pendingOutput.length === 0)
+    ) {
+      serialized = stableRendererSnapshot
+      const trailingOutput = state.pendingOutput.flatMap((item) => {
+        const output = getOutputAfterSnapshotSeq(item, stableRendererSnapshot.seq)
+        const seq = item.meta?.seq
+        return output && typeof seq === 'number' ? [{ data: output.data, seq }] : []
+      })
+      runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery(
+        ptyId,
+        stableRendererSnapshot,
+        trailingOutput
+      )
+    }
+  }
   let initialOutputOverflowed = false
   if (state.pendingOutputOverflowed) {
     state.pendingOutput.splice(0)

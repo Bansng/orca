@@ -30,6 +30,10 @@ function asRuntime(double: Record<string, unknown>): OrcaRuntimeService {
 type PaneDouble = {
   /** What the desktop renderer's serializer answers; null when no pane is registered. */
   rendererScreen: () => string | null
+  /** The host's attachment flag; defaults to whether a screen answers. True with a null screen is a stale flag. */
+  serializerRegistered?: boolean
+  /** How long each renderer serialize takes; the IPC answers null after 750 ms when no pane replies. */
+  rendererAnswerDelayMs?: number
   /** PTY output high-water; a pane printing continuously advances it on every read. */
   outputSequence?: () => number
   /** Renderer-ordered seq; null when the pane does not order output itself. */
@@ -54,6 +58,9 @@ function subscribeMobile(pane: PaneDouble) {
     requestRendererTerminalTabMount: vi.fn(() => true),
     getRendererTerminalSerializerGenerationForHandle: vi.fn(() => 1),
     getRendererTerminalSerializerGeneration: vi.fn(() => 1),
+    hasRendererTerminalSerializer: vi.fn(
+      () => pane.serializerRegistered ?? pane.rendererScreen() !== null
+    ),
     getPtyOutputSequence: vi.fn(pane.outputSequence ?? (() => 4)),
     replaceHeadlessTerminalFromRendererSnapshotForRecovery: vi.fn(),
     waitForRendererTerminalSerializer: vi.fn(pane.waitForRendererTerminalSerializer),
@@ -78,6 +85,9 @@ function subscribeMobile(pane: PaneDouble) {
       }
     }),
     serializeRendererTerminalBuffer: vi.fn(async () => {
+      if (pane.rendererAnswerDelayMs) {
+        await new Promise((resolve) => setTimeout(resolve, pane.rendererAnswerDelayMs))
+      }
       const screen = pane.rendererScreen()
       const seq = pane.rendererSeq === undefined ? 4 : pane.rendererSeq
       return screen === null
@@ -130,9 +140,10 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     vi.useRealTimers()
   })
 
-  it('answers from the live renderer without waiting out the mount deadline', async () => {
+  it('adopts the live renderer screen over the chosen snapshot without waiting out the mount deadline', async () => {
     // The renderer drops a mount request for a mounted tab, so no newer serializer settle ever arrives.
     const subscription = subscribeMobile({
+      chosenScreen: 'suffix-only redraw',
       rendererScreen: () => 'live desktop prompt $ ',
       waitForRendererTerminalSerializer: (_ptyId, _after, _timeout, signal) =>
         new Promise<boolean>((resolve) => {
@@ -143,10 +154,38 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     await vi.advanceTimersByTimeAsync(100)
 
     expect(subscription.snapshotText()).toContain('live desktop prompt $ ')
+    expect(subscription.snapshotText()).not.toContain('suffix-only redraw')
     expect(subscription.runtime.requestRendererTerminalTabMount).not.toHaveBeenCalled()
+    expect(subscription.runtime.waitForRendererTerminalSerializer).not.toHaveBeenCalled()
     expect(
       subscription.runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery
     ).toHaveBeenCalledWith('pty-1', expect.objectContaining({ data: 'live desktop prompt $ ' }), [])
+    await subscription.close()
+  })
+
+  it('adopts a renderer-ordered screen even while output is pending', async () => {
+    // The screen's seq is an exact seam, so only the bytes after it replay.
+    const subscription = subscribeMobile({
+      rendererScreen: () => 'ordered desktop prompt $ ',
+      pendingOutput: 'pending byte',
+      waitForRendererTerminalSerializer: (_ptyId, _after, _timeout, signal) =>
+        new Promise<boolean>((resolve) => {
+          signal?.addEventListener('abort', () => resolve(false), { once: true })
+        })
+    })
+
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(subscription.runtime.requestRendererTerminalTabMount).not.toHaveBeenCalled()
+    expect(subscription.snapshotText()).toContain('ordered desktop prompt $ ')
+    expect(subscription.snapshotText()).not.toContain('restored provider history')
+    expect(
+      subscription.runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery
+    ).toHaveBeenCalledWith(
+      'pty-1',
+      expect.objectContaining({ data: 'ordered desktop prompt $ ', seq: 4 }),
+      []
+    )
     await subscription.close()
   })
 
@@ -243,25 +282,6 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     await subscription.close()
   })
 
-  it('prefers the mounted renderer screen over a suffix-only fit redraw without waiting', async () => {
-    const subscription = subscribeMobile({
-      chosenScreen: 'suffix-only redraw',
-      rendererScreen: () => 'idle prompt $ ',
-      waitForRendererTerminalSerializer: (_ptyId, _after, _timeout, signal) =>
-        new Promise<boolean>((resolve) => {
-          signal?.addEventListener('abort', () => resolve(false), { once: true })
-        })
-    })
-
-    await vi.advanceTimersByTimeAsync(100)
-
-    expect(subscription.runtime.requestRendererTerminalTabMount).not.toHaveBeenCalled()
-    expect(subscription.runtime.waitForRendererTerminalSerializer).not.toHaveBeenCalled()
-    expect(subscription.snapshotText()).toContain('idle prompt $ ')
-    expect(subscription.snapshotText()).not.toContain('suffix-only redraw')
-    await subscription.close()
-  })
-
   it('still requests the mount and waits for its settle when no pane is registered', async () => {
     let mounted = false
     const subscription = subscribeMobile({
@@ -280,7 +300,7 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     await vi.advanceTimersByTimeAsync(100)
     expect(subscription.runtime.requestRendererTerminalTabMount).toHaveBeenCalledWith('terminal-1')
     expect(subscription.snapshotText()).toBe('')
-    // The probe found no pane, so it must not spend a terminal read (which can reach the provider).
+    // No pane is registered, so nothing may spend a terminal read (which can reach the provider) before the settle.
     expect(subscription.runtime.readTerminal).toHaveBeenCalledTimes(1)
 
     await vi.advanceTimersByTimeAsync(400)
@@ -311,6 +331,33 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     expect(
       subscription.runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery
     ).not.toHaveBeenCalled()
+    await subscription.close()
+  })
+
+  it('falls back to the mount wait within one serialize when the flag outlives its pane', async () => {
+    // Nothing clears the flag when a tab closes over a live PTY; the IPC then answers null at its
+    // 750 ms deadline while a busy PTY moves output under every attempt.
+    let sequence = 4
+    const subscription = subscribeMobile({
+      serializerRegistered: true,
+      rendererScreen: () => null,
+      rendererAnswerDelayMs: 750,
+      outputSequence: () => (sequence += 1),
+      waitForRendererTerminalSerializer: (_ptyId, _after, _timeout, signal) =>
+        new Promise<boolean>((resolve) => {
+          signal?.addEventListener('abort', () => resolve(false), { once: true })
+        })
+    })
+
+    await vi.advanceTimersByTimeAsync(750)
+    expect(subscription.runtime.requestRendererTerminalTabMount).toHaveBeenCalledWith('terminal-1')
+    await vi.advanceTimersByTimeAsync(2_999)
+    expect(subscription.snapshotText()).toBe('')
+
+    // Worst case: one serialize plus the 3 s mount deadline.
+    await vi.advanceTimersByTimeAsync(1)
+    expect(subscription.snapshotText()).toContain('restored provider history')
+    expect(subscription.runtime.serializeRendererTerminalBuffer).toHaveBeenCalledTimes(1)
     await subscription.close()
   })
 })

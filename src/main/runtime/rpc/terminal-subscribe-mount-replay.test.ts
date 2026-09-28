@@ -11,11 +11,6 @@ import { RpcDispatcher } from './dispatcher'
 import { TERMINAL_METHODS } from './methods/terminal'
 import { createSubscriptionRegistryDouble } from './subscription-registry-test-double'
 
-function asRuntime(double: Record<string, unknown>): OrcaRuntimeService {
-  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: terminal.subscribe reads only the members the double provides.
-  return double as unknown as OrcaRuntimeService
-}
-
 const request: RpcRequest = {
   id: 'req-1',
   authToken: 'tok',
@@ -102,7 +97,7 @@ describe('terminal subscribe mount replay', () => {
     let generation = 1
     let headlessPresent = false
     let serializeCalls = 0
-    const runtime = asRuntime({
+    const runtime = {
       getRuntimeId: () => 'test-runtime',
       subscribeToPtyExit: vi.fn(() => vi.fn()),
       resolveLeafForHandle: vi.fn().mockReturnValue({ ptyId: 'pty-1' }),
@@ -115,9 +110,9 @@ describe('terminal subscribe mount replay', () => {
       waitForRendererTerminalSerializer: vi.fn(async (_ptyId, afterGeneration) => {
         return generation > afterGeneration
       }),
-      // The phone fit's redraw creates suffix-only headless state.
       handleMobileSubscribe: vi.fn(async () => {
         headlessPresent = true
+        generation = 2
         return true
       }),
       handleMobileUnsubscribe: vi.fn(),
@@ -131,15 +126,12 @@ describe('terminal subscribe mount replay', () => {
         }
         return { data: 'raced idle prompt $ ', cols: 80, rows: 24, seq: 5 }
       }),
-      // Baseline race: the pane settles between the attachment probe and the wait, so the wait
-      // must still count that settle against the pre-fit generation.
-      serializeRendererTerminalBuffer: vi
-        .fn()
-        .mockImplementationOnce(async () => {
-          generation = 2
-          return null
-        })
-        .mockResolvedValue({ data: 'raced idle prompt $ ', cols: 80, rows: 24, seq: 5 }),
+      serializeRendererTerminalBuffer: vi.fn(async () => ({
+        data: 'raced idle prompt $ ',
+        cols: 80,
+        rows: 24,
+        seq: 5
+      })),
       getTerminalSize: vi.fn().mockReturnValue({ cols: 80, rows: 24 }),
       getMobileDisplayMode: vi.fn().mockReturnValue('auto'),
       getLayout: vi.fn().mockReturnValue({ seq: 1 }),
@@ -150,7 +142,7 @@ describe('terminal subscribe mount replay', () => {
       registerOwnedSubscriptionCleanup: vi.fn(registry.registerOwnedSubscriptionCleanup),
       cleanupSubscription: vi.fn(registry.cleanupSubscription),
       waitForTerminal: vi.fn(() => new Promise<RuntimeTerminalWait>(() => {}))
-    })
+    } as unknown as OrcaRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: TERMINAL_METHODS })
 
     const dispatchPromise = dispatcher.dispatchStreaming(request, vi.fn(), {
@@ -294,8 +286,11 @@ describe('terminal subscribe mount replay', () => {
     const registry = createSubscriptionRegistryDouble()
     let generation = 0
     let headlessPresent = false
-    const requestRendererTerminalTabMount = vi.fn(() => true)
-    const runtime = asRuntime({
+    const requestRendererTerminalTabMount = vi.fn(() => {
+      generation = 1
+      return true
+    })
+    const runtime = {
       getRuntimeId: () => 'test-runtime',
       subscribeToPtyExit: vi.fn(() => vi.fn()),
       resolveLeafForHandle: vi.fn().mockReturnValue(null),
@@ -325,15 +320,11 @@ describe('terminal subscribe mount replay', () => {
         rows: 24,
         seq: 1
       }),
-      // Baseline race: the pre-PTY mount settles between the attachment probe and the wait, so the
-      // wait must still count that settle against the pre-mount generation.
-      serializeRendererTerminalBuffer: vi
-        .fn()
-        .mockImplementationOnce(async () => {
-          generation = 1
-          return null
-        })
-        .mockResolvedValue({ data: 'late leaf prompt $ ', cols: 80, rows: 24 }),
+      serializeRendererTerminalBuffer: vi.fn().mockResolvedValue({
+        data: 'late leaf prompt $ ',
+        cols: 80,
+        rows: 24
+      }),
       getTerminalSize: vi.fn().mockReturnValue({ cols: 80, rows: 24 }),
       getMobileDisplayMode: vi.fn().mockReturnValue('auto'),
       getLayout: vi.fn().mockReturnValue({ seq: 1 }),
@@ -344,7 +335,7 @@ describe('terminal subscribe mount replay', () => {
       registerOwnedSubscriptionCleanup: vi.fn(registry.registerOwnedSubscriptionCleanup),
       cleanupSubscription: vi.fn(registry.cleanupSubscription),
       waitForTerminal: vi.fn(() => new Promise<RuntimeTerminalWait>(() => {}))
-    })
+    } as unknown as OrcaRuntimeService
     const dispatcher = new RpcDispatcher({ runtime, methods: TERMINAL_METHODS })
 
     const dispatchPromise = dispatcher.dispatchStreaming(request, vi.fn(), {
