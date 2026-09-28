@@ -115,9 +115,9 @@ describe('terminal subscribe mount replay', () => {
       waitForRendererTerminalSerializer: vi.fn(async (_ptyId, afterGeneration) => {
         return generation > afterGeneration
       }),
+      // The phone fit's redraw creates suffix-only headless state.
       handleMobileSubscribe: vi.fn(async () => {
         headlessPresent = true
-        generation = 2
         return true
       }),
       handleMobileUnsubscribe: vi.fn(),
@@ -131,10 +131,14 @@ describe('terminal subscribe mount replay', () => {
         }
         return { data: 'raced idle prompt $ ', cols: 80, rows: 24, seq: 5 }
       }),
-      // The pane registers just after the attachment probe; the pre-fit baseline must still catch its settle.
+      // Baseline race: the pane settles between the attachment probe and the wait, so the wait
+      // must still count that settle against the pre-fit generation.
       serializeRendererTerminalBuffer: vi
         .fn()
-        .mockResolvedValueOnce(null)
+        .mockImplementationOnce(async () => {
+          generation = 2
+          return null
+        })
         .mockResolvedValue({ data: 'raced idle prompt $ ', cols: 80, rows: 24, seq: 5 }),
       getTerminalSize: vi.fn().mockReturnValue({ cols: 80, rows: 24 }),
       getMobileDisplayMode: vi.fn().mockReturnValue('auto'),
@@ -290,10 +294,7 @@ describe('terminal subscribe mount replay', () => {
     const registry = createSubscriptionRegistryDouble()
     let generation = 0
     let headlessPresent = false
-    const requestRendererTerminalTabMount = vi.fn(() => {
-      generation = 1
-      return true
-    })
+    const requestRendererTerminalTabMount = vi.fn(() => true)
     const runtime = asRuntime({
       getRuntimeId: () => 'test-runtime',
       subscribeToPtyExit: vi.fn(() => vi.fn()),
@@ -324,10 +325,14 @@ describe('terminal subscribe mount replay', () => {
         rows: 24,
         seq: 1
       }),
-      // The pane registers just after the attachment probe; the pre-mount baseline must still catch its settle.
+      // Baseline race: the pre-PTY mount settles between the attachment probe and the wait, so the
+      // wait must still count that settle against the pre-mount generation.
       serializeRendererTerminalBuffer: vi
         .fn()
-        .mockResolvedValueOnce(null)
+        .mockImplementationOnce(async () => {
+          generation = 1
+          return null
+        })
         .mockResolvedValue({ data: 'late leaf prompt $ ', cols: 80, rows: 24 }),
       getTerminalSize: vi.fn().mockReturnValue({ cols: 80, rows: 24 }),
       getMobileDisplayMode: vi.fn().mockReturnValue('auto'),

@@ -32,6 +32,10 @@ type PaneDouble = {
   rendererScreen: () => string | null
   /** PTY output high-water; a pane printing continuously advances it on every read. */
   outputSequence?: () => number
+  /** Renderer-ordered seq; null when the pane does not order output itself. */
+  rendererSeq?: number | null
+  /** What the preference order serves before any renderer probe. */
+  chosenScreen?: string
   waitForRendererTerminalSerializer: OrcaRuntimeService['waitForRendererTerminalSerializer']
 }
 
@@ -57,16 +61,23 @@ function subscribeMobile(pane: PaneDouble) {
     readTerminal: vi.fn().mockResolvedValue({ tail: [], truncated: false }),
     // The restored provider snapshot wins the preference order over the live renderer.
     serializeTerminalBuffer: vi.fn(async () => ({
-      data: 'restored provider history',
+      data: pane.chosenScreen ?? 'restored provider history',
       cols: 80,
       rows: 24,
       seq: 2
     })),
     serializeRendererTerminalBuffer: vi.fn(async () => {
       const screen = pane.rendererScreen()
+      const seq = pane.rendererSeq === undefined ? 4 : pane.rendererSeq
       return screen === null
         ? null
-        : { data: screen, cols: 80, rows: 24, seq: 4, source: 'renderer' as const }
+        : {
+            data: screen,
+            cols: 80,
+            rows: 24,
+            ...(seq === null ? {} : { seq }),
+            source: 'renderer' as const
+          }
     }),
     getTerminalSize: vi.fn().mockReturnValue({ cols: 80, rows: 24 }),
     getMobileDisplayMode: vi.fn().mockReturnValue('auto'),
@@ -173,6 +184,47 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     await subscription.close()
   })
 
+  it('keeps the chosen snapshot for a mounted pane whose renderer screen has no seq', async () => {
+    // Without a seq, every buffered chunk would replay on top of a screen that already holds it.
+    const subscription = subscribeMobile({
+      rendererScreen: () => 'unordered desktop prompt $ ',
+      rendererSeq: null,
+      waitForRendererTerminalSerializer: (_ptyId, _after, _timeout, signal) =>
+        new Promise<boolean>((resolve) => {
+          signal?.addEventListener('abort', () => resolve(false), { once: true })
+        })
+    })
+
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(subscription.runtime.requestRendererTerminalTabMount).not.toHaveBeenCalled()
+    expect(subscription.snapshotText()).toContain('restored provider history')
+    expect(subscription.snapshotText()).not.toContain('unordered desktop prompt $ ')
+    expect(
+      subscription.runtime.replaceHeadlessTerminalFromRendererSnapshotForRecovery
+    ).not.toHaveBeenCalled()
+    await subscription.close()
+  })
+
+  it('prefers the mounted renderer screen over a suffix-only fit redraw without waiting', async () => {
+    const subscription = subscribeMobile({
+      chosenScreen: 'suffix-only redraw',
+      rendererScreen: () => 'idle prompt $ ',
+      waitForRendererTerminalSerializer: (_ptyId, _after, _timeout, signal) =>
+        new Promise<boolean>((resolve) => {
+          signal?.addEventListener('abort', () => resolve(false), { once: true })
+        })
+    })
+
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(subscription.runtime.requestRendererTerminalTabMount).not.toHaveBeenCalled()
+    expect(subscription.runtime.waitForRendererTerminalSerializer).not.toHaveBeenCalled()
+    expect(subscription.snapshotText()).toContain('idle prompt $ ')
+    expect(subscription.snapshotText()).not.toContain('suffix-only redraw')
+    await subscription.close()
+  })
+
   it('still requests the mount and waits for its settle when no pane is registered', async () => {
     let mounted = false
     const subscription = subscribeMobile({
@@ -191,6 +243,8 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     await vi.advanceTimersByTimeAsync(100)
     expect(subscription.runtime.requestRendererTerminalTabMount).toHaveBeenCalledWith('terminal-1')
     expect(subscription.snapshotText()).toBe('')
+    // The probe found no pane, so it must not spend a terminal read (which can reach the provider).
+    expect(subscription.runtime.readTerminal).toHaveBeenCalledTimes(1)
 
     await vi.advanceTimersByTimeAsync(400)
     expect(subscription.snapshotText()).toContain('mounted idle prompt $ ')
