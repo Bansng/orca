@@ -90,10 +90,6 @@ export class OrcaRuntimeWithWaitForLeafPtyId extends OrcaRuntimeWithRestoreLiveP
     }
   }
 
-  hasRendererTerminalSerializer(ptyId: string): boolean {
-    return this.ptyController?.hasRendererSerializer?.(ptyId) === true
-  }
-
   getRendererTerminalSerializerGeneration(ptyId: string): number {
     return this.ptyController?.getRendererSerializerGeneration?.(ptyId) ?? 0
   }

@@ -30,8 +30,6 @@ function asRuntime(double: Record<string, unknown>): OrcaRuntimeService {
 type PaneDouble = {
   /** What the desktop renderer's serializer answers; null when no pane is registered. */
   rendererScreen: () => string | null
-  /** The host's attachment flag; defaults to whether a screen answers. True with a null screen is a stale flag. */
-  serializerRegistered?: boolean
   /** How long each renderer serialize takes; the IPC answers null after 750 ms when no pane replies. */
   rendererAnswerDelayMs?: number
   /** PTY output high-water; a pane printing continuously advances it on every read. */
@@ -42,6 +40,8 @@ type PaneDouble = {
   chosenScreen?: string
   /** Live output that arrives while the subscription is still buffering. */
   pendingOutput?: string
+  /** Output offset at the end of the pending chunk. */
+  pendingOutputSeq?: number
   waitForRendererTerminalSerializer: OrcaRuntimeService['waitForRendererTerminalSerializer']
 }
 
@@ -58,9 +58,6 @@ function subscribeMobile(pane: PaneDouble) {
     requestRendererTerminalTabMount: vi.fn(() => true),
     getRendererTerminalSerializerGenerationForHandle: vi.fn(() => 1),
     getRendererTerminalSerializerGeneration: vi.fn(() => 1),
-    hasRendererTerminalSerializer: vi.fn(
-      () => pane.serializerRegistered ?? pane.rendererScreen() !== null
-    ),
     getPtyOutputSequence: vi.fn(pane.outputSequence ?? (() => 4)),
     replaceHeadlessTerminalFromRendererSnapshotForRecovery: vi.fn(),
     waitForRendererTerminalSerializer: vi.fn(pane.waitForRendererTerminalSerializer),
@@ -75,7 +72,10 @@ function subscribeMobile(pane: PaneDouble) {
     // The restored provider snapshot wins the preference order over the live renderer.
     serializeTerminalBuffer: vi.fn(async () => {
       if (pane.pendingOutput) {
-        emitData(pane.pendingOutput, { seq: 3, rawLength: pane.pendingOutput.length })
+        emitData(pane.pendingOutput, {
+          seq: pane.pendingOutputSeq ?? 3,
+          rawLength: pane.pendingOutput.length
+        })
       }
       return {
         data: pane.chosenScreen ?? 'restored provider history',
@@ -125,11 +125,17 @@ function subscribeMobile(pane: PaneDouble) {
       .filter((frame) => frame?.opcode === TerminalStreamOpcode.SnapshotChunk)
       .map((frame) => decodeTerminalStreamText(frame!.payload))
       .join('')
+  const outputText = (): string =>
+    binaryFrames
+      .map((bytes) => decodeTerminalStreamFrame(bytes))
+      .filter((frame) => frame?.opcode === TerminalStreamOpcode.Output)
+      .map((frame) => decodeTerminalStreamText(frame!.payload))
+      .join('')
   const close = async (): Promise<void> => {
     runtime.cleanupSubscription('terminal-1:phone-1')
     await done
   }
-  return { runtime, snapshotText, close }
+  return { runtime, snapshotText, outputText, close }
 }
 
 describe('terminal subscribe for a pane the desktop already has mounted', () => {
@@ -164,10 +170,11 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
   })
 
   it('adopts a renderer-ordered screen even while output is pending', async () => {
-    // The screen's seq is an exact seam, so only the bytes after it replay.
+    // The screen's seq (4) is an exact seam inside the pending chunk (offsets 3..5), so only `z` replays.
     const subscription = subscribeMobile({
       rendererScreen: () => 'ordered desktop prompt $ ',
-      pendingOutput: 'pending byte',
+      pendingOutput: 'Xz',
+      pendingOutputSeq: 5,
       waitForRendererTerminalSerializer: (_ptyId, _after, _timeout, signal) =>
         new Promise<boolean>((resolve) => {
           signal?.addEventListener('abort', () => resolve(false), { once: true })
@@ -184,8 +191,9 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     ).toHaveBeenCalledWith(
       'pty-1',
       expect.objectContaining({ data: 'ordered desktop prompt $ ', seq: 4 }),
-      []
+      [{ data: 'z', seq: 5 }]
     )
+    expect(subscription.outputText()).toBe('z')
     await subscription.close()
   })
 
@@ -339,7 +347,6 @@ describe('terminal subscribe for a pane the desktop already has mounted', () => 
     // 750 ms deadline while a busy PTY moves output under every attempt.
     let sequence = 4
     const subscription = subscribeMobile({
-      serializerRegistered: true,
       rendererScreen: () => null,
       rendererAnswerDelayMs: 750,
       outputSequence: () => (sequence += 1),

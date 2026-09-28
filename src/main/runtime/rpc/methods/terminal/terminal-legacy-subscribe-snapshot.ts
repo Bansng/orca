@@ -61,14 +61,11 @@ export async function publishLegacyBinaryInitialSnapshot(
   if (state.closed) {
     return
   }
-  // Why: missing model state (not blank snapshot text) signals a never-attached PTY; a renderer-sourced snapshot already proves attachment, so skip the remount.
+  // Why: missing model state (not blank snapshot text) signals a never-attached PTY; any renderer answer proves a pane, and the answer is null when the host's flag is unset or stale after a pane closed over a live PTY, which falls back to the mount wait.
   const needsRendererScreen =
     missingHeadlessStateBeforeMobileFit && serialized?.source !== 'renderer'
-  // Why: the host's flag is the attachment fact, but nothing clears it when a pane closes over a live
-  // PTY, so one null answer (the IPC's 750 ms deadline at worst) falls back to the mount wait.
   let rendererReady =
     needsRendererScreen &&
-    runtime.hasRendererTerminalSerializer?.(ptyId) === true &&
     (await runtime.serializeRendererTerminalBuffer(ptyId, { scrollbackRows: 0 })) !== null
   if (state.closed) {
     return
