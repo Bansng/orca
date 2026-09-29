@@ -87,8 +87,9 @@ export function useBrowserPageChromeFocus({
 
   const leaveAddressBarForPage = useCallback((): void => {
     cancelAddressBarFocusGrab()
-    focusGuestNow()
-  }, [cancelAddressBarFocusGrab, focusGuestNow])
+    // Why no blur first: a dying guest can refuse focus, and the bar must keep it rather than body.
+    guestFocus.focus()
+  }, [cancelAddressBarFocusGrab, guestFocus])
 
   /**
    * Takes the address bar and holds it for a few frames, because whatever activated the pane
