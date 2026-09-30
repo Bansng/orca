@@ -68,7 +68,11 @@ describe('ClaudeStructuredSessionAdapter turns and controls', () => {
         body: USER_MESSAGE,
         fence: 7
       })
-    ).resolves.toEqual({ state: 'rejected', reason: 'provider_write_failed: broken pipe' })
+    ).resolves.toEqual({
+      state: 'rejected',
+      reason: 'provider_write_failed',
+      rejection: { kind: 'writeFailed' }
+    })
   })
 
   it('requires an acknowledged interrupt and supports controlled options', async () => {
@@ -219,6 +223,13 @@ describe('ClaudeStructuredSessionAdapter turns and controls', () => {
       }
     })
     const adapter = await acquired(claude)
+    // The model is reported by a cycle's init frame, so start one.
+    await adapter.dispatch({
+      sessionId: 'session-1',
+      clientMessageId: 'seed-cycle',
+      body: USER_MESSAGE,
+      fence: 7
+    })
 
     await expect(adapter.readOptions({ sessionId: 'session-1', fence: 7 })).resolves.toEqual({
       models: [
@@ -247,6 +258,13 @@ describe('ClaudeStructuredSessionAdapter turns and controls', () => {
       }
     })
     const adapter = await acquired(claude)
+    // The custom model only reports on the first cycle's init frame.
+    await adapter.dispatch({
+      sessionId: 'session-1',
+      clientMessageId: 'seed-cycle',
+      body: USER_MESSAGE,
+      fence: 7
+    })
     const result = await adapter.readOptions({ sessionId: 'session-1', fence: 7 })
 
     expect(result.models.map((model) => model.id)).toEqual([

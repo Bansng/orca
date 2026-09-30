@@ -15,6 +15,7 @@ import type {
   AgentJournalItemBody,
   AgentJournalMessageItem,
   AgentJournalDispatchState,
+  AgentJournalTurnItem,
   AgentSessionJournalIdentity
 } from '../../../shared/agent-session-journal-types'
 import type { AgentSessionProviderHandleLink } from '../../../shared/agent-session-provider-handle'
@@ -27,22 +28,38 @@ import type {
   AgentSessionBackgroundTaskState,
   AgentSessionOptionsResult,
   AgentSessionSlashCommand,
-  AgentSessionThreadGoalChange,
-  AgentSessionWireRefusalCode
+  AgentSessionThreadGoalChange
 } from '../../../shared/agent-session-wire'
-import { isAgentSessionWireRefusalCode } from '../../../shared/agent-session-wire-refusals'
+import {
+  isAgentSessionWireRefusalCode,
+  type AgentSessionRefusalReason
+} from '../../../shared/agent-session-wire-refusals'
+import type {
+  ProviderDiagnostic,
+  SubmissionRejectionFact
+} from '../../../shared/agent-session-failure'
+import type { AgentJournalDispatchRejection } from '../../../shared/agent-session-failure-words'
 import type { AgentSessionPromptResponse } from '../../../shared/agent-session-question-answer'
 import type { ProviderHistoryWindow } from '../agent-session-journal/journal-submission-reconciler'
 import type { StructuredAgentSessionEventSink } from './structured-agent-session-event-sink'
 import type { AgentSessionCreatePhaseRecorder } from '../../observability/agent-session-instrumentation'
 
 export class AgentSessionAcquisitionRefusal extends Error {
+  readonly code = 'agent_session_operation_invalid'
+
   constructor(
     message: string,
-    readonly code: AgentSessionWireRefusalCode = 'agent_session_operation_invalid'
+    /** The situation, so the chat can say what to do; the message is Orca's log wording. Absent,
+     *  the provider refused its own start. */
+    readonly reason: AgentSessionRefusalReason<'agent_session_operation_invalid'> = 'providerStartFailed'
   ) {
     super(message)
     this.name = 'AgentSessionAcquisitionRefusal'
+  }
+
+  /** The conversation's history is more than this host can restore. */
+  static historyTooLarge(message: string): AgentSessionAcquisitionRefusal {
+    return new AgentSessionAcquisitionRefusal(message, 'historyTooLarge')
   }
 }
 
@@ -103,17 +120,47 @@ export type AgentSessionAcquisition = {
   providerChildPhase?: StructuredAgentSessionProviderChildPhase
 }
 
+/** A refusal before spawn that a person can act on; the site that refused names it. */
+export type AgentSessionPreSpawnReason = Extract<
+  AgentSessionRefusalReason<'agent_session_operation_invalid'>,
+  'managedAccountEnvOverride' | 'accountSwitchInProgress' | 'managedAccountUnsupported'
+>
+
 /** Acquisition failed with first-hand proof that no provider process existed. */
 export class AgentSessionPreSpawnError extends Error {
-  constructor(cause: unknown) {
-    super(cause instanceof Error ? cause.message : String(cause), { cause })
+  /** Absent: Orca's own reason, which only the log reads. A wrapped pre-spawn error keeps its. */
+  readonly reason: AgentSessionPreSpawnReason | undefined
+
+  constructor(
+    cause: unknown,
+    options: { reason?: AgentSessionPreSpawnReason; message?: string } = {}
+  ) {
+    super(options.message ?? (cause instanceof Error ? cause.message : String(cause)), { cause })
     this.name = 'AgentSessionPreSpawnError'
+    this.reason = options.reason ?? (isAgentSessionPreSpawnError(cause) ? cause.reason : undefined)
   }
 }
 
 export function isAgentSessionPreSpawnError(error: unknown): error is AgentSessionPreSpawnError {
   return error instanceof Error && error.name === 'AgentSessionPreSpawnError'
 }
+
+/** A conversation command the host handed to a provider child: the running turn it opened for it,
+ *  which the child's translator ends, and where the command's own result row goes. */
+export type StructuredAgentSessionCommandRun = {
+  clientMessageId: string
+  /** What a Stop names. */
+  turnId: string
+  identity: AgentJournalItemIdentity
+  resultIdentity: AgentJournalItemIdentity
+  /** The turn record as the host wrote it; the translator's end revises it. */
+  running: AgentJournalTurnItem
+}
+
+/** A command the provider took answers it in place and echoes no item of its own. */
+export type AgentSessionCommandAdmission =
+  | AgentSessionDispatchOutcome
+  | { state: 'accepted'; providerIdentity: null }
 
 export type AgentSessionDispatchOutcome =
   /** The provider owns the turn now, under this identity. */
@@ -125,14 +172,19 @@ export type AgentSessionDispatchOutcome =
    * anything and never promotes this to `unknown`.
    */
   | { state: 'admitted' }
-  | { state: 'rejected'; reason: string }
+  /** Words from `agentSessionFailureWords`, never written by hand. */
+  | ({ state: 'rejected' } & AgentJournalDispatchRejection)
   /** The call did not settle. Never re-send on the user's behalf. */
   | { state: 'unknown'; reason: string }
 
 export type StructuredAgentSessionEndedEvent = {
   type: 'ended'
   sessionId: string
+  /** Log text only; the chat's words come from `failure`. */
   reason: string
+  /** Why it ended, as the adapter knows it: the provider's exit with its own diagnostic, or an
+   *  Orca fault. Absent reads as a provider exit with nothing to add. */
+  failure?: SubmissionRejectionFact
   cause: 'unexpected-exit' | 'requested-close'
   fence: number
   acquisitionGeneration: string
@@ -184,6 +236,14 @@ export type StructuredAgentSessionSetOptionInput = {
   fence: number
 }
 
+/** `refusal`: the provider answered the Stop and declined it, in its own words when it gave any.
+ *  `unconfirmed`: the provider took the Stop, but Orca could not confirm the turn's work ended. */
+export type AgentSessionCancelOutcome = {
+  cancelled: boolean
+  refusal?: { detail?: ProviderDiagnostic }
+  unconfirmed?: true
+}
+
 export type StructuredAgentSessionAdapter = {
   /** Provider-aware capability check for hosts that route more than one adapter. */
   supportsCreate?(location: AgentSessionExecutionLocation, agent: string): boolean
@@ -226,22 +286,24 @@ export type StructuredAgentSessionAdapter = {
     onPrepared?: (
       items: { identity: AgentJournalItemIdentity; body: AgentJournalItemBody }[]
     ) => Promise<void>
-    onReverted?: () => Promise<void>
   }): Promise<
     | { ok: true; items?: { identity: AgentJournalItemIdentity; body: AgentJournalItemBody }[] }
     | { ok: false; reason: AgentSessionRewindReason }
   >
+  /** Sends a conversation compaction and answers with the provider's receipt of it, as a dispatch
+   *  does. The command's turn is the child's journal translator's to end, from the provider's own
+   *  frames; a child that ends first leaves it to the host's settlement of that child. */
   compact?(input: {
-    turnId: string
     sessionId: string
     fence: number
-    onLateResult?: (result: { error?: string }) => Promise<void>
-  }): Promise<{ error?: string }>
+    command: StructuredAgentSessionCommandRun
+  }): Promise<AgentSessionCommandAdmission>
   /** Cancels one turn, not the session: a session-wide interrupt would also kill
-   *  a turn the client never asked to stop. */
+   *  a turn the client never asked to stop. With no `turnId` the conversation asked to stop
+   *  everything it has in flight — a running turn, or a dispatch whose turn has not opened yet. */
   cancelTurn(input: {
     sessionId: string
-    turnId: string
+    turnId?: string
     fence: number
     prompt?: { itemId: string }
     /** Latest journal submission for this fence, when the host has one. */
@@ -250,7 +312,7 @@ export type StructuredAgentSessionAdapter = {
      *  could have named. A function, not a value, because the guard re-checks after the
      *  delivery fence may have waited. Absent for direct callers with no journal. */
     resolveLiveTurnId?: () => string | null
-  }): Promise<{ cancelled: boolean }>
+  }): Promise<AgentSessionCancelOutcome>
   /** Changes the provider thread's goal. `rejected` is the provider refusing the
    *  change; a throw leaves its effect unknown. Absent where no goal exists. */
   changeThreadGoal?(input: {
@@ -293,7 +355,7 @@ export type StructuredAgentSessionAdapter = {
   /** Resolves once a session published before it proved its start has proven it, failed, or been
    *  closed; at once for any other. A start that did not land resolves with the chat's words for
    *  why. Never rejects. */
-  awaitStarted?(sessionId: string): Promise<void | string>
+  awaitStarted?(sessionId: string): Promise<void | SubmissionRejectionFact>
   readOptions?(input: { sessionId: string; fence: number }): Promise<AgentSessionOptionsResult>
   /** Option keys skipped after a provider rejected their persisted restore value. */
   readOptionRestoreFailures?(sessionId: string): readonly string[]

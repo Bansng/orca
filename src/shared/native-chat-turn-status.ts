@@ -101,6 +101,9 @@ export type NativeChatTurnStatus = {
 
 export type NativeChatTurnTimingByTurn = Readonly<Record<string, NativeChatTurnTiming>>
 
+/** The live turn's key when the transcript has no user message to hang it on. */
+export const NATIVE_CHAT_UNANCHORED_TURN_KEY = '__unanchored__'
+
 /** The turn-timing state machine, lifted out of the React hook so desktop and
  *  mobile stamp start/stop identically. Returns the same reference when nothing
  *  changed so callers can bail out of a state update. */

@@ -23,6 +23,7 @@ import {
   hostTestOperationId,
   resetHostTestOperationIds
 } from './structured-agent-session-host-test-data'
+import { openTestJournalHostDatabase } from '../agent-session-journal/journal-host-database-test-support'
 
 /** Delivery runs on its own serialized steps; under a loaded runner they take more than a second. */
 function eventually(assertion: () => unknown): Promise<unknown> {
@@ -84,7 +85,7 @@ beforeEach(async () => {
   host = new StructuredAgentSessionHost({
     store,
     adapter: Object.assign(adapter, { supportsCreate: () => true }),
-    journalRoot: root,
+    journalDatabase: openTestJournalHostDatabase(root),
     claimKeyId: 'key-1',
     mintSpawnToken: () => `spawn-${claude.connections.length + 1}`,
     now: () => NOW
@@ -183,7 +184,9 @@ describe('a fresh chat whose Claude start fails', () => {
         releaseCreate()
       }
       await settleExits()
-      const startFailure = `The provider stopped before it finished starting: ${LAUNCH_FAILURE}.`
+      // The row says the provider stopped; its stderr stays out of the sentence.
+      const startFailure =
+        'Claude stopped before it finished starting. Send your message to try again.'
       // Opening the chat: the create's start, once, and its row.
       expect(claude.connections).toHaveLength(1)
       expect(await timeline()).toEqual([startFailure])

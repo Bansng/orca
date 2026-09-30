@@ -1,3 +1,5 @@
+import { getAppEnvironment } from '../../../../shared/app-environment'
+import { getLegacyOpenCodeEnvKeysToDelete } from '../../../opencode/legacy-shared-config-dir'
 import type { IPtyProvider, PtySpawnResult } from '../../../providers/types'
 import { LocalPtyProvider } from '../../../providers/local-pty-provider'
 import { makePaneKey, isTerminalLeafId } from '../../../../shared/stable-pane-id'
@@ -9,7 +11,7 @@ import {
   mergePtyEnvDeletions,
   removeCodexHomeDeletionRequests,
   getInheritedAgentHookEnvKeysToDelete,
-  getInheritedClaudeSessionStampEnvKeysToDelete
+  getInheritedAgentSessionStampEnvKeysToDelete
 } from '../host-env/pi-agent'
 import { promoteAgentTeamsShimPath, deleteRequestedEnvKeys } from '../host-env/path'
 import {
@@ -29,6 +31,7 @@ import {
   paneSpawnReservationsByOwnerKey
 } from '../pane/spawn-reservation'
 import type { RuntimePtySpawnState } from './spawn-state'
+import { applyAgentWorkspaceTrustToSpawn } from '../../../agent-workspace-trust-spawn'
 
 /** Headless spawns need the same host-side environment isolation as desktop spawns. */
 export async function buildRuntimePtySpawnOptions(
@@ -72,8 +75,12 @@ export async function buildRuntimePtySpawnOptions(
     // Why: disable old hosts without removing ORCA_REAL_* while their Windows shim remains on PATH.
     ctx.isDaemonHostSpawn || args.connectionId ? LEGACY_TERMINAL_SHIM_REMOTE_ENV_KEYS : [],
     ctx.isDaemonHostSpawn ? getInheritedAgentHookEnvKeysToDelete(ctx.env) : [],
+    // The daemon must judge its own inherited value; main may have a different config.
+    !args.connectionId && !ctx.isDaemonHostSpawn
+      ? getLegacyOpenCodeEnvKeysToDelete(ctx.env, getAppEnvironment().getPath('userData'))
+      : [],
     // Why: ungated, unlike the agent-hook keys — the local provider and the relay host also spread their own process.env into every spawn.
-    getInheritedClaudeSessionStampEnvKeysToDelete(ctx.env)
+    getInheritedAgentSessionStampEnvKeysToDelete(ctx.env)
   )
   if (ctx.skipCodexHomeEnv) {
     ctx.spawnOptions.envToDelete = mergePtyEnvDeletions(
@@ -106,6 +113,22 @@ export async function buildRuntimePtySpawnOptions(
   }
   if (args.worktreeId !== undefined) {
     ctx.spawnOptions.worktreeId = args.worktreeId
+  }
+  const trustWrite = applyAgentWorkspaceTrustToSpawn({
+    launchAgent: args.launchAgent,
+    worktreeId: args.worktreeId,
+    cwd: ctx.cwd,
+    store: ctx.deps.store,
+    isFreshLaunch: !ctx.preAdoptedStablePane && ctx.launchCommand !== undefined,
+    settings: ctx.deps.getSettings?.(),
+    env: ctx.env,
+    claudeAuth: ctx.claudeAuth,
+    wslDistro: ctx.expectedWslDistro,
+    connectionId: args.connectionId ?? null,
+    spawnOptions: ctx.spawnOptions
+  })
+  if (trustWrite) {
+    await trustWrite
   }
   ctx.hadSessionSizeBeforeAttach =
     ctx.effectiveSessionAppId !== undefined ? ptySizes.has(ctx.effectiveSessionAppId) : false

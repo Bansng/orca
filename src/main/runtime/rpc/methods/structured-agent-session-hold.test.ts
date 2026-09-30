@@ -24,6 +24,9 @@ import { OrcaRuntimeService } from '../../orca-runtime'
 import type { RpcResponse } from '../core'
 import { RpcDispatcher } from '../dispatcher'
 import { STRUCTURED_AGENT_SESSION_METHODS } from './structured-agent-session'
+import { agentSessionFailureFact } from '../../../../shared/agent-session-failure'
+import { agentSessionFailureWords } from '../../../../shared/agent-session-failure-words'
+import { openTestJournalHostDatabase } from '../../../native-chat/agent-session-journal/journal-host-database-test-support'
 
 const CONNECTION = 'connection-1'
 const CLIENT = {
@@ -81,12 +84,17 @@ beforeEach(async () => {
       // acquire that throws leaves an unverifiable owner nothing may replace.
       releaseAcquisition: vi.fn(async () => true),
       closeSession,
-      dispatch: async () => ({ state: 'rejected', reason: 'unused' }),
+      dispatch: async () => ({
+        state: 'rejected',
+        ...agentSessionFailureWords(agentSessionFailureFact('providerRejected'), {
+          surface: 'rejection'
+        })
+      }),
       cancelTurn: async () => ({ cancelled: false }),
       answerPrompt: async () => undefined,
       setOption: async () => undefined
     },
-    journalRoot: root,
+    journalDatabase: openTestJournalHostDatabase(root),
     claimKeyId: 'key-1',
     mintSpawnToken: () => 'spawn-a',
     now: () => NOW

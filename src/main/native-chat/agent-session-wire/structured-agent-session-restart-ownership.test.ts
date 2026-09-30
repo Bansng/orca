@@ -1,3 +1,4 @@
+import { AGENT_JOURNAL_THREAD_SCOPE } from '../../../shared/agent-session-journal-types'
 import { mkdir, rm, writeFile } from 'node:fs/promises'
 import {
   AgentSessionRecoveryCapsule,
@@ -31,6 +32,8 @@ import {
   HOST_TEST_THREAD as THREAD,
   hostTestMessage
 } from './structured-agent-session-host-test-data'
+import { agentSessionFailureFact } from '../../../shared/agent-session-failure'
+import { agentSessionFailureWords } from '../../../shared/agent-session-failure-words'
 
 afterEach(() => vi.useRealTimers())
 
@@ -98,7 +101,7 @@ it('still continues a chat whose last send acquisition proves was never delivere
   const result = await host.restartResume.continueAfterRestart([SESSION], 'modal')
   expect((await host.journalSnapshot(SESSION)).submissions[0]).toMatchObject({
     dispatchState: 'rejected',
-    reason: 'not_delivered'
+    rejection: { kind: 'notDelivered' }
   })
   expect(acquire).toHaveBeenCalledTimes(1)
   expect(dispatch).toHaveBeenCalledTimes(1)
@@ -226,7 +229,12 @@ it('waits out a slow provider answer before reporting the continuation', async (
   await dispatched.promise
   await new Promise((resolve) => setTimeout(resolve, 20))
   expect(settled).toBe(false)
-  settlement.resolve({ state: 'rejected', reason: 'provider refused' })
+  settlement.resolve({
+    state: 'rejected',
+    ...agentSessionFailureWords(agentSessionFailureFact('providerRejected'), {
+      surface: 'rejection'
+    })
+  })
   expect((await continuing).continued).toMatchObject([{ outcome: 'refused' }])
   expect(dispatch).toHaveBeenCalledTimes(1)
 })
@@ -272,7 +280,8 @@ it('serializes teardown publication behind an explicit dismissal', async () => {
   }
   events.appendItem(
     { provider: 'codex', threadId: THREAD, turnId: 'working', ordinal: 1 },
-    { kind: 'turn', turnId: 'working', state: 'running' }
+    { kind: 'turn', turnId: 'working', state: 'running' },
+    { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
   )
   await host.flushStreamedEvents(SESSION)
   host.restartResume.beginTeardown('quit')
@@ -430,7 +439,8 @@ it('logs teardown capsule publication failure and still releases the provider', 
   }
   events.appendItem(
     { provider: 'codex', threadId: THREAD, turnId: 'working', ordinal: 1 },
-    { kind: 'turn', turnId: 'working', state: 'running' }
+    { kind: 'turn', turnId: 'working', state: 'running' },
+    { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
   )
   await previous.host.flushStreamedEvents(SESSION)
   const capsulePath = join(previous.root, AGENT_SESSION_RECOVERY_CAPSULE_FILE)
@@ -447,4 +457,30 @@ it('logs teardown capsule publication failure and still releases the provider', 
   expect(previous.store.getRecord(SESSION)?.lease.claimStatus).toBe('released')
   warning.mockRestore()
   await rm(capsulePath, { recursive: true })
+})
+
+// The resume ledger's reason stays the refusal code, which is what every renderer's guidance keys
+// on; the details are filed beside it, never in its place.
+it('files a restart refused by a conflicted claim under its code, with its details beside it', async () => {
+  // The terminal agent that holds the claim is still running, so nothing may take it over.
+  const { host, store } = await interruptedRestart('turn', true, async () => ({
+    outcome: 'identity-matched',
+    matchedOn: ['spawn-token']
+  }))
+  await store.transitionHandoff(SESSION, (record) => ({
+    ...record,
+    lease: {
+      ...record.lease,
+      claimStatus: 'conflicted',
+      ownerProcess: { hostId: 'local', pid: 4242, processStartTimeMs: 1, spawnToken: 'terminal' }
+    }
+  }))
+
+  await host.restartResume.continueAfterRestart([SESSION], 'modal')
+
+  await vi.waitFor(async () =>
+    expect(await host.restartResume.listFailures()).toMatchObject([
+      { reason: 'agent_session_conflict', details: { reason: 'claimConflicted' } }
+    ])
+  )
 })

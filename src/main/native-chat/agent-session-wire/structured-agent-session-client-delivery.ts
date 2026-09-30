@@ -1,6 +1,8 @@
+import { AgentSessionRefusalError } from '../../../shared/agent-session-wire-refusals'
 import type { AgentChildWorkEvidence } from '../../../shared/agent-status-child-work-evidence'
 import type { AgentSessionJournal } from '../agent-session-journal/journal-store'
 import { AgentSessionSubscribers } from './structured-agent-session-subscribers'
+import { tryReadQueuePublication } from './structured-agent-session-queued-publication'
 import type {
   StructuredAgentSessionHostDeps,
   StructuredAgentSessionHostSession
@@ -48,6 +50,8 @@ export class StructuredAgentSessionClientDelivery {
     this.waitForSendSettlement = this.sendSettlement.wait
     this.subscribers = new AgentSessionSubscribers({
       readCommands: (sessionId) => deps().adapter.readCommands?.(sessionId),
+      readQueuePublication: (sessionId) =>
+        tryReadQueuePublication(sessions.get(sessionId)?.journal),
       onJournalPublished: (sessionId, journal) => this.publishJournal(sessionId, journal)
     })
   }
@@ -106,7 +110,7 @@ export class StructuredAgentSessionClientDelivery {
   private requireJournal(sessionId: string): AgentSessionJournal {
     const journal = this.sessions.get(sessionId)?.journal
     if (!journal) {
-      throw new Error(AGENT_SESSION_NOT_ATTACHED.code)
+      throw new AgentSessionRefusalError(AGENT_SESSION_NOT_ATTACHED)
     }
     return journal
   }

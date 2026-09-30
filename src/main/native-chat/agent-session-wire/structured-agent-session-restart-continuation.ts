@@ -6,11 +6,20 @@
 // message asks the agent to verify its last action before repeating it, and the launch toast
 // reports what happened.
 
-import type { AgentJournalMessageItem } from '../../../shared/agent-session-journal-types'
-import type {
-  AgentSessionMutationEnvelope,
-  AgentSessionMutationResult,
-  AgentSessionSendResult
+import {
+  AGENT_JOURNAL_THREAD_SCOPE,
+  type AgentJournalMessageItem
+} from '../../../shared/agent-session-journal-types'
+import {
+  readAgentSessionFailureFact,
+  type UnreadAgentSessionFailureFact
+} from '../../../shared/agent-session-failure'
+import type { AgentSessionRefusalReference } from '../../../shared/agent-session-wire-refusals'
+import {
+  agentSessionSendSubmission,
+  type AgentSessionMutationEnvelope,
+  type AgentSessionMutationResult,
+  type AgentSessionSendResult
 } from '../../../shared/agent-session-wire'
 import type { AgentSessionJournal } from '../agent-session-journal/journal-store'
 import {
@@ -39,6 +48,8 @@ export type StructuredAgentSessionContinuationOutcome = {
   sessionId: string
   outcome: 'continued' | 'pending' | 'unknown' | 'refused'
   reason?: string
+  /** The refusal that kept the agent from starting; `reason` is then its code. */
+  refusal?: AgentSessionRefusalReference
 }
 
 /** The slice of the host one continuation needs. Structural so this module never imports the host. */
@@ -85,9 +96,13 @@ export function restartContinuationDeps(
         }
       }),
     awaitSettlement: async (sessionId, clientMessageId) =>
-      (await host.awaitSendSettlement(sessionId, clientMessageId))?.value.submission,
+      agentSessionSendSubmission(
+        (await host.awaitSendSettlement(sessionId, clientMessageId))?.value
+      ),
     awaitHandedOver: async (sessionId, clientMessageId) =>
-      (await host.awaitSendHandedOver(sessionId, clientMessageId))?.value.submission,
+      agentSessionSendSubmission(
+        (await host.awaitSendHandedOver(sessionId, clientMessageId))?.value
+      ),
     onNoteFailed: host.onNoteFailed,
     note: restartNoteWriter(host)
   }
@@ -106,7 +121,8 @@ function restartNoteWriter(
     await session.journal.appendItem(
       { provider: 'orca', clientMessageId: `restart-continuation:${sessionId}:${host.now()}` },
       { kind: 'status', text, ...(tone ? { tone } : {}) },
-      { fence }
+      // About the conversation, not any turn in it.
+      { fence, turnScope: AGENT_JOURNAL_THREAD_SCOPE }
     )
   }
 }
@@ -129,7 +145,11 @@ export class RestartContinuationSupersededError extends AgentSessionPreDispatchE
   }
 }
 
-type ContinuationSubmission = { dispatchState?: string; reason?: string | null }
+type ContinuationSubmission = {
+  dispatchState?: string
+  reason?: string | null
+  rejection?: UnreadAgentSessionFailureFact
+}
 
 export type StructuredAgentSessionContinuationDeps = {
   /** Runtime fence as it stands now; null when this host has no record of the session. */
@@ -140,8 +160,10 @@ export type StructuredAgentSessionContinuationDeps = {
   }) => Promise<{
     ok: boolean
     refusal?: { code: string }
-    /** The submission is where the provider's answer lives; the envelope only says Orca took it. */
-    value?: { submission?: { dispatchState?: string; reason?: string | null } }
+    /** The submission is where the provider's answer lives; the envelope only says Orca took it.
+     *  A continuation never sends `delivery`, so a queued answer cannot arrive; the key exists so
+     *  the host's union return stays assignable. */
+    value?: { submission?: { dispatchState?: string; reason?: string | null }; queued?: unknown }
   }>
   /**
    * Waits for that send's dispatch to stop being `pending`, through the host's existing settlement
@@ -310,10 +332,13 @@ function refusedBy(
   sessionId: string,
   submission: ContinuationSubmission
 ): StructuredAgentSessionContinuationOutcome {
+  // A start the agent was refused files that refusal's code, which the failure guidance keys on.
+  const refusal = readAgentSessionFailureFact(submission.rejection)?.refusal
   return {
     sessionId,
     outcome: 'refused',
-    reason: submission.reason ?? 'agent_session_dispatch_rejected'
+    reason: refusal?.code ?? submission.reason ?? 'agent_session_dispatch_rejected',
+    ...(refusal ? { refusal } : {})
   }
 }
 

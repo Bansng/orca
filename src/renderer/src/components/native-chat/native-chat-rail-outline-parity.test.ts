@@ -81,12 +81,10 @@ function loadedRailItems(items: AgentJournalRenderItem[], submissions: AgentJour
   const slots = buildNativeChatTranscriptSlots({
     messages,
     turnKeys,
-    latestUserIndex: messages.findLastIndex((message) => message.role === 'user'),
-    currentTurnKey: turn,
+    liveTurnKey: turn,
     receipts: new Map<string, NativeChatResolvedPrompt>(),
     turnStatuses: { active: null, completedByTurn: {} },
     turnDiffs: new Map<string, NativeChatTurnDiff>(),
-    showTurnStatus: true,
     expandedTurnKeys: new Set<string>(),
     isWorking: false,
     lifecycleWorking: false

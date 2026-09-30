@@ -1,3 +1,4 @@
+import { AGENT_JOURNAL_THREAD_SCOPE } from '../../../shared/agent-session-journal-types'
 // The lifetime of a provider child, against the real host rather than a double.
 //
 // Two leaks meet here: a chat that closes without stopping its app-server, and a launch that
@@ -25,7 +26,6 @@ import {
 import type { StructuredAgentSessionEventSink } from './structured-agent-session-event-sink'
 import { StructuredAgentSessionHost } from './structured-agent-session-host'
 import { abandonStructuredAgentSessionHost } from './structured-agent-session-host-test-abandon'
-import { unexpectedProviderExitOutcome } from './structured-agent-session-dead-generation-settlement'
 import { readAgentJournalTurn } from '../../../shared/agent-session-turn-record'
 import type { StructuredAgentSessionStatusSink } from './structured-agent-session-status-feed'
 import {
@@ -37,6 +37,12 @@ import {
   hostTestOperationId,
   resetHostTestOperationIds
 } from './structured-agent-session-host-test-data'
+import { agentSessionFailureFact } from '../../../shared/agent-session-failure'
+import { agentSessionFailureWords } from '../../../shared/agent-session-failure-words'
+import { openTestJournalHostDatabase } from '../agent-session-journal/journal-host-database-test-support'
+
+const UNEXPECTED_PROVIDER_EXIT_OUTCOME =
+  'Codex stopped while this response was in progress. You can continue in this conversation.'
 
 const CALLER = { callerKey: 'client-1' }
 /** Short enough to keep the suite fast; the host clock below decides what is idle. */
@@ -71,7 +77,7 @@ function openHost(
   host = new StructuredAgentSessionHost({
     store,
     adapter: adapter(),
-    journalRoot: root,
+    journalDatabase: openTestJournalHostDatabase(root),
     claimKeyId: 'key-1',
     mintSpawnToken: () => `spawn-${acquire.mock.calls.length}`,
     idleSweep: { intervalMs: SWEEP_MS, idleMs: IDLE_MS },
@@ -117,7 +123,8 @@ function envelope(method: string, fields: Record<string, unknown>): AgentSession
 function emitTurnLifecycle(state: 'running' | 'completed', ordinal: number): void {
   sink?.appendItem(
     { provider: 'codex', threadId: THREAD, turnId: 'turn-1', ordinal },
-    { kind: 'status', text: state, turnLifecycle: { turnId: 'turn-1', state } }
+    { kind: 'status', text: state, turnLifecycle: { turnId: 'turn-1', state } },
+    { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
   )
 }
 
@@ -153,7 +160,8 @@ async function failJournalSinkUntilReleased(): Promise<void> {
   vi.spyOn(session!.journal, 'appendItem').mockRejectedValueOnce(new Error('disk unavailable'))
   sink?.appendItem(
     { provider: 'codex', threadId: THREAD, turnId: 'turn-1', ordinal: 1 },
-    { kind: 'message', role: 'assistant', blocks: [{ type: 'text', text: 'lost write' }] }
+    { kind: 'message', role: 'assistant', blocks: [{ type: 'text', text: 'lost write' }] },
+    { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
   )
   await vi.waitFor(() => {
     expect(closeSession).toHaveBeenCalledWith(SESSION)
@@ -217,7 +225,12 @@ beforeEach(async () => {
     }
   })
   closeSession = vi.fn(async () => true)
-  dispatch = vi.fn(async () => ({ state: 'rejected' as const, reason: 'unused' }))
+  dispatch = vi.fn(async () => ({
+    state: 'rejected' as const,
+    ...agentSessionFailureWords(agentSessionFailureFact('providerRejected'), {
+      surface: 'rejection'
+    })
+  }))
   store = await AgentSessionRecordStore.open({ directory: join(root, 'store'), hostId: 'local' })
   openHost()
 })
@@ -460,7 +473,8 @@ describe('a session closed and started again', () => {
     })
     sink?.appendItem(
       { provider: 'codex', threadId: THREAD, turnId: 'turn-2', ordinal: 1 },
-      { kind: 'message', role: 'assistant', blocks: [{ type: 'text', text: 'back again' }] }
+      { kind: 'message', role: 'assistant', blocks: [{ type: 'text', text: 'back again' }] },
+      { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
     )
     sink?.publish()
     await host.flushStreamedEvents(SESSION)
@@ -690,11 +704,11 @@ describe('an unexpected provider exit', () => {
     const history = await host.history({ sessionId: SESSION, direction: 'tail' })
     expect(history.ok && history.page.submissions[0]?.dispatchState).toBe('unknown')
     // A send whose delivery outcome is unknown IS work in progress, so the reassuring outcome is
-    // written — carrying the cause, and never the old bare `Provider exited: <reason>` row.
+    // written — its failure fact beside it, and never the old bare `Provider exited: <reason>` row.
     const statuses = history.ok
       ? history.page.items.flatMap((item) => (item.body.kind === 'status' ? [item.body.text] : []))
       : []
-    expect(statuses).toEqual([unexpectedProviderExitOutcome('provider exited')])
+    expect(statuses).toEqual([UNEXPECTED_PROVIDER_EXIT_OUTCOME])
     expect(statuses.some((text) => text.startsWith('Provider exited'))).toBe(false)
 
     dispatch.mockResolvedValueOnce({
@@ -758,7 +772,9 @@ describe('an unexpected provider exit', () => {
       runtimeFence: exitedFence + 1,
       deathEvidence: { kind: 'exit-observed', detail: 'provider exited', observedAt: NOW }
     })
-    // Nothing retries the settlement; the journal writes again, and the next acquire re-derives it.
+    // The retry recording the exit queues is refused too; once the journal writes again, the next
+    // acquire re-derives it.
+    await host.collaboratorsForTests().serialize(SESSION, async () => {})
     refusing.mockRestore()
 
     dispatch.mockResolvedValueOnce({
@@ -776,15 +792,20 @@ describe('an unexpected provider exit', () => {
     )
     expect(acquire).toHaveBeenCalledTimes(2)
     // The new child's acquire settled the turn from the release's evidence: ended at the exit's
-    // receipt, with the exit's own reason in the row.
+    // receipt. The evidence is Orca's log text, so the row says only that the provider stopped.
     const history = await host.history({ sessionId: SESSION, direction: 'tail' })
     const items = history.ok ? history.page.items : []
     expect(items.map((item) => readAgentJournalTurn(item.body)).filter(Boolean)).toContainEqual(
       expect.objectContaining({ turnId: 'turn-1', state: 'interrupted', completedAt: NOW })
     )
-    expect(
-      items.flatMap((item) => (item.body.kind === 'status' ? [item.body.text] : []))
-    ).toContain(unexpectedProviderExitOutcome('provider exited'))
+    const statuses = items.flatMap((item) => (item.body.kind === 'status' ? [item.body] : []))
+    expect(statuses).toContainEqual({
+      kind: 'status',
+      text: UNEXPECTED_PROVIDER_EXIT_OUTCOME,
+      failure: { kind: 'providerExited' },
+      tone: 'error'
+    })
+    expect(statuses.map((status) => status.text).join('\n')).not.toContain('provider exited')
   })
 })
 

@@ -1,3 +1,4 @@
+import { AGENT_JOURNAL_THREAD_SCOPE } from '../../../shared/agent-session-journal-types'
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { agentJournalItemKey } from '../../../shared/agent-session-journal-item-key'
 import type { AgentSessionOwnerProbe } from '../../../shared/agent-session-lease-adjudication'
@@ -26,6 +27,7 @@ import {
   HOST_TEST_THREAD as THREAD,
   hostTestMessage
 } from './structured-agent-session-host-test-data'
+import { openTestJournalHostDatabase } from '../agent-session-journal/journal-host-database-test-support'
 
 let root: string
 let store: AgentSessionRecordStore
@@ -132,18 +134,20 @@ describe('attach', () => {
     host = new StructuredAgentSessionHost({
       store,
       adapter: { ...adapter(), acquire },
-      journalRoot: root,
+      journalDatabase: openTestJournalHostDatabase(root),
       claimKeyId: 'key-1',
       mintSpawnToken: () => 'spawn-a',
       now: () => NOW
     })
     const params = attachParams()
 
+    // Orca's own store fault: the child is gone, but nothing blames the provider.
     const refused = {
       ok: false,
       refusal: {
         code: 'agent_session_operation_invalid',
-        message: 'agent_session_provider_handle_stale_fence',
+        details: { ownerVerdict: 'exited' },
+        message: "Codex couldn't restart. Send your message to try again.",
         ownerVerdict: 'exited'
       }
     }
@@ -161,7 +165,10 @@ describe('attach', () => {
 
     await expect(host.attach(CALLER, attachParams())).resolves.toMatchObject({
       ok: false,
-      refusal: { message: 'commit failed', ownerVerdict: 'exited' }
+      refusal: {
+        message: "Codex couldn't restart. Send your message to try again.",
+        ownerVerdict: 'exited'
+      }
     })
 
     expect(releaseAcquisition).toHaveBeenCalledWith({ sessionId: SESSION })
@@ -181,7 +188,8 @@ describe('attach', () => {
     })
     events?.appendItem(
       { provider: 'orca', clientMessageId: 'old-journal-write' },
-      { kind: 'status', text: 'old journal write' }
+      { kind: 'status', text: 'old journal write' },
+      { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
     )
     await vi.waitFor(() => expect(append).toHaveBeenCalledOnce())
     const released = await store.evictProvenDeadOwner({
@@ -384,7 +392,7 @@ describe('respondToPrompt', () => {
         options: [{ id: 'allow', label: 'Allow' }],
         resolution: { state: 'pending', selectedOptionId: null, resolvedBy: null, resolvedAt: null }
       },
-      child
+      { ...child, turnScope: AGENT_JOURNAL_THREAD_SCOPE }
     )
     await host.flushStreamedEvents(SESSION)
     const itemId = agentJournalItemKey(identity)
@@ -556,7 +564,7 @@ describe('restart', () => {
     host = new StructuredAgentSessionHost({
       store,
       adapter: { ...adapter(), ...adapterOverrides },
-      journalRoot: root,
+      journalDatabase: openTestJournalHostDatabase(root),
       claimKeyId: 'key-1',
       mintSpawnToken: () => 'spawn-b',
       probeOwner,

@@ -496,6 +496,7 @@
           "mimo_code_label": "MiMo Code",
           "muse_label": "Muse",
           "opencode2_label": "OpenCode 2",
+          "codebuddy_label": "CodeBuddy",
           "zcode_label": "ZCode"
         },
         "skill": {
@@ -1602,7 +1603,6 @@
         "reuseExistingBranchHint": "既存のブランチから新規ブランチを作成せず、そのブランチをチェックアウトします。",
         "createMultiple": "さらに作成",
         "waitForSetupBeforeAgent": "セットアップが完了するまで待ってから Agent を開始してください",
-        "waitForSetupBeforeAgentHelp": "セットアップによって、起動時に Agent に必要な依存関係、MCP サーバー、または構成ファイルがインストールされるときに、これをオンにします。",
         "destroyDisabled": "破壊は無効です",
         "destroyConfigured": "設定されたものを破棄する",
         "noDestroyConfigured": "破壊しない",
@@ -3033,6 +3033,7 @@
           },
           "TerminalContextMenu": {
             "b4cdd9314e": "クリアスクリーン",
+            "resetTerminal": "ターミナルをリセット",
             "8c17d6786d": "ペインを閉じる",
             "copyTerminalId": "ターミナル ID をコピー",
             "2cf85a6a55": "ペインIDのコピー",
@@ -3674,7 +3675,8 @@
             "floatingTerminalNewActivity": "{{label}}、新規アクティビティ",
             "codexSignInSuccess": "Codex にサインインしました",
             "codexSignInError": "Codex のサインインに失敗しました。もう一度お試しください。",
-            "cursorUsageMenu": "Cursor の使用状況"
+            "cursorUsageMenu": "Cursor の使用状況",
+            "hiddenUsageProviders": "ほかに: {{value0}}"
           },
           "StatusBarUsageEmptyCta": {
             "828c764a79": "アカウントを接続する",
@@ -3964,7 +3966,12 @@
             "checkLabel": "確認が必要なチャット {{value0}} 件",
             "checkAriaOne": "再開後に確認が必要なチャット 1 件。詳細はクリックしてください。",
             "checkAria": "再開後に確認が必要なチャット {{value0}} 件。詳細はクリックしてください。",
-            "checkTooltip": "再起動後に Orca が再開できなかった、または再開を確認できなかったチャット。詳細はクリックしてください。"
+            "checkTooltip": "再起動後に Orca が再開できなかった、または再開を確認できなかったチャット。詳細はクリックしてください。",
+            "resumingLabelOne": "1 件のチャットを再開中",
+            "resumingLabel": "{{value0}} 件のチャットを再開中",
+            "resumingAriaOne": "1 件のチャットを再開中。詳細はクリックしてください。",
+            "resumingAria": "{{value0}} 件のチャットを再開中。詳細はクリックしてください。",
+            "resumingTooltip": "中断されたチャットを復元し、続行を依頼しています…"
           }
         }
       },
@@ -7869,8 +7876,7 @@
           "81057d5f71": "保存中…",
           "da37d6f10e": "コピー",
           "3149964b66": "コピーしました",
-          "waitForSetupBeforeAgent": "セットアップが完了するまで待ってから Agent を開始してください",
-          "waitForSetupBeforeAgentHelp": "セットアップによって、起動時に Agent に必要な依存関係、MCP サーバー、または構成ファイルがインストールされるときに、これをオンにします。"
+          "waitForSetupBeforeAgent": "セットアップが完了するまで待ってから Agent を開始してください"
         },
         "RepositoryIconPicker": {
           "2b7d27b93c": "{{value0}} リポジトリカラーを使用する",
@@ -8985,6 +8991,9 @@
             "0d1c334987": "蓋",
             "ff8de8a2ad": "ディスプレイ",
             "0d752916f8": "フック",
+            "agent-trust-trust": "信頼",
+            "agent-trust-folder": "フォルダー",
+            "agent-trust-worktree": "ワークツリー",
             "6984d4291a": "状態",
             "13b20636a6": "待機",
             "8599603496": "完了",
@@ -10750,6 +10759,10 @@
         "agent-status-hooks-copy": {
           "7707c15abb": "Agent 状態フック",
           "a68a642835": "Orca で作業中、待機中、完了の状態を表示します。オフにすると Orca 管理のフックを削除し、再インストールを停止します。"
+        },
+        "agent-workspace-trust-copy": {
+          "title": "Orca が Agent を起動するときにフォルダーを信頼する",
+          "description": "Orca が起動した Agent は「Do you trust this folder?」の確認を省略するため、プロジェクトの Agent のフックと設定がすぐに実行されます。この設定がオフの場合、各 Agent はフォルダーで初めて実行されるときに確認します。オーケストレーションのワーカー、オートメーション、スマートフォンから起動した Agent など、あなたが見ていない間に動く Agent は、そのターミナルで応答するまでこの確認で待機します。すでに信頼済みのフォルダーは信頼されたままです。"
         },
         "agent-generated-tab-title-copy": {
           "19ad21615a": "タブタイトルを自動生成",
@@ -17347,6 +17360,7 @@
     },
     "native-chat": {
       "writeNotice": {
+        "notDoneReadHistory": "このチャットの履歴を読み込めませんでした。",
         "notDoneSend": "メッセージは送信されませんでした。",
         "tryAgainComposerSend": "もう一度送信してください。",
         "notDoneStop": "Agent は停止されませんでした。",
@@ -17361,8 +17375,41 @@
         "outcomeUnknown": "Orca は何が起きたかを確認できませんでした。チャットを確認してください。",
         "questionChanged": "この質問はすでに回答済みか、変更されています。",
         "historyUnreadable": "Orca はこのチャットの保存済み履歴を読み取れませんでした。",
+        "historyUnusable": "このチャットを読み込めません。",
+        "historyUnavailable": "Orca は現在このチャットの履歴を開けませんでした。",
+        "savedByNewerOrca": "チャットは新しいバージョンの Orca で保存されました。",
+        "updateOrcaToKeepUsing": "引き続き使用するには、Orca を更新してください。",
         "unsupported": "このチャットを実行している Orca はこの操作に対応していません。Orca を更新してから、もう一度お試しください。",
-        "unreachable": "Orca は Agent に接続できませんでした。"
+        "unreachable": "Orca は Agent に接続できませんでした。",
+        "recordFailed": "Orca はこのチャットの履歴に記録できませんでした。",
+        "conversationCleared": "この会話はクリアされました。",
+        "openCurrentConversation": "続けるには、現在の会話を開いてください。",
+        "clearUnfinished": "前回の /clear は完了しませんでした。",
+        "commandRunning": "/compact または /clear がまだ実行中です。",
+        "waitForCommand": "/compact または /clear が終わるまでお待ちください。",
+        "agentStarting": "Agent はまだ起動中です。",
+        "waitForStart": "Agent の起動が終わるまでお待ちください。",
+        "turnActive": "Agent はまだ応答中です。",
+        "waitForTurn": "Agent の応答が終わるまで待つか、Agent を停止してください。",
+        "promptPending": "Agent は質問または承認への回答を待っています。",
+        "answerFirst": "先に質問または承認に回答してください。",
+        "backgroundTasksRunning": "バックグラウンドタスクがまだ実行中です。",
+        "waitForBackgroundTasks": "バックグラウンドタスクが終わるまでお待ちください。",
+        "messagesUnsettled": "以前に送信したメッセージがまだ確認されていません。",
+        "settleEarlierMessage": "以前のメッセージが届くまで待つか、再試行してください。",
+        "optionRejected": "Agent はこの設定を受け入れませんでした。",
+        "goalsUnsupported": "この Agent は目標に対応していません。",
+        "agentRefused": "Agent がこれを拒否しました。",
+        "ownerUnproven": "Orca は、このチャットの以前の Agent が停止したことをまだ確認できていません。",
+        "reopenChat": "もう一度確認するには、チャットを開き直してください。",
+        "terminalAgentHoldsChat": "このチャットはまだターミナルの Agent で開かれています。",
+        "quitTerminalAgent": "ここでチャットを続けるには、その Agent を終了してください。",
+        "hostReconciling": "Orca は再起動後、このチャットをまだ確認しています。",
+        "waitMoment": "しばらくお待ちください。",
+        "recordUnreadable": "Orca はこのチャットの保存済みの状態を読み取れませんでした。",
+        "chatNotFound": "このチャットを実行している Orca には、このチャットの記録がありません。",
+        "startNewChat": "続けるには、新しいチャットを開始してください。",
+        "tryAgain": "もう一度お試しください。"
       },
       "composer": {
         "imageUnsupported": "この Agent では画像の貼り付けはサポートされていません。",
@@ -17523,6 +17570,7 @@
           "subtitle": "トランスクリプトを読み取ることができませんでした。作業を続けるには、ターミナルに切り替えてください。",
           "retryingSubtitle": "トランスクリプトを読み取ることができませんでした。Orca は読み込みを再試行し続けます。"
         },
+        "reconnecting": "このチャットに再接続しています…",
         "pairHost": "ホストをペアリングして、Agent のチャット履歴を表示します。",
         "notAgent": {
           "title": "ここでは会話はありません",
@@ -17647,6 +17695,7 @@
       "railEmptyMessage": "メッセージ",
       "ask": {
         "awaiting": "ユーザー入力を待っています:",
+        "awaitingUnnamed": "ユーザー入力を待っています",
         "asked": "質問:",
         "questionCount": "{{value0}} の質問"
       },
@@ -17670,7 +17719,9 @@
         "startedN": "{{value0}} サブ Agent をキックオフしました",
         "ranOne": "1 人のサブ Agent を実行しました",
         "ranN": "{{value0}} サブ Agent を実行しました",
-        "tokens": "{{value0}} トークン"
+        "tokens": "{{value0}} トークン",
+        "unnamed": "サブ Agent",
+        "writtenBy": "サブ Agent {{value0}} による出力"
       },
       "conversationCommand": {
         "pendingWork": "このコマンドを使用する前に、保留中の作業とメッセージが完了するまで待ってください。",
@@ -18034,6 +18085,9 @@
           }
         }
       }
+    },
+    "agentChildRow": {
+      "ended": "終了"
     }
   },
   "dashboardPopout": {
@@ -18452,5 +18506,63 @@
   },
   "common": {
     "retry": "再試行"
+  },
+  "fileExplorer": {
+    "root": {
+      "label": "エクスプローラーのルート",
+      "full": "リポジトリのルート",
+      "viewing": "表示中: {{path}}",
+      "back": "{{path}} に戻る",
+      "searchScope": "検索範囲: ワークスペースのファイル",
+      "retry": "再試行",
+      "omittedFiles": "スパースチェックアウトで除外されたファイルは検索されません。",
+      "viewOnly": "スパースチェックアウト · 表示を変えてもチェックアウト済みのファイルは変わりません。",
+      "sparseStatus": "スパースチェックアウト",
+      "scopeDetails": "スパースチェックアウトの範囲について",
+      "scopeExplanation": "フォルダーの選択で変わるのは表示範囲です。チェックアウトされるファイルは変わりません。リポジトリルートには、ルートと親フォルダーにチェックアウトされたファイルも表示されます。",
+      "searchExplanation": "「名前」は表示中のフォルダーを絞り込みます。「内容」はワークスペース全体を検索します。スパースチェックアウトで除外されたファイルは検索されません。",
+      "findInFolder": "{{path}} 内を検索",
+      "folderLoadError": "このフォルダーを読み込めませんでした：",
+      "emptyFolder": "このフォルダーにはファイルがありません"
+    }
+  },
+  "sparsePreset": {
+    "nameRequired": "名前を入力してください。",
+    "nameTooLong": "名前は80文字以内にしてください。",
+    "nameExists": "「{{name}}」というプリセットは既に存在します。",
+    "name": "名前",
+    "namePlaceholder": "Webアプリと共通UI",
+    "directories": "ディレクトリ",
+    "pathHelp": "リポジトリ相対のディレクトリを1行に1つ入力してください。パス内の空白は保持されます。",
+    "coneHelp": "Gitはリポジトリのルートと、選択したディレクトリの親フォルダにあるファイルも保持します。",
+    "cancel": "キャンセル",
+    "save": "プリセットを保存",
+    "new": "新しいスパースプリセット",
+    "edit": "スパースプリセットを編集",
+    "description": "新しいワークスペースでチェックアウトするフォルダを選択してください。",
+    "saveFailed": "プリセットを保存できませんでした。もう一度お試しください。",
+    "loading": "プリセットを読み込み中...",
+    "details": "チェックアウトされるファイルは？",
+    "finishEditing": "ワークスペースの作成を続けるには、プリセットを保存するかキャンセルしてください。",
+    "pathInstructions": "リポジトリルートからの相対パスで、1行に1フォルダーずつ入力します。",
+    "retryLoad": "プリセットの読み込みを再試行",
+    "fullCheckout": "フルチェックアウト",
+    "checkoutPreset": "チェックアウトのプリセット",
+    "search": "プリセットを検索…",
+    "noMatches": "一致するプリセットはありません。",
+    "allFiles": "リポジトリ内のすべてのファイル",
+    "editNamed": "{{name}} を編集",
+    "addPath": "Add a folder",
+    "findPath": "Find a folder…",
+    "noPathMatches": "No folders found.",
+    "repositoryRoot": "Repository root",
+    "loadingPaths": "Reading folders…",
+    "pathsUnavailable": "Could not read this folder. Type the path instead.",
+    "pathAdded": "Added",
+    "openFolder": "Open {{name}}",
+    "findOrTypePath": "Find a folder, or type any path…",
+    "addTypedPath": "Add",
+    "noDirectories": "No folders added yet.",
+    "removePath": "Remove {{name}}"
   }
 }

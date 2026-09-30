@@ -1,3 +1,4 @@
+import { AGENT_JOURNAL_THREAD_SCOPE } from '../../../shared/agent-session-journal-types'
 // A chat interrupted mid-turn by a restart, rebuilt on a fresh host over the same store, for the
 // restart-resume ownership and failure tests.
 
@@ -11,6 +12,7 @@ import {
 import { AgentSessionRecordStore } from '../../runtime/agent-session-record-store'
 import { parseAgentSessionResumeMarker } from '../../../shared/agent-session-resume-marker'
 import { StructuredAgentSessionHost } from './structured-agent-session-host'
+import type { StructuredAgentSessionHostDeps } from './structured-agent-session-host-types'
 import { StructuredAgentSessionResumeAdmission } from './structured-agent-session-restart-resume-runner'
 import {
   adapter,
@@ -27,6 +29,7 @@ import {
   hostTestAttachParams,
   hostTestMessage
 } from './structured-agent-session-host-test-data'
+import { openTestJournalHostDatabase } from '../agent-session-journal/journal-host-database-test-support'
 
 /** Starts the agent explicitly — the attach a client's ensure makes — for a test that needs a
  *  running child before its next step. Nothing else starts one ahead of a send. */
@@ -43,7 +46,11 @@ export async function startAgent(state: {
 
 export async function interruptedRestart(
   work: 'turn' | 'submission' | 'send-after-reply' | 'children' = 'turn',
-  historyBoundaryConsistent = true
+  historyBoundaryConsistent = true,
+  /** What the restarted host proves about the recorded owner; gone unless a test says otherwise. */
+  probeOwner: NonNullable<StructuredAgentSessionHostDeps['probeOwner']> = async () => ({
+    outcome: 'pid-absent'
+  })
 ) {
   const previous = hostTestState()
   await attach()
@@ -55,7 +62,8 @@ export async function interruptedRestart(
     // An earlier exchange had finished; the user's next send had not opened a turn yet.
     events.appendItem(
       { provider: 'codex', threadId: THREAD, turnId: 'earlier-turn', ordinal: 1 },
-      { kind: 'turn', turnId: 'earlier-turn', state: 'completed' }
+      { kind: 'turn', turnId: 'earlier-turn', state: 'completed' },
+      { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
     )
     await previous.host.flushStreamedEvents(SESSION)
   }
@@ -68,7 +76,8 @@ export async function interruptedRestart(
   } else if (work === 'children') {
     events.appendItem(
       { provider: 'codex', threadId: THREAD, turnId: 'settled-turn', ordinal: 1 },
-      { kind: 'turn', turnId: 'settled-turn', state: 'completed' }
+      { kind: 'turn', turnId: 'settled-turn', state: 'completed' },
+      { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
     )
     const group = {
       provider: 'codex',
@@ -87,20 +96,21 @@ export async function interruptedRestart(
         }
       ]
     })
-    events.appendItem(group, roster('working'))
+    events.appendItem(group, roster('working'), { turnScope: AGENT_JOURNAL_THREAD_SCOPE })
     previous.host.deps.adapter.backgroundTaskState = () => ({
       state: 'monitoring',
       tasks: [{ id: 'child-1', kind: 'agent', description: 'Review loop 4', state: 'working' }]
     })
     // As the real adapters do: the child's own close settles the children it can no longer hear.
     previous.host.deps.adapter.closeSession = async () => {
-      events.appendItem(group, roster('unverifiable'))
+      events.appendItem(group, roster('unverifiable'), { turnScope: AGENT_JOURNAL_THREAD_SCOPE })
       return true
     }
   } else {
     events.appendItem(
       { provider: 'codex', threadId: THREAD, turnId: 'interrupted-turn', ordinal: 1 },
-      { kind: 'turn', turnId: 'interrupted-turn', state: 'running' }
+      { kind: 'turn', turnId: 'interrupted-turn', state: 'running' },
+      { turnScope: AGENT_JOURNAL_THREAD_SCOPE }
     )
   }
   await previous.host.flushStreamedEvents(SESSION)
@@ -127,10 +137,10 @@ export async function interruptedRestart(
           }
         : {})
     },
-    journalRoot: previous.root,
+    journalDatabase: openTestJournalHostDatabase(previous.root),
     claimKeyId: 'key-1',
     mintSpawnToken: () => 'spawn-next',
-    probeOwner: async () => ({ outcome: 'pid-absent' }),
+    probeOwner,
     recoveryCapsule: new AgentSessionRecoveryCapsule(previous.root),
     now: () => clock.now
   })

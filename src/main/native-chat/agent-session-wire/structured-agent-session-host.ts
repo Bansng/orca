@@ -35,9 +35,9 @@ import * as sessionTabs from './structured-agent-session-host-tabs'
 import {
   structuredAgentSessionMutationDelegates,
   settleStructuredAgentSessionLateDispatch,
-  type StructuredAgentSessionMutationContext,
-  releaseStructuredAgentSessionUnansweredDispatches
+  type StructuredAgentSessionMutationContext
 } from './structured-agent-session-host-mutations'
+import { releaseStructuredAgentSessionUnansweredDispatches } from './structured-agent-session-unanswered-dispatch-release'
 import { flushStructuredAgentSessionHost } from './structured-agent-session-host-teardown'
 import type {
   StructuredAgentSessionCaller,
@@ -55,6 +55,7 @@ import {
 import { structuredAgentSessionRestartResumeSurfaces } from './structured-agent-session-restart-resume-wiring'
 import { createStructuredAgentSessionConversationDelivery } from './structured-agent-session-host-delivery'
 import { structuredAgentSessionConversationFence } from './structured-agent-session-provider-child'
+import { wireStructuredAgentSessionQueuedMessages } from './structured-agent-session-queued-wiring'
 export type { StructuredAgentSessionHostDeps } from './structured-agent-session-host-types'
 
 export class StructuredAgentSessionHost {
@@ -63,16 +64,23 @@ export class StructuredAgentSessionHost {
     this
   )
   private readonly sessions = new StructuredAgentSessionConversations({
-    deliver: (sessionId, journal) => this.subscribers.publish(sessionId, journal),
+    deliver: (sessionId, journal) => {
+      this.subscribers.publish(sessionId, journal)
+      this.conversationDelivery.afterCommit(sessionId, journal)
+    },
     onDeliveryError: (sessionId, error) => this.deps.onEventSinkError?.({ sessionId, error }),
+    onOpened: (sessionId) => this.queued.drain.schedule(sessionId),
     now: () => this.now()
   })
+  private readonly queued = wireStructuredAgentSessionQueuedMessages(this.sessions, () =>
+    this.mutationContext()
+  )
   // Every journal publish is activity: the one renewal the idle sweep reads.
   private readonly clientDelivery = new StructuredAgentSessionClientDelivery(
     this.sessions,
     () => this.now(),
     () => this.deps,
-    (sessionId) => this.sessions.touch(sessionId),
+    (sessionId) => this.queued.onJournalActivity(sessionId),
     (sessionId) => this.restartResume.onAgentStarted(sessionId)
   )
   private readonly subscribers = this.clientDelivery.subscribers
@@ -123,7 +131,8 @@ export class StructuredAgentSessionHost {
           reset,
           structuredAgentSessionConversationFence(deps.store, sessionId)
         ),
-      publishRestored: this.clientDelivery.publishRestored
+      publishRestored: this.clientDelivery.publishRestored,
+      flushStreamedEvents: (sessionId) => this.flushStreamedEvents(sessionId)
     })
     this.restore = createStructuredAgentSessionHostRestore(deps, {
       reconcile: this.reconcileLeases,
@@ -170,6 +179,7 @@ export class StructuredAgentSessionHost {
   private now = (): number => this.deps.now?.() ?? Date.now()
 
   hasSession = (sessionId: string): boolean => this.sessions.has(sessionId)
+  sessionAgent = (sessionId: string) => this.deps.store.getRecord(sessionId)?.provider ?? null
 
   handleAdapterEvent = (event: Parameters<StructuredAgentSessionEventRecovery['handle']>[0]) =>
     this.eventRecovery.handle(event)
@@ -247,7 +257,7 @@ export class StructuredAgentSessionHost {
   // Trigger inlined rather than imported: `AgentSessionResumeTrigger` in shared is the canonical
   // type, and this file has no line budget left for the import.
   async flushAllStreamedEvents(options?: { trigger?: 'quit' | 'update' }): Promise<void> {
-    this.conversationDelivery.loop.dispose()
+    this.conversationDelivery.dispose()
     await flushStructuredAgentSessionHost({
       ...this.lifetimeContext(),
       idleSweep: this.lifetime,
@@ -271,11 +281,16 @@ export class StructuredAgentSessionHost {
         ensureStructuredAgentSessionAgentForOperation(this.attachContext(), sessionId),
       wakeDelivery: (sessionId) => this.conversationDelivery.loop.wake(sessionId),
       stopAgent: this.lifetime.stopAgent,
+      wakeQueuedDrain: (sessionId) => this.queued.drain.schedule(sessionId),
       now: () => this.now()
     }
   }
 
   send = this.conversationCommands.send
+
+  queuedMessageSend = this.queued.queuedMessageSend
+  queuedMessageDelete = this.queued.queuedMessageDelete
+  queuedMessagesResume = this.queued.queuedMessagesResume
 
   waitForSendSettlement = this.clientDelivery.waitForSendSettlement
 

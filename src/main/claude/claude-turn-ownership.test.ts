@@ -6,7 +6,6 @@ import type { AgentJournalItemBody } from '../../shared/agent-session-journal-ty
 import { readAgentJournalTurn } from '../../shared/agent-session-turn-record'
 import type { StructuredAgentSessionEventSink } from '../native-chat/agent-session-wire/structured-agent-session-event-sink'
 import { agentJournalItemKey } from '../../shared/agent-session-journal-item-key'
-import { StructuredSessionCompaction } from '../native-chat/agent-session-wire/structured-session-compaction'
 import {
   CLAUDE_DISPATCH_ADMISSION_TIMEOUT_MS,
   cancelClaudeStructuredTurn
@@ -96,8 +95,13 @@ function sessionHoldingTurn(turnId: string | null): ReturnType<typeof sessionFor
   session.dispatchSequence = 1
   session.translator = {
     handle: vi.fn(),
+    openTurnInLiveProviderCycle: false,
     journalPrompts: { cancel: vi.fn(), resolve: vi.fn() },
     currentTurnId: turnId,
+    commandTurnId: null,
+    beginCommand: vi.fn(),
+    forgetCommand: vi.fn(),
+    commandInterruptRequested: vi.fn(),
     flush: vi.fn(),
     contextActivity: 0,
     markContextActivity: vi.fn(),
@@ -118,7 +122,6 @@ function cancellationOf(
   return cancelClaudeStructuredTurn({
     request,
     sessions: new Map([['session-1', session]]),
-    compactions: new StructuredSessionCompaction(),
     admitPromptCancellation: () => true
   })
 }
@@ -277,8 +280,13 @@ describe('Claude turn ownership', () => {
       session.dispatchSequence = 1
       session.translator = {
         handle: vi.fn(),
+        openTurnInLiveProviderCycle: false,
         journalPrompts: { cancel: vi.fn(), resolve: vi.fn() },
         currentTurnId: 'turn-1',
+        commandTurnId: null,
+        beginCommand: vi.fn(),
+        forgetCommand: vi.fn(),
+        commandInterruptRequested: vi.fn(),
         flush: vi.fn(),
         contextActivity: 0,
         markContextActivity: vi.fn(),
@@ -306,7 +314,6 @@ describe('Claude turn ownership', () => {
       const cancellation = cancelClaudeStructuredTurn({
         request: { sessionId: 'session-1', turnId: 'turn-1', fence: 1 },
         sessions: new Map([['session-1', session]]),
-        compactions: new StructuredSessionCompaction(),
         admitPromptCancellation: () => true
       })
       await vi.advanceTimersByTimeAsync(100)

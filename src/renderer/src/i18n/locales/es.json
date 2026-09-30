@@ -385,7 +385,8 @@
           "d443a47995": "Prime Agent",
           "mimo_code_label": "MiMo Code",
           "muse_label": "Muse",
-          "zcode_label": "ZCode"
+          "zcode_label": "ZCode",
+          "codebuddy_label": "CodeBuddy"
         },
         "skill": {
           "cli": {
@@ -1378,7 +1379,6 @@
         "reuseExistingBranchHint": "Haz checkout de la rama existente en lugar de crear una nueva a partir de ella.",
         "createMultiple": "Crear más",
         "waitForSetupBeforeAgent": "Esperar a que termine el setup antes de iniciar el agente",
-        "waitForSetupBeforeAgentHelp": "Activa esto cuando el setup instale dependencias, servidores MCP o archivos de configuración que el agente necesita al iniciar.",
         "destroyDisabled": "destroy deshabilitado",
         "destroyConfigured": "destroy configurado",
         "noDestroyConfigured": "sin destroy",
@@ -2751,6 +2751,7 @@
           },
           "TerminalContextMenu": {
             "b4cdd9314e": "Borrar pantalla",
+            "resetTerminal": "Restablecer terminal",
             "8c17d6786d": "Cerrar panel",
             "copyTerminalId": "Copiar ID de terminal",
             "2cf85a6a55": "Copiar ID del panel",
@@ -3347,7 +3348,8 @@
             "floatingTerminalNewActivity": "{{label}}, nueva actividad",
             "codexSignInSuccess": "Sesión iniciada en Codex",
             "codexSignInError": "No se pudo iniciar sesión en Codex. Inténtalo de nuevo.",
-            "cursorUsageMenu": "Uso de Cursor"
+            "cursorUsageMenu": "Uso de Cursor",
+            "hiddenUsageProviders": "También: {{value0}}"
           },
           "StatusBarUsageEmptyCta": {
             "828c764a79": "Conectar una cuenta",
@@ -3613,7 +3615,12 @@
             "checkLabel": "{{value0}} chats por revisar",
             "checkAriaOne": "1 chat por revisar tras la reanudación. Haz clic para ver los detalles.",
             "checkAria": "{{value0}} chats por revisar tras la reanudación. Haz clic para ver los detalles.",
-            "checkTooltip": "Chats que Orca no pudo reanudar, o no pudo confirmar que reanudó, tras el reinicio. Haz clic para ver los detalles."
+            "checkTooltip": "Chats que Orca no pudo reanudar, o no pudo confirmar que reanudó, tras el reinicio. Haz clic para ver los detalles.",
+            "resumingLabelOne": "Reanudando 1 chat",
+            "resumingLabel": "Reanudando {{value0}} chats",
+            "resumingAriaOne": "Reanudando 1 chat. Haz clic para ver los detalles.",
+            "resumingAria": "Reanudando {{value0}} chats. Haz clic para ver los detalles.",
+            "resumingTooltip": "Restaurando los chats interrumpidos y pidiéndoles que continúen…"
           }
         }
       },
@@ -6801,8 +6808,7 @@
           "81057d5f71": "Guardando...",
           "da37d6f10e": "Copiar",
           "3149964b66": "Copiado",
-          "waitForSetupBeforeAgent": "Espera a que se complete la configuración antes de iniciar el agente",
-          "waitForSetupBeforeAgentHelp": "Activa esto cuando la configuración instale dependencias, servidores MCP o archivos de configuración que el agente necesite durante el inicio."
+          "waitForSetupBeforeAgent": "Espera a que se complete la configuración antes de iniciar el agente"
         },
         "RepositoryIconPicker": {
           "2b7d27b93c": "Usar {{value0}} como color del repositorio",
@@ -7899,6 +7905,9 @@
             "0d1c334987": "tapa",
             "ff8de8a2ad": "pantalla",
             "0d752916f8": "hooks",
+            "agent-trust-trust": "confianza",
+            "agent-trust-folder": "carpeta",
+            "agent-trust-worktree": "worktree",
             "6984d4291a": "estado",
             "13b20636a6": "esperando",
             "8599603496": "hecho",
@@ -9481,6 +9490,10 @@
         "agent-status-hooks-copy": {
           "7707c15abb": "Hooks de estado del agente",
           "a68a642835": "Muestra los estados trabajando, esperando y completado en Orca. Desactívalo para quitar los hooks administrados por Orca y dejar de reinstalarlos."
+        },
+        "agent-workspace-trust-copy": {
+          "title": "Confiar en la carpeta cuando Orca inicia un agente",
+          "description": "Los agentes que inicia Orca omiten su pregunta \"Do you trust this folder?\", así que los hooks y ajustes de agente del proyecto se ejecutan de inmediato. Sin esto, cada agente pregunta la primera vez que se ejecuta en una carpeta. Los agentes que se ejecutan sin que estés mirando, como los workers de orquestación, las automatizaciones y los agentes iniciados desde tu teléfono, esperarán en esa pregunta hasta que la respondas en su terminal. Las carpetas que ya son de confianza lo siguen siendo."
         },
         "agent-generated-tab-title-copy": {
           "19ad21615a": "Generar títulos de pestañas automáticamente",
@@ -14928,6 +14941,7 @@
   "components": {
     "native-chat": {
       "writeNotice": {
+        "notDoneReadHistory": "No se pudo cargar el historial de este chat.",
         "notDoneSend": "Su mensaje no se envió.",
         "tryAgainComposerSend": "Vuelva a enviarlo.",
         "notDoneStop": "El agente no se detuvo.",
@@ -14942,8 +14956,41 @@
         "outcomeUnknown": "Orca no pudo confirmar qué pasó. Revise el chat.",
         "questionChanged": "Esta pregunta ya se respondió o ha cambiado.",
         "historyUnreadable": "Orca no pudo leer el historial guardado de este chat.",
+        "historyUnusable": "No se puede cargar este chat.",
+        "historyUnavailable": "Orca no pudo abrir el historial de este chat en este momento.",
+        "savedByNewerOrca": "Los chats se guardaron con una versión más reciente de Orca.",
+        "updateOrcaToKeepUsing": "Actualice Orca para seguir usándolos.",
         "unsupported": "La versión de Orca que ejecuta este chat no lo admite. Actualice Orca y vuelva a intentarlo.",
-        "unreachable": "Orca no pudo comunicarse con el agente."
+        "unreachable": "Orca no pudo comunicarse con el agente.",
+        "recordFailed": "Orca no pudo registrarlo en el historial de este chat.",
+        "conversationCleared": "Esta conversación se borró.",
+        "openCurrentConversation": "Abra la conversación actual para continuar.",
+        "clearUnfinished": "El último /clear no terminó.",
+        "commandRunning": "Todavía se está ejecutando un /compact o /clear.",
+        "waitForCommand": "Espere a que termine el /compact o /clear.",
+        "agentStarting": "El agente todavía se está iniciando.",
+        "waitForStart": "Espere a que el agente termine de iniciarse.",
+        "turnActive": "El agente todavía está respondiendo.",
+        "waitForTurn": "Espere a que el agente termine de responder o deténgalo.",
+        "promptPending": "El agente está esperando una respuesta a una pregunta o aprobación.",
+        "answerFirst": "Responda primero a la pregunta o aprobación.",
+        "backgroundTasksRunning": "Todavía hay tareas en segundo plano en ejecución.",
+        "waitForBackgroundTasks": "Espere a que terminen las tareas en segundo plano.",
+        "messagesUnsettled": "Un mensaje que envió antes todavía no se ha confirmado.",
+        "settleEarlierMessage": "Espere a que se entregue su mensaje anterior o vuelva a intentarlo.",
+        "optionRejected": "El agente no aceptó este ajuste.",
+        "goalsUnsupported": "Este agente no admite objetivos.",
+        "agentRefused": "El agente lo rechazó.",
+        "ownerUnproven": "Orca no ha confirmado que el agente anterior de este chat se haya detenido.",
+        "reopenChat": "Vuelva a abrir el chat para comprobarlo de nuevo.",
+        "terminalAgentHoldsChat": "Este chat sigue abierto en un agente de terminal.",
+        "quitTerminalAgent": "Cierre ese agente para continuar el chat aquí.",
+        "hostReconciling": "Orca todavía está comprobando este chat después de reiniciarse.",
+        "waitMoment": "Espere un momento.",
+        "recordUnreadable": "Orca no pudo leer el estado guardado de este chat.",
+        "chatNotFound": "La versión de Orca que ejecuta este chat no tiene ningún registro de él.",
+        "startNewChat": "Inicie un chat nuevo para continuar.",
+        "tryAgain": "Vuelva a intentarlo."
       },
       "composer": {
         "imageUnsupported": "Este agente no admite pegar imágenes.",
@@ -15025,6 +15072,7 @@
           "subtitle": "No se pudo leer la transcripción. Vuelva a la terminal para seguir trabajando.",
           "retryingSubtitle": "No se pudo leer la transcripción. Orca sigue intentando cargarla."
         },
+        "reconnecting": "Reconectando con este chat…",
         "pairHost": "Empareje un host para ver el historial de chat del agente.",
         "notAgent": {
           "title": "No hay conversación aquí",
@@ -15069,6 +15117,10 @@
         "label": "Contexto: {{used}} de {{window}} tokens, {{percent}} % usados",
         "title": "Contexto",
         "estimated": "Estimado a partir de la última respuesta."
+      },
+      "subagents": {
+        "unnamed": "Subagente",
+        "writtenBy": "Escrito por el subagente {{value0}}"
       }
     },
     "tab": {
@@ -15133,6 +15185,9 @@
         "copySessionIdSuccess": "ID de sesión copiado",
         "copySessionIdError": "No se pudo copiar el ID de sesión"
       }
+    },
+    "agentChildRow": {
+      "ended": "Finalizado"
     }
   },
   "dashboardPopout": {
@@ -15327,5 +15382,63 @@
       "settingsLink": "Ajustes → Búsqueda de sesiones de agentes",
       "startSearching": "Empezar a buscar"
     }
+  },
+  "fileExplorer": {
+    "root": {
+      "label": "Raíz del explorador",
+      "full": "Raíz del repositorio",
+      "viewing": "Viendo: {{path}}",
+      "back": "Volver a {{path}}",
+      "searchScope": "Ámbito: archivos del espacio de trabajo",
+      "retry": "Reintentar",
+      "omittedFiles": "Los archivos excluidos por el checkout disperso no se buscan.",
+      "viewOnly": "Checkout disperso · Cambiar la vista no cambia los archivos extraídos.",
+      "sparseStatus": "Checkout disperso",
+      "scopeDetails": "Acerca del alcance del checkout disperso",
+      "scopeExplanation": "El selector de carpetas cambia lo que ves, no los archivos del checkout. La raíz del repositorio incluye los archivos presentes en la raíz y en las carpetas superiores.",
+      "searchExplanation": "Nombres filtra la carpeta que estás viendo. Contenido busca en todo el espacio de trabajo. No se buscan los archivos omitidos por el checkout disperso.",
+      "findInFolder": "Buscar en {{path}}",
+      "folderLoadError": "No se pudo cargar esta carpeta:",
+      "emptyFolder": "No hay archivos en esta carpeta"
+    }
+  },
+  "sparsePreset": {
+    "nameRequired": "El nombre es obligatorio.",
+    "nameTooLong": "El nombre debe tener 80 caracteres o menos.",
+    "nameExists": "Ya existe un preajuste llamado «{{name}}».",
+    "name": "Nombre",
+    "namePlaceholder": "Aplicación web e IU compartida",
+    "directories": "Directorios",
+    "pathHelp": "Un directorio relativo al repositorio por línea. Se conservan los espacios dentro de las rutas.",
+    "coneHelp": "Git también conserva los archivos de la raíz del repositorio y de las carpetas superiores de estos directorios.",
+    "cancel": "Cancelar",
+    "save": "Guardar preajuste",
+    "new": "Nuevo preajuste de checkout disperso",
+    "edit": "Editar preajuste de checkout disperso",
+    "description": "Elige las carpetas que se extraerán en un nuevo espacio de trabajo.",
+    "saveFailed": "No se pudo guardar el preajuste. Inténtalo de nuevo.",
+    "loading": "Cargando preajustes...",
+    "details": "¿Qué archivos se extraen?",
+    "finishEditing": "Guarda o cancela el preajuste para continuar creando tu espacio de trabajo.",
+    "pathInstructions": "Una carpeta por línea, con la ruta relativa a la raíz del repositorio.",
+    "retryLoad": "Reintentar cargar los ajustes predefinidos",
+    "fullCheckout": "Checkout completo",
+    "checkoutPreset": "Ajuste predefinido de checkout",
+    "search": "Buscar un ajuste predefinido…",
+    "noMatches": "No hay ajustes predefinidos que coincidan.",
+    "allFiles": "Todos los archivos del repositorio",
+    "editNamed": "Editar {{name}}",
+    "addPath": "Add a folder",
+    "findPath": "Find a folder…",
+    "noPathMatches": "No folders found.",
+    "repositoryRoot": "Repository root",
+    "loadingPaths": "Reading folders…",
+    "pathsUnavailable": "Could not read this folder. Type the path instead.",
+    "pathAdded": "Added",
+    "openFolder": "Open {{name}}",
+    "findOrTypePath": "Find a folder, or type any path…",
+    "addTypedPath": "Add",
+    "noDirectories": "No folders added yet.",
+    "removePath": "Remove {{name}}"
   }
 }

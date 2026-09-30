@@ -155,7 +155,11 @@ jobs:
     name: static analysis
     needs: [code_paths]
     if: needs.code_paths.outputs.static_analysis == 'true'
-    runs-on: ubuntu-latest
+    # Why ARM: measured 128s against 172s on ubuntu-latest, with every compute step faster --
+    # type-aware 24s->15s, anti-slop 28->19s, localization extraction 67->46s, the orcad smoke
+    # 39->14s. Both lint engines ship linux-arm64 and the Bun target follows process.arch, so
+    # the whole toolchain resolves. Free for public repositories, same as the typecheck job.
+    runs-on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout
@@ -431,9 +435,12 @@ jobs:
     name: Codex index-heal contract
     needs: [code_paths]
     if: needs.code_paths.outputs.codex_index_heal_contract == 'true'
-    runs-on: ubuntu-latest
+    # Why ARM: @openai/codex ships @openai/codex-linux-arm64.
+    runs-on: ubuntu-24.04-arm
     env:
       CODEX_CLI_VERSION: '0.150.1'
+      # Why a second pin: --no-daemon only exists from 0.156, and Orca's codex wrapper relies on it.
+      CODEX_NO_DAEMON_CLI_VERSION: '0.158.0'
 
     steps:
       - name: Checkout
@@ -462,11 +469,42 @@ jobs:
             pnpm exec vitest run --config config/vitest.config.ts \
             src/main/codex/codex-index-heal-binary-contract.test.ts
 
+      - name: Install pinned no-daemon Codex CLI
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund --prefix "$RUNNER_TEMP/codex-cli-no-daemon" \
+            "@openai/codex@$CODEX_NO_DAEMON_CLI_VERSION"
+
+      - name: Verify Codex --no-daemon contract
+        env:
+          ORCA_CODEX_NO_DAEMON_CONTRACT_REQUIRED: '1'
+          ORCA_CODEX_NO_DAEMON_CONTRACT_VERSION: ${{ env.CODEX_NO_DAEMON_CLI_VERSION }}
+        run: |
+          set -euo pipefail
+          ORCA_CODEX_NO_DAEMON_CONTRACT_BINARY="$RUNNER_TEMP/codex-cli-no-daemon/node_modules/.bin/codex" \
+            pnpm exec vitest run --config config/vitest.config.ts \
+            src/main/pty/codex-no-daemon-binary-contract.test.ts
+
+      # Why the no-daemon install: it is the newest pinned Codex, and its project
+      # lookup decides whether a worktree launch stops at the trust prompt.
+      - name: Verify Codex project-trust contract
+        env:
+          ORCA_CODEX_TRUST_CONTRACT_REQUIRED: '1'
+          ORCA_CODEX_TRUST_CONTRACT_VERSION: ${{ env.CODEX_NO_DAEMON_CLI_VERSION }}
+        run: |
+          set -euo pipefail
+          ORCA_CODEX_TRUST_CONTRACT_BINARY="$RUNNER_TEMP/codex-cli-no-daemon/node_modules/.bin/codex" \
+            pnpm exec vitest run --config config/vitest.config.ts \
+            src/main/agent-trust-presets.test.ts
+
   xterm_patch_sync:
     name: xterm patch sync
     needs: [code_paths]
     if: needs.code_paths.outputs.xterm_patch_sync == 'true'
-    runs-on: ubuntu-latest
+    # Why ARM: the patch check rebuilds 4 packages x 2 builds and byte-compares against the
+    # checked-in bundles. Those were generated on Linux x64 and reproduce byte-for-byte on
+    # darwin-arm64, so the output is neither host-arch nor host-OS dependent.
+    runs-on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout
@@ -474,21 +512,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/install-node-dependencies
-
-      # Why: the check rebuilds every package in the manifest from a pinned upstream
-      # commit — @xterm/xterm and its three addons, each built twice (once unmodified to
-      # prove the toolchain still reproduces the published bundles, once patched). Caching
-      # the npm metadata and the shallow clone keeps the repeated cost to the builds
-      # themselves; the key is the manifest, so a commit, package or toolchain bump
-      # invalidates it.
-      - name: Restore upstream xterm build inputs
-        uses: actions/cache@v5
+      # The generator uses Node built-ins and installs its own upstream toolchain.
+      - uses: actions/setup-node@v6
         with:
-          path: |
-            ~/.npm
-            ${{ runner.temp }}/xterm-patch-build/upstream/.git
-          key: xterm-upstream-${{ hashFiles('config/patches/xterm-upstream.json') }}
+          node-version-file: package.json
+          package-manager-cache: false
+
+      # Rebuild both pristine and patched bundles; reuse only the pinned toolchain.
+      - uses: ./.github/actions/prepare-xterm-dependencies
 
       - name: Verify xterm patches match the pinned upstream build
         env:
@@ -499,7 +530,8 @@ jobs:
     name: shell contracts
     needs: [code_paths]
     if: needs.code_paths.outputs.shell_contracts == 'true'
-    runs-on: ubuntu-latest
+    # Why ARM: fish 4.x is published for noble/arm64 and zsh is in the arm64 archive.
+    runs-on: ubuntu-24.04-arm
     # Why: this job's cost is almost entirely package download, and a stalled mirror has
     # no wall-clock bound of its own. A successful run finishes in ~4.5 minutes, so this
     # is generous; it exists so a wedge fails the job instead of holding the whole run
@@ -511,6 +543,8 @@ jobs:
       # and its fish lane is the only end-to-end guard for #9993, so a skip would
       # report green with nothing exercised. Turns those skips into failures.
       ORCA_REQUIRE_FISH: '1'
+      # Why: the runner image ships pwsh, and the codex wrapper's PowerShell lane must not skip.
+      ORCA_REQUIRE_PWSH: '1'
 
     steps:
       - name: Checkout
@@ -605,6 +639,7 @@ jobs:
             src/main/providers/local-pty-shell-ready-zsh-launch-environment.test.ts \
             src/main/providers/__tests__/shell-ready-framework-example.test.ts \
             src/main/pty/codex-shell-launch-preflight.test.ts \
+            src/main/pty/codex-shell-no-daemon.test.ts \
             src/main/pty/omp-shell-wrapper-alias-safety.test.ts \
             src/main/pty/omp-shell-wrapper.node-pty.test.ts \
             src/main/shell-startup-feature-channel.test.ts \
@@ -612,6 +647,7 @@ jobs:
             src/main/zsh-scoped-histfile.live-shell.test.ts \
             src/main/zsh-startup-hook-user-config-equivalence.live-shell.test.ts \
             src/main/zsh-wrapper-version-mismatch.live-shell.test.ts \
+            src/main/runtime/structured-session-cli-login-shell.live-shell.test.ts \
             src/renderer/src/components/terminal-pane/fish-color-scheme-child-stdin.node-pty.test.ts \
             src/shared/fish-query-reply-child-stdin.node-pty.test.ts \
             src/shared/pty-reply-echo-shapes.node-pty.test.ts \
@@ -637,12 +673,24 @@ jobs:
           native-runtime: node
           node-version: '24'
 
+  # Why hoisted out of unit-tests.yml: a caller's `needs` gate the whole called workflow, so
+  # while planning lived in there it queued behind static analysis and typecheck and the shards
+  # then queued behind it. Planning needs none of their output, so running it against
+  # code_paths alone overlaps it with the gate. Measured a median 93s off the matrix's start.
+  unit_plan:
+    needs: [code_paths]
+    if: needs.code_paths.outputs.test == 'true'
+    uses: ./.github/workflows/unit-plan.yml
+    with:
+      selection_mode: ${{ vars.ORCA_UNIT_SELECTION_MODE || 'shadow' }}
+
   test:
-    needs: [code_paths, test_native_cache, static_analysis, typecheck]
+    needs: [code_paths, unit_plan, test_native_cache, static_analysis, typecheck]
     # Honor cancellation while allowing the optional native-cache primer to skip.
     if: >-
       !cancelled() &&
       needs.code_paths.outputs.test == 'true' &&
+      needs.unit_plan.result == 'success' &&
       needs.static_analysis.result == 'success' &&
       needs.typecheck.result == 'success' &&
       (needs.test_native_cache.result == 'success' || needs.test_native_cache.result == 'skipped')
@@ -650,7 +698,15 @@ jobs:
     with:
       node_versions: '["24"]'
       runner: ubuntu-24.04-arm
-      selection_mode: ${{ vars.ORCA_UNIT_SELECTION_MODE || 'shadow' }}
+      shards: ${{ needs.unit_plan.outputs.shards }}
+
+  # Why a sibling and not part of the test workflow: it is advisory, so it must not delay the
+  # gate. Inside unit-tests.yml a caller's `needs: test` waited for it, holding verify ~36s
+  # after the last shard. Deliberately absent from verify's needs for the same reason.
+  unit_selection_evidence:
+    needs: [test]
+    if: ${{ !cancelled() && needs.test.result == 'success' }}
+    uses: ./.github/workflows/unit-selection-evidence.yml
 
   # Why a separate job: the test needs a real Chrome, and the sharded `test` matrix
   # would pay for it on every shard to run one file in whichever shard it landed in.
@@ -772,7 +828,8 @@ jobs:
     name: cross-version wire compatibility
     needs: [code_paths]
     if: needs.code_paths.outputs.cross-version-wire == 'true'
-    runs-on: ubuntu-latest
+    # Why ARM: source-only: tagged checkout plus in-process vitest, no docker or browser.
+    runs-on: ubuntu-24.04-arm
 
     steps:
       # Why fetch-depth 0: the harness extracts the newest release tag to skew
@@ -812,7 +869,8 @@ jobs:
     name: managed hooks on Node 18
     needs: [code_paths]
     if: needs.code_paths.outputs.managed_hook_node18 == 'true'
-    runs-on: ubuntu-latest
+    # Why ARM: Node 18 publishes linux-arm64; the per-platform runtime files are read as data.
+    runs-on: ubuntu-24.04-arm
 
     steps:
       - name: Checkout
@@ -848,7 +906,7 @@ jobs:
           persist-credentials: false
 
       - name: Cache electron-builder downloads
-        uses: actions/cache@v5
+        uses: actions/cache/restore@v5
         with:
           path: ~/.cache/electron-builder
           key: electron-builder-linux-${{ hashFiles('pnpm-lock.yaml') }}
@@ -1102,11 +1160,9 @@ jobs:
         uses: actions/cache@v5
         with:
           path: native/windows-cli-launcher/.build
-          key: windows-cli-launcher-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/windows-cli-launcher/**', 'config/scripts/build-windows-cli-launcher.mjs') }}
+          key: windows-cli-launcher-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/windows-cli-launcher/**', 'config/scripts/build-windows-cli-launcher.mjs', 'resources/build/icon.ico', 'package.json') }}
 
       - name: Build package inputs
-        env:
-          ORCA_REUSE_WINDOWS_CLI_LAUNCHER: '1'
         run: pnpm run build:release:parallel
 
       - name: Restore compiled Electron native modules

@@ -1,3 +1,4 @@
+import type { SubmissionRejectionFact } from '../../../shared/agent-session-failure'
 import type { AgentSessionOwnerProbe } from '../../../shared/agent-session-lease-adjudication'
 import type { AgentJournalCursor } from '../../../shared/agent-session-journal-types'
 import type { AgentSessionRecord } from '../../../shared/agent-session-record'
@@ -5,6 +6,7 @@ import type { AgentSessionStatusSummary } from '../../../shared/agent-session-wi
 import type { AgentSessionRecordStore } from '../../runtime/agent-session-record-store'
 import type { AgentSessionRecoveryCapsule } from '../../runtime/agent-session-recovery-capsule'
 import type { AgentSessionSpawnTokenScan } from '../../runtime/agent-session-spawn-token-process-scan'
+import type { JournalHostDatabase } from '../agent-session-journal/journal-host-database'
 import type { AgentSessionJournal } from '../agent-session-journal/journal-store'
 import type {
   StructuredAgentSessionAdapter,
@@ -64,6 +66,8 @@ export type StructuredAgentSessionEndedChild = StructuredAgentSessionProviderChi
     cause: StructuredAgentSessionChildEndCause
     /** Descriptive text only — the provider's diagnostic, or the host's cause. Decides nothing. */
     reason: string | null
+    /** What the chat records about this end; absent reads as a provider exit with no detail. */
+    failure?: SubmissionRejectionFact
     duringStartup: boolean
     startedFor?: string
     /** Where the conversation's journal stood when the child ended, to order the end against a
@@ -92,7 +96,8 @@ export type StructuredAgentSessionHostDeps = {
   adapter: StructuredAgentSessionAdapter
   /** Optional advisory recovery storage, independent of conversation backups. */
   recoveryCapsule?: AgentSessionRecoveryCapsule
-  journalRoot: string
+  /** The host's one chat journal database. */
+  journalDatabase: JournalHostDatabase
   claimKeyId: string
   probeOwner?: (record: AgentSessionRecord) => Promise<AgentSessionOwnerProbe>
   probeOwners?: (
