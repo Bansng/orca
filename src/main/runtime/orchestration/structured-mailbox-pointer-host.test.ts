@@ -45,10 +45,13 @@ describe('structured mailbox pointer host', () => {
     // then delivered mid-turn, which Codex coalesces into the running turn and Claude folds into
     // it -- either way folded into work already in flight rather than read as a new instruction.
     const items = [runningTurn(), ...transcript(500)]
-    hostRef.current = { journalSnapshot: () => ({ items }) }
+    const submissions = [{ clientMessageId: 'op1', dispatchState: 'unknown' }]
+    hostRef.current = { journalSnapshot: () => ({ items, submissions }) }
+    // The recorded sends ride along: the lane reads what its own operation id settled as.
     expect(await createStructuredMailboxPointerHost().readGateFacts('s1')).toEqual({
       turnRunning: true,
-      awaitingHuman: false
+      awaitingHuman: false,
+      submissions
     })
   })
 
@@ -71,7 +74,6 @@ describe('structured mailbox pointer host', () => {
         dispatchId: 'd1',
         operationId: 'op1',
         expectedRuntimeFence: 1,
-        payloadFingerprint: 'fp',
         body: { kind: 'message', role: 'user', blocks: [] }
       } as never)
     ).resolves.toEqual({ kind: 'unattached' })
@@ -98,13 +100,33 @@ describe('structured mailbox pointer host', () => {
         dispatchId: 'd1',
         operationId: 'op1',
         expectedRuntimeFence: 1,
-        payloadFingerprint: 'fp',
         body: { kind: 'message', role: 'user', blocks: [] }
       } as never)
     ).resolves.toEqual({ kind: 'sent', state: expected })
     // Per-dispatch, so one worker's nudges cannot exhaust the shared operation-ledger budget.
     expect(send.mock.calls[0]![0]).toEqual({ callerKey: structuredPointerCallerKey('d1') })
     expect(send.mock.calls[0]![1]!.retryUnknown).toBeUndefined()
+  })
+
+  it('reads a queued answer as unknown, so the pointer is retained', async () => {
+    hostRef.current = {
+      send: async () => ({
+        ok: true,
+        value: {
+          clientMessageId: 'op1',
+          queued: { messageId: 'op1', position: 0, state: 'waiting' }
+        }
+      })
+    }
+    await expect(
+      createStructuredMailboxPointerHost().send({
+        sessionId: 's1',
+        dispatchId: 'd1',
+        operationId: 'op1',
+        expectedRuntimeFence: 1,
+        body: { kind: 'message', role: 'user', blocks: [] }
+      } as never)
+    ).resolves.toEqual({ kind: 'sent', state: 'unknown' })
   })
 
   it('consumes mail once an accepted nudge is delivered while the worker starts (W10)', async () => {
@@ -123,7 +145,6 @@ describe('structured mailbox pointer host', () => {
         dispatchId: 'd1',
         operationId: 'op1',
         expectedRuntimeFence: 1,
-        payloadFingerprint: 'fp',
         body: { kind: 'message', role: 'user', blocks: [] }
       } as never)
     ).resolves.toEqual({ kind: 'sent', state: 'accepted' })
@@ -145,7 +166,6 @@ describe('structured mailbox pointer host', () => {
         dispatchId: null,
         operationId: 'op1',
         expectedRuntimeFence: 1,
-        payloadFingerprint: 'fp',
         body: { kind: 'message', role: 'user', blocks: [] }
       } as never)
     ).resolves.toEqual({ kind: 'sent', state: 'accepted' })
@@ -167,7 +187,6 @@ describe('structured mailbox pointer host', () => {
           dispatchId: 'd1',
           operationId: 'op1',
           expectedRuntimeFence: 1,
-          payloadFingerprint: 'fp',
           body: { kind: 'message', role: 'user', blocks: [] }
         } as never)
       ).resolves.toEqual(expected)

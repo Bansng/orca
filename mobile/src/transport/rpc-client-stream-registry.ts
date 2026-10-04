@@ -3,13 +3,13 @@ import {
   type BrowserScreencastFrame
 } from './browser-screencast-protocol'
 import {
-  buildStreamUnsubscribe,
-  buildTerminalUnsubscribeParams,
+  buildRequestStreamUnsubscribe,
   updateTerminalSubscriptionViewport
 } from './rpc-client-terminal-subscription'
-import { buildReadyStreamUnsubscribe } from './rpc-client-server-subscription'
+import { buildReadyStreamUnsubscribe, isReadyIdStream } from './rpc-client-server-subscription'
 import { isStreamingOpenerReply } from './rpc-acceptance-policies'
 import {
+  isStreamEndResult,
   isStreamingSubscriptionReadyResult,
   isTerminalSubscribedResult
 } from './rpc-subscription-result-shapes'
@@ -26,7 +26,7 @@ export type RpcStreamSubscribeOptions = {
 type StreamRequest = {
   method: string
   params: unknown
-  listener: RpcStreamingListener
+  listener?: RpcStreamingListener
   onBinaryFrame?: (frame: BrowserScreencastFrame) => void
   subscriptionId?: string
   cancelled?: boolean
@@ -70,8 +70,7 @@ export class RpcClientStreamRegistry {
       if (this.send(id, stream)) {
         stream.sent = true
       } else {
-        this.emitError(stream, 'Connection interrupted')
-        this.remove(id)
+        this.finish(id, stream, { type: 'error', message: 'Connection interrupted' })
       }
     } else {
       console.log('[net] subscribe queued — waiting for connected', {
@@ -125,27 +124,25 @@ export class RpcClientStreamRegistry {
     const stream = this.streams.get(response.id)
     if (response.ok) {
       const result = (response as RpcSuccess).result as Record<string, unknown> | null
-      if (stream && result?.type === 'end') {
-        if (!stream.cancelled) {
-          stream.listener(result)
-        }
-        this.remove(response.id)
+      if (stream && isStreamEndResult(result)) {
+        this.finish(response.id, stream, result)
         return true
       }
       if (stream && result?.type === 'scrollback') {
-        stream.listener(result)
+        stream.listener?.(result)
         return true
       }
     }
     if (!stream) {
       return false
     }
-    this.emitError(
-      stream,
-      response.ok ? 'Streaming request ended before it was ready.' : response.error.message,
-      response.ok ? undefined : response.error
-    )
-    this.remove(response.id)
+    this.finish(response.id, stream, {
+      type: 'error',
+      message: response.ok
+        ? 'Streaming request ended before it was ready.'
+        : response.error.message,
+      error: response.ok ? undefined : response.error
+    })
     return true
   }
 
@@ -172,6 +169,10 @@ export class RpcClientStreamRegistry {
       return
     }
     const result = response.result
+    if (isStreamEndResult(result)) {
+      this.finish(response.id, stream, result)
+      return
+    }
     if (sessionTabsStream.recordSnapshot(stream, result) && stream.cancelled) {
       this.dispose(response.id)
       return
@@ -196,39 +197,34 @@ export class RpcClientStreamRegistry {
         this.activeBrowserRequestId = response.id
       }
     }
-    if (isTerminalSubscribedResult(result)) {
+    if (isTerminalSubscribedResult(result) && stream.listener) {
       this.terminalRouter.register(response.id, result.streamId, stream.listener)
     }
     if (!stream.cancelled) {
-      stream.listener(result)
+      stream.listener?.(result)
     }
   }
 
   private dispose(id: string): void {
     const stream = this.streams.get(id)
-    if (stream?.method === 'browser.screencast') {
-      stream.cancelled = true
-      this.clearBrowserRequest(id)
+    if (stream) {
+      // A canceled opener may never reply; only its host cleanup route must survive.
+      stream.listener = undefined
+      stream.onBinaryFrame = undefined
+    }
+    if (stream && isReadyIdStream(stream.method)) {
+      if (stream.method === 'browser.screencast') {
+        this.clearBrowserRequest(id)
+      }
       this.disposeServerSubscription(id, stream)
       return
     }
-    if (stream?.method === 'runtime.clientEvents.subscribe') {
-      this.disposeServerSubscription(id, stream)
+    if (stream && sessionTabsStream.holdUnsubscribe(stream)) {
       return
     }
-    if (stream?.method === 'terminal.subscribe') {
-      const params = buildTerminalUnsubscribeParams(stream.params)
-      if (params) {
-        // Why: `requestId` names this exact request; hosts that predate it strip it and use the slot.
-        this.sendRpc('terminal.unsubscribe', { ...params, requestId: id })
-      }
-    } else if (stream && sessionTabsStream.holdUnsubscribe(stream)) {
-      return
-    } else {
-      const unsubscribe = buildStreamUnsubscribe(stream?.method, stream?.params, id)
-      if (unsubscribe) {
-        this.sendRpc(unsubscribe.method, unsubscribe.params)
-      }
+    const unsubscribe = buildRequestStreamUnsubscribe(stream?.method, stream?.params, id)
+    if (unsubscribe) {
+      this.sendRpc(unsubscribe.method, unsubscribe.params)
     }
     this.remove(id)
   }
@@ -320,9 +316,10 @@ export class RpcClientStreamRegistry {
     stream.onBinaryFrame?.(frame)
   }
 
-  private emitError(stream: StreamRequest, message: string, error?: unknown): void {
-    if (!stream.cancelled) {
-      stream.listener({ type: 'error', message, error })
-    }
+  /** Removed first, so neither the listener's dispose nor a replay can name a host-ended stream. */
+  private finish(id: string, stream: StreamRequest, result: unknown): void {
+    const listener = stream.cancelled ? undefined : stream.listener
+    this.remove(id)
+    listener?.(result)
   }
 }

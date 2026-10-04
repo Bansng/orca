@@ -1,3 +1,4 @@
+import { MANAGED_DATA_ACCOUNT_POSIX_RESTORE } from '../shared/managed-data-account-shell'
 /**
  * The single `.zshenv` Orca writes for every transport: local PTY, daemon/SSH,
  * and relay.
@@ -28,7 +29,7 @@
  */
 import { getPosixOmpShellWrapper } from './pty/omp-shell-wrapper'
 import { WSL_MANAGED_CLI_PATH_RESTORE } from './wsl-managed-cli-path-restore'
-import { getPosixCodexShellLaunchPreflight } from './pty/codex-shell-launch-preflight'
+import { getPosixCodexShellLaunchPreflight } from '../shared/codex-shell-function'
 import {
   getZshShellReadyMarkerRegistrationBlock,
   SHELL_STARTUP_IDENTITY_MARKER_BLOCK,
@@ -47,8 +48,6 @@ export type ZshWrapperRestoreSpec = {
   remoteCliBinDir: boolean
   /** Orca's runtime CODEX_HOME. */
   codexHome: boolean
-  /** The `codex()` wrapper that runs Orca's launch preflight. */
-  codexLaunchPreflight: boolean
 }
 
 export type ZshStartupHookSpec = {
@@ -124,11 +123,11 @@ function getOverlayRestoreBlocks(spec: ZshStartupHookSpec): (string | null)[] {
     spec.overlayRestoreComment,
     spec.restores.agentTeamsPath ? AGENT_TEAMS_PATH_RESTORE_BLOCK : null,
     OPENCODE_CONFIG_DIR_RESTORE,
+    MANAGED_DATA_ACCOUNT_POSIX_RESTORE,
     MIMOCODE_HOME_RESTORE,
     spec.restores.remoteCliBinDir ? REMOTE_CLI_BIN_DIR_RESTORE : null,
     getPosixOmpShellWrapper(),
-    spec.restores.codexHome ? CODEX_HOME_RESTORE : null,
-    spec.restores.codexLaunchPreflight ? getPosixCodexShellLaunchPreflight() : null
+    spec.restores.codexHome ? CODEX_HOME_RESTORE : null
   ]
 }
 
@@ -175,6 +174,8 @@ ${permanentPrecmd}
 ${joinBlocks([
   spec.restores.managedWslCli ? indentBlock(WSL_MANAGED_CLI_PATH_RESTORE, '  ') : null,
   featureGuard('overlay', getOverlayRestoreBlocks(spec)),
+  // Why outside the overlay guard: a system-default Codex home carries no overlay key.
+  indentBlock(getPosixCodexShellLaunchPreflight(), '  ').replace(/\n$/, ''),
   // Why no /etc/zshrc repair branch: ZDOTDIR was handed back before that file
   // ran, so the value it derives is the user's own path. #11044 is unreachable.
   `  if [[ -n "\${_orca_histfile:-}" ]]; then

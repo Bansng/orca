@@ -11,6 +11,10 @@
 import { attachFingerprintFields } from '../../../src/main/native-chat/agent-session-wire/structured-agent-session-attach'
 import type { AgentSessionAttachParams } from '../../../src/main/native-chat/agent-session-wire/structured-agent-session-attach'
 import { computeAgentSessionPayloadFingerprint } from '../../../src/shared/agent-session-mutation-envelope'
+import {
+  createStructuredAgentSessionOutboxEntry,
+  structuredAgentSessionSendRequest
+} from '../../../src/shared/structured-agent-session-outbox'
 
 export const SESSION = 'session-alpha'
 export const WORKSPACE = 'workspace-1'
@@ -64,6 +68,23 @@ export const STRUCTURED_CALLS: {
   },
   { method: 'agentSession.send', hostMethod: 'send', result: { ok: true, replayed: false } },
   { method: 'agentSession.cancel', hostMethod: 'cancel', result: { ok: true, replayed: false } },
+  // Draft mutations for mid-turn queueing. Methods exist ahead of the
+  // capability's advertisement; only capability-gated clients ever call them.
+  {
+    method: 'agentSession.queuedMessageSend',
+    hostMethod: 'queuedMessageSend',
+    result: { ok: true, replayed: false }
+  },
+  {
+    method: 'agentSession.queuedMessageDelete',
+    hostMethod: 'queuedMessageDelete',
+    result: { ok: true, replayed: false }
+  },
+  {
+    method: 'agentSession.queuedMessagesResume',
+    hostMethod: 'queuedMessagesResume',
+    result: { ok: true, replayed: false }
+  },
   {
     method: REWIND_METHOD,
     hostMethod: 'rewind',
@@ -220,9 +241,21 @@ export function createIntentParams(): Record<string, unknown> {
   return { envelope: envelope({ method: 'agentSession.create', fields, fence: null }), ...fields }
 }
 
-export function sendParams(text: string, fence: number): Record<string, unknown> {
-  const body = { kind: 'message', role: 'user', blocks: [{ type: 'text', text }] }
-  return { envelope: envelope({ method: 'agentSession.send', fields: { body }, fence }), body }
+/** Built by the outbox clients send from, so an older host is handed exactly what a current
+ *  client puts on the wire, fingerprint included. */
+export function sendParams(
+  text: string,
+  fence: number,
+  sentDelivery?: 'queue-if-active'
+): Record<string, unknown> {
+  const entry = createStructuredAgentSessionOutboxEntry({
+    clientMessageId: operationId(),
+    sessionId: SESSION,
+    text,
+    attachments: [],
+    queuedAt: NOW
+  })
+  return structuredAgentSessionSendRequest({ ...entry, sentDelivery }, fence)
 }
 
 /** Schema-valid params per method; values only need to survive validation. */
@@ -250,6 +283,13 @@ export function paramsFor(method: string): unknown {
         envelope: envelope({ method: 'agentSession.cancel', fields: { turnId: 'turn-1' }, fence }),
         turnId: 'turn-1'
       }
+    case 'agentSession.queuedMessageSend':
+    case 'agentSession.queuedMessageDelete': {
+      const fields = { messageId: 'queued-1' }
+      return { envelope: envelope({ method, fields, fence }), ...fields }
+    }
+    case 'agentSession.queuedMessagesResume':
+      return { envelope: envelope({ method, fields: {}, fence }) }
     case 'agentSession.respondToApproval':
     case 'agentSession.respondToQuestion': {
       const fields = { itemId: 'item-1', expectedRevision: 1, optionId: 'allow' }
