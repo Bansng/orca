@@ -46,6 +46,111 @@ used 42 aggregate runner-minutes across 11 test jobs. The
 estimates 34.9 headless runner-hours, including 23.4 in cancelled runs. These are
 baseline observations; post-merge savings have not yet been measured.
 
+## October 4 clock, byte and import test fixtures
+
+These changes retain production behavior, original case names and platform
+outcomes. The paired pilots use three alternating one-worker Node 24 invocations
+on Ubuntu 24 ARM. Every median below is a complete focused test invocation;
+they do not establish whole-shard savings or queue-delay improvements.
+
+| Workload                                             | Baseline median | Candidate median | Reduction | Hosted evidence                                                          |
+| ---------------------------------------------------- | --------------- | ---------------- | --------- | ------------------------------------------------------------------------ |
+| Codex settlement and Claude stop deadlines, 35 cases | 35.914s         | 10.142s          | 71.8%     | [37186232658](https://github.com/stablyai/orca/actions/runs/37186232658) |
+| Native-chat delivery, 15 cases                       | 22.321s         | 7.376s           | 67.0%     | [37183731823](https://github.com/stablyai/orca/actions/runs/37183731823) |
+| Six profile-storage byte suites, 118 cases           | 12.629s         | 9.978s           | 21.0%     | [37183141654](https://github.com/stablyai/orca/actions/runs/37183141654) |
+| Encrypted account storage, six cases                 | 18.277s         | 0.958s           | 94.8%     | [37184007241](https://github.com/stablyai/orca/actions/runs/37184007241) |
+| SSH remote commands, 27 cases                        | 6.840s          | 6.078s           | 11.1%     | [37184454532](https://github.com/stablyai/orca/actions/runs/37184454532) |
+| OpenCode subscription, 28 cases                      | 47.347s         | 6.284s           | 86.7%     | [37184858823](https://github.com/stablyai/orca/actions/runs/37184858823) |
+| Window-service attachment, 31 cases                  | 11.910s         | 1.619s           | 86.4%     | [37186340840](https://github.com/stablyai/orca/actions/runs/37186340840) |
+| OpenCode 2 TUI ownership, 41 cases                   | 16.811s         | 2.429s           | 85.6%     | [37187699312](https://github.com/stablyai/orca/actions/runs/37187699312) |
+| Title-send authorization, nine cases                 | 29.545s         | 12.995s          | 56.0%     | [37188423318](https://github.com/stablyai/orca/actions/runs/37188423318) |
+| Range selection, 15 cases                            | 9.737s          | 7.130s           | 26.8%     | [37188996198](https://github.com/stablyai/orca/actions/runs/37188996198) |
+
+Provider tests wait for the real fake-child write/ready barrier and drain the
+host stream before installing a scoped parent clock. The original 2.5/5-second
+Codex and 3-second Claude deadlines remain; before/at assertions check their
+boundaries. Early rejection and refusal resolve without waiting on an unreachable
+barrier; finally and suite teardown restore clocks and spies even after a native
+Vitest timeout. Four healthy failure-path controls pass; old-helper hangs and
+removed teardown are caught. Missing-child failure retains a real ten-second observation window.
+Six faults for early/late stop deadlines, late queued resend and missing child
+output fail the intended assertions. Native-chat tests still use the real React
+outbox hooks. Their scoped clock retains probe, retry, churn and target-switch
+windows, drains async act work, and unmounts before clock restoration. All eight
+hook faults fail; two boundary faults pass the old coarse tests and fail the new
+before/at assertions. Node/web typecheck, lint and formatting pass.
+
+Native Buffer.equals replaces deep per-byte assertion traversal. It checks the
+complete original bytes and length; fixtures, SQLite operations, encryption and
+processes are unchanged. The six profile suites retain 114 passes and four
+existing Linux case-sensitivity skips; all 118 pass locally on macOS. Seven
+profile last-byte/length faults and two encrypted-vault last-byte/length faults
+fail their exact byte assertions. All six encrypted-vault cases still exercise
+52 accounts near the 4 MiB encrypted cap, refused growth, restart/readback and
+private permissions.
+
+The old SSH fixture created 15,197 short stage paths but never exceeded the real
+1,048,576 UTF-16-character transport tail cap; its two valid entries also left
+the 64-result assertion vacuous. The replacement uses about 1,300 real excluded
+stage directories under long Unicode path components, a real shell channel and
+the production execCommand limiter. Actual find output exceeds that cap, while
+the generated filter retains both original valid entries. A separate population
+of 65 valid directories proves the first-64 limit and native find ordering. File,
+symlink, nested-install and failed-enumeration checks remain. All 27 case outcomes
+match across treatments (23 passes and four unavailable PowerShell 5.1 skips on
+the hosted image). Eight cap, ordering, filtering and failure faults are caught.
+Paths use platform utilities; local PowerShell availability retains its original
+skip policy. The deadline and SSH fixtures reuse existing process/stream code.
+OpenCode subscription tests batch only uninterrupted fixture writes between the
+original observation barriers. Both SQLite schema versions keep every row, rowid,
+read cap, poll, clock position and case. No durability pragma or production code
+changes. All 28 cases pass in every pair. Separate captures compare ordered
+schema and rows, transaction state, pragmas, signals, page requests/results and
+subscriber callbacks: 124,754,101 payload bytes match, canonical digest
+`ba0eb6f09281746071d73fae88e2e8eb45332f36892b90998b374b1b8c59b3e3`.
+Missing rows, collapsed frontier rowids, read-cap overruns, missing commit and
+missing rollback each fail the intended case in both schemas. Positive rollback
+controls pass. The unmeasured full-suite timing report ranked this fixture at
+134.229 seconds; the paired 47.347-second figure above is the relevant focused
+baseline, and the two figures must not be mixed into a claimed saving.
+
+Window attachment tests mock five unrelated registrar modules using their actual
+types. The existing window ownership, reload, media permission, native file drop,
+hydration barrier and updater scheduling cases remain real. Exact store/runtime/
+window arguments and daemon registration after the PTY handler are now asserted;
+nine actual production wiring/order faults fail. The registrar implementations
+retain separate handler tests. Concrete existing stubs moved to one fixture to
+stay within the line limit. All 31 cases and statuses match across all pairs. The
+final source differs from the timed source only by a required type-assertion
+safety comment.
+OpenCode 2 TUI tests use a scoped async clock only after the first real native
+module import. The unchanged generated plugin runs against the existing fake TUI
+and fetch. Original poll, permission, retry, preview, slow POST and endpoint
+windows remain. Before/at assertions pin the 100 ms poll, 500 ms permission,
+120 ms slow POST and 5-second endpoint boundaries. All 41 original case outcomes
+match. Separate ordered captures preserve 678 TUI/event rows and 362 complete
+POST start/completion rows; wall timestamps and cross-stream interleaving are
+excluded from equivalence. Eleven generated-source faults fail their intended
+identity, reload, order, deadline or timer-cleanup assertions. Four import/setup/
+disposer rejection and timeout controls confirm restoration of clocks, fetch,
+argv and environment. Teardown restores real clocks before its bounded wait.
+Title-send authorization tests retain real terminal creation, graph binding and
+positive evidence paths. Negative process-evidence probes use scoped clocks
+after setup: both 150 ms polling loops retain their 6,500 ms budget, crossed at
+6,600 ms, and the send guard retains its 1,050 ms deadline. Before/at assertions
+check 6,599/6,600 and 1,049/1,050 ms. All nine original cases remain. Actual
+early/late wrapper and guard deadlines, false spinner identity and unknown-agent
+authorization faults fail their intended assertions; native clocks and runtime
+instance spies are restored after each failure.
+Range-selection tests stub only the saved-note send menu, which their empty
+comment populations never render. A facade typed from the actual menu props
+throws if invoked, and an afterEach assertion verifies no call with unconditional
+mock clearing in finally. The real hook, Monaco constants/model, line and range
+drag behavior, draft-card lifecycle and open-inline-card chord remain. All 15
+original test bodies are byte-unchanged. Three actual range/hunk/draft faults
+fail their original assertions; a real draft-render menu call hits the facade
+and sentinel, and an outer cleanup check proves mock state cleared after failure.
+The actual saved-note menu retains its independent component tests.
 ## October 2 headless detector compiler cache
 
 The deferred detector already avoids dependency setup for known build inputs.
@@ -1858,6 +1963,32 @@ the imported helper has no top-level side effects, and the Linux rebuild branch
 is unchanged. Focused tests verify its Linux/macOS no-op behavior. Final-head PR
 checks qualify separately.
 
+## October 4 reusable cells for terminal context scans
+
+Terminal cursor-context scans now request one reusable cell per invocation when
+the adapter offers getNullCell, and pass it through all unchanged text/style
+scans. Adapters without that optional method keep the existing allocating path.
+The scratch cell is local and no cell reference escapes into returned context.
+Browser composer/readiness text, colors, bold flags and wrapping are unchanged.
+
+Three alternating one-worker ARM pairs in
+[37182789677](https://github.com/stablyai/orca/actions/runs/37182789677)
+ran all 19 original cases from readiness census suite 2. Baseline complete
+invocations were 37.141 / 37.879 / 37.090 seconds; candidate invocations were
+33.887 / 33.387 / 32.916 seconds. Median 37.141 to 33.387 seconds saves 10.1%.
+This is a focused workload measurement, not a whole-shard or queue-delay claim.
+
+Separate baseline/candidate captures retained all 192 cases across six census
+suites. Every context and visible projection matched: 643,926 of each, with
+7,465,308,324 complete length-prefixed payload bytes hashed per test/type/order.
+The canonical capture digest was
+`f7440c0f1b5bbb57127cd29245530029415c8e9e243c1744359f330b3c7ace19`.
+These captures run outside the timing samples. All 41 cursor/composer/browser
+consumer checks passed. Seven faults for lost dim filtering, wide continuation,
+bold prompt, custom foreground, wrap preservation, adapter fallback and scratch
+reuse failed their intended assertions. Node and web typecheck, lint and format
+passed. Two added controls prove per-call scratch lifetime and adapter parity.
+
 ## October 3 producer follow-up: automatic selection for the measured profile
 
 The first producer rollout in [#24927](https://github.com/stablyai/orca/pull/24927)
@@ -1894,6 +2025,36 @@ header placement, then its empty cache-miss output), and are excluded. This prov
 automatic selection and cold publication, not a new timing result. Local
 verification passed eight suites / 184 tests, the changed-code quality gate and
 compiled-composite actionlint.
+
+## October 4 shared PR preflight capacity
+
+Static analysis and the unchanged compiler now share one ARM runner and guarded
+Node 24 install. Static checks finish and all background work joins before the
+compiler starts; unit planning still overlaps compilation. Each phase keeps its
+classifier output. Successful no-op background bodies register every required
+join when a phase is unselected or an earlier step failed. Unit and package
+consumers depend on physical job success, including action cleanup.
+
+Three counterbalanced pairs in
+[37180613601](https://github.com/stablyai/orca/actions/runs/37180613601)
+used the same frozen checkout `f199a20c3acd`, Node 24.21.0, pnpm 12.8.1,
+policy hashes, native cache hits, warm TypeScript cache and 10,787-file unit plan.
+Both arms used the PR root-only download-store policy. Total active job time was
+152 / 153 / 151 seconds separately and 138 / 133 / 129 combined. Excluding the
+extra measurement-only evidence steps gives 151 / 151 / 149 versus
+136 / 132 / 128 seconds: median 151 to 132, saving 19 seconds (12.6%).
+Two heavy runner admissions become one. This saves capacity; it does not prove a
+whole-PR latency or queue gain. The median active dependency barrier increases
+from 116 to 132 seconds because compilation follows static checks.
+
+The separate physical-failure run
+[37180755694](https://github.com/stablyai/orca/actions/runs/37180755694)
+proved that an included TypeScript error failed the actual compiler, its planner
+still joined, and unit/package admissions skipped. A registered late action post
+failure also blocked both consumers after successful foreground checks and
+published shards. All 12 unselected/prior-failure no-op backgrounds joined, and
+the downstream audit passed. Local workflow contracts passed 239 tests across
+12 suites; lint and formatting passed.
 
 ## October 3 retired-cache collection observation
 
