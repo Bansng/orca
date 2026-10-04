@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildSettingsNavigationMetadata } from './useSettingsNavigationMetadata'
 import type { Repo } from '../../../shared/repo-types'
+import { getCodexTerminalServerIsolationTitle } from '../components/settings/codex-terminal-server-isolation-copy'
 
 const repo = {
   id: 'repo-1',
@@ -177,6 +178,21 @@ describe('settings navigation metadata', () => {
     expect(orchestration?.searchEntries.map((entry) => entry.title)).not.toContain(
       'Nested worker depth'
     )
+  })
+
+  it('lists the host-only Codex server setting in desktop Agents search only', () => {
+    const agentTitles = (isWebClient: boolean): string[] | undefined =>
+      buildSettingsNavigationMetadata({
+        isMac: false,
+        isWindows: false,
+        isWebClient,
+        repos: [repo]
+      })
+        .find((section) => section.id === 'agents')
+        ?.searchEntries.map((entry) => entry.title)
+
+    expect(agentTitles(false)).toContain(getCodexTerminalServerIsolationTitle())
+    expect(agentTitles(true)).not.toContain(getCodexTerminalServerIsolationTitle())
   })
 
   it('keeps the Browser shortcut searchable for a capable web runtime', () => {
@@ -397,6 +413,30 @@ describe('settings navigation metadata', () => {
     const repoSections = sections.filter((section) => section.id.startsWith('repo-'))
     expect(repoSections).toHaveLength(1)
     expect(repoSections[0].id).toBe('repo-local-1')
+  })
+
+  it('renders a nav section per same-host clone, titled by the clone (#20861)', () => {
+    const gitRemote = {
+      canonicalKey: 'gitlab.com/acme/app',
+      remoteName: 'origin',
+      remoteUrl: 'git@gitlab.com:acme/app.git'
+    }
+    const clone = { badgeColor: '#000', addedAt: 0, gitRemoteIdentity: gitRemote }
+    const sections = buildSettingsNavigationMetadata({
+      isMac: false,
+      isWindows: false,
+      isWebClient: false,
+      repos: [
+        { ...clone, id: 'clone-a', path: '/work/app', displayName: 'app' },
+        { ...clone, id: 'clone-b', path: '/work/app-b', displayName: 'app-b' }
+      ]
+    })
+
+    const repoSections = sections.filter((section) => section.id.startsWith('repo-'))
+    expect(repoSections.map((section) => [section.id, section.title])).toEqual([
+      ['repo-clone-a', 'app'],
+      ['repo-clone-b', 'app-b']
+    ])
   })
 
   it('keeps macOS permissions mac-only', () => {

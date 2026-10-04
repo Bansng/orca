@@ -41,7 +41,6 @@ import {
   type CodexSession,
   type CodexStructuredSessionAdapterDeps
 } from './codex-structured-session-state'
-import type { CodexStructuredTurnCancellation } from './codex-structured-turn-cancellation'
 import type { CodexStructuredSessionTeardown } from './codex-structured-session-teardown'
 import type { CodexStructuredNotificationRetry } from './codex-structured-notification-retry'
 import type { deliverCodexServerRequest } from './codex-structured-provider-events'
@@ -53,7 +52,6 @@ export async function acquireCodexStructuredSession(input: {
   deps: CodexStructuredSessionAdapterDeps
   sessions: Map<string, CodexSession>
   acquisitions: CodexAcquisitionRegistry
-  turnCancellation: CodexStructuredTurnCancellation
   notificationRetries: CodexStructuredNotificationRetry
   deliver: (
     acquisition: CodexAcquisitionAttempt['window'],
@@ -68,14 +66,7 @@ export async function acquireCodexStructuredSession(input: {
   handleUnhandledFrame: (sessionId: string, kind: string, payload: unknown) => void
   forceCloseUnexpected: CodexStructuredSessionTeardown['forceCloseUnexpected']
 }): Promise<AgentSessionAcquisition> {
-  const {
-    input: acquireInput,
-    deps,
-    sessions,
-    acquisitions,
-    turnCancellation,
-    notificationRetries
-  } = input
+  const { input: acquireInput, deps, sessions, acquisitions, notificationRetries } = input
   const sessionId = acquireInput.identity.sessionId
   const { previousAttempt, attempt } = acquisitions.start(sessionId)
   const acquisition = attempt.window
@@ -86,10 +77,13 @@ export async function acquireCodexStructuredSession(input: {
       : null
   const subagentExecutions = new CodexSubagentExecutions()
   const dispatchEchoes = createCodexDispatchEchoes()
+  // Minted before the translator, which names this connection's frame rows with it.
+  const acquisitionGeneration = mintCodexAcquisitionGeneration(deps)
   const translator = acquireInput.events
     ? createCodexJournalTranslator({
         sink: acquireInput.events,
         sessionId,
+        acquisitionId: acquisitionGeneration,
         ...(deps.now ? { now: deps.now } : {}),
         primaryThreadId: () => primaryThreadId,
         onPrimaryThreadStoppedRunning: () => deps.onPrimaryThreadStoppedRunning?.({ sessionId }),
@@ -177,7 +171,6 @@ export async function acquireCodexStructuredSession(input: {
               connection: acquisition.connection,
               error,
               prompts: acquisition.prompts,
-              onBackgroundTasksChanged: deps.onBackgroundTasksChanged,
               ...(deps.onEvent ? { onEvent: deps.onEvent } : {})
             })
           } finally {
@@ -219,7 +212,7 @@ export async function acquireCodexStructuredSession(input: {
         linkId: deps.mintLinkId?.(),
         observedAt: deps.now?.() ?? Date.now()
       }),
-      acquisitionGeneration: mintCodexAcquisitionGeneration(deps)
+      acquisitionGeneration
     }
     assertCodexConnectionOpen(connection, sessionId)
     acquisitions.assertCurrent(sessionId, attempt)
@@ -271,7 +264,6 @@ export async function acquireCodexStructuredSession(input: {
           ?.supportsFastMode
       })
     }
-    turnCancellation.register(session)
     sessions.set(sessionId, session)
     for (const event of acquisition.drain()) {
       event()

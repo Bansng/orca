@@ -1,5 +1,4 @@
 import type { Dispatch, DragEvent, MutableRefObject, SetStateAction } from 'react'
-import type { BrowserGrabPayload } from '../../../../../shared/browser-grab-types'
 import {
   normalizeBrowserNavigationUrl,
   redactKagiSessionToken
@@ -51,9 +50,8 @@ export type AttachBrowserPageWebviewArgs = {
   faviconUrlRef: MutableRefObject<string | null>
   lastKnownWebviewUrlRef: MutableRefObject<string | null>
   trackNextLoadingEventRef: MutableRefObject<boolean>
-  clearBrowserPageAnnotationsRef: MutableRefObject<(pageId: string) => void>
+  invalidateBrowserAnnotationDocumentRef: MutableRefObject<() => void>
   onSetUrlRef: MutableRefObject<BrowserPageUrlSetter>
-  setPendingAnnotationPayload: Dispatch<SetStateAction<BrowserGrabPayload | null>>
   setBrowserOverlayViewport: Dispatch<SetStateAction<BrowserOverlayViewport>>
   setAddressBarValueFromPage: (value: string) => void
   addBrowserHistoryEntryRef: MutableRefObject<
@@ -107,6 +105,7 @@ export function attachBrowserPageWebview(
   if (!container || !webviewContainer) {
     return
   }
+  args.invalidateBrowserAnnotationDocumentRef.current()
   const webview = ensuredWebview.webview
   const needsInitialNavigation = ensuredWebview.created
   seedLiveBrowserUrl(browserTabId, redactKagiSessionToken(browserTabUrlRef.current))

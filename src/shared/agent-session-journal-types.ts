@@ -4,8 +4,9 @@
 // so no class instances, Maps, or Dates.
 //
 // Rows are append-only. `schemaVersion` is upcast at read time and never
-// rewritten in place, so a host that cannot read a row refuses to write the
-// journal rather than skipping or compacting past it.
+// rewritten in place, so a host that cannot read a row (a newer version, or a
+// newer kind) refuses to write the journal rather than skipping or compacting
+// past it.
 
 import type { UnreadAgentSessionFailureFact } from './agent-session-failure'
 import type { AgentSessionFailureRowWords } from './agent-session-failure-words'
@@ -339,7 +340,9 @@ export type AgentJournalProducerLinkage = {
   /** The producing agent's own parent. Absent ⇒ its parent is the session root. */
   parentAgentId?: string
   /** The provider's own parent reference for this row. Provenance only: it names
-   *  the tool CALL, which is re-minted on every resume, so it is never a join key. */
+   *  the tool CALL, not the agent, and a resumed agent is re-announced under a new
+   *  call, so no reader joins on it. Only its producer reads it back, to recall
+   *  the ids an earlier run of the session resolved. */
   providerParentRef?: string
   producerKind?: AgentJournalProducerKind
   /** Which run of the agent, when past the first. Identity answers "which agent";

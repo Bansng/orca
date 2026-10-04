@@ -6,7 +6,8 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computeAgentSessionPayloadFingerprint } from '../../../shared/agent-session-mutation-envelope'
-import { AgentSessionRecordStore } from '../../runtime/agent-session-record-store'
+import type { AgentSessionRecordStore } from '../../runtime/agent-session-record-store'
+import { openTestAgentSessionRecordStore } from '../../runtime/agent-session-record-store-test-harness'
 import type { StructuredAgentSessionAdapter } from './structured-agent-session-adapter'
 import {
   attachFingerprintFields,
@@ -18,6 +19,7 @@ import { AgentSessionJournal } from '../agent-session-journal/journal-store'
 import * as legacyImport from '../agent-session-journal/journal-legacy-import'
 import { StructuredAgentSessionHost } from './structured-agent-session-host'
 import { openTestJournalHostDatabase } from '../agent-session-journal/journal-host-database-test-support'
+import { createStructuredAgentSessionLogger } from './structured-agent-session-logger'
 
 const NOW = 1_800_000_000_000
 const SESSION = 'codex_adopting_session'
@@ -119,8 +121,9 @@ async function attach(
   sessionAdapter: StructuredAgentSessionAdapter,
   onAttached: AttachFlowInput['onAttached'] = () => {}
 ) {
-  store ??= await AgentSessionRecordStore.open({ directory: join(root!, 'store'), hostId: 'local' })
+  store ??= await openTestAgentSessionRecordStore(root!)
   return performAttach({
+    logger: createStructuredAgentSessionLogger(),
     store,
     adapter: sessionAdapter,
     openConversation: openTestAttachConversation(openTestJournalHostDatabase(root!)),
@@ -230,8 +233,9 @@ describe('adopting a provider conversation on create', () => {
     root = await mkdtemp(join(tmpdir(), 'orca-adopt-host-failure-'))
     const transcriptPath = join(root, 'rollout.jsonl')
     await writeCodexRollout(transcriptPath, 'valid source')
-    store = await AgentSessionRecordStore.open({ directory: join(root, 'store'), hostId: 'local' })
+    store = await openTestAgentSessionRecordStore(root)
     const host = new StructuredAgentSessionHost({
+      logger: createStructuredAgentSessionLogger(),
       store,
       adapter: adapter(),
       journalDatabase: openTestJournalHostDatabase(root),

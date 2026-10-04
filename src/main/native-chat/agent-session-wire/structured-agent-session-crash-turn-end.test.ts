@@ -4,22 +4,29 @@
 // that runs for half a minute leaves one journal row at its start. The lease renewal the host
 // wrote every ten seconds is what saw the child working after that row.
 
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AgentSessionOwnerProbe } from '../../../shared/agent-session-lease-adjudication'
 import type { AgentSessionRecord } from '../../../shared/agent-session-record'
-import type { AgentSessionSubscribeEvent } from '../../../shared/agent-session-wire'
+import type {
+  AgentSessionStatusSummary,
+  AgentSessionSubscribeEvent
+} from '../../../shared/agent-session-wire'
 import { AGENT_JOURNAL_THREAD_SCOPE } from '../../../shared/agent-session-journal-types'
 import { agentJournalItemKey } from '../../../shared/agent-session-journal-item-key'
 import { readAgentJournalTurn } from '../../../shared/agent-session-turn-record'
+import { describeNativeChatTurnStatus } from '../../../shared/native-chat-turn-status'
 import {
   completedStructuredAgentTurnSeconds,
   selectStructuredAgentTurnTimings
 } from '../../../shared/structured-agent-session-turn-timing'
-import { AgentSessionRecordStore } from '../../runtime/agent-session-record-store'
-import { AGENT_SESSION_STORE_FILE_NAME } from '../../runtime/agent-session-record-store-file'
+import type { AgentSessionRecordStore } from '../../runtime/agent-session-record-store'
+import {
+  openTestAgentSessionRecordStore,
+  seedTestAgentSessionRecordStore
+} from '../../runtime/agent-session-record-store-test-harness'
 import {
   closeTestJournalHostDatabases,
   openTestJournalHostDatabase
@@ -38,6 +45,8 @@ import {
   HOST_TEST_LOCATION as LOCATION,
   HOST_TEST_SESSION as SESSION
 } from './structured-agent-session-host-test-data'
+import { createStructuredAgentSessionLogger } from './structured-agent-session-logger'
+import { recordingStructuredAgentSessionLogger } from './structured-agent-session-logger-test-support'
 
 const PROVIDER_SESSION = 'provider-session-alpha-1'
 /** The tool call's row: the last thing the provider wrote before the crash. */
@@ -96,21 +105,8 @@ function crashedClaudeRecord(): AgentSessionRecord {
 }
 
 async function seedCrashedStore(): Promise<void> {
-  const directory = join(root, 'store')
-  await mkdir(directory, { recursive: true })
-  await writeFile(
-    join(directory, AGENT_SESSION_STORE_FILE_NAME),
-    JSON.stringify({
-      schemaVersion: 2,
-      hostId: 'local',
-      records: { [SESSION]: crashedClaudeRecord() },
-      operations: {},
-      retiredClaimKeys: [],
-      unusableRecords: {}
-    }),
-    'utf-8'
-  )
-  store = await AgentSessionRecordStore.open({ directory, hostId: 'local' })
+  await seedTestAgentSessionRecordStore(root, { records: [crashedClaudeRecord()] })
+  store = await openTestAgentSessionRecordStore(root)
 }
 
 /** A running turn whose only row after its start is a Bash call that never reported back, for a
@@ -161,6 +157,7 @@ async function seedClaudeToolTurn(): Promise<void> {
 
 function openHost(overrides: Partial<StructuredAgentSessionHostDeps>): void {
   host = new StructuredAgentSessionHost({
+    logger: createStructuredAgentSessionLogger(),
     store,
     adapter: {
       acquire: vi.fn(),
@@ -301,6 +298,36 @@ describe('a turn a read reached before the reconcile proved its owner dead', () 
     unsubscribe()
   })
 
+  it('reports the revision to the status feed as an interruption, which the chat folds as failed', async () => {
+    const published: AgentSessionStatusSummary[] = []
+    openHost({
+      probeOwner: async () => ({ outcome: 'pid-absent' }),
+      statusSink: { publish: (summary) => published.push(summary), forget: () => {} }
+    })
+    await host.history({ sessionId: SESSION, direction: 'tail' })
+    const outcomes = () =>
+      published
+        .filter((summary) => summary.sessionId === SESSION && summary.turnOutcome)
+        .map((summary) => summary.turnOutcome)
+    expect(outcomes().at(-1)).toBe('unconfirmed')
+
+    await host.reconcileRestartLeases()
+    await drainSession()
+
+    // The sidebar's red Failed, then the folded "Failed after 27s".
+    await vi.waitFor(() => expect(outcomes().at(-1)).toBe('interruption'))
+    const [timing] = selectStructuredAgentTurnTimings(
+      (await host.journalSnapshot(SESSION)).items
+    ).values()
+    expect(
+      describeNativeChatTurnStatus({
+        elapsedSeconds: 0,
+        workedSeconds: completedStructuredAgentTurnSeconds(timing),
+        verdict: timing?.verdict
+      })
+    ).toEqual({ key: 'failedAfter', duration: '27s' })
+  })
+
   it('revises nothing twice, whoever re-runs the settle', async () => {
     openHost({ probeOwner: async () => ({ outcome: 'pid-absent' }) })
     await host.history({ sessionId: SESSION, direction: 'tail' })
@@ -416,11 +443,11 @@ describe('a turn a read reached before the reconcile proved its owner dead', () 
 
   it('stays unverifiable when the revision cannot be written, and a later open revises it', async () => {
     let now = RELAUNCHED_AT
-    const onEventSinkError = vi.fn()
+    const log = recordingStructuredAgentSessionLogger()
     openHost({
       probeOwner: async () => ({ outcome: 'pid-absent' }),
       now: () => now,
-      onEventSinkError
+      logger: log.logger
     })
     await host.history({ sessionId: SESSION, direction: 'tail' })
     const { journal } = host.collaboratorsForTests().sessions.get(SESSION)!
@@ -429,7 +456,7 @@ describe('a turn a read reached before the reconcile proved its owner dead', () 
     await host.reconcileRestartLeases()
     await drainSession()
 
-    expect(onEventSinkError).toHaveBeenCalledOnce()
+    expect(log.scopes()).toEqual(['open-dead-generation'])
     expect(await settledTurn()).toEqual(UNVERIFIABLE_TURN)
     // The proof is durable on the record, so the next open converges.
     now += STRUCTURED_AGENT_SESSION_IDLE_MS + 1

@@ -16,6 +16,7 @@ import { ClaudeBackgroundTaskRows } from './claude-background-task-rows'
 import { ClaudeToolOriginRegistry } from './claude-tool-origin-registry'
 import { ClaudeProvisionalRowCorrections } from './claude-provisional-row-corrections'
 import { ClaudeSubagentRoster } from './claude-subagent-roster'
+import { ClaudeJournaledRoster } from './claude-subagent-journaled-roster'
 import { createClaudeStreamedBlockRegistry } from './claude-streamed-block-identity'
 import { createClaudeStreamedTextCheckpoints } from './claude-streamed-text-checkpoints'
 import {
@@ -66,7 +67,11 @@ export function createClaudeJournalTranslator(
   const tools = new Map<string, ClaudeToolUse>()
   // Every row joins the root turn open when it is written, whoever produced it.
   const turnScope = () => turn.turnScope
-  const prompts = new ClaudeJournalPrompts({ ...deps, turnScope })
+  const prompts = new ClaudeJournalPrompts({
+    ...deps,
+    turnScope,
+    producerOf: (prompt) => childQueries.promptProducer(prompt)
+  })
   const streamedBlocks = createClaudeStreamedBlockRegistry()
   const turn = new ClaudeOpenTurn({
     sink: deps.sink,
@@ -77,12 +82,15 @@ export function createClaudeJournalTranslator(
   const fallbackId = deps.fallbackIdPrefix ?? 'acquisition'
   const providerFallback = createClaudeProviderFrameFallback(deps.sink, fallbackId, turnScope)
   const toolOrigins = new ClaudeToolOriginRegistry()
+  const journaled = new ClaudeJournaledRoster(() => deps.sink.journalLinkage?.() ?? null)
   const subagents = new ClaudeSubagentRoster({
     sink: deps.sink,
     currentGroupKey: () => turn.groupKey,
     currentTurnScope: turnScope,
     isForwardedParentTool: (toolUseId) => toolOrigins.has(toolUseId),
     childOwnerRefOf: (toolUseId) => toolOrigins.childOwnerRef(toolUseId),
+    // A restarted provider continues the roster earlier runs journaled.
+    journaled,
     // A settled group can receive no further announcement, so a correction
     // still owed is never coming; the rows keep the stamp they already have.
     onIdentitiesFinal: () => corrections.abandon()
@@ -107,6 +115,7 @@ export function createClaudeJournalTranslator(
   const backgroundTasks = new ClaudeBackgroundTaskRows({
     sink: deps.sink,
     isForwardedParentTool: (toolUseId) => toolOrigins.has(toolUseId),
+    rosteredByEarlierRun: (taskId) => journaled.groupOf(taskId) !== null,
     // A typed task row is provider output: journaling one must open a resumed
     // turn, or the session shows the row while reading idle.
     openOutputTurn: (frame, observedAt) =>
@@ -170,8 +179,10 @@ export function createClaudeJournalTranslator(
     message: Record<string, unknown>,
     startsTurn: boolean,
     observedAt: number,
-    requestedAt?: number
-  ): boolean => journalClaudeMessage(messageContext, message, startsTurn, observedAt, requestedAt)
+    requestedAt?: number,
+    openedBy?: string
+  ): boolean =>
+    journalClaudeMessage(messageContext, message, startsTurn, observedAt, requestedAt, openedBy)
 
   return {
     handle: (event) => {
@@ -180,7 +191,8 @@ export function createClaudeJournalTranslator(
         streamedText.flush()
         subagents.settleSession()
         backgroundTasks.settleSession()
-        // The host saw the child end, so the turn's end is observed, not lost.
+        // The host saw the child end, so the turn's end is observed, not lost. Whether it was a
+        // person's Stop is the journal's Stop event to say (`turnEndAfterStop`), else it is news.
         turn.settle({ state: 'interrupted', completedAt: event.observedAt ?? Date.now() })
         // A frame that arrives after the child is gone must not open a turn no
         // event can close.
@@ -238,7 +250,8 @@ export function createClaudeJournalTranslator(
             event.message,
             event.startsTurn === true,
             event.observedAt ?? Date.now(),
-            event.requestedAt
+            event.requestedAt,
+            event.clientMessageId
           )
         ) {
           providerFallback.append(

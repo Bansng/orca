@@ -12,7 +12,8 @@ import type {
   AgentJournalSubmission
 } from '../../../shared/agent-session-journal-types'
 import type { AgentSessionSubscribeEvent } from '../../../shared/agent-session-wire'
-import { AgentSessionRecordStore } from '../../runtime/agent-session-record-store'
+import type { AgentSessionRecordStore } from '../../runtime/agent-session-record-store'
+import { openTestAgentSessionRecordStore } from '../../runtime/agent-session-record-store-test-harness'
 import type { StructuredAgentSessionAdapter } from './structured-agent-session-adapter'
 import { StructuredAgentSessionHost } from './structured-agent-session-host'
 import {
@@ -25,6 +26,7 @@ import {
   resetHostTestOperationIds
 } from './structured-agent-session-host-test-data'
 import { openTestJournalHostDatabase } from '../agent-session-journal/journal-host-database-test-support'
+import { createStructuredAgentSessionLogger } from './structured-agent-session-logger'
 
 const CALLER = { callerKey: 'client-1' }
 const EXIT_REASON = 'Claude Code is not signed in. Sign in with the Claude CLI'
@@ -35,10 +37,10 @@ let host: StructuredAgentSessionHost
 let acquire: Mock<StructuredAgentSessionAdapter['acquire']>
 let generation = 0
 
-/** Everything a live subscriber was sent after it opened. */
-function liveReader() {
+/** Everything a live subscriber was sent after its opening snapshot. */
+async function liveReader() {
   const events: AgentSessionSubscribeEvent[] = []
-  host.subscribe({ id: 'pane', sessionId: SESSION, emit: (event) => events.push(event) })
+  await host.subscribe({ id: 'pane', sessionId: SESSION, emit: (event) => events.push(event) })
   const opened = events.length
   const received = () => {
     const items: AgentJournalRenderItem[] = []
@@ -125,8 +127,9 @@ beforeEach(async () => {
     acquisitionGeneration: `generation-${++generation}`,
     providerChildPhase: 'starting' as const
   }))
-  store = await AgentSessionRecordStore.open({ directory: join(root, 'store'), hostId: 'local' })
+  store = await openTestAgentSessionRecordStore(root)
   host = new StructuredAgentSessionHost({
+    logger: createStructuredAgentSessionLogger(),
     store,
     adapter: {
       acquire,
@@ -155,7 +158,7 @@ afterEach(async () => {
 describe('an open chat receives every row its journal commits', () => {
   it('shows a failed start whose lease could not be handed back', async () => {
     const held = await send('hello')
-    const pane = liveReader()
+    const pane = await liveReader()
     // The exit settles the journal, then fails to release the lease: nothing moves the fence.
     vi.spyOn(store, 'transitionHandoff').mockRejectedValueOnce(new Error('record store busy'))
 
@@ -174,7 +177,7 @@ describe('an open chat receives every row its journal commits', () => {
   })
 
   it('shows a revision the provider queued with no publish behind it', async () => {
-    const pane = liveReader()
+    const pane = await liveReader()
     const identity = { provider: 'orca' as const, clientMessageId: 'context-usage' }
     const body = { kind: 'status' as const, text: 'context usage answered after the turn' }
 
@@ -191,7 +194,7 @@ describe('an open chat receives every row its journal commits', () => {
   })
 
   it('shows a row appended straight to the journal', async () => {
-    const pane = liveReader()
+    const pane = await liveReader()
     const journal = host['sessions'].get(SESSION)?.journal
     if (!journal) {
       throw new Error('the attached chat has no journal')
@@ -212,7 +215,7 @@ describe('an open chat receives every row its journal commits', () => {
 
 describe('an open chat receives each row once', () => {
   it('when the provider frame that wrote it also publishes', async () => {
-    const pane = liveReader()
+    const pane = await liveReader()
     const sink = providerSink()
     const journal = host['sessions'].get(SESSION)?.journal
     if (!journal) {
@@ -234,7 +237,7 @@ describe('an open chat receives each row once', () => {
   })
 
   it('when a writer publishes the row it appended', async () => {
-    const pane = liveReader()
+    const pane = await liveReader()
     const journal = host['sessions'].get(SESSION)?.journal
     if (!journal) {
       throw new Error('the attached chat has no journal')

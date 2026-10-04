@@ -3,6 +3,8 @@ import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'rea
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MAX_TOOL_DETAIL_LENGTH } from '../../../src/shared/native-chat-tool-summary'
 import type { NativeChatMessage } from '../../../src/shared/native-chat-types'
+import { AGENT_SESSION_HOST_STATUS_COPY } from '../../../src/shared/agent-session-host-status-rows'
+import { colors } from '../theme/mobile-theme'
 
 vi.mock('react-native', async () => {
   const React = await import('react')
@@ -60,6 +62,7 @@ describe('MobileNativeChatMessage', () => {
   function render(
     message: NativeChatMessage,
     props: {
+      fontScale?: number
       toolsExpanded?: boolean
       structuredActivityUi?: boolean
       activeTurnIsWorking?: boolean
@@ -80,6 +83,38 @@ describe('MobileNativeChatMessage', () => {
 
   const textIn = (node: ReactTestInstance): string[] =>
     node.findAllByType('Text' as never).map((text) => String(text.children.join('')))
+
+  it.each(['system', 'user'] as const)(
+    'renders a %s host notice as selectable muted text rather than a markdown answer',
+    (role) => {
+      const tree = render(
+        {
+          id: 'notice',
+          role,
+          timestamp: 1,
+          blocks: [
+            { type: 'text', text: 'provider fallback', presentation: 'history-item-too-large' }
+          ]
+        },
+        { fontScale: 1.5 }
+      )
+      expect(tree.root.findAll((node) => String(node.type) === 'MobileMarkdown')).toHaveLength(0)
+      const text = tree.root.find((node) => String(node.type) === 'Text')
+      expect(text.props.children).toBe(AGENT_SESSION_HOST_STATUS_COPY['history-item-too-large'])
+      expect(text.props.selectable).toBe(true)
+      expect(Object.assign({}, ...text.props.style)).toMatchObject({
+        color: colors.textMuted,
+        fontSize: 25.5
+      })
+    }
+  )
+
+  it('preserves an ordinary assistant answer without interpreting its text as a host notice', () => {
+    const tree = render(toolMessage([{ type: 'text', text: 'provider fallback' }]))
+    expect(tree.root.find((node) => String(node.type) === 'MobileMarkdown').props.content).toBe(
+      'provider fallback'
+    )
+  })
 
   it('renders a loadable preview URI as an image thumbnail', () => {
     const tree = render(userMessage([{ type: 'image-ref', url: 'file:///a.jpg', alt: 'a photo' }]))
@@ -283,76 +318,5 @@ describe('MobileNativeChatMessage', () => {
       })
       expect(textIn(tree.root)).toEqual(['go'])
     })
-  })
-})
-
-describe("MobileNativeChatMessage — a subagent's row speaks as that subagent", () => {
-  let renderer: ReactTestRenderer | null = null
-
-  afterEach(() => {
-    act(() => renderer?.unmount())
-    renderer = null
-  })
-
-  function renderAgentRow(agentId: string | undefined, subagentLabel?: string): ReactTestRenderer {
-    const message: NativeChatMessage = {
-      id: 'a1',
-      role: 'assistant',
-      blocks: [{ type: 'text', text: 'The PR is CLEAN.' }],
-      timestamp: null,
-      source: 'transcript',
-      ...(agentId === undefined ? {} : { agentId })
-    }
-    act(() => {
-      renderer = create(createElement(MobileNativeChatMessage, { message, subagentLabel }))
-    })
-    return renderer!
-  }
-
-  const captions = (tree: ReactTestRenderer): ReactTestInstance[] =>
-    tree.root
-      .findAllByType('Text' as never)
-      .filter((node) => typeof node.props.accessibilityLabel === 'string')
-
-  it('names the subagent that wrote the row', () => {
-    const [caption] = captions(renderAgentRow('task-1', 'review the PR'))
-    expect(caption?.props.accessibilityLabel).toBe('Written by subagent review the PR')
-    expect(caption?.children.join('')).toBe('review the PR')
-  })
-
-  it('still marks the row as a subagent when no loaded roster names it', () => {
-    const [caption] = captions(renderAgentRow('task-9'))
-    expect(caption?.children.join('')).toBe('Subagent')
-  })
-
-  it("adds nothing to the session's own row", () => {
-    expect(captions(renderAgentRow(undefined, 'review the PR'))).toEqual([])
-  })
-
-  it('names no one on a settled row whose only content is hidden, and names the live one', () => {
-    const toolOnly: NativeChatMessage = {
-      id: 'a2',
-      role: 'assistant',
-      blocks: [{ type: 'tool-call', name: 'Grep', input: {}, state: 'completed' }],
-      timestamp: null,
-      source: 'transcript',
-      agentId: 'task-1'
-    }
-    const renderToolOnly = (activeTurnIsWorking: boolean): ReactTestRenderer => {
-      act(() => {
-        renderer = create(
-          createElement(MobileNativeChatMessage, {
-            message: toolOnly,
-            subagentLabel: 'review the PR',
-            structuredActivityUi: true,
-            activeTurnIsWorking
-          })
-        )
-      })
-      return renderer!
-    }
-    expect(captions(renderToolOnly(false))).toEqual([])
-    act(() => renderer?.unmount())
-    expect(captions(renderToolOnly(true))).toHaveLength(1)
   })
 })

@@ -6,9 +6,10 @@ import type { NativeChatLiveSession } from './use-native-chat-live-session'
 import { NativeChatApprovalCard } from './NativeChatApprovalCard'
 import { NativeChatComposer, type NativeChatComposerHandle } from './NativeChatComposer'
 import { NativeChatEmptyState } from './NativeChatEmptyState'
+import { NativeChatLoadingCue } from './NativeChatLoadingCue'
 import { NativeChatMessageList } from './NativeChatMessageList'
 import { NativeChatQuestionCard } from './NativeChatQuestionCard'
-import { selectNativeChatViewState } from './native-chat-view-state'
+import { selectNativeChatViewState, structuredChatHistoryPhase } from './native-chat-view-state'
 import { useNativeChatComposerRevealFocus } from './use-native-chat-composer-reveal-focus'
 import { useNativeChatFontScale } from './use-native-chat-font-scale'
 import { LinkActionPopover } from '@/components/link-actions/LinkActionPopover'
@@ -22,7 +23,9 @@ import { NativeChatStructuredSessionStatus } from './NativeChatStructuredSession
 import { useNativeChatLaunchDraftSignal } from './use-native-chat-launch-draft-adoption'
 import { NativeChatLaunchRetry } from './NativeChatLaunchRetry'
 import { useNativeChatProvisionalLaunch } from './use-native-chat-provisional-launch'
-import { useStructuredAgentSessionHostExecution } from './StructuredAgentSessionStatusBridge'
+import { useStructuredAgentSessionHostExecutionPhase } from './StructuredAgentSessionStatusBridge'
+import { NativeChatQueuedMessageList } from './NativeChatQueuedMessageList'
+import { useAppStore } from '../../store'
 import { structuredAgentLabel } from '@/lib/structured-agent-session-launch-label'
 import { NativeChatThreadGoalBanner } from './NativeChatThreadGoalBanner'
 import { structuredAgentSessionReadFailureNotice } from './structured-agent-session-read-failure-notice'
@@ -42,15 +45,18 @@ export function NativeChatStructuredSession(
   )
   const { sendThroughRelaunch } = provisionalLaunch
   // The host's own word on whether the provider child has answered startup yet.
-  const hostExecution = useStructuredAgentSessionHostExecution(props.sessionId, props.target)
+  const startupPhase = useStructuredAgentSessionHostExecutionPhase(props.sessionId, props.target)
   const paneKey = useMemo(
     () => structuredAgentSessionPaneKey(props.tabId, props.sessionId),
     [props.sessionId, props.tabId]
   )
+  // Chat-wide: absent means on; only an explicit off keeps mid-turn sends immediate.
+  const queueFollowUps = useAppStore((store) => store.settings?.nativeChatQueueFollowUps !== false)
   const controller = useStructuredAgentSession({
     ...props,
     composerScopeKey: paneKey,
-    providerStarting: hostExecution.phase === 'starting',
+    queueFollowUps,
+    providerStarting: startupPhase === 'starting',
     transportEnabled: provisionalLaunch.transportEnabled,
     ...(provisionalLaunch.launch ? { launch: provisionalLaunch.launch } : {})
   })
@@ -75,15 +81,18 @@ export function NativeChatStructuredSession(
     isVisible: props.isVisible,
     rootRef,
     composerRef,
-    terminalPaneActions: props.contextMenuActions
+    terminalPaneActions: props.contextMenuActions,
+    sessionId: props.sessionId,
+    target: props.target
   })
+  const historyPhase = structuredChatHistoryPhase(provisionalLaunch, controller.status)
   const session = useMemo<NativeChatLiveSession>(
     () => ({
       messages: controller.messages,
       status:
         controller.status === 'error'
           ? 'error'
-          : controller.status === 'loading'
+          : historyPhase !== 'known'
             ? 'loading'
             : controller.isWorking
               ? 'working'
@@ -104,7 +113,7 @@ export function NativeChatStructuredSession(
             ? 'error'
             : 'ready'
     }),
-    [controller, props.agent, props.sessionId]
+    [controller, historyPhase, props.agent, props.sessionId]
   )
   // Read at click time, so the notices stay put while the outbox's Retry is rebuilt each render.
   const retryRef = useRef(controller.retry)
@@ -126,22 +135,24 @@ export function NativeChatStructuredSession(
     () =>
       structuredAgentSessionDeliveryNotices(
         controller.outbox,
-        controller.blockedClientMessageId,
         agentLabel,
         retryDelivery,
         rejectionRows,
-        startFailures
+        startFailures,
+        controller.failedHere
       ),
     [
       controller.outbox,
-      controller.blockedClientMessageId,
       agentLabel,
       retryDelivery,
       rejectionRows,
-      startFailures
+      startFailures,
+      controller.failedHere
     ]
   )
   const viewState = selectNativeChatViewState(session, { readRetries: true })
+  // Nothing reads an unread history, so its pane stays blank beside the Retry line.
+  const loadingPane = historyPhase === 'unread' ? null : <NativeChatLoadingCue />
   const readFailure =
     controller.status === 'error'
       ? structuredAgentSessionReadFailureNotice(controller.readRefusal)
@@ -260,7 +271,7 @@ export function NativeChatStructuredSession(
     >
       <div className="flex min-h-0 flex-1 flex-col">
         {viewState.kind === 'loading' ? (
-          <NativeChatEmptyState kind="loading" />
+          loadingPane
         ) : viewState.kind === 'error' ? (
           <NativeChatEmptyState
             kind="error"
@@ -274,6 +285,7 @@ export function NativeChatStructuredSession(
             session={session}
             journalItems={controller.journalItems}
             journalSubmissions={controller.submissions}
+            subagentRoster={controller.subagentRoster}
             railOutline={controller.railOutline}
             isVisible={props.isVisible}
             isWorking={controller.isWorking}
@@ -296,11 +308,16 @@ export function NativeChatStructuredSession(
         agentLabel={agentLabel}
         onRetry={provisionalLaunch.retry}
       />
+      {/* Host-held drafts, never transcript rows. Above the status area, so running shells and agents sit next to the composer. */}
+      <NativeChatQueuedMessageList
+        controller={controller.queuedMessages}
+        focusComposer={() => {
+          composerRef.current?.focus()
+        }}
+      />
       <NativeChatStructuredSessionStatus
         sessionId={props.sessionId}
-        agentLabel={agentLabel}
-        startupPhase={hostExecution.phase}
-        startupChildKey={hostExecution.childKey}
+        paneKey={paneKey}
         // Said once: on the pane when the failure took it, else here beside the transcript. A
         // failure that names nothing is only the pane reconnecting.
         error={
@@ -378,6 +395,7 @@ export function NativeChatStructuredSession(
           canSend={!prompt}
           isWorking={controller.canStop}
           onStop={() => void controller.stop()}
+          steerQueued={controller.queuedMessages.steerNewest}
           structuredTransport={structuredTransport}
           launchSeed={{ ...launchDraftSignal, ownsTabWideLaunchDraft: true }}
         />

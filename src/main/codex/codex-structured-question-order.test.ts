@@ -16,7 +16,8 @@ import {
 } from '../../shared/structured-agent-session-reducer'
 import { projectStructuredAgentSessionMessages } from '../../shared/structured-agent-session-message-projection'
 import { projectNativeChatTranscriptMessages } from '../../shared/native-chat-transcript-projection'
-import { AgentSessionRecordStore } from '../runtime/agent-session-record-store'
+import type { AgentSessionRecordStore } from '../runtime/agent-session-record-store'
+import { openTestAgentSessionRecordStore } from '../runtime/agent-session-record-store-test-harness'
 import { CodexJournalPrompts } from './codex-structured-journal-prompts'
 import { CODEX_USER_INPUT_METHOD } from './codex-structured-prompt-replies'
 import type { StructuredAgentSessionAdapter } from '../native-chat/agent-session-wire/structured-agent-session-adapter'
@@ -35,6 +36,7 @@ import {
   structuredQuestionTranscript
 } from '../../renderer/src/components/native-chat/structured-agent-question-projection'
 import { openTestJournalHostDatabase } from '../native-chat/agent-session-journal/journal-host-database-test-support'
+import { createStructuredAgentSessionLogger } from '../native-chat/agent-session-wire/structured-agent-session-logger'
 
 const CALLER = { callerKey: 'client-1' }
 
@@ -90,8 +92,9 @@ beforeEach(async () => {
     answerPrompt: vi.fn(async ({ commit }) => commit()),
     setOption: vi.fn(async () => undefined)
   }
-  store = await AgentSessionRecordStore.open({ directory: join(root, 'store'), hostId: 'local' })
+  store = await openTestAgentSessionRecordStore(root)
   host = new StructuredAgentSessionHost({
+    logger: createStructuredAgentSessionLogger(),
     store,
     adapter,
     journalDatabase: openTestJournalHostDatabase(root),

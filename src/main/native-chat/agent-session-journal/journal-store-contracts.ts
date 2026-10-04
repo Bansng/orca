@@ -4,6 +4,7 @@ import type {
   AgentJournalItemBody,
   AgentJournalItemIdentity,
   AgentJournalMessageItem,
+  AgentJournalProducerLinkage,
   AgentJournalResetReason,
   AgentJournalRowAttribution,
   AgentJournalTurnScope,
@@ -56,6 +57,14 @@ export type JournalItemAppendOptions = AgentJournalRowAttribution & {
 }
 export type JournalTombstoneInput = { fence: number }
 
+/** One reduced item, the producer that wrote it and the turn it was created beside. */
+export type JournalItemLinkageVisitor = (
+  itemId: string,
+  sequence: number,
+  body: AgentJournalItemBody,
+  attribution: AgentJournalProducerLinkage & { turnScope?: AgentJournalTurnScope }
+) => void
+
 export type JournalLifecycleBatchInput = {
   settlementId: string
   mutations: readonly JournalLifecycleMutationInput[]
@@ -85,6 +94,9 @@ export type JournalSubmissionConsume = {
   /** The host process handing it off, stamped on the draft so a hand-off withdrawn back to
    *  waiting belongs to the process that sent it, not the one that first wrote the card. */
   hostInstance?: string
+  /** The queue's own send: refused in the consume's transaction while the queue's pause, as
+   *  this host instance derives it, holds the card. Send-now omits it. */
+  yieldsToPause?: { hostInstance: string }
 }
 
 export type JournalItemAppendInput = {
