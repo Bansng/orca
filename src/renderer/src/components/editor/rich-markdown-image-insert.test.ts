@@ -180,17 +180,23 @@ describe('insertRichMarkdownImageFromPath', () => {
         worktreesByRepo: { repo1: [{ id: 'wt-1', path: '/repo' }] }
       })
       vi.mocked(getConnectionIdForFile).mockReturnValue(connectionId)
-      const { editor } = editorWithRunResult(true)
+      const { editor, insertContentAt } = editorWithRunResult(true)
 
       await insertRichMarkdownImageFromPath({
         editor: editor as never,
         filePath,
         sourcePath: '/tmp/image.png',
         worktreeId: 'wt-1',
-        insertPos: 4
+        getInsertionRange: () => ({ from: 4, to: 4, requestOrder: 1 })
       })
 
       expect(vi.mocked(importExternalPathsToRuntime).mock.calls[0]?.[3]).toEqual({ access })
+      expect(insertContentAt).toHaveBeenCalledWith(
+        4,
+        { type: 'image', attrs: { src: 'image.png' } },
+        { updateSelection: true }
+      )
+      expect(toast.error).not.toHaveBeenCalled()
     }
   )
 

@@ -1,4 +1,37 @@
 {
+  "csv": {
+    "detectingDelimiter": "Detecting delimiter…",
+    "indexProgress": "Indexing CSV… {{percent}}%",
+    "loadingCell": "Loading…",
+    "nextRows": "Next rows",
+    "previousRows": "Previous rows",
+    "readOnlyPreview": "Large file preview · Read-only",
+    "resizeColumn": "Resize column {{column}}",
+    "rowWindow": "Rows {{first}}–{{last}}",
+    "editor": "CSV editor",
+    "editCell": "Edit row {{row}}, column {{column}}",
+    "filterRows": "Filter rows",
+    "edit": "Edit cell",
+    "copy": "Copy",
+    "paste": "Paste",
+    "rows": "Rows",
+    "insertRowAbove": "Insert row above",
+    "insertRowBelow": "Insert row below",
+    "deleteRows": "Delete selected rows",
+    "columns": "Columns",
+    "newColumn": "Column {{column}}",
+    "insertColumnBefore": "Insert column before",
+    "insertColumnAfter": "Insert column after",
+    "moveColumnLeft": "Move column left",
+    "moveColumnRight": "Move column right",
+    "deleteColumns": "Delete selected columns",
+    "sort": "Sort",
+    "sortAscending": "Sort selected column ascending",
+    "sortDescending": "Sort selected column descending",
+    "originalOrder": "Original row order",
+    "save": "Save",
+    "inspectionOnly": "Inspection only · File row order unchanged"
+  },
   "osDocumentOpen": {
     "failed": "Failed to open the file."
   },
@@ -3872,6 +3905,9 @@
             "grokUsageAria": "Open Grok usage details",
             "grokUsageMenu": "Grok Usage",
             "floatingTerminalNewActivity": "{{label}}, new activity",
+            "4fba7dc1e7": "{{value0}} bal",
+            "4025a6f62f": "Unlimited",
+            "a95969101f": "{{value0}} credits",
             "codexSignInSuccess": "Signed in to Codex",
             "codexSignInError": "Codex sign-in failed. Please try again.",
             "cursorUsageMenu": "Cursor Usage",
@@ -4022,6 +4058,16 @@
               }
             }
           },
+          "provider": {
+            "extra": {
+              "usage": {
+                "section": {
+                  "135d51c19f": "Limit {{value0}}",
+                  "apiKeyBalanceUnavailable": "Balance is not included in this usage response."
+                }
+              }
+            }
+          },
           "tooltip": {
             "zcode": {
               "mcp": "MCP"
@@ -4059,6 +4105,14 @@
             "d1b7f509ac": "Run grok in a terminal on the computer running Orca and wait for it to start. If prompted, complete sign-in, then retry usage. You do not need to send a chat message.",
             "f90b3d7a16": "Run Kimi to refresh",
             "a37e8c15d4": "Run kimi in a terminal on the computer running Orca and wait for it to start, then retry usage.",
+            "fbc80d8be2": "Zen balance",
+            "c03c61f53f": "Balance",
+            "f6a27a3c0a": "{{value0}} available",
+            "7404abbece": "Usage credits",
+            "473d45cd0f": "Balance {{value0}}",
+            "f21b2ba897": "Credits",
+            "56c0d70577": "Unlimited",
+            "87b5bda4d3": "{{value0}} credits available",
             "minimax": {
               "expired": {
                 "label": "Sign-in expired",
@@ -8915,7 +8969,38 @@
             "fastDescription": "Extra multiplier while scrolling with a modifier key.",
             "tui": "TUI",
             "tuiDescription": "Discrete wheel reports for full-screen terminal apps."
-          }
+          },
+          "8dbe0bc942": "Shell arguments, one per line",
+          "f58cb71f53": "--rcfile\n/path/to/rcfile",
+          "48b91a3ed2": "Custom args",
+          "7bd83fc1d0": "-l (default)",
+          "5ffc4777b6": "Shell argument mode",
+          "578ec79449": "Enter one argument per line. Leave it empty to pass no arguments.",
+          "884a006065": "Starts the shell as a login shell with -l.",
+          "01c600daff": "Shell arguments",
+          "e3ae5aed18": ". Switch to System shell or choose an executable on this host.",
+          "59573d0b33": "Enter a shell name on PATH or an executable path. Orca starts it as a login shell.",
+          "5e06e87730": "Custom shell executable",
+          "c2bf02ce2f": "fish, nu, or /bin/zsh",
+          "f51cc79784": "Custom shell",
+          "dd3f4c35da": "System shell ({{value0}})",
+          "fd05fb109c": "Terminal shell",
+          "69724e8f0c": "Choose what Orca opens for new local terminal panes.",
+          "c2ddb189e7": "rcfile",
+          "73c211e979": "wrapper",
+          "4faf688f78": "login",
+          "44f8a56f66": "args",
+          "af893aa433": "arguments",
+          "ddc72a4860": "default",
+          "d469840b75": "nushell",
+          "17ad899ba4": "bash",
+          "c9bc93d343": "zsh",
+          "0cbe5ad727": "fish",
+          "81694f1584": "terminal",
+          "a909136b3f": "shell",
+          "1c29734248": "Shell used for new terminal panes",
+          "9589abc009": "Default shell",
+          "5a5eac2f44": "Shell not found: {{value0}}"
         },
         "TerminalSettingsPreview": {
           "a63953a48a": "Preview {{value0}} theme",
@@ -10880,7 +10965,19 @@
               "statusline": "statusline",
               "dim": "dim",
               "colors": "colors"
-            }
+            },
+            "d31ed1ac1c": "rcfile",
+            "d9e29543a1": "wrapper",
+            "50ba80b6dd": "login",
+            "36ba1a1357": "args",
+            "5304b12d5c": "arguments",
+            "7c3ede6f12": "nushell",
+            "bf09070e31": "bash",
+            "d26257a80d": "zsh",
+            "454df22a5e": "fish",
+            "ddd5efe113": "shell",
+            "3de504994c": "Shell and arguments used for new local interactive terminal panes",
+            "1733ccd3e9": "Terminal shell"
           },
           "windows": {
             "search": {
@@ -17596,6 +17693,11 @@
           "managePullRequests": "Read, comment on, and merge pull requests without leaving Orca"
         }
       }
+    },
+    "jiraIssueAssigneeField": {
+      "label": "Assignee",
+      "automatic": "Automatic",
+      "assignToMe": "Assign to me ({{name}})"
     },
     "jiraUserPicker": {
       "select": "Select {{value0}}",
