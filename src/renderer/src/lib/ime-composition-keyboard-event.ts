@@ -1,28 +1,32 @@
-import { useMemo, useRef, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import {
+  useMemo,
+  useRef,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 
 type ImeKeyboardEvent = {
-  isComposing?: boolean
-  keyCode?: number
-  nativeEvent?: { isComposing?: boolean; keyCode?: number }
-}
+  isComposing?: boolean;
+  keyCode?: number;
+  nativeEvent?: { isComposing?: boolean; keyCode?: number };
+};
 
 /** True when the IME, rather than Orca, owns a keyboard event. Generic so synthetic, native, and
  * gesture events each pass their own richer shape. */
 export function isImeOwnedKeyboardEvent<KeyEvent extends ImeKeyboardEvent>(
-  event: KeyEvent
+  event: KeyEvent,
 ): boolean {
   return (
     event.isComposing === true ||
     event.keyCode === 229 ||
     event.nativeEvent?.isComposing === true ||
     event.nativeEvent?.keyCode === 229
-  )
+  );
 }
 
 type ImeKeyGestureEvent = Pick<
   ReactKeyboardEvent,
-  'key' | 'keyCode' | 'nativeEvent' | 'preventDefault' | 'shiftKey'
-> & { altKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }
+  "key" | "keyCode" | "nativeEvent" | "preventDefault" | "shiftKey"
+> & { altKey?: boolean; ctrlKey?: boolean; metaKey?: boolean };
 
 /**
  * Why: the key that ends a CJK composition arrives as two keydowns: Enter confirming a
@@ -32,86 +36,90 @@ type ImeKeyGestureEvent = Pick<
  * carry survives until the next animation frame. Identity-scoped so an older
  * gesture's expiry cannot clear a newer one.
  */
-export function useImeKeyGestureOwnership(key: 'Enter' | 'Escape'): {
-  isComposing: () => boolean
-  ownsKeyDown: (event: ImeKeyGestureEvent) => boolean
-  onKeyUp: (event: Pick<ImeKeyGestureEvent, 'key' | 'keyCode'>) => void
-  reset: () => void
-  setComposing: (active: boolean) => void
+export function useImeKeyGestureOwnership(key: "Enter" | "Escape"): {
+  isComposing: () => boolean;
+  ownsKeyDown: (event: ImeKeyGestureEvent) => boolean;
+  onKeyUp: (event: Pick<ImeKeyGestureEvent, "key" | "keyCode">) => void;
+  reset: () => void;
+  setComposing: (active: boolean) => void;
 } {
   const stateRef = useRef<{ composing: boolean; pendingKey: object | null }>({
     composing: false,
-    pendingKey: null
-  })
+    pendingKey: null,
+  });
 
   return useMemo(() => {
     const reset = (): void => {
-      stateRef.current = { composing: false, pendingKey: null }
-    }
+      stateRef.current = { composing: false, pendingKey: null };
+    };
     // Shift+Enter is a newline, never a submit — it must never be owned or swallowed.
     const isPlainKey = (event: ImeKeyGestureEvent): boolean =>
-      event.key === key && event.keyCode === KEY_CODES[key] && !event.shiftKey
+      event.key === key && event.keyCode === KEY_CODES[key] && !event.shiftKey;
     // The redispatched Enter of a confirm carries no modifiers, so a chorded one is the
     // user's own submit aimed past the IME. It must still ARM, and must never be swallowed.
     const hasChordModifier = (event: ImeKeyGestureEvent): boolean =>
-      Boolean(event.altKey || event.ctrlKey || event.metaKey)
+      Boolean(event.altKey || event.ctrlKey || event.metaKey);
     return {
       isComposing: () => stateRef.current.composing,
       ownsKeyDown: (event: ImeKeyGestureEvent): boolean => {
         const markedKey =
-          (event.nativeEvent.isComposing || stateRef.current.composing) &&
+          (isImeOwnedKeyboardEvent(event) || stateRef.current.composing) &&
           (isPlainKey(event) ||
             (event.key === key && event.keyCode === 229) ||
-            (event.key === 'Process' && event.keyCode === 229))
+            (event.key === "Process" && event.keyCode === 229));
         if (markedKey) {
-          stateRef.current.pendingKey = {}
-          return true
+          stateRef.current.pendingKey = {};
+          return true;
         }
-        if (stateRef.current.pendingKey && isPlainKey(event) && !event.nativeEvent.isComposing) {
+        // Continued typing ends the confirmation even when hidden renderers delay the frame.
+        if (
+          !stateRef.current.composing &&
+          !isImeOwnedKeyboardEvent(event) &&
+          ![key, "Shift", "Control", "Alt", "Meta"].includes(event.key)
+        ) {
+          stateRef.current.pendingKey = null;
+        }
+        if (
+          stateRef.current.pendingKey &&
+          isPlainKey(event) &&
+          !event.nativeEvent.isComposing
+        ) {
           // The gesture resolves either way, so the carry is spent either way; only a bare
           // Enter is also swallowed, because a chorded one is the user's own submit.
-          stateRef.current.pendingKey = null
+          stateRef.current.pendingKey = null;
           if (hasChordModifier(event)) {
-            return false
+            return false;
           }
-          event.preventDefault()
-          return true
+          event.preventDefault();
+          return true;
         }
-        return false
+        return false;
       },
-      onKeyUp: (event: Pick<ImeKeyGestureEvent, 'key' | 'keyCode'>): void => {
-        // A Process/229 keyup means the IME finished without redispatching, so the
-        // gesture is over immediately.
-        if (event.key === 'Process' && event.keyCode === 229) {
-          stateRef.current.pendingKey = null
-          return
-        }
-        // Every other keyup expires on the NEXT FRAME, never synchronously. Enter/13
-        // because macOS delivers keyup before the unmarked redispatch; anything else
-        // because IMEs reporting Process/229 on every key (Pinyin candidate selection)
-        // release a non-Enter key, and a Process-only clear left the carry armed and ate
-        // the user's next real Enter.
-        const pendingKey = stateRef.current.pendingKey
+      onKeyUp: (): void => {
+        // Any keyup can precede the redispatch, including an IME-owned Process/229 release.
+        const pendingKey = stateRef.current.pendingKey;
         if (pendingKey) {
           requestAnimationFrame(() => {
             if (stateRef.current.pendingKey === pendingKey) {
-              stateRef.current.pendingKey = null
+              stateRef.current.pendingKey = null;
             }
-          })
+          });
         }
       },
       reset,
       setComposing: (active: boolean) => {
-        stateRef.current.composing = active
-      }
-    }
-  }, [key])
+        stateRef.current.composing = active;
+      },
+    };
+  }, [key]);
 }
 
-const KEY_CODES = { Enter: 13, Escape: 27 } as const
+const KEY_CODES = { Enter: 13, Escape: 27 } as const;
 
-export function useImeEnterGestureOwnership(): ReturnType<typeof useImeKeyGestureOwnership> {
-  return useImeKeyGestureOwnership('Enter')
+export function useImeEnterGestureOwnership(): ReturnType<
+  typeof useImeKeyGestureOwnership
+> {
+  return useImeKeyGestureOwnership("Enter");
 }
 
 /**
@@ -122,5 +130,5 @@ export function useImeEnterGestureOwnership(): ReturnType<typeof useImeKeyGestur
  * a defensive fallback for IMEs that don't set `isComposing` on keydown.
  */
 export function isImeCompositionKeyDown(event: ReactKeyboardEvent): boolean {
-  return isImeOwnedKeyboardEvent(event)
+  return isImeOwnedKeyboardEvent(event);
 }
