@@ -301,13 +301,17 @@ export default function BrowserAddressBar({
     [clearSuggestionPreview, onNavigate, onOpenWorkspaceDoc, suggestions]
   )
 
-  const handleKeyDown = useCallback(
+  const handleKeyDownCapture = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Escape') {
         handleEscape(event)
-        return
       }
+    },
+    [handleEscape]
+  )
 
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter' && open) {
         // Why: match Chrome — Enter always navigates to the current input text,
         // not the highlighted dropdown row (click still picks a row directly).
@@ -358,7 +362,6 @@ export default function BrowserAddressBar({
       selectedValue,
       selectSuggestionAtIndex,
       restoreTypedQuery,
-      handleEscape,
       clearSuggestionPreview,
       onSubmit
     ]
@@ -432,6 +435,8 @@ export default function BrowserAddressBar({
               }}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
+              // Capture: Input swallows IME-marked keydowns before bubble handlers, and Escape's IME pair needs them.
+              onKeyDownCapture={handleKeyDownCapture}
               data-orca-browser-address-bar="true"
               className="h-auto border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0"
               spellCheck={false}
