@@ -1128,11 +1128,7 @@
         "a4c8e1b2f7": "Codex 仍以 {{value0}} 身份登录",
         "d3e8a1f4b2": "账户已切换",
         "9375620cc3": "重启此会话以使用 {{value0}}。在重启之前，它将继续使用旧账户。",
-        "6133594b12": "保留旧账户",
-        "8f0d5c92a1": "Codex 设置已更改",
-        "3ea91b5c07": "此 Codex 会话使用过时的配置",
-        "e6b7139d2a": "重新启动此会话以加载当前 Codex 配置。",
-        "7b1d20f4c8": "保持当前会话"
+        "6133594b12": "保留旧账户"
       },
       "FirstLaunchBanner": {
         "b9e1b966c7": "关闭通知",
@@ -6862,7 +6858,7 @@
           "1199258ace": "复制",
           "1188e56af4": "复制示例提示",
           "b84807f228": "”",
-          "59722f31b4": "”",
+          "59722f31b4": "“",
           "c5325e91f6": "将其中任何内容粘贴到 Claude Code、Codex 或安装该技能的项目中的其他智能体中。",
           "2a180694f7": "尝试一下 - 示例提示",
           "5ec620ccc4": "复制失败。",
@@ -7525,7 +7521,7 @@
           "edf13dd03b": "复制",
           "c12b253997": "复制示例提示",
           "d151e25078": "”",
-          "b525ff2b12": "”",
+          "b525ff2b12": "“",
           "4daa95f25a": "将其中任何内容粘贴到安装了 Orca CLI 技能的项目中的 Claude Code、Codex 或其他智能体中。",
           "0820b3f84f": "尝试一下 - 示例提示",
           "1f608e7d60": "复制提示失败。",
@@ -13966,7 +13962,7 @@
             "2a0d535f69": "创建新分支",
             "a44229ce4d": "作为工作区名称",
             "766083a596": "”",
-            "34ca97bce3": "”",
+            "34ca97bce3": "“",
             "b1a7d679ba": "使用",
             "e57c53727c": "添加项目...",
             "a76fcb4fa0": "切换到",
@@ -16020,6 +16016,7 @@
             "effd75e330": "附近的环境",
             "7d1480fbf1": "超文本标记语言",
             "9098b118ab": "页",
+            "accessibleNameOpenQuote": "“",
             "eb98a0971a": "”",
             "d053db279d": "角色=",
             "a759d8f866": "选定的元素",
@@ -16676,7 +16673,6 @@
           "770d458144": "分组方式",
           "795cbf26e2": "筛选...",
           "4616ea39fd": "跳转到工作区",
-          "threadListOptionsFiltered": "线程列表选项，筛选器已启用",
           "showSearch": "显示搜索",
           "markThreadRead": "将话题标记为已读",
           "59b131fbd9": "将话题标记为未读",
@@ -17112,6 +17108,7 @@
           "tool": {
             "arrow": "箭头",
             "ellipse": "椭圆",
+            "eraser": "橡皮擦",
             "highlight": "高亮",
             "pen": "画笔",
             "rect": "矩形",
@@ -17488,6 +17485,7 @@
         "providerStartFailed": "{{agent}} 在完成启动前已停止。",
         "runCommandAgain": "请重新运行 /{{command}}。",
         "sendToTryAgain": "请发送您的消息以重试。",
+        "sendAgainToTryOnceMore": "请重新发送您的消息，再试一次。",
         "couldNotStart": "{{agent}} 无法启动。",
         "couldNotRestart": "{{agent}} 无法重新启动。",
         "notSignedIn": "{{agent}} 未使用所选账户登录。",
@@ -17541,7 +17539,7 @@
         "providerRateLimited": "{{agent}} 已被限流，正在重试。",
         "providerRetrying": "{{agent}} 遇到临时问题，正在重试。",
         "providerRetryingQuoted": "{{agent}} 正在重试：{{detail}}。",
-        "previousExitUnverifiable": "之前的 {{agent}} 可能仍在运行。它停止后，您的消息就会发送。"
+        "previousExitUnverifiable": "无法停止之前的 {{agent}}。"
       },
       "writeNotice": {
         "notDoneReadHistory": "无法加载此聊天的历史记录。",
@@ -17565,6 +17563,8 @@
         "historyUnavailable": "Orca 目前无法打开此聊天的历史记录。",
         "savedByNewerOrca": "这些聊天由更新版本的 Orca 保存。",
         "updateOrcaToKeepUsing": "请更新 Orca 以继续使用这些聊天。",
+        "chatSavedByNewerOrca": "此聊天由更新版本的 Orca 保存。",
+        "updateOrcaToOpenChat": "请更新 Orca 以打开它。",
         "unsupported": "运行此聊天的计算机需要更新版本的 Orca。请在该计算机上更新 Orca 后重试。",
         "notAvailable": "此聊天中无法使用此功能。",
         "unreachable": "Orca 无法连接到智能体。",
@@ -17789,6 +17789,7 @@
         "sending": "正在发送…"
       },
       "approval": {
+        "needsNewerOrca": "此请求需要更新版本的 Orca。",
         "title": "允许 {{value0}}？",
         "allow": "允许",
         "deny": "拒绝",
@@ -17918,6 +17919,12 @@
         "subtitle": "文件将作为代理可以读取的路径添加到您的消息中。"
       },
       "copyCode": "复制代码",
+      "context": {
+        "unavailable": "上下文用量暂时未知，将在智能体下次响应后提供。",
+        "summary": "上下文：{{used}}/{{window}} token（{{percent}}%），根据上一次响应的估算值。",
+        "used": "上下文：已用 {{used}} token，根据上一次响应的估算值。",
+        "unreported": "此会话无法提供上下文用量。"
+      },
       "goal": {
         "placeholder": "描述您的目标，定义可衡量的结果以获得最佳结果",
         "clear": "明确的目标",
