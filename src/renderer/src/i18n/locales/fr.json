@@ -1231,11 +1231,7 @@
         "9263e75f49": "Codex utilise le compte précédent",
         "d3e8a1f4b2": "Compte changé",
         "9375620cc3": "Redémarrez cette session pour utiliser {{value0}}. Elle reste sur le compte précédent tant que vous ne l'avez pas fait.",
-        "6133594b12": "Conserver l'ancien compte",
-        "8f0d5c92a1": "Configuration Codex modifiée",
-        "3ea91b5c07": "Cette session Codex utilise une configuration obsolète",
-        "e6b7139d2a": "Redémarrez cette session pour charger votre configuration Codex actuelle.",
-        "7b1d20f4c8": "Conserver la session actuelle"
+        "6133594b12": "Conserver l'ancien compte"
       },
       "FirstLaunchBanner": {
         "b9e1b966c7": "Masquer l'avis",
@@ -16123,6 +16119,7 @@
             "effd75e330": "Contexte proche",
             "7d1480fbf1": "HTML",
             "9098b118ab": "Page",
+            "accessibleNameOpenQuote": "\"",
             "eb98a0971a": "\"",
             "d053db279d": "role=",
             "a759d8f866": "Élément sélectionné",
@@ -16779,7 +16776,6 @@
           "770d458144": "Grouper l'activité des agents par",
           "795cbf26e2": "Filtrer...",
           "4616ea39fd": "Aller à l'espace de travail",
-          "threadListOptionsFiltered": "Options de la liste des fils, filtres actifs",
           "showSearch": "Afficher la recherche",
           "showUnreadOnly": "Afficher uniquement les fils non lus",
           "showChildAgents": "Afficher les agents enfants",
@@ -17215,6 +17211,7 @@
           "tool": {
             "arrow": "Flèche",
             "ellipse": "Ellipse",
+            "eraser": "Gomme",
             "highlight": "Surligneur",
             "pen": "Stylo",
             "rect": "Rectangle",
@@ -17587,6 +17584,7 @@
         "providerStartFailed": "{{agent}} s'est arrêté avant d'avoir fini de démarrer.",
         "runCommandAgain": "Relancez /{{command}}.",
         "sendToTryAgain": "Envoyez votre message pour réessayer.",
+        "sendAgainToTryOnceMore": "Renvoyez votre message pour réessayer.",
         "couldNotStart": "{{agent}} n'a pas pu démarrer.",
         "couldNotRestart": "{{agent}} n'a pas pu redémarrer.",
         "notSignedIn": "{{agent}} n'est pas connecté avec le compte sélectionné.",
@@ -17640,7 +17638,7 @@
         "providerRateLimited": "{{agent}} est limité en débit et réessaie.",
         "providerRetrying": "{{agent}} a rencontré un problème temporaire et réessaie.",
         "providerRetryingQuoted": "{{agent}} réessaie : {{detail}}.",
-        "previousExitUnverifiable": "L'exécution précédente de {{agent}} est peut-être toujours en cours. Vos messages seront envoyés dès qu'elle s'arrêtera."
+        "previousExitUnverifiable": "Impossible d'arrêter l'exécution précédente de {{agent}}."
       },
       "writeNotice": {
         "notDoneReadHistory": "L'historique de ce chat n'a pas pu être chargé.",
@@ -17664,6 +17662,8 @@
         "historyUnavailable": "Orca n'a pas pu ouvrir l'historique de ce chat pour le moment.",
         "savedByNewerOrca": "Les chats ont été enregistrés par une version plus récente d'Orca.",
         "updateOrcaToKeepUsing": "Mettez à jour Orca pour continuer à les utiliser.",
+        "chatSavedByNewerOrca": "Ce chat a été enregistré par une version plus récente d'Orca.",
+        "updateOrcaToOpenChat": "Mettez à jour Orca pour l'ouvrir.",
         "unsupported": "Cela nécessite une version plus récente d'Orca sur l'ordinateur qui exécute ce chat. Mettez Orca à jour sur cet ordinateur, puis réessayez.",
         "notAvailable": "Ceci n'est pas disponible dans ce chat.",
         "unreachable": "Orca n'a pas pu joindre l'agent.",
@@ -17888,6 +17888,7 @@
         "sending": "Envoi…"
       },
       "approval": {
+        "needsNewerOrca": "Cette demande nécessite une version plus récente d'Orca.",
         "title": "Autoriser {{value0}} ?",
         "allow": "Autoriser",
         "deny": "Refuser",
@@ -18017,6 +18018,12 @@
         "subtitle": "Les fichiers sont ajoutés à votre message sous forme de chemins que l'agent peut lire."
       },
       "copyCode": "Copier le code",
+      "context": {
+        "unavailable": "L'utilisation du contexte n'est pas encore connue. Elle sera disponible après la prochaine réponse de l'agent.",
+        "summary": "Contexte : {{used}} / {{window}} tokens ({{percent}} %), estimation basée sur la dernière réponse.",
+        "used": "Contexte : {{used}} tokens utilisés, estimation basée sur la dernière réponse.",
+        "unreported": "L'utilisation du contexte n'est pas disponible pour cette session."
+      },
       "goal": {
         "placeholder": "Décrivez votre objectif, définissez des résultats mesurables pour de meilleurs résultats",
         "clear": "Objectif clair",
