@@ -9,6 +9,7 @@ import type {
 } from '../../../../shared/native-chat-session-options'
 import type { NativeChatLaunchDraft } from '@/lib/native-chat-launch-prompt'
 import type { NativeChatComposerImageAttachment } from './NativeChatComposerField'
+import type { NativeChatAfterStopSend } from './native-chat-composer-target'
 import type { NativeChatLocalCommandAnswer } from './use-native-chat-local-command-answer'
 
 export type NativeChatOptionPickerRequest = {
@@ -18,7 +19,10 @@ export type NativeChatOptionPickerRequest = {
 
 export type NativeChatStructuredComposerTransport = {
   conversationCommands?: readonly AgentSessionConversationCommand[]
-  send: (text: string, attachments: readonly NativeChatComposerImageAttachment[]) => boolean
+  send: (
+    text: string,
+    attachments: readonly NativeChatComposerImageAttachment[]
+  ) => boolean | 'queued'
   dispatchCommand: (text: string) => Promise<StructuredAgentSessionCommandOutcome>
   optionsSurface: SessionOptionsSurface
   optionSnapshot: SessionOptionDescriptor[]
@@ -32,6 +36,8 @@ export type NativeChatStructuredComposerTransport = {
   /** Present only where the host can set this session's goal. */
   threadGoal?: { setObjective: (objective: string) => Promise<boolean> }
   onError: (message: string | null) => void
+  /** A local send: brings the latest into view at the press, not when the host answers. */
+  onSubmitted?: () => void
   runtime: 'local' | 'remote'
   /** The session behind this composer; a real user send relinquishes orchestration ownership. */
   sessionId: string
@@ -61,6 +67,11 @@ export type NativeChatComposerProps = {
   canSend?: boolean
   /** True while the hosted TUI reports an in-flight turn; swaps Send to Stop. */
   isWorking?: boolean
+  /** This client's Stop request is in flight: the Stop control is disabled and says so. */
+  isStopping?: boolean
+  /** The chat reads Stopping: the placeholder says a message runs after the stop, queued as a
+   *  card where the host holds sends as cards (`queue`), else sent and held by the host (`send`). */
+  afterStop?: NativeChatAfterStopSend
   /** Interrupt the hosted agent, usually by sending ESC into the PTY. */
   onStop?: () => void
   /** Render an optimistic echo until the real transcript turn lands. */
@@ -69,11 +80,15 @@ export type NativeChatComposerProps = {
   optimisticSendOutcome?: NativeChatOptimisticSendOutcome
   /** Remove an optimistic echo when its delayed submit is canceled. */
   onOptimisticSendCanceled?: (pendingId: string) => void
+  /** A prompt card owns the input region; the composer stays mounted but hidden. */
+  inputOwnedByCard?: boolean
   /** Record a dispatched slash command that does not create a chat turn; `output`
    *  carries the host's answer when the agent never saw the command. */
   onSlashCommand?: (command: string, output?: string) => void
   /** The host's own answer to a command the agent must not see, or null to send it. */
   answerCommandLocally?: NativeChatLocalCommandAnswer
+  /** Anything sent to the terminal: a message, a command or a session option. */
+  onSubmitted?: () => void
   /** Picker-only agent commands continue in the hosted TUI after dispatch. */
   onSwitchToTerminal?: () => void
   /** Reads the hosted TUI's current rendered screen when chat is entered. */

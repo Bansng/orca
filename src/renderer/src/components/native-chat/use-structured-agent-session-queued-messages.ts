@@ -26,11 +26,14 @@ import type { StructuredAgentSessionMutate } from './use-structured-agent-sessio
 
 export type StructuredAgentSessionQueuedMessagesController = {
   cards: QueuedMessageCard[]
+  /** The host queues sends. Without it a card can still show — a message the host kept unsent —
+   *  but queueing settings and the steer chord would do nothing. */
+  queueCapable: boolean
   /** Why the whole queue sends nothing on its own; null when it drains. Shown only with cards.
    *  A string reason: a newer host may name one this build does not know. */
   pause: { reason: string } | null
-  /** Lift the queue's pause; a failure is a toast, and the Resume button is the retry. */
-  resume: () => Promise<void>
+  /** Whether the host lifted the pause; a failure is a toast, and Resume is the retry. */
+  resume: () => Promise<boolean>
   /** A Resume is in flight. */
   resuming: boolean
   /** Send-now into the running turn; the transcript shows it at delivery position. */
@@ -153,18 +156,19 @@ export function useStructuredAgentSessionQueuedMessages(args: {
 
   const resumingRef = useRef(false)
   const [resuming, setResuming] = useState(false)
-  const resume = useCallback(async (): Promise<void> => {
+  const resume = useCallback(async (): Promise<boolean> => {
     if (resumingRef.current) {
-      return
+      return false
     }
     resumingRef.current = true
     setResuming(true)
     try {
-      await mutate<AgentSessionQueuedMessagesResumeResult>(
+      const result = await mutate<AgentSessionQueuedMessagesResumeResult>(
         'agentSession.queuedMessagesResume',
         'agentSession.queuedMessagesResume',
         {}
       )
+      return result?.resumed === true
     } finally {
       resumingRef.current = false
       setResuming(false)
@@ -183,5 +187,15 @@ export function useStructuredAgentSessionQueuedMessages(args: {
     return true
   }, [enabled, steer])
 
-  return { cards, pause, resume, resuming, steer, remove, edit, steerNewest }
+  return {
+    cards,
+    queueCapable: enabled,
+    pause,
+    resume,
+    resuming,
+    steer,
+    remove,
+    edit,
+    steerNewest
+  }
 }

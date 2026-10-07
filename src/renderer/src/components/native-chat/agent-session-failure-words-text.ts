@@ -40,6 +40,31 @@ const PIECES: Record<AgentSessionFailureCopyId, (values: AgentSessionFailureCopy
         COPY.couldNotRestart,
         values
       ),
+    argumentsUnsupportedOption: (values) =>
+      translate(
+        'components.native-chat.failureWords.argumentsUnsupportedOption',
+        COPY.argumentsUnsupportedOption,
+        values
+      ),
+    argumentsMissingValue: (values) =>
+      translate(
+        'components.native-chat.failureWords.argumentsMissingValue',
+        COPY.argumentsMissingValue,
+        values
+      ),
+    argumentsMultipleValues: (values) =>
+      translate(
+        'components.native-chat.failureWords.argumentsMultipleValues',
+        COPY.argumentsMultipleValues,
+        values
+      ),
+    argumentsPositionalPrompt: () =>
+      translate(
+        'components.native-chat.failureWords.argumentsPositionalPrompt',
+        COPY.argumentsPositionalPrompt
+      ),
+    editSavedArguments: () =>
+      translate('components.native-chat.failureWords.editSavedArguments', COPY.editSavedArguments),
     terminalAgentHoldsChat: () =>
       translate(
         'components.native-chat.writeNotice.terminalAgentHoldsChat',
@@ -77,6 +102,11 @@ const PIECES: Record<AgentSessionFailureCopyId, (values: AgentSessionFailureCopy
       translate(
         'components.native-chat.failureWords.managedAccountUnsupported',
         COPY.managedAccountUnsupported
+      ),
+    launchFolderMissing: () =>
+      translate(
+        'components.native-chat.failureWords.launchFolderMissing',
+        COPY.launchFolderMissing
       ),
     chooseClaudeAccount: () =>
       translate(
@@ -231,6 +261,24 @@ const PIECES: Record<AgentSessionFailureCopyId, (values: AgentSessionFailureCopy
       translate(
         'components.native-chat.failureWords.providerRetryingQuoted',
         COPY.providerRetryingQuoted,
+        values
+      ),
+    providerRetryNumber: (values) =>
+      translate(
+        'components.native-chat.failureWords.providerRetryNumber',
+        COPY.providerRetryNumber,
+        values
+      ),
+    providerRetryNumberOf: (values) =>
+      translate(
+        'components.native-chat.failureWords.providerRetryNumberOf',
+        COPY.providerRetryNumberOf,
+        values
+      ),
+    providerRetryLastError: (values) =>
+      translate(
+        'components.native-chat.failureWords.providerRetryLastError',
+        COPY.providerRetryLastError,
         values
       ),
     previousExitUnverifiable: (values) =>

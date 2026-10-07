@@ -17,6 +17,11 @@ export const AGENT_SESSION_FAILURE_COPY = {
   sendAgainToTryOnceMore: 'Send your message again to try once more.',
   couldNotStart: "{{agent}} couldn't start.",
   couldNotRestart: "{{agent}} couldn't restart.",
+  argumentsUnsupportedOption: 'Saved Arguments contain an unsupported option ({{option}}).',
+  argumentsMissingValue: 'Saved Arguments need a value for {{option}}.',
+  argumentsMultipleValues: 'Saved Arguments give {{option}} more than one value.',
+  argumentsPositionalPrompt: 'Saved Arguments include a prompt.',
+  editSavedArguments: 'Edit them in Settings > Agents > Arguments.',
   terminalAgentHoldsChat: TERMINAL_AGENT_HOLDS_CHAT,
   quitTerminalAgent: QUIT_TERMINAL_AGENT,
   startNewChat: START_NEW_CHAT,
@@ -30,6 +35,8 @@ export const AGENT_SESSION_FAILURE_COPY = {
   accountSwitchInProgress: 'A Claude account switch is in progress. Try again after it finishes.',
   managedAccountUnsupported:
     'While a Claude account is added in WSL, Claude chats need a Windows Claude account.',
+  launchFolderMissing:
+    'The folder this chat ran in no longer exists. Restore it to continue this chat.',
   chooseClaudeAccount: 'Choose or add one in Claude Accounts settings.',
   chooseClaudeAccountThenRunCommand:
     'Choose or add one in Claude Accounts settings, then run /{{command}} again.',
@@ -82,6 +89,9 @@ export const AGENT_SESSION_FAILURE_COPY = {
   providerRateLimited: '{{agent}} is rate-limited and retrying.',
   providerRetrying: '{{agent}} hit a temporary problem and is retrying.',
   providerRetryingQuoted: '{{agent}} is retrying: {{detail}}.',
+  providerRetryNumber: 'Retry {{attempt}}.',
+  providerRetryNumberOf: 'Retry {{attempt}} of {{maxRetries}}.',
+  providerRetryLastError: 'Last error: {{detail}}.',
   previousExitUnverifiable: "Couldn't stop {{agent}} from before."
 } as const
 
@@ -92,8 +102,11 @@ export type AgentSessionFailureCopyValues = {
   agent?: string
   command?: string
   detail?: string
+  option?: string
   limit?: string
   size?: string
+  attempt?: string
+  maxRetries?: string
 }
 
 /** One piece in the reader's language, placeholders filled. */
