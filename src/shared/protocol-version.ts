@@ -1,3 +1,16 @@
+import { STRUCTURED_AGENT_SESSION_SURFACE_RUNTIME_CAPABILITIES } from './structured-agent-session-surface-capabilities'
+export {
+  STRUCTURED_AGENT_SESSION_HOLD_RUNTIME_CAPABILITY,
+  STRUCTURED_AGENT_SESSION_REVEAL_RUNTIME_CAPABILITY,
+  STRUCTURED_AGENT_SESSION_REGISTERED_AGENTS_RUNTIME_CAPABILITY,
+  STRUCTURED_AGENT_SESSION_RESUME_HISTORY_RUNTIME_CAPABILITY
+} from './structured-agent-session-surface-capabilities'
+import { AGENT_SESSION_ATTENTION_RUNTIME_CAPABILITIES } from './agent-session-attention-capabilities'
+export {
+  AGENT_SESSION_STATUS_FEED_RUNTIME_CAPABILITY,
+  AGENT_SESSION_TURN_COMPLETION_RUNTIME_CAPABILITY,
+  AGENT_SESSION_ATTENTION_ACK_RUNTIME_CAPABILITY
+} from './agent-session-attention-capabilities'
 import { ORCHESTRATION_RUNTIME_CAPABILITIES } from './orchestration-runtime-capabilities'
 export {
   ORCHESTRATION_FEDERATION_RUNTIME_CAPABILITY,
@@ -215,52 +228,22 @@ export const AGENT_SESSION_ACCEPTED_SEND_RUNTIME_CAPABILITY =
 export const AGENT_SESSION_SEND_ANSWERS_PROOF_RUNTIME_CAPABILITY =
   'agent-session.send-answers-proof.v1' as const
 // Why: `agentSession.send`'s params are strict, so an older host rejects `delivery`; and only a
-// capable client can render the `queued` result arm, the draft list, and returned cards. DARK ON
-// PURPOSE — not in RUNTIME_CAPABILITIES: advertising still requires the integrated Codex steer
-// matrix (#21062) in the shipped host, and the desktop and phone clients that render the queue.
+// capable client can render the `queued` result arm. It gates `delivery: 'queue-if-active'` and
+// the client's queueing setting and chord, never the published draft list or its card actions: a
+// host without it still publishes a message it kept unsent across a restart or a close, and both
+// clients show that card and call its actions. DARK ON PURPOSE — not in RUNTIME_CAPABILITIES:
+// advertising still requires the integrated Codex steer matrix (#21062) in the shipped host.
 // v1 includes `submission.queuedMessageId` on every draft hand-off: a client reads that link and
 // never compares a draft id with a submission id. It also publishes the queue's pause once, as
 // `queuePause` beside the list, lifted by `agentSession.queuedMessagesResume` or the user's next
-// turn; cards carry a hold of their own only when their conversion failed. The host mechanism lands first; the constant
-// gates the rollout.
+// turn; a card carries a hold of its own when its conversion failed (`send_failed`) or the host
+// kept it unsent (`kept`). The host mechanism lands first; the constant gates the rollout.
 export const AGENT_SESSION_QUEUED_MESSAGES_RUNTIME_CAPABILITY =
   'agent-session.queued-messages.v1' as const
 // Why: paired clients advertise Claude-structured support so the host can gate its agent-specific
 // journal and lifecycle surfaces independently from Codex support.
 export const CLAUDE_STRUCTURED_AGENT_SESSION_RUNTIME_CAPABILITY =
   'agent-session.structured.claude.v1' as const
-// Why: a host's structured agents are the ones it registered, not a list every build ships. A host
-// advertising this accepts any agent it lists through `agentSession.agents` (with each agent's
-// capability record) in `agentSession.*` params, and refuses one it did not register; a client
-// offers an agent beyond Claude and Codex only to such a host. A client advertising it renders an
-// `agent-session` tab of any agent its host lists; the host withholds every other agent's tabs from
-// a client that does not (an older client would list them with an empty pane).
-export const STRUCTURED_AGENT_SESSION_REGISTERED_AGENTS_RUNTIME_CAPABILITY =
-  'agent-session.structured.registered-agents.v1' as const
-// Why: paired structured clients explicitly hold every visible session surface, allowing the host
-// to stop provider children after the last surface closes without tying lifetime to a transport.
-export const STRUCTURED_AGENT_SESSION_HOLD_RUNTIME_CAPABILITY =
-  'agent-session.structured.hold.v1' as const
-// Why: a client holding only a session id — an Agent Session History row — asks the host to
-// republish that chat's tab. An older host has no such method, and a client must learn that during
-// negotiation rather than by calling and reading a refusal it cannot distinguish from a real one.
-export const STRUCTURED_AGENT_SESSION_REVEAL_RUNTIME_CAPABILITY =
-  'agent-session.structured.reveal.v1' as const
-// Why: `agentSession.create` gains an optional `resumeFrom`, and its params are a STRICT union — an
-// older host rejects the unknown key as a schema error, which a client cannot tell from a real
-// refusal. Worse, without probing, a client cannot know whether a host that accepted the call
-// adopted the conversation or quietly started a blank one. Negotiate before offering the action.
-export const STRUCTURED_AGENT_SESSION_RESUME_HISTORY_RUNTIME_CAPABILITY =
-  'agent-session.structured.resume-history.v1' as const
-// Why: agentSession.subscribeStatus is additive to a surface that already shipped, so a host
-// advertising agent-session.structured.v1 may still answer it with method_not_found. Clients must
-// probe before subscribing or they reconnect forever and never show any status at all.
-export const AGENT_SESSION_STATUS_FEED_RUNTIME_CAPABILITY = 'agent-session.status-feed.v1' as const
-// Why separate from the status feed: a host can carry the status feed and not this stream, and a
-// decoder drops an unknown stream opcode in silence. A client that subscribed without probing
-// would wait forever for completions the host never sends and report nothing wrong.
-export const AGENT_SESSION_TURN_COMPLETION_RUNTIME_CAPABILITY =
-  'agent-session.turn-completion.v1' as const
 // Why: agentSession.conversationOutline is additive; a client probes this before calling so an
 // older host leaves the message rail on loaded messages instead of answering method_not_found.
 export const AGENT_SESSION_CONVERSATION_OUTLINE_RUNTIME_CAPABILITY =
@@ -400,12 +383,8 @@ export const RUNTIME_CAPABILITIES = [
   // turn starts, so a client may gate on either.
   AGENT_SESSION_ACCEPTED_SEND_RUNTIME_CAPABILITY,
   AGENT_SESSION_SEND_ANSWERS_PROOF_RUNTIME_CAPABILITY,
-  STRUCTURED_AGENT_SESSION_HOLD_RUNTIME_CAPABILITY,
-  STRUCTURED_AGENT_SESSION_REVEAL_RUNTIME_CAPABILITY,
-  STRUCTURED_AGENT_SESSION_REGISTERED_AGENTS_RUNTIME_CAPABILITY,
-  STRUCTURED_AGENT_SESSION_RESUME_HISTORY_RUNTIME_CAPABILITY,
-  AGENT_SESSION_STATUS_FEED_RUNTIME_CAPABILITY,
-  AGENT_SESSION_TURN_COMPLETION_RUNTIME_CAPABILITY,
+  ...STRUCTURED_AGENT_SESSION_SURFACE_RUNTIME_CAPABILITIES,
+  ...AGENT_SESSION_ATTENTION_RUNTIME_CAPABILITIES,
   AGENT_SESSION_REWIND_RUNTIME_CAPABILITY,
   AGENT_SESSION_REWIND_RECOVERY_CAPABILITY,
   AGENT_SESSION_CONVERSATION_OUTLINE_RUNTIME_CAPABILITY,
