@@ -98,6 +98,7 @@ export function useStructuredAgentSession(args: {
     optionSnapshot,
     optionSurface,
     setStructuredOption,
+    unavailable,
     threadGoal: threadGoalSupport,
     contextUsage: contextUsageSupport,
     rewind: rewindSupport
@@ -279,13 +280,13 @@ export function useStructuredAgentSession(args: {
     /** A send made now while the agent works is held as a queued card: the host queues, and this
      *  send asks it to (the setting is on and no pending prompt blocks the queue). */
     sendsQueue: structuredAgentSessionNewSendsQueue(queue),
-    cancel: async (turnId: string, prompt?: StructuredPromptCancelTarget) => {
+    cancel: async (turnId: string | undefined, prompt?: StructuredPromptCancelTarget) => {
       // Capability negotiation must complete before mutate fingerprints the payload:
       // older hosts reject the strict prompt field.
       const promptSupported =
         prompt !== undefined && (await supportsStructuredAgentSessionPromptCancel(target))
       return mutate('agentSession.cancel', 'agentSession.cancel', {
-        turnId,
+        ...(turnId ? { turnId } : {}),
         ...(promptSupported ? { prompt } : {})
       })
     },
@@ -325,6 +326,8 @@ export function useStructuredAgentSession(args: {
     optionSurface,
     sessionCommands: transportEnabled ? (state.commands ?? undefined) : undefined,
     setStructuredOption,
+    /** Why the host's catalog probe says no chat can start here; the chat shows it as a notice. */
+    unavailable,
     threadGoal,
     contextUsage
   }

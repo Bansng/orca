@@ -5,6 +5,7 @@ import { Goal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { CommentMarkdownLinkClickHandler } from '@/components/sidebar/CommentMarkdown'
 import { NativeChatMarkdown } from './NativeChatMarkdown'
+import { NATIVE_CHAT_QUOTE_SOURCE_PROPS } from './native-chat-quote-selection'
 import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
 import type {
@@ -14,6 +15,7 @@ import type {
 import { deriveNativeChatRowContent } from '../../../../shared/native-chat-row-content'
 import { NativeChatToolRun } from './NativeChatToolRun'
 import { NativeChatReasoningRow } from './NativeChatReasoningRow'
+import { NativeChatUserMessageFold } from './NativeChatUserMessageFold'
 import { NativeChatCodeBlock } from './NativeChatCodeBlock'
 import { NativeChatNoticeRow } from './NativeChatNoticeRow'
 import { nativeChatBlocksInOwnWords } from './native-chat-stopped-before-start-row'
@@ -155,6 +157,14 @@ export const MessageRow = memo(function MessageRow({
       onScrollMessageToTop(rowRef.current)
     }
   }, [onScrollMessageToTop])
+  // "Show less" sits at the bottom of an open prompt; folding it can leave the reader past it.
+  const returnToView = useCallback(() => {
+    const row = rowRef.current
+    const viewport = row?.closest('[data-native-chat-scroll]')
+    if (row && viewport && row.getBoundingClientRect().top < viewport.getBoundingClientRect().top) {
+      onScrollMessageToTop(row)
+    }
+  }, [onScrollMessageToTop])
 
   // Skip rows with nothing renderable so the transcript shows no empty/ghost
   // bubble.
@@ -227,14 +237,20 @@ export const MessageRow = memo(function MessageRow({
                 runtimeContext={runtimeContext}
                 enablePreview={runtimeContext !== undefined}
               />
-              <NativeChatMarkdown
-                content={markdown}
-                variant="document"
-                className="text-sm native-chat-message-text"
-                renderCodeBlock={NativeChatCodeBlock}
-                onLinkClick={onLinkClick}
-                allowFileUriLinks={allowFileUriLinks}
-              />
+              <NativeChatUserMessageFold
+                messageId={message.id}
+                markdown={markdown}
+                onRefolded={returnToView}
+              >
+                <NativeChatMarkdown
+                  content={markdown}
+                  variant="document"
+                  className="text-sm native-chat-message-text"
+                  renderCodeBlock={NativeChatCodeBlock}
+                  onLinkClick={onLinkClick}
+                  allowFileUriLinks={allowFileUriLinks}
+                />
+              </NativeChatUserMessageFold>
             </>
           ) : (
             <NativeChatImageAttachments
@@ -313,6 +329,7 @@ export const MessageRow = memo(function MessageRow({
           onLinkClick={onLinkClick}
           allowFileUriLinks={allowFileUriLinks}
           linkifyFilePaths={onLinkClick !== undefined}
+          {...(isSystem ? {} : NATIVE_CHAT_QUOTE_SOURCE_PROPS)}
           visualMessageId={message.role === 'assistant' ? message.id : undefined}
           // Structured text streams in place with no per-row state: only the live turn's frontier
           // row, still ending in prose, can be mid-sentence.

@@ -112,6 +112,7 @@ export const AI_VAULT_METHODS = [
       const args: AiVaultPrepareSessionResumeArgs = {
         agent: params.agent,
         ...(params.sessionId ? { sessionId: params.sessionId } : {}),
+        ...(params.fork ? { fork: true } : {}),
         filePath: params.filePath,
         codexHome: params.codexHome,
         // Why: the RPC executes on the transcript-owning host; never let a
