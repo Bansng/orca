@@ -1,7 +1,7 @@
 import { memo, useCallback, useRef } from 'react'
 import { NativeChatRewindAction } from './NativeChatRewindAction'
 import type { NativeChatRewindSurface } from './use-native-chat-rewind'
-import { Goal, RotateCcw } from 'lucide-react'
+import { Goal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { CommentMarkdownLinkClickHandler } from '@/components/sidebar/CommentMarkdown'
 import { NativeChatMarkdown } from './NativeChatMarkdown'
@@ -37,8 +37,8 @@ import { useNativeChatWorkRun } from './use-native-chat-work-run'
  *  place of its time, or that it did not go through, with its own Retry when the surface can send
  *  it again. */
 export type NativeChatDeliveryNotice =
-  | { sending: true; text?: never; onRetry?: never; onDismiss?: never }
-  | { sending?: never; text: string; onRetry?: () => void; onDismiss?: () => void }
+  | { sending: true; text?: never; onDismiss?: never }
+  | { sending?: never; text: string; onDismiss?: () => void }
 
 const USER_META_REVEAL =
   'transition-opacity can-hover:pointer-events-none can-hover:opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 [.group:has(:focus-visible)_&]:pointer-events-auto [.group:has(:focus-visible)_&]:opacity-100'
@@ -88,6 +88,8 @@ type MessageRowProps = {
   activeTurnIsWorking?: boolean
   /** This row's tool run is the turn's last, so it is the one still live. */
   trailingRun?: boolean
+  /** Hover controls would overlap the next row. */
+  continuesTurn?: boolean
   /** Align this message's top to the top of the scroll viewport. */
   onScrollMessageToTop: (el: HTMLElement) => void
   onLinkClick?: CommentMarkdownLinkClickHandler
@@ -119,6 +121,7 @@ export const MessageRow = memo(function MessageRow({
   expandSignal,
   activeTurnIsWorking,
   trailingRun,
+  continuesTurn = false,
   onScrollMessageToTop,
   onLinkClick,
   allowFileUriLinks = false,
@@ -261,15 +264,6 @@ export const MessageRow = memo(function MessageRow({
                 {translate('components.native-chat.dismissDeliveryNotice', 'Dismiss')}
               </Button>
             ) : null}
-            {deliveryNotice.onRetry ? (
-              <Button type="button" variant="ghost" size="xs" onClick={deliveryNotice.onRetry}>
-                <RotateCcw className="size-3" />
-                {translate(
-                  'auto.components.native.chat.NativeChatStructuredSession.a5e7f14068',
-                  'Retry'
-                )}
-              </Button>
-            ) : null}
           </div>
         ) : null}
       </div>
@@ -293,7 +287,7 @@ export const MessageRow = memo(function MessageRow({
   // A thought heading a run reads inside it, so the row has no words of its own.
   const words = isReasoning ? '' : markdown
   // Assistant controls reveal on hover and keyboard focus; system asides stay chrome-free.
-  const showControls = !isSystem && words.length > 0
+  const showControls = !isSystem && words.length > 0 && !continuesTurn
 
   return (
     <div
@@ -319,6 +313,14 @@ export const MessageRow = memo(function MessageRow({
           onLinkClick={onLinkClick}
           allowFileUriLinks={allowFileUriLinks}
           linkifyFilePaths={onLinkClick !== undefined}
+          visualMessageId={message.role === 'assistant' ? message.id : undefined}
+          // Structured text streams in place with no per-row state: only the live turn's frontier
+          // row, still ending in prose, can be mid-sentence.
+          streaming={
+            activeTurnIsWorking === true &&
+            trailingRun === true &&
+            message.blocks.at(-1)?.type === 'text'
+          }
         />
       ) : null}
       {run || tools.length > 0 || subagentGroups.length > 0 || backgroundTasks.length > 0 ? (
@@ -333,6 +335,7 @@ export const MessageRow = memo(function MessageRow({
           subagentRoster={subagentRoster}
           subagentDisclosure={subagentDisclosure}
           backgroundTasks={backgroundTasks}
+          followsProse={markdown.length > 0 || hasImages}
           expandSignal={expandSignal}
           activeTurnIsWorking={activeTurnIsWorking}
           trailing={trailingRun}
