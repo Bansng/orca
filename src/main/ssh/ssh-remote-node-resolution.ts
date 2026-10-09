@@ -160,12 +160,13 @@ export async function tryResolveViaLoginShell<T>(
       return null
     }
 
+    const probe = buildSshLoginShellCommand(shell, 'command -v node')
     const nodePath = await execCommand(
       conn,
-      buildSshLoginShellCommand(shell, 'command -v node'),
+      probe.command,
       commandOptions({ wrapCommand: false, timeoutMs: LOGIN_SHELL_PROBE_TIMEOUT_MS }, options)
     )
-    const candidate = nodePath.trim().split('\n')[0]
+    const candidate = probe.readStdout(nodePath)?.trim().split('\n')[0]
     if (!candidate) {
       return null
     }
