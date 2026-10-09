@@ -17400,8 +17400,8 @@
         {
           "file": "src/renderer/src/components/terminal-pane/remote-snapshot-alt-screen-replay.test.ts",
           "assertions": [
-            "repaints a pushed image exactly and keeps the history the TUI covers",
-            "keeps the pane's history when the host screen has another grid",
+            "repaints a pushed image exactly, normal buffer included",
+            "replaces both buffers when the host screen has another grid",
             "keeps history unduplicated when a pushed image also carries history",
             "paints the whole image when the TUI started while hidden",
             "reads the pane buffer after a queued alt-screen entry parses",
@@ -17414,7 +17414,8 @@
           "file": "src/renderer/src/components/terminal-pane/remote-snapshot-alt-screen-host-chain.test.ts",
           "assertions": [
             "keeps the covered history for a live TUI exactly as the host holds it",
-            "repaints from the normal buffer once the host TUI has exited"
+            "repaints from the normal buffer once the host TUI has exited",
+            "replaces the normal history that changed between two alt-screen sessions"
           ]
         },
         {
