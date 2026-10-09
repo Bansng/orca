@@ -1,8 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  agentSessionSignInCopyId,
-  type AgentSessionUnavailable
-} from '../../../../shared/agent-session-availability'
+import type { AgentSessionUnavailable } from '../../../../shared/agent-session-availability'
 import { readAgentSessionFailureFact } from '../../../../shared/agent-session-failure'
 import type { AgentJournalRenderItem } from '../../../../shared/agent-session-journal-types'
 import type { AgentType } from '../../../../shared/agent-status-types'
@@ -10,6 +7,7 @@ import { agentSessionRefusalReasonWords } from '../../../../shared/agent-session
 import type { AgentSessionWriteRefusal } from '../../../../shared/agent-session-write-failure'
 import { isStructuredAgentSessionStartFailureRow } from '../../../../shared/structured-agent-session-start-failure-row-key'
 import { sayAgentSessionFailureTranslated } from './agent-session-failure-words-text'
+import { notSignedInSentence } from '../../../../shared/agent-session-availability-sentences'
 import type { NativeChatComposerNotice } from './native-chat-composer-notice'
 
 /** Why the chat's latest start failed, unless a turn has run since. */
@@ -18,11 +16,11 @@ function failedStartReason(items: readonly AgentJournalRenderItem[] | undefined)
   for (const item of items ?? []) {
     if (item.body.kind === 'turn') {
       reason = null
-    } else if (
-      item.body.kind === 'status' &&
-      isStructuredAgentSessionStartFailureRow(item.itemId)
-    ) {
-      reason = readAgentSessionFailureFact(item.body.failure)?.kind ?? null
+    } else if (item.body.kind === 'status') {
+      const failure = readAgentSessionFailureFact(item.body.failure)
+      if (isStructuredAgentSessionStartFailureRow(item.itemId) || failure?.kind === 'notSignedIn') {
+        reason = failure?.kind ?? null
+      }
     }
   }
   return reason
@@ -63,11 +61,10 @@ export function useNativeChatAvailabilityNotice(input: {
     text:
       unavailable.reason === 'cliMissing'
         ? sayAgentSessionFailureTranslated('cliMissing', { agent: input.agentLabel })
-        : sayAgentSessionFailureTranslated(
-            agentSessionSignInCopyId(
-              input.agent === 'codex' ? 'codex' : 'claude',
-              unavailable.account
-            )
+        : notSignedInSentence(
+            { agentName: input.agentLabel },
+            { kind: 'notSignedIn', account: unavailable.account },
+            sayAgentSessionFailureTranslated
           ),
     onDismiss: () => setDismissal({ key, dismissed: true })
   }
