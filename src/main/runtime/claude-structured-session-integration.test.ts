@@ -227,7 +227,7 @@ beforeEach(async () => {
   hookServer = new AgentHookServer()
   const runtime = {
     getRuntimeId: () => 'runtime-1',
-    getClientSettings: () => ({ experimentalStructuredNativeChat: true }),
+    getClientSettings: () => ({ experimentalNativeChat: true }),
     getStructuredAgentSessionCreateSupport: async () => ({ supported: true }),
     resolveStructuredAgentSessionCreateIntent: async (input: { envelope: unknown }) => ({
       ...ensureParams(1),
@@ -429,7 +429,7 @@ describe('a structured Claude session over agentSession.*', () => {
     // The adapter typed the refusal, so the row names the situation rather than quoting Orca.
     expect(guidance?.body).toMatchObject({
       kind: 'status',
-      text: "Claude isn't signed in. Run `claude` and sign in with /login, or choose an account in Claude Accounts settings.",
+      text: "Claude isn't signed in. Run `claude auth login`, or choose an account in Claude Accounts settings.",
       failure: { kind: 'notSignedIn', account: 'system' }
     })
     expect(leaseOf(SESSION)).toMatchObject({ claimStatus: 'released', handoffStage: null })
