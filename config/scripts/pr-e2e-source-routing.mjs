@@ -73,7 +73,11 @@ export const PR_E2E_SOURCE_ROUTES = [
     matches: (file) =>
       isProductSource(file) &&
       (file === 'src/renderer/src/components/right-sidebar/useFileExplorerWatch.ts' ||
-        file === 'src/renderer/src/components/right-sidebar/file-explorer-operation-owner.ts')
+        file === 'src/renderer/src/components/right-sidebar/file-explorer-operation-owner.ts' ||
+        file === 'src/renderer/src/components/right-sidebar/FileExplorer.tsx' ||
+        file === 'src/renderer/src/hooks/editor-external-watch-targets.ts' ||
+        file === 'src/renderer/src/components/right-sidebar/useFileExplorerTree.ts' ||
+        file === 'src/renderer/src/components/right-sidebar/use-file-explorer-tree-load-effects.ts')
   },
   {
     id: 'serve.orcad-mode-switch',
@@ -155,6 +159,18 @@ export const PR_E2E_SOURCE_ROUTES = [
       ) ||
       (isProductSource(file) &&
         /^src\/renderer\/src\/(?:lib\/(?:local-path-open-guard|external-editor-open-capability|worktree-runtime-owner)\.ts|components\/(?:sidebar\/(?:WorktreeOpenInMenu|WorktreeContextMenuView)\.tsx|right-sidebar\/(?:FileExplorer(?:Toolbar)?\.tsx|source-control\/listing\/entry-context-menu\.tsx)))$/.test(
+          file
+        ))
+  },
+  {
+    id: 'ssh.orcad-terminal-root-owner',
+    specs: ['tests/e2e/ssh-orcad-terminal-root-owner.spec.ts'],
+    matches: (file) =>
+      /^tests\/e2e\/helpers\/(?:terminal-workspace-root-link|orcad-convert-(?:flow|host)|orcad-upgrade-profile|docker-ssh-relay-target)\.ts$/.test(
+        file
+      ) ||
+      (isProductSource(file) &&
+        /^src\/renderer\/src\/(?:components\/terminal-pane\/terminal-(?:worktree-path-link|file-link-actions|file-link-hit-testing|file-open-routing|link-handlers)\.ts|lib\/(?:workspace-file-host-routing|worktree-owner-route|worktree-operation-route|worktree-operation-catalog-route)\.ts)$/.test(
           file
         ))
   },
