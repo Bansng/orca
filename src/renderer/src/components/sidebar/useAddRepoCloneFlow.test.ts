@@ -66,7 +66,6 @@ vi.mock('@/store', () => {
 })
 
 vi.mock('@/runtime/runtime-rpc-client', () => ({
-  getActiveRuntimeTarget: () => ({ kind: 'local' }),
   callRuntimeRpc: mocks.callRuntimeRpc
 }))
 

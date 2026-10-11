@@ -162,7 +162,8 @@ export async function activateGoldenWorktree(
           if (!store) {
             throw new Error('window.__store is not available')
           }
-          await store.getState().fetchRepos()
+          const owner = store.getState().settings?.activeRuntimeEnvironmentId ?? null
+          await store.getState().fetchRepos({ runtimeEnvironmentId: owner })
           const repos: {
             id: string
             path: string

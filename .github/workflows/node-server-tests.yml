@@ -192,6 +192,11 @@ jobs:
             (github.event_name == 'pull_request' ||
             (github.ref == 'refs/heads/main' && contains(fromJSON('["push","schedule","workflow_dispatch"]'), github.event_name))) }}
           restore-windows-cache: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+      # The template lane cross-compiles arm64 too, as it does for the process-table addon.
+      - uses: ./.github/actions/prepare-windows-cli-launcher
+        if: runner.os == 'Windows'
+        with:
+          arches: ${{ (inputs.build_template && matrix.os == 'windows-2022') && 'x64 arm64' || (runner.arch == 'ARM64' && 'arm64' || 'x64') }}
       - run: pnpm build:orcad
       - wait: bun-orcad
       - run: pnpm test:node-server --artifact ${{ runner.os == 'Linux' && '--cross-runtime' || '' }}
@@ -213,6 +218,15 @@ jobs:
           name: orcad-windows-process-tree
           path: .build/windows-process-tree/
           include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+      - name: Keep the Windows CLI launchers for the desktop template
+        if: inputs.build_template && matrix.os == 'windows-2022'
+        uses: actions/upload-artifact@v7
+        with:
+          name: orcad-windows-cli-launcher
+          path: .build/windows-cli-launcher/
           if-no-files-found: error
           retention-days: 7
           overwrite: true
@@ -458,6 +472,11 @@ jobs:
         with:
           name: orcad-windows-process-tree
           path: .build/windows-process-tree
+      - name: Collect the Windows CLI launchers
+        uses: actions/download-artifact@v8
+        with:
+          name: orcad-windows-cli-launcher
+          path: .build/windows-cli-launcher
       - name: Merge the lanes and gate the full slot matrix
         shell: bash
         run: |

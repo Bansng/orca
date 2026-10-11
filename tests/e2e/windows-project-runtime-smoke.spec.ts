@@ -101,7 +101,8 @@ test.describe('Windows project runtime smoke', () => {
         }
 
         await window.api.repos.add({ path: wslRepoPath })
-        await store.getState().fetchRepos()
+        const owner = store.getState().settings?.activeRuntimeEnvironmentId ?? null
+        await store.getState().fetchRepos({ runtimeEnvironmentId: owner })
         const state = store.getState()
         const hostRepo = state.repos.find((repo) => repo.path === hostRepoPath)
         const wslRepo = state.repos.find((repo) => repo.path === wslRepoPath)

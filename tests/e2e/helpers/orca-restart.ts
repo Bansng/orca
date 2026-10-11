@@ -265,7 +265,8 @@ export async function attachRepoAndOpenTerminal(page: Page, repoPath: string): P
             }
             // Why: repos.add emits a concurrent refresh whose generation can
             // supersede this fetch; poll until either refresh publishes the repo.
-            await store.getState().fetchRepos()
+            const owner = store.getState().settings?.activeRuntimeEnvironmentId ?? null
+            await store.getState().fetchRepos({ runtimeEnvironmentId: owner })
             const repo = store.getState().repos.find((candidate) => candidate.id === repoId)
             if (!repo) {
               return false

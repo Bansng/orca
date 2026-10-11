@@ -159,6 +159,7 @@ export function useComposerSourceState(
     handleBaseBranchPrSelect: branchStartPointActions.handleBaseBranchPrSelect,
     isProjectGroupTarget: target.runtimeTargetSelection.isProjectGroupTarget,
     lastAutoNameRef: target.asyncComposerState.lastAutoNameRef,
+    linkedWorkItem: target.sourceContextState.linkedWorkItem,
     name: target.sourceContextState.name,
     selectedRepo: target.runtimeTargetSelection.selectedRepo,
     selectedRepoGitHubSourceContext: target.sourceContextState.selectedRepoGitHubSourceContext,
@@ -188,6 +189,7 @@ export function useComposerSourceState(
     handleBaseBranchMrSelect: branchStartPointActions.handleBaseBranchMrSelect,
     isProjectGroupTarget: target.runtimeTargetSelection.isProjectGroupTarget,
     lastAutoNameRef: target.asyncComposerState.lastAutoNameRef,
+    linkedWorkItem: target.sourceContextState.linkedWorkItem,
     name: target.sourceContextState.name,
     selectedRepo: target.runtimeTargetSelection.selectedRepo,
     setBaseBranch: target.workspaceIdentityState.setBaseBranch,
@@ -204,8 +206,7 @@ export function useComposerSourceState(
     setLinkedWorkItem: target.sourceContextState.setLinkedWorkItem,
     setName: target.sourceContextState.setName,
     setPushTarget: target.workspaceIdentityState.setPushTarget,
-    setStartFromResetHint: target.workspaceIdentityState.setStartFromResetHint,
-    settings: target.composerTargetStore.settings
+    setStartFromResetHint: target.workspaceIdentityState.setStartFromResetHint
   })
   const workItemSourceActions = useWorkItemSourceActions({
     branchAutoNameRef: target.asyncComposerState.branchAutoNameRef,

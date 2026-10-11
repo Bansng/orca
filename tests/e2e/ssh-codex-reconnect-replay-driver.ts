@@ -69,7 +69,8 @@ export async function connectDockerRemote(
         if ('error' in result) {
           throw new Error(result.error)
         }
-        await store.getState().fetchRepos()
+        const owner = store.getState().settings?.activeRuntimeEnvironmentId ?? null
+        await store.getState().fetchRepos({ runtimeEnvironmentId: owner })
         await store.getState().fetchWorktrees(result.repo.id)
         return { targetId: createdTarget.id, repoId: result.repo.id, repoPath: result.repo.path }
       } finally {

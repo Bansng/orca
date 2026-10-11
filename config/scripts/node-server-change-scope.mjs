@@ -14,6 +14,7 @@ const BUILD_SCRIPTS = [
   'config/scripts/orcad-windows-prebuild-cache.mjs',
   'config/scripts/orcad-prebuild-smoke-child.cjs',
   'config/scripts/build-windows-process-tree-relay-addon.mjs',
+  'config/scripts/build-windows-cli-launcher.mjs',
   'config/scripts/run-node-server-tests.mjs',
   'config/vitest.config.ts',
   'config/scripts/happy-dom-offscreen-canvas.ts',

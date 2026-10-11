@@ -1,33 +1,17 @@
 /**
- * Host-keyed provider dispatch: one entry per execution host kind, with `local` among them.
+ * Host-keyed provider dispatch: one route per execution host kind, `local` included.
  *
- * The incumbent spelling across main is `const c = repo.connectionId; c ? sshProvider(c) : local()`,
- * where `null` means *both* "resolved: this is local" and "could not resolve". Every path that
- * cannot determine the host therefore answers "local" and runs remote work on the client — the
- * #11163 defect class, which has produced a reproduced cross-host leak (an `ssh:` worktree
- * resolving to another target) and near-misses where a transcript that exists only on a remote host
- * would have been read locally. The shape also cannot express a `runtime:` host at all.
+ * The input is an `ExecutionHostId`, never null, and an id that names no host throws instead of
+ * degrading to `local`, so work whose host is unknown never runs on this client (#11163). The
+ * resolution layer (`getRepoExecutionHostId`, `getWorktreeExecutionHostId`,
+ * `resolveWorktreeExecutionHost`) reports `unresolved` as its own verdict.
  *
- * This module removes that spelling. Its input is an `ExecutionHostId`, which is never null, and an
- * id that names no host throws instead of degrading. `getRepoExecutionHostId` /
- * `getWorktreeExecutionHostId` / `resolveWorktreeExecutionHost` are the resolution layer that feeds
- * it; the last one already answers `unresolved` as a distinct verdict rather than "local".
- *
- * Why a route union rather than a uniform `getGitProviderForHost(): IGitProvider`:
- *
- *   - `local` git and filesystem work takes per-worktree execution options (`wslDistro`,
- *     `sharedLinkPaths`, admission tier). A registered stateless provider would silently drop WSL
- *     routing, so the local git and filesystem routes carry a factory that is built per call.
- *   - `runtime:<env>` is never executed in this process; it is forwarded to that server, which
- *     treats it as its own `local`. A runtime repo's `connectionId` names the *server's* SSH target,
- *     so handing it to this client's SSH table would dial a same-named target on the wrong host.
- *
- * So each host kind is its own variant and callers switch exhaustively; `runtime` cannot collapse
- * into `local` by omission.
- *
- * Inside the `ssh` variant, `provider: null` means "remote and currently unreachable", never
- * "local" — loss of contact is never evidence of locality (the `live` / `unverifiable` / `exited`
- * rule in AGENTS.md).
+ * Each kind is its own variant so callers switch exhaustively:
+ *   - `local` git and filesystem routes carry a per-call factory, because they need per-worktree
+ *     options (WSL distro, shared links, admission tier) a shared provider would drop.
+ *   - `runtime:<env>` is forwarded to that server. Its repo's `connectionId` names the server's SSH
+ *     target, so it must never reach this client's SSH table.
+ *   - `ssh` with `provider: null` means "remote and unreachable", never "local".
  */
 
 import {
