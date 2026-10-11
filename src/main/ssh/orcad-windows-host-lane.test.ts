@@ -27,6 +27,8 @@ import { decommissionRemoteOrcad } from './orcad-remote-decommission'
 import { readOrcadActivationRecord } from './orcad-activation-record-store'
 import { gcOldOrcadVersions } from './orcad-remote-gc'
 import { execOrcadRemote } from './orcad-remote-runtime-control'
+import { orcadWindowsNodeCommandLine } from './orcad-remote-windows-node'
+import { joinRemotePath } from './ssh-remote-platform'
 import {
   isWindowsOrcadCellId,
   readWindowsHostCellDescriptor,
@@ -97,6 +99,14 @@ describe.runIf(RUN)('managed orcad on a Windows OpenSSH host', () => {
             await execOrcadRemote(options, orcadLivenessProbeCommand(options.host, slotDir))
           )
         expect(await liveness()).toBe('LIVE')
+        // Managed terminals' `orca`: the native launcher orcad installed in its profile.
+        const cli = joinRemotePath(options.host, context.userDataDir, 'cli', 'bin', 'orca.exe')
+        const status = JSON.parse(
+          await execOrcadRemote(options, orcadWindowsNodeCommandLine(cli, ['status', '--json']))
+        )
+        receipt.cliStatus = status.result
+        expect(status.result.runtime).toMatchObject({ reachable: true })
+        expect(status.result.app.desktopWindowStatus).toBe('blocked')
         // The managed tunnel picks the stdio bridge on this account and reaches orcad through it.
         receipt.stdioBridge = await proveWindowsStdioBridge(conn, options.host, slotDir)
         expect(receipt.stdioBridge).toMatchObject({

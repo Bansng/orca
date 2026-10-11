@@ -41,7 +41,8 @@ export async function replaceRuntimePairingInPlace(args: {
       throw new Error('Same-ID re-paired desktop could not select the HUB runtime')
     }
     // Why: same-ID selection is a no-op, so explicitly rehydrate the graph from the replacement transport.
-    await store.getState().fetchRepos()
+    const owner = store.getState().settings?.activeRuntimeEnvironmentId ?? null
+    await store.getState().fetchRepos({ runtimeEnvironmentId: owner })
     await store.getState().fetchAllWorktrees()
     await store.getState().fetchWorktreeLineage()
     return window.api.runtimeEnvironments.resolve({ selector })

@@ -119,7 +119,8 @@ async function addRealOrcaRepo(page: Page, repoPath: string): Promise<string> {
       throw new Error('window.__store unavailable')
     }
     const state = store.getState()
-    await state.fetchRepos()
+    const owner = state.settings?.activeRuntimeEnvironmentId ?? null
+    await state.fetchRepos({ runtimeEnvironmentId: owner })
     const repo = store.getState().repos.find((candidate) => candidate.path === repoPath)
     if (!repo) {
       throw new Error(`Real Orca repo did not load: ${repoPath}`)

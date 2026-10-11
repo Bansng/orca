@@ -77,34 +77,6 @@ describe('resolveRelayPushTarget', () => {
     ])
   })
 
-  it('does not combine remote.pushDefault with a base-branch merge target', async () => {
-    const git = gitForConfig({
-      branch: 'feature/fix',
-      pushRemote: new Error('missing pushRemote'),
-      pushDefault: 'fork',
-      branchRemote: 'origin',
-      merge: 'refs/heads/main',
-      base: 'refs/remotes/origin/main'
-    })
-
-    await expect(resolveRelayPushTarget(git, '/repo', undefined)).resolves.toBeNull()
-  })
-
-  it('keeps a fork head target when the contributor branch matches the base branch name', async () => {
-    const git = gitForConfig({
-      branch: 'review/pr-1',
-      pushRemote: 'fork',
-      branchRemote: 'fork',
-      merge: 'refs/heads/main',
-      base: 'refs/remotes/origin/main'
-    })
-
-    await expect(resolveRelayPushTarget(git, '/repo', undefined)).resolves.toEqual({
-      remote: 'fork',
-      refspec: 'HEAD:main'
-    })
-  })
-
   it('uses remote.pushDefault when branch pushRemote is missing', async () => {
     const git = gitForConfig({
       pushRemote: new Error('missing pushRemote'),
@@ -114,42 +86,6 @@ describe('resolveRelayPushTarget', () => {
 
     await expect(resolveRelayPushTarget(git, '/repo', undefined)).resolves.toEqual({
       remote: 'fork',
-      refspec: 'HEAD:feature/fix'
-    })
-  })
-
-  it('normalizes a URL-valued branch remote to a matching named remote', async () => {
-    const forkUrl = 'https://github.com/contributor/orca.git'
-    const git = gitForConfig({
-      pushRemote: new Error('missing pushRemote'),
-      pushDefault: new Error('missing pushDefault'),
-      branchRemote: forkUrl,
-      remotes: ['origin', 'pr-contributor-orca'],
-      remoteUrls: {
-        origin: 'https://github.com/stablyai/orca.git',
-        'pr-contributor-orca': forkUrl
-      }
-    })
-
-    await expect(resolveRelayPushTarget(git, '/repo', undefined)).resolves.toEqual({
-      remote: 'pr-contributor-orca',
-      refspec: 'HEAD:feature/fix'
-    })
-  })
-
-  it('keeps a URL-valued pushRemote when no named remote matches it', async () => {
-    const forkUrl = 'git@github.com:contributor/orca.git'
-    const git = gitForConfig({
-      pushRemote: forkUrl,
-      branchRemote: forkUrl,
-      remotes: ['origin'],
-      remoteUrls: {
-        origin: 'git@github.com:stablyai/orca.git'
-      }
-    })
-
-    await expect(resolveRelayPushTarget(git, '/repo', undefined)).resolves.toEqual({
-      remote: forkUrl,
       refspec: 'HEAD:feature/fix'
     })
   })

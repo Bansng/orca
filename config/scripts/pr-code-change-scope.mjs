@@ -360,6 +360,7 @@ const LINUX_PACKAGE_TESTS = [
 ]
 
 const WINDOWS_PACKAGE_TESTS = [
+  'src/main/zcode/zcode-plan-api-key-store-native-windows.test.ts',
   ...LINUX_PACKAGE_TESTS,
   'config/scripts/rebuild-native-deps.test.mjs',
   'config/scripts/rebuild-native-deps-windows-process-tree.test.mjs',
@@ -368,6 +369,7 @@ const WINDOWS_PACKAGE_TESTS = [
   'config/scripts/ensure-native-runtime-job-ownership.test.mjs',
   'config/scripts/verify-packaged-node-pty-job-ownership.test.mjs',
   'config/scripts/windows-pe-machine.test.mjs',
+  'config/scripts/build-windows-cli-launcher.test.mjs',
   'config/scripts/script-module-dependencies.test.mjs',
   'src/main/windows-registry-addon.test.ts',
   'src/main/providers/windows-conpty-wide-char-duplication.node-pty.test.ts',
@@ -528,7 +530,11 @@ function jobDetector(job) {
       return (files) => files.some((file) => matchesPrefix(file, GIT_COMPAT_PREFIXES))
     case 'codex_index_heal_contract':
       return (files) =>
-        files.some((file) => matchesPrefix(file, CODEX_INDEX_HEAL_CONTRACT_PREFIXES))
+        files.some(
+          (file) =>
+            file !== 'src/main/codex/codex-app-server-client.test.ts' &&
+            matchesPrefix(file, CODEX_INDEX_HEAL_CONTRACT_PREFIXES)
+        )
     case 'xterm_patch_sync':
       return (files) => files.some((file) => matchesPrefix(file, XTERM_PREFIXES))
     case 'shell_contracts':
@@ -570,9 +576,12 @@ function isProductBundlePath(file, extraPrefixes) {
   return matchesPrefix(file, extraPrefixes)
 }
 
-// This shared fixture is consumed only by unit suites and their placement rig.
+// These shared fixtures are consumed only by unit tests.
 export function isUnitTestSupportSource(file) {
-  return file === 'src/renderer/src/runtime/web-session-tabs-sync-test-harness.ts'
+  return (
+    file === 'src/renderer/src/runtime/web-session-tabs-sync-test-harness.ts' ||
+    file === 'src/renderer/src/components/native-chat/NativeChatStructuredSession.test-harness.tsx'
+  )
 }
 
 function isTestFile(file) {

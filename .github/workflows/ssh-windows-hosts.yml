@@ -26,6 +26,11 @@ on:
       - 'config/scripts/build-orcad-*.mjs'
       - 'config/scripts/orcad-prebuild-*.mjs'
       - 'config/scripts/orcad-windows-process-tree.mjs'
+      - 'config/scripts/orcad-windows-cli-launcher.mjs'
+      - 'config/scripts/build-windows-cli-launcher.mjs'
+      - 'native/windows-cli-launcher/**'
+      - 'src/main/orcad/orcad-cli-launcher.ts'
+      - '.github/actions/prepare-windows-cli-launcher/**'
       - 'config/scripts/build-relay.mjs'
       - 'config/patches/node-pty*'
       - 'config/patches/@vscode__windows-process-tree*'
@@ -150,6 +155,9 @@ jobs:
         with:
           resolve-windows-cache: ${{ github.event_name == 'pull_request' }}
           restore-windows-cache: ${{ github.event_name == 'pull_request' }}
+      - uses: ./.github/actions/prepare-windows-cli-launcher
+        with:
+          arches: ${{ matrix.arch }}
       - name: Build the win32 template and the relay
         shell: bash
         env:

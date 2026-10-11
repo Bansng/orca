@@ -19,7 +19,6 @@ import {
   worktreeHostMatchOptions,
   worktreeMatchesHost
 } from './worktree-host-ownership'
-import { settingsForRepoOwner } from './worktree-owner-settings'
 import { getCurrentDirectSshAuthority } from './direct-ssh-authority'
 import {
   acquireDetectedWorktreeRefreshLeaseForRepo,
@@ -210,17 +209,12 @@ export function acquireDirectSshDetectedWorktreeRefresh(
     request.repoId,
     request.executionHostId
   )
-  const settings = settingsForRepoOwner(
-    requestStartedState,
-    request.repoId,
-    request.executionHostId
-  )
   const options: DetectedWorktreeRefreshOptions = {
     executionHostId: request.executionHostId,
     directSshAuthority: request.authority,
     requireAuthoritative: request.requireAuthoritative
   }
-  const lease = acquireDetectedWorktreeRefreshLeaseForRepo(settings, request.repoId, options)
+  const lease = acquireDetectedWorktreeRefreshLeaseForRepo(request.repoId, options)
   let mergedResult: HostQualifiedDetectedWorktreeResult | undefined
 
   return {

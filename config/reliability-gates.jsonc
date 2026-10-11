@@ -337,12 +337,12 @@
       "invariant": "An ended tracked task stays pending until its wake-up and finishing turn end; missing wake-ups expire only after 60 idle seconds. Cancellation remains owned by the executing host, duplicate delivery cannot create a fresh completion veto, and fresh native rest can recover a lost finishing Stop.",
       "oracle": "Replay captured hook ordering through production HTTP entry points and native ready bytes through the actual automation observer. Check local/relay state, cancellation/new-turn fencing, fresh versus retained rest, bounded task/timer ownership, and zero global status reads during indexed runtime waits.",
       "commands": [
-        "ORCA_BACKGROUND_LAUNCH=1 node node_modules/vitest/vitest.mjs run --config config/vitest.config.ts src/main/agent-hooks/server-claude-task-wakeup-lifecycle.test.ts src/main/runtime/tui-idle-claude-task-wakeup.test.ts src/main/runtime/claude-task-wakeup-indexed-read.test.ts src/shared/claude-owed-notification-resource-contract.test.ts src/shared/agent-hook-listener-claude-task-notification.test.ts src/shared/agent-hook-listener-claude-reordered-task-notification.test.ts src/wsl-guest/agent-hook-interrupt-reconciliation.test.ts src/main/ssh/ssh-agent-hook-interrupt-reconciliation.test.ts"
+        "ORCA_BACKGROUND_LAUNCH=1 node node_modules/vitest/vitest.mjs run --config config/vitest.config.ts src/main/agent-hooks/server-claude-task-wakeup-lifecycle.test.ts src/main/runtime/tui-idle-claude-task-wakeup.test.ts src/main/runtime/tui-idle-hook-lane-runtime.test.ts src/shared/claude-owed-notification-resource-contract.test.ts src/shared/agent-hook-listener-claude-task-notification.test.ts src/shared/agent-hook-listener-claude-reordered-task-notification.test.ts src/wsl-guest/agent-hook-interrupt-reconciliation.test.ts src/main/ssh/ssh-agent-hook-interrupt-reconciliation.test.ts"
       ],
       "testFiles": [
         "src/main/agent-hooks/server-claude-task-wakeup-lifecycle.test.ts",
         "src/main/runtime/tui-idle-claude-task-wakeup.test.ts",
-        "src/main/runtime/claude-task-wakeup-indexed-read.test.ts",
+        "src/main/runtime/tui-idle-hook-lane-runtime.test.ts",
         "src/shared/claude-owed-notification-resource-contract.test.ts",
         "src/shared/agent-hook-listener-claude-task-notification.test.ts",
         "src/shared/agent-hook-listener-claude-reordered-task-notification.test.ts",
@@ -358,7 +358,7 @@
           ]
         },
         {
-          "file": "src/main/runtime/claude-task-wakeup-indexed-read.test.ts",
+          "file": "src/main/runtime/tui-idle-hook-lane-runtime.test.ts",
           "assertions": [
             "reads only its pane with 512 unrelated agents, including an empty index: pending=%s"
           ]
@@ -376,10 +376,10 @@
           "date": "2026-10-06",
           "runner": "local",
           "platform": "macos",
-          "command": "ORCA_BACKGROUND_LAUNCH=1 node node_modules/vitest/vitest.mjs run --config config/vitest.config.ts src/main/agent-hooks/server-claude-task-wakeup-lifecycle.test.ts src/main/runtime/tui-idle-claude-task-wakeup.test.ts src/main/runtime/claude-task-wakeup-indexed-read.test.ts src/shared/claude-owed-notification-resource-contract.test.ts src/shared/agent-hook-listener-claude-task-notification.test.ts src/shared/agent-hook-listener-claude-reordered-task-notification.test.ts src/wsl-guest/agent-hook-interrupt-reconciliation.test.ts src/main/ssh/ssh-agent-hook-interrupt-reconciliation.test.ts",
+          "command": "ORCA_BACKGROUND_LAUNCH=1 node node_modules/vitest/vitest.mjs run --config config/vitest.config.ts src/main/agent-hooks/server-claude-task-wakeup-lifecycle.test.ts src/main/runtime/tui-idle-claude-task-wakeup.test.ts src/main/runtime/tui-idle-hook-lane-runtime.test.ts src/shared/claude-owed-notification-resource-contract.test.ts src/shared/agent-hook-listener-claude-task-notification.test.ts src/shared/agent-hook-listener-claude-reordered-task-notification.test.ts src/wsl-guest/agent-hook-interrupt-reconciliation.test.ts src/main/ssh/ssh-agent-hook-interrupt-reconciliation.test.ts",
           "result": "passed",
           "durationSeconds": 8.62,
-          "summary": "Exact stored command with repository Vitest configuration passes 148 tests across eight files including out-of-order launch/end/delivery controls. Includes real HTTP/relay ingress, 12 blank/padded Agent/Bash/Monitor IDs, captured-native-rest automation completion, duplicate/cancellation controls, owner/phase gates, timer/task bounds and indexed reads. Three upstream interrupt suites pass 28 more tests separately."
+          "summary": "Exact stored command with repository Vitest configuration passes 148 tests across eight files including out-of-order launch/end/delivery controls. Includes real HTTP/relay ingress, 12 blank/padded Agent/Bash/Monitor IDs, captured-native-rest automation completion, duplicate/cancellation controls, owner/phase gates, timer/task bounds and indexed reads. Three upstream interrupt suites pass 28 more tests separately. This dated receipt is unchanged; command now names the relocated test selector, not a new run. Original 2026-10-06 command: ORCA_BACKGROUND_LAUNCH=1 node node_modules/vitest/vitest.mjs run --config config/vitest.config.ts src/main/agent-hooks/server-claude-task-wakeup-lifecycle.test.ts src/main/runtime/tui-idle-claude-task-wakeup.test.ts src/main/runtime/claude-task-wakeup-indexed-read.test.ts src/shared/claude-owed-notification-resource-contract.test.ts src/shared/agent-hook-listener-claude-task-notification.test.ts src/shared/agent-hook-listener-claude-reordered-task-notification.test.ts src/wsl-guest/agent-hook-interrupt-reconciliation.test.ts src/main/ssh/ssh-agent-hook-interrupt-reconciliation.test.ts"
         }
       ],
       "runtimeBudget": {

@@ -29,7 +29,9 @@ export const OWNER_RPC_CALLER_SCOPE: RpcCallerScope = { kind: 'owner' }
 
 // Why: a paired desktop, web client or `--host runtime:` CLI is this runtime's full remote UI, so its
 // standard set covers what that UI drives here (settings, accounts, skills, SSH and server updates).
-// Everything else (desktop control, pairing and push admin) is refused unless granted at pairing.
+// None of these exceeds `workspace`, which already runs commands as the user (see
+// rpc-method-permission.ts). Desktop control needs a grant at pairing; pairing admin is never
+// granted to this row.
 const RUNTIME_PAIRED_STANDARD: ReadonlySet<RpcMethodPermission> = new Set([
   'workspace',
   'settings-write',

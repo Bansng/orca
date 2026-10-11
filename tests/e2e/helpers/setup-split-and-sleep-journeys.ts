@@ -98,7 +98,8 @@ export async function openSetupSplitWorktree(page: Page, userDataDir: string): P
     .poll(async () => {
       setupWorktreeId = await page.evaluate(async () => {
         const store = window.__store!
-        await store.getState().fetchRepos()
+        const owner = store.getState().settings?.activeRuntimeEnvironmentId ?? null
+        await store.getState().fetchRepos({ runtimeEnvironmentId: owner })
         for (const repo of store.getState().repos) {
           await store.getState().fetchWorktrees(repo.id)
         }

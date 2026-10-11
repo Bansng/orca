@@ -5,6 +5,10 @@ import {
 } from '../../../shared/execution-host'
 import type { GlobalSettings } from '../../../shared/global-settings-types'
 import type { Repo } from '../../../shared/repo-types'
+import {
+  runtimeTargetForOwnerHostId,
+  type RuntimeClientTarget
+} from '@/runtime/runtime-client-target'
 
 export type RepoRuntimeOwnerState = {
   repos?: readonly Pick<Repo, 'id' | 'connectionId' | 'executionHostId'>[]
@@ -29,6 +33,18 @@ function findRepoOwner(
   // Why: duplicate bare repo ids are only safe to route when focus selects one
   // owner unambiguously; otherwise callers must avoid guessing a host.
   return focusedMatches.length === 1 ? focusedMatches[0] : null
+}
+
+/**
+ * Transport to a repo row's owner; a row with no owner stamp is local. `null` when no row, or no
+ * single row among duplicates, names the repo.
+ */
+export function runtimeTargetForRepoOwner(
+  state: RepoRuntimeOwnerState,
+  repoId: string | null | undefined
+): RuntimeClientTarget | null {
+  const repo = repoId ? findRepoOwner(state, repoId) : null
+  return repo ? runtimeTargetForOwnerHostId(getRepoExecutionHostId(repo)) : null
 }
 
 export function getRuntimeEnvironmentIdForRepo(
@@ -63,6 +79,20 @@ export function getExplicitRuntimeOwnerEnvironmentId(
     return null
   }
   const parsed = parseExecutionHostId(getRepoExecutionHostId(repo))
+  return parsed?.kind === 'runtime' ? parsed.environmentId : null
+}
+
+// Why: a source without a runtime host inherits a repo's runtime owner only when exactly one
+// row has that id; duplicate ids across hosts fail closed to the source's own host (#7623).
+export function getHostlessSourceRepoOwnerEnvironmentId(
+  repos: RepoRuntimeOwnerState['repos'],
+  repoId: string | null | undefined
+): string | null {
+  const matches = repoId ? (repos?.filter((entry) => entry.id === repoId) ?? []) : []
+  if (matches.length !== 1) {
+    return null
+  }
+  const parsed = parseExecutionHostId(getRepoExecutionHostId(matches[0]))
   return parsed?.kind === 'runtime' ? parsed.environmentId : null
 }
 
