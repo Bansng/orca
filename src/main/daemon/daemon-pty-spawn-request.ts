@@ -132,6 +132,7 @@ export abstract class DaemonPtySpawnRequest extends DaemonPtyRuntimeState {
         ...(this.supportsStartupIngress && !context.attachOnly && opts.startupIngress
           ? { startupIngress: opts.startupIngress }
           : {}),
+        ...(!context.attachOnly && opts.spawnIntent ? { spawnIntent: opts.spawnIntent } : {}),
         ...(!context.attachOnly && opts.agentSessionEnsure
           ? { agentSessionEnsure: opts.agentSessionEnsure }
           : {})

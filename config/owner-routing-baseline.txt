@@ -1,4 +1,0 @@
-# Renderer call sites that route by the Active Server focus setting:
-# getActiveRuntimeTarget( + legacyRouteFromSettings( + settingsForRuntimeOwner(, per file.
-# The helpers are deleted and this list is empty: any new use fails lint. Route by the
-# resource's owner; only a creation flow with no source row may use defaultCreationHost.

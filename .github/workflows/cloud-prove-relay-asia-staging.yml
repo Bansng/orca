@@ -26,17 +26,27 @@ on:
         required: false
         type: string
       load-region:
-        description: Load only. asia-east2 runs on the Asia load runner; us-central1 on a hosted runner
+        description: >-
+          Load only. asia-east2 runs on the Asia load runner; asia-east2-hosted asks for asia-east2
+          from a hosted runner; us-central1 runs on a hosted runner
         required: false
         default: asia-east2
         type: choice
-        options: [asia-east2, us-central1]
+        options: [asia-east2, asia-east2-hosted, us-central1]
       load-shards:
         description: Load only. Generator processes, each with its own shard of the 32 load principals
         required: false
         default: '4'
         type: choice
         options: ['1', '2', '3', '4']
+      load-runners:
+        description: >-
+          Load only, hosted runners only. Runner machines, each with load-shards generators; one
+          hosted runner holds about 2,000 connections to one cell
+        required: false
+        default: '1'
+        type: choice
+        options: ['1', '2']
       load-args:
         description: >-
           Load only. Per-shard generator arguments, e.g. --controls 150 --splices 15
@@ -364,7 +374,12 @@ jobs:
   # free-form staging load lives here rather than in a workflow of its own.
   load:
     if: ${{ vars.ORCA_CLOUD_OPERATIONS_ENABLED == 'true' && (github.ref == 'refs/heads/main') && inputs.mode == 'load' }}
-    runs-on: ${{ inputs.load-region == 'us-central1' && 'ubuntu-latest' || fromJSON('["self-hosted","linux","x64","relay-asia-east2-load"]') }}
+    runs-on: ${{ inputs.load-region == 'asia-east2' && fromJSON('["self-hosted","linux","x64","relay-asia-east2-load"]') || 'ubuntu-latest' }}
+    strategy:
+      # One runner's failure must not drop the other half of the load mid-run.
+      fail-fast: false
+      matrix:
+        runner: ${{ fromJSON(inputs.load-runners == '2' && '[0, 1]' || '[0]') }}
     timeout-minutes: 180
     environment: staging
     env:
@@ -372,6 +387,8 @@ jobs:
       AUTH_ORIGIN: https://auth-staging.onorca.dev
       LOAD_REGION: ${{ inputs.load-region }}
       LOAD_SHARDS: ${{ inputs.load-shards }}
+      LOAD_RUNNERS: ${{ inputs.load-runners }}
+      LOAD_RUNNER_INDEX: ${{ matrix.runner }}
       LOAD_ARGS: ${{ inputs.load-args }}
     steps:
       - uses: actions/checkout@v4
@@ -383,8 +400,14 @@ jobs:
         run: |
           set -euo pipefail
           test "${CONFIRMATION}" = LOAD_RELAY_STAGING
-          [[ "${LOAD_REGION}" =~ ^(asia-east2|us-central1)$ ]]
+          [[ "${LOAD_REGION}" =~ ^(asia-east2|asia-east2-hosted|us-central1)$ ]]
           [[ "${LOAD_SHARDS}" =~ ^[1-4]$ ]]
+          [[ "${LOAD_RUNNERS}" =~ ^[12]$ ]]
+          # The Asia runner is one machine; a second matrix job would only queue behind the first.
+          if test "${LOAD_RUNNERS}" != 1 && test "${LOAD_REGION}" = asia-east2; then
+            echo "load-runners 2 needs a hosted runner" >&2
+            exit 1
+          fi
           read -r -a args <<< "${LOAD_ARGS}"
           for arg in "${args[@]}"; do
             [[ "${arg}" =~ ^[A-Za-z0-9=:/._,-]+$ ]] || { echo "unsupported characters in load-args" >&2; exit 1; }
@@ -445,10 +468,10 @@ jobs:
             node dev/scripts/load-relay-controls.mjs \
               --director-origin "${DIRECTOR_ORIGIN}" \
               --auth-origin "${AUTH_ORIGIN}" \
-              --preferred-region "${LOAD_REGION}" \
+              --preferred-region "${LOAD_REGION%-hosted}" \
               --relay-asia-load-principals 32 \
-              --shard-count "${LOAD_SHARDS}" \
-              --shard-index "${shard}" \
+              --shard-count "$((LOAD_SHARDS * LOAD_RUNNERS))" \
+              --shard-index "$((LOAD_RUNNER_INDEX * LOAD_SHARDS + shard))" \
               "${args[@]}" \
               > "${load_dir}/shard-${shard}.jsonl" &
             pids+=("$!")
@@ -468,7 +491,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
-          name: relay-staging-load-${{ github.run_id }}-${{ github.run_attempt }}
+          name: relay-staging-load-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.runner }}
           path: ${{ runner.temp }}/relay-staging-load/
           if-no-files-found: warn
           retention-days: 7

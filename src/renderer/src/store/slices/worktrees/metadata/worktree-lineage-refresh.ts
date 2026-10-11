@@ -15,6 +15,7 @@ import { getRepoIdFromWorktreeId } from '../../worktree-helpers'
 import { replaceWorktreeInRepoLists } from '../listing/worktree-owner-settings'
 import { repoHostId, withRepoHostOwnership } from '../listing/worktree-host-ownership'
 import { mergeLineageForHost, mergeWorkspaceLineageForHost } from './worktree-lineage-host-merge'
+import { beginWorktreeLineageRefresh } from './worktree-lineage-readiness'
 import type {
   BackgroundRuntimeRefreshOptions,
   WorktreeLineageUpdateResult,
@@ -252,9 +253,16 @@ export async function refreshWorktreeLineageForTarget(
   getState: () => Pick<AppState, 'worktreeLineageById' | 'workspaceLineageByChildKey'>,
   options: BackgroundRuntimeRefreshOptions = {}
 ): Promise<void> {
-  const lineageAtRequestStart = captureLineageAtRequestStart(getState())
-  const lineage = await listWorktreeLineageForRuntime(target, options)
-  applyHostLineageRefresh(set, getRuntimeTargetHostId(target), lineage, lineageAtRequestStart)
+  const finish = beginWorktreeLineageRefresh(getState, target)
+  let succeeded = false
+  try {
+    const lineageAtRequestStart = captureLineageAtRequestStart(getState())
+    const lineage = await listWorktreeLineageForRuntime(target, options)
+    applyHostLineageRefresh(set, getRuntimeTargetHostId(target), lineage, lineageAtRequestStart)
+    succeeded = true
+  } finally {
+    finish(succeeded)
+  }
 }
 
 export async function refreshRemoteWorktreeLineageBestEffort(
@@ -266,11 +274,9 @@ export async function refreshRemoteWorktreeLineageBestEffort(
     return
   }
   try {
-    const lineageAtRequestStart = captureLineageAtRequestStart(getState())
-    const lineage = await listWorktreeLineageForRuntime(target, {
+    await refreshWorktreeLineageForTarget(target, set, getState, {
       reuseRecentCompatibilityFailure: true
     })
-    applyHostLineageRefresh(set, getRuntimeTargetHostId(target), lineage, lineageAtRequestStart)
   } catch (err) {
     // Why: lineage is supplemental, so a remote timeout here must not discard a successful worktree refresh.
     console.error('Failed to fetch worktree lineage:', err)

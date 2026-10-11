@@ -1,3 +1,4 @@
+import type { SpawnIntent } from '../../shared/host-spawn-admission'
 import type {
   ConfirmForegroundProcessRequest,
   ConfirmShellForegroundRequest,
@@ -93,6 +94,8 @@ export type CreateOrAttachRequest = {
     /** Server-side fence that prevents a client timeout from publishing an orphan PTY. */
     cancelAfterMs?: number
     startupIngress?: PtyStartupIngressIntent
+    /** Optional; an old daemon ignores it and an old client omits it (legacy pacing). */
+    spawnIntent?: SpawnIntent
     agentSessionEnsure?: {
       claim: AgentSessionExecutionClaim
       surface: AgentSessionSurfaceBinding

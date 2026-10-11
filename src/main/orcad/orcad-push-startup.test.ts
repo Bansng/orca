@@ -79,7 +79,7 @@ vi.mock('./orcad-automations', () => ({
 vi.mock('../runtime/agent-state-rules/agent-state-rules-live-update', () => ({
   startAgentStateRulesLiveUpdates: () => {}
 }))
-vi.mock('../daemon/daemon-init', () => ({ daemonOwnsFreshPersistentPtys: () => false }))
+vi.mock('../daemon/daemon-provider-state', () => ({ daemonOwnsFreshPersistentPtys: () => false }))
 vi.mock('../ipc/pty', () => ({
   registerHeadlessPtyRuntime: async () => {},
   getLocalPtyProvider: () => null,

@@ -77,14 +77,13 @@ export function requireRuntimeFileProvider(
   target: { executionHostId: ExecutionHostId },
   host: RuntimeLocalFileHost,
   route: RuntimeFileRoute = runtimeFileRouteForTarget(target)
-): LocalFilesystemProvider {
+): LocalFilesystemProvider | IFilesystemProvider {
   if (route.kind === 'ssh') {
     return requireSshRuntimeFileProvider(route)
   }
   return route.createProvider({
     requireStore: () => host.requireStore(),
-    resolveAuthorizedPath,
-    onTextSearchSpawn: host.onTextSearchSpawn
+    resolveAuthorizedPath
   })
 }
 

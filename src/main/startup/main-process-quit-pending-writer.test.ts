@@ -11,7 +11,7 @@ const dependencies: Record<string, Record<string, unknown>> = {
   '../ipc/worktree-base-directory-watcher': { disposeWorktreeBaseDirectoryWatchers: settled() },
   '../ipc/folder-repo-git-upgrade': { stopFolderRepoGitUpgradeWatch: idle() },
   '../ipc/pty': { killAllPty: idle() },
-  '../daemon/daemon-init': { disconnectDaemon: settled(), shutdownDaemon: settled() },
+  '../daemon/daemon-provider-state': { disconnectDaemon: settled(), shutdownDaemon: settled() },
   '../ipc/ssh-shutdown-drain': { beginSshShutdown: settled() },
   '../agent-hooks/server': { agentHookServer: { stop: idle() } },
   '../agent-hooks/wsl-hook-relay-manager': { wslHookRelayManager: { disposeAll: idle() } },

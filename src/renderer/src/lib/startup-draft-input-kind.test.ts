@@ -23,7 +23,6 @@ vi.mock('@/store', () => ({
 }))
 
 vi.mock('./worktree-runtime-owner', () => ({
-  getSettingsForWorktreeRuntimeOwner: () => ({}),
   getRuntimeEnvironmentIdForWorktree: () => null
 }))
 

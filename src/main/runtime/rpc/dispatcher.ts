@@ -10,7 +10,7 @@ import {
   type RpcStreamingMethod
 } from './core'
 
-import { successResponse, errorResponse } from './errors'
+import { successResponse } from './errors'
 import { ALL_RPC_METHODS } from './methods'
 import { emulatorProbe, emulatorProbeError } from '../../emulator/emulator-probe'
 import type { OrcaRuntimeService } from '../orca-runtime'
@@ -97,14 +97,7 @@ export class RpcDispatcher {
         orchestrationMutations: this.orchestrationMutations,
         legacyOrchestration: this.legacyOrchestration
       })
-      const filtered = admission.binding?.filterResult?.(result) ?? {
-        kind: 'allowed',
-        result
-      }
-      if (filtered.kind === 'denied') {
-        return errorResponse(request.id, meta, 'forbidden', filtered.message)
-      }
-      return successResponse(request.id, meta, filtered.result)
+      return successResponse(request.id, meta, result)
     } catch (error) {
       if (request.method.startsWith('emulator.')) {
         emulatorProbeError(`rpc ${request.method}`, error, {

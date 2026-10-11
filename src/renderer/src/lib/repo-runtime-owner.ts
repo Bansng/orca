@@ -109,10 +109,6 @@ const ownerRoutedSettingsCache = new Map<string, OwnerRoutedSettingsCacheEntry>(
 // Why bounded: repo ids come from remote listings, so the key space is not closed.
 const MAX_OWNER_ROUTED_SETTINGS_CACHE_KEYS = 256
 
-export function releaseRepoRuntimeOwnerSettingsCache(): void {
-  ownerRoutedSettingsCache.clear()
-}
-
 export function getSettingsForRepoRuntimeOwner(
   state: RepoRuntimeOwnerState,
   repoId: string | null | undefined
@@ -149,21 +145,4 @@ export function getSettingsForRepoRuntimeOwner(
     }
   }
   return value
-}
-
-// Why: git/file/terminal mutations must route by the OWNER host of the repo,
-// not the currently focused runtime. This rebinds activeRuntimeEnvironmentId to
-// the repo owner while preserving every other (display/AI) settings field.
-export function getRepoOwnerRoutedSettings<T extends GlobalSettings | null>(
-  settings: T,
-  repo: Pick<Repo, 'id' | 'connectionId' | 'executionHostId'> | null | undefined
-): T {
-  if (!settings) {
-    return settings
-  }
-  const activeRuntimeEnvironmentId = getRuntimeEnvironmentIdForRepo(
-    { repos: repo ? [repo] : [], settings },
-    repo?.id ?? null
-  )
-  return { ...settings, activeRuntimeEnvironmentId }
 }

@@ -1,7 +1,5 @@
 import { makePaneKey } from '../../../../shared/stable-pane-id'
-import { terminalLayoutEqual, terminalLayoutNodeEqual } from '@/lib/terminal-layout-equality'
-import { getConnectionIdFromState } from '@/lib/connection-owner-resolution'
-import { omitRecordKeys } from '../slices/worktrees/teardown/record-key-omission'
+import { terminalLayoutEqual } from '@/lib/terminal-layout-equality'
 import {
   normalizeTerminalLayoutPtyOwnership,
   resolveTerminalLayoutPtyOwnershipTransfers
@@ -25,7 +23,6 @@ export function createTerminalLayoutActions(
   | 'setTabPaneExpanded'
   | 'setTabCanExpandPane'
   | 'setTabLayout'
-  | 'acknowledgeDirectSshLayoutEdits'
   | 'setTabLocalOnlyScrollback'
   | 'syncPaneDetachPtyOwnership'
 > {
@@ -78,19 +75,6 @@ export function createTerminalLayoutActions(
           : { canExpandPaneByTabId: { ...s.canExpandPaneByTabId, [tabId]: canExpand } }
       )
     },
-    acknowledgeDirectSshLayoutEdits: (uploaded) => {
-      set((s) => {
-        const acknowledged = Object.keys(uploaded).filter((tabId) => {
-          const pending = s.pendingDirectSshLayoutEditsByTabId[tabId]
-          const candidate = uploaded[tabId]
-          return pending === candidate
-        })
-        const pending = omitRecordKeys(s.pendingDirectSshLayoutEditsByTabId, acknowledged)
-        return pending === s.pendingDirectSshLayoutEditsByTabId
-          ? s
-          : { pendingDirectSshLayoutEditsByTabId: pending }
-      })
-    },
     setTabLayout: (tabId, layout) => {
       let ownershipTransfers: ReturnType<typeof resolveTerminalLayoutPtyOwnershipTransfers> = []
       set((s) => {
@@ -100,13 +84,7 @@ export function createTerminalLayoutActions(
           }
           const next = { ...s.terminalLayoutsByTabId }
           delete next[tabId]
-          return {
-            terminalLayoutsByTabId: next,
-            pendingDirectSshLayoutEditsByTabId: omitRecordKeys(
-              s.pendingDirectSshLayoutEditsByTabId,
-              [tabId]
-            )
-          }
+          return { terminalLayoutsByTabId: next }
         }
         const normalized = normalizeTerminalLayoutPtyOwnership(layout)
         // Resolved before the bailout: normalization can transfer pane ownership even when the stored snapshot is untouched.
@@ -121,23 +99,8 @@ export function createTerminalLayoutActions(
         if (existing && terminalLayoutEqual(existing, normalized.snapshot)) {
           return s
         }
-        const structuralEdit = !terminalLayoutNodeEqual(existing?.root, normalized.snapshot.root)
-        const workspaceId = structuralEdit
-          ? Object.keys(s.tabsByWorktree).find((id) =>
-              s.tabsByWorktree[id].some((tab) => tab.id === tabId)
-            )
-          : undefined
-        const tracksRemoteEdit = workspaceId && getConnectionIdFromState(s, workspaceId)
         return {
-          terminalLayoutsByTabId: { ...s.terminalLayoutsByTabId, [tabId]: normalized.snapshot },
-          ...(tracksRemoteEdit
-            ? {
-                pendingDirectSshLayoutEditsByTabId: {
-                  ...s.pendingDirectSshLayoutEditsByTabId,
-                  [tabId]: { targetId: tracksRemoteEdit, root: normalized.snapshot.root }
-                }
-              }
-            : {})
+          terminalLayoutsByTabId: { ...s.terminalLayoutsByTabId, [tabId]: normalized.snapshot }
         }
       })
       transferNormalizedTerminalLayoutPtyOwnership(get(), tabId, ownershipTransfers)

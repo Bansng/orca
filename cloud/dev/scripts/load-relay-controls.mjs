@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { monitorEventLoopDelay } from 'node:perf_hooks'
 import { setTimeout as delay } from 'node:timers/promises'
 import { RelayLoadControlPeer } from './relay-load-control-peer.mjs'
-import { requestGitHubSmokeTokens } from './github-smoke-token.mjs'
+import { RELAY_ASIA_LOAD_PRINCIPAL_SHARDS, requestGitHubSmokeTokens } from './github-smoke-token.mjs'
 import { relayLoadFailureReason } from './relay-load-connection-failure.mjs'
 import {
   assertRelayLoadDirectorCapacityToken,
@@ -31,6 +31,7 @@ import {
   runRelayLoadWithShutdown
 } from './relay-load-run-lifecycle.mjs'
 import { createRelayLoadReaderEvidence } from './relay-load-reader-evidence.mjs'
+import { holdRelayLoadSplice, relayLoadSpliceReopenSummary } from './relay-load-splice-retry.mjs'
 import {
   parseRelayLoadArguments,
   relayLoadPrincipalIndex,
@@ -107,6 +108,9 @@ function report(state, final = false) {
     peakActiveSplices: state.peakActiveSplices,
     completedSplices: state.completedSplices,
     failedSplices: state.failedSplices,
+    spliceRetries: state.spliceRetries,
+    spliceFailuresByReason: state.spliceFailuresByReason,
+    spliceReopen: relayLoadSpliceReopenSummary(state.spliceReopenGapsMs, state.spliceFailedAt.size),
     slowReaderSplicesCompleted: state.slowReaderSplicesCompleted,
     wedgedReaderSplicesClosed: state.wedgedReaderSplicesClosed,
     readerQueueEvidence,
@@ -160,7 +164,9 @@ if (!accessToken && !key.signingKey && process.env.ACTIONS_ID_TOKEN_REQUEST_URL 
   const loadOptions = config.relayAsiaLoadPrincipalCount > 0
     ? {
         relayAsiaLoad: {
-          shardIndex: config.shardIndex,
+          // Staging auth mints principal sets for shards 0-3 only; shards past that (a second
+          // hosted runner) reuse a set, and their hosts stay distinct by peer index.
+          shardIndex: config.shardIndex % RELAY_ASIA_LOAD_PRINCIPAL_SHARDS,
           principalCount: config.relayAsiaLoadPrincipalCount
         }
       }
@@ -242,6 +248,10 @@ const state = {
   peakActiveSplices: 0,
   completedSplices: 0,
   failedSplices: 0,
+  spliceRetries: 0,
+  spliceFailuresByReason: {},
+  spliceFailedAt: new Map(),
+  spliceReopenGapsMs: [],
   slowReaderSplicesCompleted: 0,
   wedgedReaderSplicesClosed: 0,
   readerEvidence: null,
@@ -329,6 +339,11 @@ function observe(type, detail) {
   else if (type === 'protocolError') state.protocolErrors++
   else if (type === 'socketError') state.socketErrors++
   else if (type === 'spliceOpened') {
+    const failedAt = state.spliceFailedAt.get(detail.index)
+    if (failedAt !== undefined) {
+      state.spliceReopenGapsMs.push(Date.now() - failedAt)
+      state.spliceFailedAt.delete(detail.index)
+    }
     state.activeSplices++
     state.peakActiveSplices = Math.max(state.peakActiveSplices, state.activeSplices)
   } else if (type === 'spliceCompleted') {
@@ -559,11 +574,22 @@ await runRelayLoadWithShutdown(async () => {
   }
   const splicePromises = spliceIndexes.map((index, spliceIndex) =>
     delay(relayLoadSpliceStartDelayMs(config, spliceIndex)).then(() =>
-      peers.get(index).openSplice({
-        payloadBytes: config.splicePayloadBytes,
-        ...relayLoadSpliceProfile(config, spliceIndex),
-        observeReaderPressure,
-        holdMs: config.spliceHoldMs
+      holdRelayLoadSplice({
+        open: () =>
+          peers.get(index).openSplice({
+            payloadBytes: config.splicePayloadBytes,
+            ...relayLoadSpliceProfile(config, spliceIndex),
+            observeReaderPressure,
+            holdMs: config.spliceHoldMs
+          }),
+        retryMaxMs: config.spliceRetryMaxMs,
+        stopping: () => state.stopping,
+        onFailure: (reason) => {
+          state.spliceRetries++
+          state.spliceFailuresByReason[reason] = (state.spliceFailuresByReason[reason] ?? 0) + 1
+          if (!state.spliceFailedAt.has(index)) state.spliceFailedAt.set(index, Date.now())
+        },
+        delay
       })
     )
   )

@@ -56,3 +56,27 @@ export function portsPanelHostForOwnerKey(key: HostAuthorityKey | null): PortsPa
   }
   return { kind: 'host-scoped', route, executionHostId: authority.at }
 }
+
+/** The Ports tab shows for a workspace on an SSH host, dialed directly or through its managed server. */
+export function portsPanelReachesSshHost(
+  host: PortsPanelHost,
+  environments: readonly { id: string; orcadDeployment?: unknown }[]
+): boolean {
+  switch (host.kind) {
+    case 'direct-ssh':
+    case 'host-scoped':
+      return true
+    case 'endpoint': {
+      const { target } = host
+      return (
+        target.kind === 'environment' &&
+        environments.some(
+          (environment) =>
+            environment.id === target.environmentId && environment.orcadDeployment !== undefined
+        )
+      )
+    }
+    case 'unknown':
+      return false
+  }
+}

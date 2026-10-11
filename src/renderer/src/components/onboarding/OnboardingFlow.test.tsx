@@ -7,6 +7,12 @@ import { getDefaultOnboardingState } from '../../../../shared/onboarding-default
 import { useAppStore } from '@/store'
 import OnboardingFlow from './OnboardingFlow'
 
+vi.mock('@/components/terminal-pane/TerminalPane', () => ({
+  default: () => {
+    throw new Error('This suite must not render a terminal pane')
+  }
+}))
+
 function renderOnboardingFlow(props: ComponentProps<typeof OnboardingFlow>): string {
   return renderToStaticMarkup(
     <TooltipProvider>

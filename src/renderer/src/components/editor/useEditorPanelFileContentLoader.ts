@@ -185,7 +185,7 @@ export function useEditorPanelFileContentLoader({
               await reownRestoredFile(route, runtimeEnvironmentId ?? null)
               return
             }
-            if (runtimeEnvironmentId && !route) {
+            if (runtimeEnvironmentId && !route && !restoredOpenFile.terminalArtifactGrantId) {
               throw new Error('External local files are not available for remote workspaces.')
             }
             if (!externalSshOwnerId) {
@@ -225,7 +225,8 @@ export function useEditorPanelFileContentLoader({
               connectionId: readConnectionId,
               expectedExternalSshTargetId: restoredOpenFile?.externalSshTargetId,
               includeLocalLogMetadata: isLiveTailLogTab,
-              access
+              access,
+              terminalArtifactGrantId: restoredOpenFile?.terminalArtifactGrantId
             },
             allowPagedPreview
           )

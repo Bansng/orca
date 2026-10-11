@@ -1,6 +1,9 @@
 import { runtimeTargetForExecutionHostId } from '@/runtime/runtime-client-target'
 import { repoHostId } from '../listing/worktree-host-ownership'
-import { isUnresolvedOwnerHostId } from '../../../../../../shared/execution-host'
+import {
+  isUnresolvedOwnerHostId,
+  toRuntimeExecutionHostId
+} from '../../../../../../shared/execution-host'
 import { adoptFromEndpoint } from '../../../adopt-from-endpoint'
 import type { WorktreeSlice } from '../../worktree-helpers'
 import type { WorktreeSliceGet, WorktreeSliceSet } from '../listing/worktree-slice-types'
@@ -22,6 +25,7 @@ import { showLocalBaseRefUpdateSuggestionToast } from '@/components/sidebar/loca
 import { requestWorktreeBaseFallbackNotice } from '@/components/worktree-base-fallback-notice'
 import { showLocalBaseRefRefreshToast } from './local-base-ref-refresh-toast'
 import { applyCreatedWorktree } from './created-worktree-state-merge'
+import { adoptRuntimeProvisionedRoot } from './runtime-provisioned-root-adoption'
 import { isRuntimeLineageParentMissingError } from '../listing/runtime-worktree-rpc-errors'
 import {
   buildLocalWorktreeCreateArgs,
@@ -53,10 +57,17 @@ async function runCreateAttempt(
     parentWorkspace: WorktreeCreateAttempt['parentWorkspace']
   ): Promise<CreateWorktreeResult> =>
     provisionedRoot
-      ? await window.api.worktrees.adoptProvisionedRoot({
-          ...buildLocalWorktreeCreateArgs(request, { ...attempt, parentWorkspace }),
-          ...provisionedRoot
-        })
+      ? target.kind === 'environment'
+        ? await adoptRuntimeProvisionedRoot(
+            target,
+            request,
+            { ...attempt, parentWorkspace },
+            provisionedRoot
+          )
+        : await window.api.worktrees.adoptProvisionedRoot({
+            ...buildLocalWorktreeCreateArgs(request, { ...attempt, parentWorkspace }),
+            ...provisionedRoot
+          })
       : target.kind === 'local'
         ? // Why local can still reject on the parent: paired web clients route this API to their host.
           await window.api.worktrees.create(
@@ -200,8 +211,12 @@ export function createCreateWorktree(
           'Update the remote runtime to link Jira'
         )
       }
-      if (options?.provisionedRoot && target.kind !== 'local') {
-        throw new Error('Provisioned-root recipes currently require a direct SSH connection.')
+      if (
+        options?.provisionedRoot &&
+        target.kind === 'environment' &&
+        options.provisionedRoot.executionHostId !== toRuntimeExecutionHostId(target.environmentId)
+      ) {
+        throw new Error("The provisioned root's host does not match the workspace host.")
       }
       for (let attempt = 0; attempt < CLIENT_WORKTREE_CREATE_MAX_ATTEMPTS; attempt += 1) {
         try {

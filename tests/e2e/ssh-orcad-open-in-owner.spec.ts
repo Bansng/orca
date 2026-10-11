@@ -17,9 +17,9 @@ import { seedRelayEraProfile } from './helpers/orcad-upgrade-profile'
 import { convertAndRetain, serverCall } from './helpers/orcad-convert-flow'
 import { waitForSessionReady } from './helpers/store'
 import { dismissTransientAnnouncement } from './helpers/ssh-config-host-picker'
-import { shellQuote } from './helpers/docker-ssh-relay-target'
 import { toRuntimeExecutionHostId } from '../../src/shared/execution-host'
 import { folderWorkspaceKey } from '../../src/shared/workspace-scope'
+import { quotePosixShell } from '../../src/shared/wsl-login-shell-command'
 
 const TEMPLATE = process.env.ORCA_E2E_ORCAD_CONVERT_TEMPLATE
 
@@ -52,7 +52,7 @@ for (const surface of [
     // This recorder writes argv/content and exits; it never opens or focuses a window.
     writeFileSync(
       recorder,
-      `#!/bin/sh\nprintf 'DESKTOP_PID=%s\\nARG=%s\\n' "$$" "$1" > ${shellQuote(receiptPath)}\nif [ -d "$1" ]; then cat "$1/README.md"; else cat "$1"; fi >> ${shellQuote(receiptPath)}\n`
+      `#!/bin/sh\nprintf 'DESKTOP_PID=%s\\nARG=%s\\n' "$$" "$1" > ${quotePosixShell(receiptPath)}\nif [ -d "$1" ]; then cat "$1/README.md"; else cat "$1"; fi >> ${quotePosixShell(receiptPath)}\n`
     )
     chmodSync(recorder, 0o755)
     const receipt = (): string => (existsSync(receiptPath) ? readFileSync(receiptPath, 'utf8') : '')
@@ -65,7 +65,7 @@ for (const surface of [
       }
       const execute = host.exec
       execute(
-        `mkdir -p ${shellQuote(owned)} && git clone --quiet ${shellQuote(host.remoteRepoPath)} ${shellQuote(repoPath)} && printf '%s\\n' ${shellQuote(`# ${remoteMarker}`)} > ${shellQuote(filePath)} && mkdir -p ${shellQuote(folderPath)} && printf '%s\\n' ${shellQuote(`# ${remoteMarker}`)} > ${shellQuote(path.join(folderPath, 'README.md'))}`
+        `mkdir -p ${quotePosixShell(owned)} && git clone --quiet ${quotePosixShell(host.remoteRepoPath)} ${quotePosixShell(repoPath)} && printf '%s\\n' ${quotePosixShell(`# ${remoteMarker}`)} > ${quotePosixShell(filePath)} && mkdir -p ${quotePosixShell(folderPath)} && printf '%s\\n' ${quotePosixShell(`# ${remoteMarker}`)} > ${quotePosixShell(path.join(folderPath, 'README.md'))}`
       )
       const first = await session.launch()
       app = first.app

@@ -1,6 +1,6 @@
 // @ts-nocheck -- mechanically split class members.
 import { RuntimeFileCommandsWithReadMobileFile } from './runtime-file-commands-read-mobile-file'
-import { RuntimeFileCommandsWithActiveRuntimeTextSearches as RuntimeFileCommands } from './runtime-file-commands-active-runtime-text-searches'
+import { RuntimeFileCommandAccess as RuntimeFileCommands } from './runtime-file-command-access'
 import type {
   RuntimeNativeChatFileContext,
   RuntimeTerminalPathResolution

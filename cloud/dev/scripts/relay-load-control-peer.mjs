@@ -11,6 +11,9 @@ const { buildHostProofMacInput, HOST_CHALLENGE_PLAINTEXT_DOMAIN } = await import
   requireFromRelay.resolve('@orca-cloud/relay-contract')
 )
 
+export const CONTROL_SILENCE_LIMIT_MS = 75_000
+const CONTROL_SILENCE_CHECK_INTERVAL_MS = 15_000
+
 const REPORTABLE_ASSIGNMENT_ERRORS = [
   'relay_capacity_exhausted',
   'relay_connection_headroom_exhausted',
@@ -278,6 +281,7 @@ export class RelayLoadControlPeer {
       this.generation = ack.generation
       this.controlResumeSecret = ack.controlResumeSecret
       socket.on('message', (data) => this.onMessage(socket, data))
+      this.watchSilence(socket)
       socket.once('close', (code) => this.onClose(socket, code))
       socket.once('error', (error) => this.observe('socketError', { index: this.index, error }))
       this.observe('connected', { index: this.index })
@@ -741,7 +745,9 @@ export class RelayLoadControlPeer {
         body: JSON.stringify({
           v: 1,
           relayHostId: this.relayHostId,
-          ...(preferredRegion ? { preferredRegion } : {})
+          ...(preferredRegion ? { preferredRegion } : {}),
+          // Desktops declare a reconnect after an established control; the director's sticky lane needs it.
+          ...(this.generation === undefined ? {} : { reconnect: true })
         })
       },
       'relay assignment timeout',
@@ -819,6 +825,23 @@ export class RelayLoadControlPeer {
       this.drainExpected = true
       this.observe('drain', { index: this.index })
     }
+  }
+
+  // Desktops close a control after 75 s with no inbound frame (the cell pings every 15 s); the
+  // load balancer keeps a dead backend's client socket open, so without this a host never re-assigns.
+  watchSilence(socket) {
+    let lastInboundAt = Date.now()
+    const noteInbound = () => {
+      lastInboundAt = Date.now()
+    }
+    socket.on('message', noteInbound)
+    socket.on('ping', noteInbound)
+    socket.on('pong', noteInbound)
+    const timer = setInterval(() => {
+      if (Date.now() - lastInboundAt > CONTROL_SILENCE_LIMIT_MS) socket.terminate()
+    }, CONTROL_SILENCE_CHECK_INTERVAL_MS)
+    timer.unref?.()
+    socket.once('close', () => clearInterval(timer))
   }
 
   onClose(socket, code) {

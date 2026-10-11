@@ -307,6 +307,8 @@ export function parseRelayLoadArguments(argv) {
     rampMs: integer('--ramp-seconds', 60) * 1000,
     rampStartDelayMs: integer('--ramp-start-delay-ms', 0),
     reconnectMaxMs: integer('--reconnect-max-seconds', 30) * 1000,
+    // 0 keeps the old behaviour: the first splice failure fails the run.
+    spliceRetryMaxMs: integer('--splice-retry-max-seconds', 0) * 1000,
     shardCount,
     shardIndex,
     aggregateControls,

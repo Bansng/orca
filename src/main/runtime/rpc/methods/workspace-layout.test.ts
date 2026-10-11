@@ -6,9 +6,9 @@ import { ALL_RPC_METHODS } from './index'
 import { RUNTIME_CAPABILITIES } from '../../../../shared/protocol-version'
 import { MOBILE_RPC_METHOD_ALLOWLIST } from '../../runtime-rpc/runtime-rpc-mobile-method-allowlist'
 
-const subscribe = eraseRpcMethods(ALL_RPC_METHODS).find(
-  (method) => method.name === 'layout.subscribe'
-)
+const methods = eraseRpcMethods(ALL_RPC_METHODS)
+const subscribe = methods.find((method) => method.name === 'layout.subscribe')
+const unsubscribeMethod = methods.find((method) => method.name === 'layout.unsubscribe')
 
 function harness() {
   const cleanups = new Map<string, () => void>()
@@ -57,19 +57,58 @@ describe('layout.subscribe', () => {
       { runtime, connectionId: 'conn-1' } as RpcContext,
       (event) => emitted.push(event)
     )
-    const [subscriptionId] = [...cleanups.keys()]
+    const [cleanupKey] = [...cleanups.keys()]
     expect(emitted).toEqual([
       {
         type: 'snapshot',
-        subscriptionId,
+        subscriptionId: expect.any(String),
         workspaces: [{ key: 'b', layout: { worktreeId: 'b' } }]
       }
     ])
     publish({ type: 'removed', key: 'a' })
     publish({ type: 'removed', key: 'b' })
-    runtime.cleanupSubscription(subscriptionId!)
+    runtime.cleanupSubscription(cleanupKey!)
     await done
     expect(emitted.slice(1)).toEqual([{ type: 'removed', key: 'b' }, { type: 'end' }])
     expect(unsubscribe).toHaveBeenCalledTimes(1)
+  })
+
+  it('ends a subscription only for the connection that opened it', async () => {
+    const { runtime, unsubscribe } = harness()
+    const emitted: unknown[] = []
+    if (!subscribe || !isStreamingMethod(subscribe) || !unsubscribeMethod) {
+      throw new Error('layout methods are missing')
+    }
+    if (isStreamingMethod(unsubscribeMethod)) {
+      throw new Error('layout.unsubscribe is not a request method')
+    }
+    const done = subscribe.handler(
+      undefined,
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the handler reads only runtime and connectionId from its context.
+      { runtime, connectionId: 'conn-1' } as RpcContext,
+      (event) => emitted.push(event)
+    )
+    const [snapshot] = emitted
+    const subscriptionId =
+      snapshot && typeof snapshot === 'object' && 'subscriptionId' in snapshot
+        ? snapshot.subscriptionId
+        : undefined
+    expect(subscriptionId).toEqual(expect.any(String))
+
+    await unsubscribeMethod.handler(
+      { subscriptionId },
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the handler reads only runtime and connectionId from its context.
+      { runtime, connectionId: 'conn-2' } as RpcContext
+    )
+    expect(unsubscribe).not.toHaveBeenCalled()
+
+    await unsubscribeMethod.handler(
+      { subscriptionId },
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the handler reads only runtime and connectionId from its context.
+      { runtime, connectionId: 'conn-1' } as RpcContext
+    )
+    await done
+    expect(unsubscribe).toHaveBeenCalledTimes(1)
+    expect(emitted.at(-1)).toEqual({ type: 'end' })
   })
 })

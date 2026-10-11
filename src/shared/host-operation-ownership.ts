@@ -37,6 +37,7 @@ export const HOST_OPERATION_OWNERSHIP = {
   linear: 'scope-picked',
   managedServer: 'host',
   markdown: 'host',
+  mobileRelay: 'host',
   mobileWeb: 'host',
   nativeChat: 'host',
   network: 'host',

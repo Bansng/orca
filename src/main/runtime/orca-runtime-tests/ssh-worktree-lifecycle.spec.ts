@@ -221,6 +221,12 @@ describe('OrcaRuntimeService', () => {
     registerSshGitProvider('ssh-1', provider as never)
     getActiveMultiplexerMock.mockReturnValue({ request: muxRequestMock, notify: vi.fn() })
     const runtime = new OrcaRuntimeService(remoteStore as never)
+    const lineageAtEvent: (WorktreeLineage | undefined)[] = []
+    const unsubscribe = runtime.onClientEvent((event) => {
+      if (event.type === 'worktreesChanged') {
+        lineageAtEvent.push(lineageById[childId])
+      }
+    })
 
     try {
       const result = await runtime.createManagedWorktree({
@@ -228,6 +234,9 @@ describe('OrcaRuntimeService', () => {
         name: 'child-feature',
         lineage: { parentWorktree: `id:${parentId}` }
       })
+      // Paired clients skip lineage on order saves, so a change event must follow the lineage write.
+      expect(lineageAtEvent.at(-1)).toBe(lineageById[childId])
+      expect(lineageAtEvent.at(-1)).toBeDefined()
 
       expect(result.worktree).toMatchObject({
         id: childId,
@@ -246,6 +255,7 @@ describe('OrcaRuntimeService', () => {
       expect(addWorktree).not.toHaveBeenCalled()
       expect(listWorktrees).not.toHaveBeenCalled()
     } finally {
+      unsubscribe()
       unregisterSshGitProvider('ssh-1')
     }
   })

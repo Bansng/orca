@@ -1,6 +1,9 @@
 /** The live collaborators behind each connect's server decision. */
 import { getAppEnvironment } from '../../shared/app-environment'
-import { getManagedOrcadFenceEnvironmentId } from '../../shared/managed-orcad-ssh-owner'
+import {
+  getManagedOrcadFenceEnvironmentId,
+  managedOrcadServerName
+} from '../../shared/managed-orcad-ssh-owner'
 import { listEnvironments } from '../../shared/runtime-environment-store'
 import { findOrcadMigrationSourceCutoverForTarget } from '../ssh/orcad-migration-cutover-journal'
 import { orcadMigrationRelayPtyLister } from '../ssh/orcad-migration-relay-pty-lister'
@@ -89,13 +92,13 @@ export function hostServerOnConnectDeps(userDataPath: string): HostServerOnConne
       }),
     deploy: (target) =>
       createManagedOrcadEnvironment(userDataPath, {
-        name: target.orcadProvisioning?.name ?? target.label,
+        name: target.orcadProvisioning?.name ?? managedOrcadServerName(target),
         sshTargetId: target.id
       }),
     convert: (target, hostProof) =>
       convertSshTargetToManagedOrcad(userDataPath, {
         sshTargetId: target.id,
-        name: target.label,
+        name: managedOrcadServerName(target),
         listRelayPtyIds: orcadMigrationRelayPtyLister(target.id),
         // The connect's own census already answered; a conversion before any session reuses it.
         censusHost: (host) =>

@@ -75,11 +75,6 @@ describe('createSshSlice', () => {
         [targetId, 'Removed target'],
         [otherTargetId, 'Other target']
       ]),
-      remoteWorkspaceHydratedTargetIds: new Set([targetId, otherTargetId]),
-      remoteWorkspaceSyncStatusByTargetId: {
-        [targetId]: { phase: 'offline' },
-        [otherTargetId]: { phase: 'synced' }
-      },
       portForwardsByConnection: {
         [targetId]: [
           {
@@ -170,8 +165,6 @@ describe('createSshSlice', () => {
     const state = store.getState()
     expect(state.sshConnectionStates.has(targetId)).toBe(false)
     expect(state.sshTargetLabels.has(targetId)).toBe(false)
-    expect(state.remoteWorkspaceHydratedTargetIds.has(targetId)).toBe(false)
-    expect(state.remoteWorkspaceSyncStatusByTargetId[targetId]).toBeUndefined()
     expect(state.portForwardsByConnection[targetId]).toBeUndefined()
     expect(state.detectedPortsByConnection[targetId]).toBeUndefined()
     expect(state.sshCredentialQueue.map((req) => req.targetId)).toEqual([otherTargetId])
@@ -203,8 +196,6 @@ describe('createSshSlice', () => {
 
     expect(state.sshConnectionStates.get(otherTargetId)?.status).toBe('connected')
     expect(state.sshTargetLabels.get(otherTargetId)).toBe('Other target')
-    expect(state.remoteWorkspaceHydratedTargetIds.has(otherTargetId)).toBe(true)
-    expect(state.remoteWorkspaceSyncStatusByTargetId[otherTargetId]).toEqual({ phase: 'synced' })
     expect(state.portForwardsByConnection[otherTargetId]).toHaveLength(1)
     expect(state.detectedPortsByConnection[otherTargetId]).toHaveLength(1)
     expect(state.tabsByWorktree[otherWorktreeId][0]?.ptyId).toBe(otherPtyId)
@@ -546,8 +537,6 @@ describe('createSshSlice', () => {
       ]
     ])
     const sshTargetLabels = new Map([['ssh-2', 'Other']])
-    const remoteWorkspaceHydratedTargetIds = new Set(['ssh-2'])
-    const remoteWorkspaceSyncStatusByTargetId = { 'ssh-2': { phase: 'synced' as const } }
     const portForwardsByConnection = { 'ssh-2': [] }
     const detectedPortsByConnection = { 'ssh-2': [] }
     const sshCredentialQueue = [
@@ -559,8 +548,6 @@ describe('createSshSlice', () => {
     store.setState({
       sshConnectionStates,
       sshTargetLabels,
-      remoteWorkspaceHydratedTargetIds,
-      remoteWorkspaceSyncStatusByTargetId,
       portForwardsByConnection,
       detectedPortsByConnection,
       sshCredentialQueue,
@@ -574,8 +561,6 @@ describe('createSshSlice', () => {
     expect(state.deferredSshReconnectTargets).toEqual([])
     expect(state.sshConnectionStates).toBe(sshConnectionStates)
     expect(state.sshTargetLabels).toBe(sshTargetLabels)
-    expect(state.remoteWorkspaceHydratedTargetIds).toBe(remoteWorkspaceHydratedTargetIds)
-    expect(state.remoteWorkspaceSyncStatusByTargetId).toBe(remoteWorkspaceSyncStatusByTargetId)
     expect(state.portForwardsByConnection).toBe(portForwardsByConnection)
     expect(state.detectedPortsByConnection).toBe(detectedPortsByConnection)
     expect(state.sshCredentialQueue).toBe(sshCredentialQueue)

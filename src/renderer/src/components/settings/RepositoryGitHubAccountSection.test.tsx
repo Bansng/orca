@@ -33,10 +33,6 @@ vi.mock('../../store', () => {
   return { useAppStore }
 })
 
-vi.mock('@/lib/repo-runtime-owner', () => ({
-  getRepoOwnerRoutedSettings: (settings: unknown) => settings
-}))
-
 vi.mock('@/runtime/runtime-rpc-client', () => ({
   callRuntimeRpc: vi.fn()
 }))

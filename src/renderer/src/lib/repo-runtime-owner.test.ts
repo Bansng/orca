@@ -1,13 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import type { GlobalSettings } from '../../../shared/global-settings-types'
 import type { RepoRuntimeOwnerState } from './repo-runtime-owner'
 import {
   getExplicitRuntimeOwnerEnvironmentId,
-  getRepoOwnerRoutedSettings,
   getRuntimeEnvironmentIdForRepo,
   getSettingsForRepoRuntimeOwner,
-  runtimeTargetForRepoOwner,
-  releaseRepoRuntimeOwnerSettingsCache
+  runtimeTargetForRepoOwner
 } from './repo-runtime-owner'
 
 describe('getRuntimeEnvironmentIdForRepo', () => {
@@ -196,53 +194,7 @@ describe('getExplicitRuntimeOwnerEnvironmentId', () => {
   })
 })
 
-describe('getRepoOwnerRoutedSettings', () => {
-  // Why: SourceControl builds its git/file mutation contexts from this value,
-  // so it must rebind activeRuntimeEnvironmentId to the repo OWNER even while a
-  // different host is focused — otherwise stage/commit/push hit the wrong host.
-  it('routes a git mutation context for a runtime-owned active repo to the owner, not the focused runtime', () => {
-    const settings = {
-      activeRuntimeEnvironmentId: 'focused-runtime',
-      sourceControlViewMode: 'list'
-    } as unknown as GlobalSettings
-
-    const routed = getRepoOwnerRoutedSettings(settings, {
-      id: 'repo-1',
-      connectionId: null,
-      executionHostId: 'runtime:owner-runtime'
-    })
-
-    expect(routed?.activeRuntimeEnvironmentId).toBe('owner-runtime')
-    // Non-routing (display) fields must survive the rebind untouched.
-    expect((routed as { sourceControlViewMode?: string }).sourceControlViewMode).toBe('list')
-  })
-
-  it('falls back to the focused runtime for a legacy repo without an explicit owner', () => {
-    const settings = { activeRuntimeEnvironmentId: 'focused-runtime' } as unknown as GlobalSettings
-    const routed = getRepoOwnerRoutedSettings(settings, {
-      id: 'repo-1',
-      connectionId: null,
-      executionHostId: null
-    })
-    expect(routed?.activeRuntimeEnvironmentId).toBe('focused-runtime')
-  })
-
-  it('passes null settings through unchanged', () => {
-    expect(
-      getRepoOwnerRoutedSettings(null, {
-        id: 'repo-1',
-        connectionId: null,
-        executionHostId: null
-      })
-    ).toBeNull()
-  })
-})
-
 describe('getSettingsForRepoRuntimeOwner identity', () => {
-  beforeEach(() => {
-    releaseRepoRuntimeOwnerSettingsCache()
-  })
-
   type OwnerRepo = NonNullable<RepoRuntimeOwnerState['repos']>[number]
   const repos: OwnerRepo[] = [
     { id: 'repo-1', connectionId: null, executionHostId: 'runtime:env-a' }

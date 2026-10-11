@@ -108,9 +108,6 @@ function spawnDetached(command: string, args: string[], options: SpawnOptions): 
 
 export function serveOrcaApp(args: ServeOrcaAppArgs = {}): Promise<number> {
   const executable = resolveForegroundOrcaExecutable()
-  if (args.recipeJson && !args.projectRoot) {
-    throw new RuntimeClientError('invalid_argument', 'Recipe JSON output requires --project-root.')
-  }
   // Why one value: the selector, orcad and Electron must all serve the profile the caller chose.
   const userDataPath = resolveLaunchUserDataPath()
   // Why synchronous on the opt-out: it must spawn Electron exactly as before, without asking.

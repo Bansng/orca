@@ -10,7 +10,6 @@ import { convertAndRetain, serverCall } from './helpers/orcad-convert-flow'
 import { waitForSessionReady } from './helpers/store'
 import { dismissTransientAnnouncement } from './helpers/ssh-config-host-picker'
 import { openFileExplorer } from './helpers/file-explorer'
-import { shellQuote } from './helpers/docker-ssh-relay-target'
 import { openTerminalWorkspaceRootLink } from './helpers/terminal-workspace-root-link'
 import { toRuntimeExecutionHostId } from '../../src/shared/execution-host'
 import { getWorktreeHostIdentity } from '../../src/shared/worktree/host-qualified-identity'
@@ -20,6 +19,7 @@ import {
   getTerminalContent,
   waitForActivePanePtyId
 } from './helpers/terminal'
+import { quotePosixShell } from '../../src/shared/wsl-login-shell-command'
 
 const TEMPLATE = process.env.ORCA_E2E_ORCAD_CONVERT_TEMPLATE
 test.skip(!TEMPLATE || process.env.ORCA_E2E_SSH_DOCKER !== '1', 'Needs owned Docker host')
@@ -45,7 +45,7 @@ test('a managed terminal path link cannot switch to a desktop workspace at the s
     }
     const execute = host.exec
     execute(
-      `mkdir -p ${shellQuote(path.dirname(testRepoPath))} && git clone --quiet ${shellQuote(host.remoteRepoPath)} ${shellQuote(testRepoPath)} && printf 'REMOTE_COMMAND_FILE_OWNER\n' > ${shellQuote(filePath)}`
+      `mkdir -p ${quotePosixShell(path.dirname(testRepoPath))} && git clone --quiet ${quotePosixShell(host.remoteRepoPath)} ${quotePosixShell(testRepoPath)} && printf 'REMOTE_COMMAND_FILE_OWNER\n' > ${quotePosixShell(filePath)}`
     )
     const first = await session.launch()
     app = first.app
@@ -88,7 +88,7 @@ test('a managed terminal path link cannot switch to a desktop workspace at the s
       'DESKTOP_TERMINAL_DIRECTORY_OWNER\n'
     )
     execute(
-      `mkdir -p ${shellQuote(markerDirectory)} && printf 'REMOTE_TERMINAL_DIRECTORY_OWNER\n' > ${shellQuote(path.join(markerDirectory, 'TERMINAL_OWNER.txt'))}`
+      `mkdir -p ${quotePosixShell(markerDirectory)} && printf 'REMOTE_TERMINAL_DIRECTORY_OWNER\n' > ${quotePosixShell(path.join(markerDirectory, 'TERMINAL_OWNER.txt'))}`
     )
     await dismissTransientAnnouncement(page)
     const localIdentity = getWorktreeHostIdentity({ id: ids[0], hostId: 'local' })
@@ -173,11 +173,11 @@ test('a managed terminal path link cannot switch to a desktop workspace at the s
       .toContain('REMOTE_TERMINAL_DIRECTORY_OWNER')
     console.log('[actual-managed-terminal]', await getTerminalContent(page))
     execute(
-      `mkdir -p ${shellQuote(intermediate)} && printf 'REMOTE_LINK_DIRECTORY_OWNER\n' > ${shellQuote(path.join(intermediate, 'LINK_DIRECTORY_OWNER.txt'))}`
+      `mkdir -p ${quotePosixShell(intermediate)} && printf 'REMOTE_LINK_DIRECTORY_OWNER\n' > ${quotePosixShell(path.join(intermediate, 'LINK_DIRECTORY_OWNER.txt'))}`
     )
     console.log(
       '[actual-host-link-directory-marker]',
-      execute(`cat ${shellQuote(path.join(intermediate, 'LINK_DIRECTORY_OWNER.txt'))}`)
+      execute(`cat ${quotePosixShell(path.join(intermediate, 'LINK_DIRECTORY_OWNER.txt'))}`)
     )
     const foreignTarget = await openTerminalWorkspaceRootLink(page, testInfo, intermediate)
     const popover = page.locator('[data-terminal-link-action-popover]')

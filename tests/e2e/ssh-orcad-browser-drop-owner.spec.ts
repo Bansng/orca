@@ -9,7 +9,6 @@ import { convertAndRetain, serverCall } from './helpers/orcad-convert-flow'
 import { waitForSessionReady } from './helpers/store'
 import { dismissTransientAnnouncement } from './helpers/ssh-config-host-picker'
 import { openFileExplorer } from './helpers/file-explorer'
-import { shellQuote } from './helpers/docker-ssh-relay-target'
 import { startBrowserSplitPageServer } from './helpers/browser-split-page-server'
 import {
   navigateGuest,
@@ -18,6 +17,7 @@ import {
 } from './helpers/browser-split-guest-probes'
 import { toRuntimeExecutionHostId } from '../../src/shared/execution-host'
 import { getWorktreeHostIdentity } from '../../src/shared/worktree/host-qualified-identity'
+import { quotePosixShell } from '../../src/shared/wsl-login-shell-command'
 
 const TEMPLATE = process.env.ORCA_E2E_ORCAD_CONVERT_TEMPLATE
 test.skip(!TEMPLATE || process.env.ORCA_E2E_SSH_DOCKER !== '1', 'Needs owned Docker host')
@@ -87,10 +87,10 @@ test('managed Files drag cannot load a desktop same-path HTML file', async ({
       throw new Error('Missing owned host control')
     }
     host.exec(
-      `mkdir -p ${shellQuote(path.dirname(testRepoPath))} && git clone --quiet ${shellQuote(host.remoteRepoPath)} ${shellQuote(testRepoPath)} && printf '%s' '<html><body>REMOTE_BROWSER_DROP_OWNER</body></html>' > ${shellQuote(filePath)}`
+      `mkdir -p ${quotePosixShell(path.dirname(testRepoPath))} && git clone --quiet ${quotePosixShell(host.remoteRepoPath)} ${quotePosixShell(testRepoPath)} && printf '%s' '<html><body>REMOTE_BROWSER_DROP_OWNER</body></html>' > ${quotePosixShell(filePath)}`
     )
     host.exec(
-      `printf '%s' REMOTE_DROP_READY > ${shellQuote(path.join(testRepoPath, 'REMOTE_DROP_READY.txt'))}`
+      `printf '%s' REMOTE_DROP_READY > ${quotePosixShell(path.join(testRepoPath, 'REMOTE_DROP_READY.txt'))}`
     )
     const first = await session.launch()
     app = first.app

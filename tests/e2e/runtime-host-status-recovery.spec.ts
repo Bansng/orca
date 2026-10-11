@@ -120,8 +120,9 @@ for (const topology of ['desktop', 'headless'] as const) {
         ? headless.client.call('repo.add', { path: testRepoPath })
         : page.evaluate(async (path) => {
             await window.api.repos.add({ path })
-            const owner = window.__store?.getState().settings?.activeRuntimeEnvironmentId ?? null
-            await window.__store?.getState().fetchRepos({ runtimeEnvironmentId: owner })
+            await window.__store
+              ?.getState()
+              .fetchRepos({ runtimeEnvironmentId: null, throwOnError: true })
           }, testRepoPath))
       proxy = await interruptibleHost(offer)
       client = await launchPairedElectronClient(offer, testInfo, 'Direct host')

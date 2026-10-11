@@ -111,6 +111,7 @@ export class OrcaRuntimeWithCreateRuntimeOwnedMobileSessionTerminal extends Orca
         ...(opts.launchConfig ? { launchConfig: opts.launchConfig } : {}),
         ...(opts.launchAgent ? { launchAgent: opts.launchAgent } : {}),
         ...(opts.viewMode ? { viewMode: opts.viewMode } : {}),
+        ...(opts.targetGroupId ? { targetGroupId: opts.targetGroupId } : {}),
         startupCommandDelivery: opts.startupCommandDelivery,
         ...(opts.identity
           ? {
@@ -181,10 +182,6 @@ export class OrcaRuntimeWithCreateRuntimeOwnedMobileSessionTerminal extends Orca
     }
     const parentTabId = livePty.pty.tabId ?? `pty:${livePty.pty.ptyId}`
     const leafId = parsePaneKey(livePty.pty.paneKey ?? '')?.leafId ?? randomUUID()
-    if (opts.viewMode) {
-      // Why: the runtime-owned binding must survive a serve restart with the same initial mode, not a later client's local default.
-      this.persistHeadlessSessionTabProps(worktreeId, parentTabId, { viewMode: opts.viewMode })
-    }
     const existing = this.mobileSessionTabsByWorktree.get(worktreeId)
     const existingSurface =
       existing?.tabs.find(

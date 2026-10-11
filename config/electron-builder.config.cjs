@@ -301,6 +301,7 @@ module.exports = {
   // disappears from Agent Session History in packaged builds only. Worker
   // entries reached solely from the Electron main process stay packed, since
   // asar redirects their app.asar paths.
+  // Why: `orca serve` runs the orcad selection entry under ELECTRON_RUN_AS_NODE too (#27307).
   asarUnpack: [
     'out/package.json',
     'out/cli/**',
@@ -327,6 +328,7 @@ module.exports = {
     'out/main/plugin-host-entry.js',
     'out/main/computer-sidecar.js',
     'out/main/parcel-watcher-process-entry.js',
+    'out/main/orcad/orcad-local-serve-selection-entry.js',
     'out/main/chunks/**',
     'resources/**',
     'node_modules/ws/**',

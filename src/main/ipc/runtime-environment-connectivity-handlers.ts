@@ -110,9 +110,7 @@ export function registerRuntimeEnvironmentConnectivityHandlers({
         )
       }
       const removed = removeEnvironment(getUserDataPath(), args.selector)
-      void retireRemovedRuntimeEnvironment(removed.id, invalidateTransport, (hostId) =>
-        store.removeWorkspaceSessionHost(hostId)
-      )
+      void retireRemovedRuntimeEnvironment(removed.id, invalidateTransport, store)
       closeLegacySelectorTransport(args.selector, removed.id)
       return { removed: redactRuntimeEnvironment(removed) }
     }

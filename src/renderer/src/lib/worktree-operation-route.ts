@@ -374,17 +374,3 @@ function resolveFolderWorkspaceOperationRoute(
     }
   }
 }
-
-/**
- * Projects the route's runtime environment onto settings so a routed operation runs against the
- * owner's environment rather than whichever one the UI has active; settings can still be absent
- * during early hydration, hence the synthesized fallback.
- */
-export function settingsForWorktreeOperationRoute(
-  settings: AppState['settings'],
-  route: WorktreeOperationRoute
-): AppState['settings'] {
-  return settings
-    ? { ...settings, activeRuntimeEnvironmentId: route.runtimeEnvironmentId }
-    : ({ activeRuntimeEnvironmentId: route.runtimeEnvironmentId } as AppState['settings'])
-}

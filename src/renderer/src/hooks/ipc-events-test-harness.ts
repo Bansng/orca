@@ -241,8 +241,7 @@ export async function loadIpcEventsHarness(
         }),
         mobile: createApiNamespaceStub({
           consumePendingUnpairedDeviceAuthFailure: () => Promise.resolve(false)
-        }),
-        remoteWorkspace: createApiNamespaceStub({ clientId: () => Promise.resolve(null) })
+        })
       } as Record<string, unknown>,
       { get: (target, prop: string) => target[prop] ?? createApiNamespaceStub() }
     )

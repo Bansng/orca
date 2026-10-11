@@ -97,10 +97,10 @@ async function handleForTab(run: Run, tabId: string): Promise<string> {
   return handle!
 }
 
-async function createTab(run: Run, client: RuntimeClient): Promise<string> {
+async function createTab(run: Run, client: RuntimeClient, targetGroupId?: string): Promise<string> {
   const created = await client.call<{ tab: { parentTabId: string } }>(
     'session.tabs.createTerminal',
-    { worktree: run.worktree }
+    { worktree: run.worktree, ...(targetGroupId ? { targetGroupId } : {}) }
   )
   return created.result.tab.parentTabId
 }
@@ -302,6 +302,42 @@ const SCENARIOS: Scenario[] = [
       )
       await run.check('split into new group', [1, 1])
       await run.restart('warm restart', [1, 1])
+    }
+  },
+  {
+    // #27083 review: a phone create joins the group it targets, and an untargeted CLI create the
+    // first group, across a cold restart.
+    id: 'create-in-second-group-cold-restart',
+    journey: async (run) => {
+      const first = await createTab(run, run.a)
+      const second = await createTab(run, run.a)
+      await run.check('two tabs', [1, 1])
+      const [source] = await groupsOf(run)
+      const [, target] = await moveTab(
+        run,
+        'split second tab right',
+        { kind: 'split', tabId: second, targetGroupId: source!.id, splitDirection: 'right' },
+        [[first], [second]]
+      )
+      const phone = await createTab(run, run.a, target!.id)
+      await run.check('phone create in second group', [1, 1, 1])
+      const membership = async () =>
+        JSON.stringify((await groupsOf(run)).map((group) => group.tabOrder.toSorted()))
+      const joined = await membership()
+      const phoneExpected = JSON.stringify([[first], [second, phone].toSorted()])
+      run.expectNone(
+        'phone create joins the second group',
+        joined === phoneExpected ? [] : [`groups ${joined}, expected ${phoneExpected}`]
+      )
+      const cli = (await createTerminal(run)).tabId!
+      await run.check('CLI create in first group', [1, 1, 1, 1])
+      await run.restart('cold restart', [1, 1, 1, 1], true)
+      const after = await membership()
+      const expected = JSON.stringify([[first, cli].toSorted(), [second, phone].toSorted()])
+      run.expectNone(
+        'created tabs stay in their groups after a cold restart',
+        after === expected ? [] : [`groups ${after}, expected ${expected}`]
+      )
     }
   },
   {

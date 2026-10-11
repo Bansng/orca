@@ -56,8 +56,9 @@ test('concurrent registration keeps one identity, including nested and linked pa
       if (results.some((result) => 'error' in result)) {
         throw new Error(JSON.stringify(results))
       }
-      const owner = window.__store!.getState().settings?.activeRuntimeEnvironmentId ?? null
-      await window.__store!.getState().fetchRepos({ runtimeEnvironmentId: owner })
+      await window
+        .__store!.getState()
+        .fetchRepos({ runtimeEnvironmentId: null, throwOnError: true })
       await window.__store!.getState().awaitLocalRepoCatalogSettlement()
       return {
         ids: results.map((result) => ('repo' in result ? result.repo.id : null)),

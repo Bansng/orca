@@ -105,6 +105,17 @@ describe('editorTabFileAccess', () => {
       'user-file'
     ],
     [
+      'a read-only server file outside every workspace, restored without its grant',
+      {
+        filePath: '/tmp/out.png',
+        relativePath: '/tmp/out.png',
+        worktreeId: localWorktreeId,
+        runtimeEnvironmentId: 'env-1',
+        readOnly: true
+      },
+      undefined
+    ],
+    [
       'a project tab, which stays inside its root',
       { filePath: '/Users/me/project/a.ts', relativePath: 'a.ts', worktreeId: localWorktreeId },
       undefined

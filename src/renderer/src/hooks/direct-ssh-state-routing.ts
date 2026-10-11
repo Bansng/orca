@@ -12,7 +12,7 @@ export type DirectSshConnectedStateRoutingDeps = {
   coordinatorRoutingEnabled: boolean
   invalidateStaleTerminalBindings: (authority: DirectSshAuthority) => number
   retryTargetPanes: (authority: DirectSshAuthority) => number
-  prepareAndSync: (
+  prepareHost: (
     authority: DirectSshAuthority,
     reason: 'reconnect' | 'initial-hydration' | 'wake-refresh',
     options?: { authorityAlreadyReplaced?: boolean }
@@ -37,7 +37,7 @@ export function routeDirectSshConnectedState(
   const { authority } = input
   if (input.origin === 'initial-hydration') {
     deps.rememberReconnectAuthority(null)
-    void deps.prepareAndSync(authority, 'initial-hydration')
+    void deps.prepareHost(authority, 'initial-hydration')
     return 'initial-hydration'
   }
   if (!directSshAuthoritiesEqual(input.previousAuthority, authority)) {
@@ -49,11 +49,11 @@ export function routeDirectSshConnectedState(
     deps.coordinator.replaceAuthority(authority)
     deps.invalidateStaleTerminalBindings(authority)
     deps.retryTargetPanes(authority)
-    void deps.prepareAndSync(authority, 'reconnect', { authorityAlreadyReplaced: true })
+    void deps.prepareHost(authority, 'reconnect', { authorityAlreadyReplaced: true })
     return 'changed-authority-fallback'
   }
   deps.coordinator.correctUnboundTerminals(authority, 'wake-refresh')
-  void deps.prepareAndSync(authority, 'wake-refresh')
+  void deps.prepareHost(authority, 'wake-refresh')
   return 'same-authority-wake'
 }
 
