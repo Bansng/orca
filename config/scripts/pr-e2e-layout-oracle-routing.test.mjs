@@ -3,7 +3,6 @@ import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { classifyE2eJobs, selectGeneralE2eSpecs } from './ci-e2e-job-selection.mjs'
 import {
-  hasSshSourceChange,
   PR_E2E_SOURCE_ROUTES,
   selectPrE2eSpecs,
   shouldRunReusablePrE2e
@@ -52,14 +51,12 @@ describe('workspace layout oracle PR E2E routing', () => {
 
   it('sends each oracle spec to the job that can run it', () => {
     const specs = ORACLE_ROUTE.specs
-    // Window spec runs in the general shards; headless and SSH run in their dedicated jobs.
+    // Window spec runs in the general shards; headless runs in its dedicated job.
     expect(selectGeneralE2eSpecs(specs)).toEqual(['tests/e2e/workspace-layout-oracle.spec.ts'])
     expect(classifyE2eJobs(JSON.stringify(specs))).toEqual({
       e2e_run_changed: true,
       e2e_needs_build: true
     })
-    // The SSH oracle reaches the Docker lane by spec name, not by claiming SSH source.
-    expect(hasSshSourceChange(LAYOUT_AUTHORITIES)).toBe(false)
   })
 
   it('keeps every routed spec and authority a real file', () => {

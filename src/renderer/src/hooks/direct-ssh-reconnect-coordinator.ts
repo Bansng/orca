@@ -29,10 +29,6 @@ import {
   normalizeDirectSshPreparationInput
 } from './direct-ssh-reconnect-tokens'
 export type * from './direct-ssh-reconnect-coordinator-types'
-export {
-  admitDirectSshSnapshotApplyToken,
-  buildDirectSshSnapshotApplyToken
-} from './direct-ssh-reconnect-tokens'
 
 export const DIRECT_SSH_RELAY_STABILIZATION_MS = 5_000
 
@@ -106,14 +102,6 @@ export function createDirectSshReconnectCoordinator(
     return normalizeDirectSshPreparationInput({ ...captured, reason })
   }
 
-  const startSync = (token: NonNullable<DirectSshPreparationOutcome['token']>): void => {
-    try {
-      void Promise.resolve(deps.syncRemoteWorkspaceAfterConnect(token)).catch(() => {})
-    } catch {
-      // Sync failure is reported by its owning boundary.
-    }
-  }
-
   const runPreparedReconnect = async (
     authority: DirectSshAuthority,
     staleBindingsCleared: number,
@@ -146,9 +134,6 @@ export function createDirectSshReconnectCoordinator(
     let correctedTerminals = 0
     if (prepared.token && isCurrent(authority)) {
       correctedTerminals = deps.correctUnboundTerminalPanes(authority, 'preparation-complete')
-      if (isCurrent(authority)) {
-        startSync(prepared.token)
-      }
     }
     const outcome = combineDirectSshReconnectOutcome(
       prepared,
@@ -265,9 +250,6 @@ export function createDirectSshReconnectCoordinator(
     return acquired.promise
   }
 
-  const finalizeHydratedTerminals = (authority: DirectSshAuthority): number =>
-    isCurrent(authority) ? deps.finalizeHydratedTerminalPanes(authority) : 0
-
   const correctUnboundTerminals = (
     authority: DirectSshAuthority,
     reason: DirectSshCorrectionReason
@@ -301,7 +283,6 @@ export function createDirectSshReconnectCoordinator(
   return {
     requestReconnect,
     prepareOnly,
-    finalizeHydratedTerminals,
     correctUnboundTerminals,
     replaceAuthority,
     invalidate,

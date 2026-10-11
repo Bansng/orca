@@ -8,7 +8,6 @@ export type DirectSshReconnectCoordinatorDouble = {
   replaceAuthority: ReturnType<typeof vi.fn>
   prepareOnly: ReturnType<typeof vi.fn>
   correctUnboundTerminals: ReturnType<typeof vi.fn>
-  finalizeHydratedTerminals: ReturnType<typeof vi.fn>
   invalidate: ReturnType<typeof vi.fn>
   stop: ReturnType<typeof vi.fn>
 }
@@ -50,7 +49,6 @@ export function buildSshAuthorityReconciliationHarness(args: {
     retryDirectSshTargetPanes: vi.fn(() => 0),
     setSshTargetsMetadata: vi.fn(),
     setRemovedSshTargetLabels: vi.fn(),
-    setRemoteWorkspaceSyncStatus: vi.fn(),
     clearRemoteDetectedAgents: vi.fn(),
     clearDirectSshTargetPtyBindings: vi.fn(),
     clearRemovedSshTargetState: vi.fn()
@@ -60,7 +58,6 @@ export function buildSshAuthorityReconciliationHarness(args: {
     replaceAuthority: vi.fn(),
     prepareOnly: vi.fn(),
     correctUnboundTerminals: vi.fn(() => 0),
-    finalizeHydratedTerminals: vi.fn(() => 0),
     invalidate: vi.fn(),
     stop: vi.fn()
   }

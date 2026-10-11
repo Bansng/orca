@@ -53,6 +53,8 @@ export type EphemeralVmProvisionIpcResult =
       connectionType: 'ssh'
       runtime: EphemeralVmRuntimeRecord
       sshTargetId: string
+      /** The managed Orca server the host runs; its workspace lives there. */
+      environmentId?: string
       expectedRefHead?: string
       stderr: string
       warnings: EphemeralVmRecipeResultWarning[]
@@ -213,7 +215,8 @@ export function registerEphemeralVmHandlers(store: Store, pluginService?: Plugin
               app.getPath('userData'),
               result.runtime.id,
               {
-                sshTargetId: ssh.targetId
+                sshTargetId: ssh.targetId,
+                ...(ssh.environmentId ? { runtimeEnvironmentId: ssh.environmentId } : {})
               }
             )
             return {
@@ -221,6 +224,7 @@ export function registerEphemeralVmHandlers(store: Store, pluginService?: Plugin
               connectionType: 'ssh',
               runtime,
               sshTargetId: ssh.targetId,
+              ...(ssh.environmentId ? { environmentId: ssh.environmentId } : {}),
               ...(expectedRefHead ? { expectedRefHead } : {}),
               stderr: redactEphemeralVmRecipeDiagnosticText(result.start.stderr),
               warnings: getEphemeralVmRecipeResultWarnings(result.start.result)

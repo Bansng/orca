@@ -40,10 +40,6 @@ export type DirectSshPreparationToken = {
   outcome: 'complete' | 'degraded'
 }
 
-export type DirectSshSnapshotApplyToken = DirectSshPreparationToken & {
-  snapshotRevision: number
-}
-
 export type DirectSshLineageOutcome = 'complete' | 'degraded' | 'canceled' | 'stale'
 
 export type DirectSshRepoOutcomeCounts = Record<DirectSshWorktreeRefreshTerminalStatus, number>
@@ -125,12 +121,10 @@ export type DirectSshReconnectCoordinatorDeps = {
   readHostScopedLineage: (input: DirectSshPreparationInput) => Promise<DirectSshLineageOutcome>
   invalidateStaleTerminalBindings: (authority: DirectSshAuthority) => number
   retryTargetPanes: (authority: DirectSshAuthority) => number
-  finalizeHydratedTerminalPanes: (authority: DirectSshAuthority) => number
   correctUnboundTerminalPanes: (
     authority: DirectSshAuthority,
     reason: DirectSshCorrectionReason
   ) => number
-  syncRemoteWorkspaceAfterConnect: (token: DirectSshPreparationToken) => void | Promise<void>
   onTelemetry?: (event: DirectSshCoordinatorTelemetry) => void
   now?: () => number
   setTimer?: (callback: () => void, delayMs: number) => DirectSshReconnectTimer
@@ -141,7 +135,6 @@ export type DirectSshReconnectCoordinatorDeps = {
 export type DirectSshReconnectCoordinator = {
   requestReconnect: (authority: DirectSshAuthority) => Promise<DirectSshReconnectOutcome>
   prepareOnly: (input: DirectSshPreparationInput) => Promise<DirectSshPreparationOutcome>
-  finalizeHydratedTerminals: (authority: DirectSshAuthority) => number
   correctUnboundTerminals: (
     authority: DirectSshAuthority,
     reason: DirectSshCorrectionReason

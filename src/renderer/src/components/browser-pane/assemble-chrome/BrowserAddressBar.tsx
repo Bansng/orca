@@ -12,6 +12,7 @@ import {
   saveBrowserAddressBarEditSession
 } from './browser-address-bar-edit-session'
 import { useBrowserAddressBarEscape, type AddressBarPreview } from './browser-address-bar-escape'
+import { useBrowserAddressBarClickSelect } from './use-browser-address-bar-click-select'
 import { useBrowserAddressBarDismissal } from './use-browser-address-bar-dismissal'
 import { useBrowserAddressBarOverlay } from './use-browser-address-bar-overlay'
 import type { BrowserAddressBarEditSessionBinding } from './use-browser-address-bar-edit-session'
@@ -61,7 +62,7 @@ export default function BrowserAddressBar({
   const browserDefaultSearchEngine = useAppStore((s) => s.browserDefaultSearchEngine)
   const browserKagiSessionLink = useAppStore((s) => s.browserKagiSessionLink)
   const closingRef = useRef(false)
-  const initialMouseDownRef = useRef(false)
+  const addressBarClickSelect = useBrowserAddressBarClickSelect()
   const openedAtRef = useRef(0)
   const blurCloseTimerRef = useRef<number | null>(null)
   const closingResetTimerRef = useRef<number | null>(null)
@@ -242,15 +243,12 @@ export default function BrowserAddressBar({
       window.clearTimeout(blurCloseTimerRef.current)
       blurCloseTimerRef.current = null
     }
-    if (!initialMouseDownRef.current) {
-      inputRef.current?.select()
-    }
+    inputRef.current?.select()
     openedAtRef.current = Date.now()
     setOpen(true)
   }, [inputRef])
 
   const handleBlur = useCallback(() => {
-    initialMouseDownRef.current = false
     // Why: delay close so that clicking a suggestion item registers before
     // the popover unmounts. Without this, onSelect never fires because the
     // mousedown on PopoverContent triggers input blur first.
@@ -421,18 +419,8 @@ export default function BrowserAddressBar({
               ref={inputRef}
               value={value}
               onFocus={handleFocus}
-              onMouseDown={(event) => {
-                initialMouseDownRef.current =
-                  event.button === 0 && document.activeElement !== event.currentTarget
-              }}
-              onClick={(event) => {
-                const input = event.currentTarget
-                // Preserve native drag selection; only expand a collapsed initial click.
-                if (initialMouseDownRef.current && input.selectionStart === input.selectionEnd) {
-                  input.select()
-                }
-                initialMouseDownRef.current = false
-              }}
+              onMouseDown={addressBarClickSelect.onMouseDown}
+              onClick={addressBarClickSelect.onClick}
               onBlur={handleBlur}
               onKeyDown={handleKeyDown}
               // Capture: Input swallows IME-marked keydowns before bubble handlers, and Escape's IME pair needs them.

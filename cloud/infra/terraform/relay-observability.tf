@@ -850,6 +850,86 @@ resource "google_monitoring_alert_policy" "relay_cell_process_exit" {
   depends_on = [google_logging_metric.relay_incident]
 }
 
+# One count per runtime sample whose interval held a 5 s or longer freeze. A count, not a distribution:
+# a percentile of the max would hide a single freeze among healthy samples. Gated until staging
+# has proved it (variables.tf).
+resource "google_logging_metric" "relay_event_loop_stall" {
+  count = var.relay_event_loop_stall_alert ? 1 : 0
+
+  project     = var.project_id
+  name        = "orca_relay_event_loop_stalls"
+  description = "Runtime samples whose interval held an event-loop freeze of at least 5,000 ms."
+  filter      = "${local.relay_runtime_log_filter} AND jsonPayload.eventLoopDelayMsMax>=5000"
+  label_extractors = {
+    role    = "EXTRACT(jsonPayload.role)"
+    cell_id = "EXTRACT(jsonPayload.cellId)"
+  }
+
+  metric_descriptor {
+    metric_kind = "DELTA"
+    value_type  = "INT64"
+    unit        = "1"
+
+    labels {
+      key         = "role"
+      value_type  = "STRING"
+      description = "Relay process role."
+    }
+
+    labels {
+      key         = "cell_id"
+      value_type  = "STRING"
+      description = "Durable relay cell identifier, or director."
+    }
+  }
+}
+
+resource "google_monitoring_alert_policy" "relay_event_loop_stall" {
+  count = var.relay_event_loop_stall_alert ? 1 : 0
+
+  project      = var.project_id
+  display_name = "Orca Relay: event loop stall"
+  combiner     = "OR"
+  enabled      = true
+  # Not paging until staging has shown its noise floor.
+  notification_channels = []
+
+  dynamic "conditions" {
+    for_each = {
+      "Cloud Run" = "cloud_run_revision"
+      "GCE cell"  = "gce_instance"
+    }
+
+    content {
+      display_name = "Event loop froze at least 5,000 ms (${conditions.key})"
+
+      condition_threshold {
+        # The metric counts only samples at or over 5,000 ms, so any count is a breach.
+        filter          = "resource.type=\"${conditions.value}\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.relay_event_loop_stall[0].name}\""
+        comparison      = "COMPARISON_GT"
+        threshold_value = 0
+        duration        = "0s"
+
+        aggregations {
+          alignment_period     = "60s"
+          per_series_aligner   = "ALIGN_SUM"
+          cross_series_reducer = "REDUCE_SUM"
+          group_by_fields      = ["metric.label.\"role\"", "metric.label.\"cell_id\""]
+        }
+
+        trigger {
+          count = 1
+        }
+      }
+    }
+  }
+
+  documentation {
+    content   = "A relay process froze its event loop for 5 s or more. While frozen it serves nothing, polls nothing and no timeout fires, so assigns hang and reserve cells lose their dead-man feed. On a director, look for Cloud SQL connection failures in the same window: a connect on Cloud Run's built-in /cloudsql socket blocks the loop until the connector's dial ends (staging 2026-10-11, production 2026-09-28). Otherwise look for a long synchronous task."
+    mime_type = "text/markdown"
+  }
+}
+
 # Pages on cell holds only: director holds of 1-2.5 s recur several times a day with rehoming paused,
 # and pausing rehome does not stop them, so paging on them would ask on-call to do nothing.
 resource "google_monitoring_alert_policy" "relay_long_cell_inventory_hold" {

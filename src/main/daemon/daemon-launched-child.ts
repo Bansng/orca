@@ -1,4 +1,5 @@
 import type { ChildProcess } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import { isDurableDaemonScopeSupported } from './daemon-cgroup-scope'
 import { DAEMON_EXIT_ENDPOINT_OCCUPIED } from './daemon-endpoint-ownership'
 import type { DaemonEndpointIdentity } from './daemon-hello-protocol'
@@ -24,9 +25,43 @@ export class DaemonEndpointUnavailableError extends Error {
   }
 }
 
+/** The failed attempt may still be alive, so no retry may start beside it. */
+class DaemonStartupCleanupError extends AggregateError {}
+
 export type LaunchedDaemonChild = {
   child: ChildProcess
   identity: DaemonEndpointIdentity
+}
+
+export async function launchDaemonChild(
+  options: DaemonChildSpawnOptions
+): Promise<LaunchedDaemonChild> {
+  // Why once: the probe is a synchronous systemd-run spawn; the AppImage fallback must not repeat it.
+  const scopeSupported = isDurableDaemonScopeSupported()
+  if (options.appImage) {
+    try {
+      // Why a fresh nonce: it names the scope unit, and a failed attempt's unit may still hold its
+      // FUSE server when the in-mount retry registers the original name.
+      return await launchDaemonChildAttempt(
+        { ...options, launchNonce: randomUUID() },
+        scopeSupported
+      )
+    } catch (error) {
+      if (
+        error instanceof DaemonEndpointUnavailableError ||
+        error instanceof DaemonStartupCleanupError
+      ) {
+        throw error
+      }
+      // Why: a missing/replaced AppImage or a refused FUSE mount must not cost the daemon; the
+      // in-mount launch (with its own scope fallback) still works while this window lives.
+      console.warn(
+        '[daemon] AppImage launch failed, retrying from the current mount:',
+        error instanceof Error ? error.message : String(error)
+      )
+    }
+  }
+  return launchDaemonChildInEitherScope({ ...options, appImage: undefined }, scopeSupported)
 }
 
 /**
@@ -37,10 +72,11 @@ export type LaunchedDaemonChild = {
  * for any reason but a lost endpoint race retries once, unscoped, so an environment that cannot
  * support isolation degrades to today's proven behavior instead of failing the launch outright.
  */
-export async function launchDaemonChild(
-  options: DaemonChildSpawnOptions
+async function launchDaemonChildInEitherScope(
+  options: DaemonChildSpawnOptions,
+  scopeSupported: boolean
 ): Promise<LaunchedDaemonChild> {
-  if (!isDurableDaemonScopeSupported()) {
+  if (!scopeSupported) {
     return launchDaemonChildAttempt(options, false)
   }
   try {
@@ -118,7 +154,7 @@ async function launchDaemonChildAttempt(
         await terminateLaunchedDaemonChild(child)
       } catch (cleanupError) {
         reject(
-          new AggregateError(
+          new DaemonStartupCleanupError(
             [startupError, cleanupError],
             'Daemon startup and child cleanup both failed'
           )

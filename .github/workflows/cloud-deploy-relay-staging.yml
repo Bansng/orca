@@ -39,7 +39,11 @@ on:
         type: choice
         options: [preserve, '0', '2']
       confirmation:
-        description: BOOTSTRAP_RELAY_DIRECTOR_REHOME_IDENTITY for a bootstrap
+        description: BOOTSTRAP_RELAY_DIRECTOR_REHOME_IDENTITY for a bootstrap, ADOPT_RELAY_DIRECTOR_TERRAFORM_SHAPE with a shape baseline
+        required: false
+        type: string
+      shape-baseline-revision:
+        description: Only after a Terraform apply changed the director template. The apply's 0% revision, whose shape the deploy adopts
         required: false
         type: string
       shadow-seat-feed-cells:
@@ -86,6 +90,7 @@ jobs:
       PREDECESSOR_IMAGE_DIGEST: ${{ inputs.predecessor-image-digest }}
       CAPACITY_CELL_ID: ${{ inputs.capacity-cell-id }}
       MIN_INSTANCES: ${{ inputs.min-instances }}
+      SHAPE_BASELINE_REVISION: ${{ inputs.shape-baseline-revision }}
     steps:
       - uses: actions/checkout@v4
 
@@ -105,6 +110,12 @@ jobs:
             test "${CONFIRMATION}" = BOOTSTRAP_RELAY_DIRECTOR_REHOME_IDENTITY
           else
             test -z "${PREDECESSOR_IMAGE_DIGEST}"
+          fi
+          if test -n "${SHAPE_BASELINE_REVISION}"; then
+            [[ "${SHAPE_BASELINE_REVISION}" =~ ^orca-cloud-relay-staging-[0-9]{5}-[a-z0-9]{3}$ ]]
+            test "${BOOTSTRAP_RUNTIME_IDENTITY}" = false
+            test "${CAPACITY_CELL_ID}" = none
+            test "${CONFIRMATION}" = ADOPT_RELAY_DIRECTOR_TERRAFORM_SHAPE
           fi
 
       - uses: hashicorp/setup-terraform@v3
@@ -186,6 +197,10 @@ jobs:
           if test "${MIN_INSTANCES}" != preserve; then
             floor_args=(--min-instances "${MIN_INSTANCES}")
           fi
+          shape_args=()
+          if test -n "${SHAPE_BASELINE_REVISION}"; then
+            shape_args=(--shape-baseline-revision "${SHAPE_BASELINE_REVISION}")
+          fi
           topology_args=()
           if test "${CAPACITY_CELL_ID}" != none; then
             topology_args=(
@@ -207,6 +222,7 @@ jobs:
             "${floor_args[@]}" \
             --runtime-service-account "${DIRECTOR_RUNTIME_SERVICE_ACCOUNT}" \
             "${identity_args[@]}" \
+            "${shape_args[@]}" \
             --rehome-director-service-account "${DIRECTOR_RUNTIME_SERVICE_ACCOUNT}" \
             --rehome-audience "${REHOME_AUDIENCE}" \
             --rehome-control-origin https://relay-staging.onorca.dev \

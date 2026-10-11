@@ -427,6 +427,27 @@ describe('startShadowSeatPoller', () => {
     expect(listCells.mock.calls.length).toBeGreaterThanOrEqual(5)
   })
 
+  it('keeps polling the last cell list while a cell-list read hangs', async () => {
+    let finishRead: (cells: SeatFeedCell[]) => void = () => undefined
+    const listCells = vi
+      .fn<() => Promise<SeatFeedCell[]>>()
+      .mockResolvedValueOnce(CELLS)
+      .mockImplementation(() => new Promise((resolve) => (finishRead = resolve)))
+    const cell = poller({ 'cell-a': () => json(feed({ seq: 1, full: [] })) }, ['cell-a'], listCells)
+    await cell.tick()
+    cell.advance(31_000)
+    const round = cell.tick()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(listCells).toHaveBeenCalledTimes(2)
+    expect(cell.requests.map((url) => url.hostname)).toEqual([
+      'cell-a.example.test',
+      'cell-a.example.test'
+    ])
+    finishRead(CELLS)
+    await round
+    cell.stop()
+  })
+
   it('treats a malformed or mislabelled body as unverifiable', async () => {
     const cell = poller({
       'cell-a': () => json({ v: 2 }),

@@ -58,6 +58,16 @@ export const LAYOUT_ORACLE_KNOWN_ON_MAIN: readonly KnownOnMain[] = [
     rule: 'tab_order_disagrees',
     cause: 'one tab order'
   },
+  // Intermittent (about 1 in 30 on main): the relaunch's exits for the killed daemon's terminals
+  // retire both tab rows, the respawns re-add them in whichever order they bind, and the window's
+  // next save keeps main's row order. Fixed in PR 6, where rows follow the group's tab order.
+  {
+    scenario: 'cold-daemon-restart',
+    check: 'expected',
+    step: 'after cold relaunch',
+    detail: /: panes per tab \[1,2\], expected \[2,1\]$/,
+    cause: 'one tab order'
+  },
   // After a cold relaunch the paired-client tab list stays empty while the window shows the tabs.
   {
     scenario: 'cold-daemon-restart',
@@ -83,20 +93,6 @@ export const LAYOUT_ORACLE_KNOWN_ON_MAIN: readonly KnownOnMain[] = [
     check: 'restart',
     step: 'relaunch',
     cause: 'tab bar not saved after wake'
-  },
-  // Headless runtimes save tab rows and no tab bar; a close then saves a tab bar that lacks the
-  // tabs still open.
-  {
-    scenario: 'headless-*',
-    check: 'rules',
-    rule: 'tab_bar_missing',
-    cause: 'headless saves no tab bar'
-  },
-  {
-    scenario: 'headless-*',
-    check: 'rules',
-    rule: 'tab_lists_disagree',
-    cause: 'headless close saves a partial tab bar'
   },
   // After a relaunch main holds the tab rows but no tab bar for the worktree until the window
   // saves again; slow enough on Linux CI to outlast the settle wait.
@@ -132,16 +128,15 @@ export const LAYOUT_ORACLE_KNOWN_ON_MAIN: readonly KnownOnMain[] = [
     step: 'rename after restart',
     cause: 'orcad title after restart'
   },
-  // Headless group moves save the groups but still no tab bar, so the groups list tabs the tab bar
-  // lacks.
-  ...(['orcad', 'electron'] as const).flatMap((kind) =>
-    ['split-tab-into-new-group', 'move-tab-between-groups'].map((id) => ({
-      scenario: `headless-${kind}-${id}`,
-      check: 'rules' as const,
-      rule: 'group_lists_missing_tab',
-      cause: 'headless saves groups but no tab bar'
-    }))
-  ),
+  // A headless reorder saves rows through the session merge door, which keeps the stored row order,
+  // so rows and the group disagree; hidden until creates saved a tab bar. Fixed in PR 6 with
+  // client-reorder-tabs.
+  ...(['orcad', 'electron'] as const).map((kind) => ({
+    scenario: `headless-${kind}-move-tab-between-groups`,
+    check: 'rules' as const,
+    rule: 'tab_order_disagrees',
+    cause: 'one tab order'
+  })),
   // After a headless move into an existing group, paired clients still see that group's previous
   // tab selected, not the moved one. A split into a new group selects the moved tab.
   ...(['orcad', 'electron'] as const).map((kind) => ({

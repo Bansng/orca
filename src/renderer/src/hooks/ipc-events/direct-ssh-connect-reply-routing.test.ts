@@ -86,7 +86,7 @@ async function createHarness(
   const clearBindings = vi.spyOn(store, 'clearDirectSshTargetPtyBindings').mockReturnValue(1)
   const runtime = createDirectSshBridgeRuntime()
   const requestReconnect = vi.spyOn(runtime.reconnectCoordinator, 'requestReconnect')
-  const prepareAndSync = vi.spyOn(runtime, 'prepareAndSync')
+  const prepareHost = vi.spyOn(runtime, 'prepareHost')
   const unsubs: (() => void)[] = []
   cleanups.push(() => {
     for (const unsubscribe of unsubs) {
@@ -103,7 +103,7 @@ async function createHarness(
     retry,
     clearBindings,
     requestReconnect,
-    prepareAndSync,
+    prepareHost,
     emit: (state: SshConnectionState) => {
       if (!stateListener) {
         throw new Error('SSH state listener was not registered')
@@ -158,7 +158,7 @@ describe('direct SSH connect reply routing', () => {
       expect(harness.requestReconnect).toHaveBeenCalledOnce()
       expect(harness.invalidate).toHaveBeenCalledOnce()
       expect(harness.retry).toHaveBeenCalledExactlyOnceWith(authority(state))
-      expect(harness.prepareAndSync).toHaveBeenLastCalledWith(authority(state), 'wake-refresh')
+      expect(harness.prepareHost).toHaveBeenLastCalledWith(authority(state), 'wake-refresh')
     }
   )
 
@@ -166,7 +166,7 @@ describe('direct SSH connect reply routing', () => {
     const state = connectedState()
     const harness = await createHarness([state])
 
-    expect(harness.prepareAndSync).toHaveBeenCalledExactlyOnceWith(
+    expect(harness.prepareHost).toHaveBeenCalledExactlyOnceWith(
       authority(state),
       'initial-hydration'
     )
@@ -217,7 +217,7 @@ describe('direct SSH connect reply routing', () => {
       const harness = await createHarness([partial], [state])
 
       expect(useAppStore.getState().sshConnectionStates.get(state.targetId)).toEqual(state)
-      expect(harness.prepareAndSync).toHaveBeenCalledExactlyOnceWith(
+      expect(harness.prepareHost).toHaveBeenCalledExactlyOnceWith(
         authority(state),
         'initial-hydration'
       )

@@ -1034,3 +1034,41 @@ test('a twin shares its host keys and connects with a given assignment, not the 
   assert.equal(JSON.parse(socket.sent[0]).assignmentEpoch, 7)
   assert.equal(fetched.some((url) => url.endsWith('/v1/assign')), false)
 })
+
+test('declares a reconnect only after an established control', async (context) => {
+  const originalFetch = global.fetch
+  context.after(() => {
+    global.fetch = originalFetch
+  })
+  const bodies = []
+  global.fetch = async (_url, { body }) => {
+    bodies.push(JSON.parse(body))
+    return response({ cellUrl: 'https://cell.test', assignmentEpoch: 1 })
+  }
+  const peer = new RelayLoadControlPeer(0, peerOptions(), () => undefined)
+  const token = await peer.relayToken()
+  await peer.assignment(token)
+  peer.generation = 1
+  await peer.assignment(token)
+  assert.equal(bodies[0].reconnect, undefined)
+  assert.equal(bodies[1].reconnect, true)
+})
+
+test('a silent control is terminated after the desktop silence limit', (context) => {
+  context.mock.timers.enable({ apis: ['setInterval', 'Date'] })
+  const peer = new RelayLoadControlPeer(0, peerOptions(), () => undefined)
+  const socket = fakeOpenSocket()
+  let terminated = 0
+  socket.terminate = () => {
+    terminated++
+    socket.emit('close', 1006, Buffer.from(''))
+  }
+  peer.watchSilence(socket)
+  context.mock.timers.tick(60_000)
+  socket.emit('ping')
+  context.mock.timers.tick(60_000)
+  assert.equal(terminated, 0)
+  context.mock.timers.tick(30_000)
+  context.mock.timers.tick(60_000)
+  assert.equal(terminated, 1)
+})

@@ -174,11 +174,6 @@ export function targetScopedWorkspaceHydrationPatch(
       hydrated.activeTabIdByWorktree,
       workspaceKeys
     ),
-    pendingDirectSshLayoutEditsByTabId: Object.fromEntries(
-      Object.entries(state.pendingDirectSshLayoutEditsByTabId ?? {}).filter(
-        ([tabId]) => !deletedTargetTabIds.has(tabId)
-      )
-    ),
     tabsByWorktree: replaceHydratedRecordKeys(
       state.tabsByWorktree,
       hydrated.tabsByWorktree,
@@ -189,7 +184,7 @@ export function targetScopedWorkspaceHydrationPatch(
       hydrated.lastVisitedAtByWorktreeId,
       workspaceKeys
     ),
-    // Why local marks win: same write-once rule as mergeDirectSshRemoteWorkspaceSession.
+    // Why local marks win: the applied mark is write-once.
     defaultTerminalTabsAppliedByWorktreeId: {
       ...replaceHydratedRecordKeys(
         state.defaultTerminalTabsAppliedByWorktreeId,

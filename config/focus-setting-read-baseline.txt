@@ -2,7 +2,7 @@
 # activeRuntimeEnvironmentId) plus calls of exported functions that read it, per file.
 # This is a RATCHET: counts may only go DOWN. Only creation flows with no source row may read
 # the default host, through defaultCreationHost. Everything else routes by the owner.
-# Prune after removing reads: pnpm check:owner-routing-ratchet --prune
+# Prune after removing reads: pnpm check:focus-read-ratchet --prune
 2 src/renderer/src/App.tsx
 5 src/renderer/src/app-shell/use-app-shell-services.ts
 9 src/renderer/src/components/JiraIssueWorkspace.tsx
@@ -233,7 +233,6 @@
 1 src/renderer/src/components/terminal-pane/pty-connection/pane-agent-identity.ts
 1 src/renderer/src/components/terminal-pane/retire-unbound-runtime-terminal-pane.ts
 1 src/renderer/src/components/terminal-pane/terminal-ctrl-arrow-conpty.ts
-2 src/renderer/src/components/terminal-pane/terminal-drop-runtime-owner.ts
 1 src/renderer/src/components/terminal-pane/terminal-fit-restore.ts
 2 src/renderer/src/components/terminal-pane/terminal-input-host-platform.ts
 1 src/renderer/src/components/terminal-pane/terminal-keyboard-hook.ts
@@ -346,8 +345,7 @@
 2 src/renderer/src/lib/provider-runtime-context.ts
 2 src/renderer/src/lib/remap-open-editor-tabs-for-path-change.ts
 1 src/renderer/src/lib/remote-workspace-drop-test-fixtures.ts
-4 src/renderer/src/lib/repo-runtime-owner.ts
-2 src/renderer/src/lib/resolve-owner.ts
+3 src/renderer/src/lib/repo-runtime-owner.ts
 2 src/renderer/src/lib/resume-sleeping-agent-session.ts
 1 src/renderer/src/lib/runtime-session-mirror-owners.ts
 1 src/renderer/src/lib/runtime-session-mirror-targets.ts
@@ -377,7 +375,7 @@
 1 src/renderer/src/lib/worktree-jump-navigation.ts
 2 src/renderer/src/lib/worktree-operation-route.ts
 1 src/renderer/src/lib/worktree-row-open-in-owner.ts
-6 src/renderer/src/lib/worktree-runtime-owner.ts
+5 src/renderer/src/lib/worktree-runtime-owner.ts
 1 src/renderer/src/lib/worktree-sort-order-host-split.ts
 1 src/renderer/src/runtime/close-mirrored-editor-tab.ts
 1 src/renderer/src/runtime/local-structured-session-tabs-sync/snapshot-apply.ts

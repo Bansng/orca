@@ -741,10 +741,13 @@ export function startShadowSeatPoller(
 
   const round = async (awaitPolls: boolean): Promise<void> => {
     if (stopped) return
-    await refreshCells()
+    const refresh = refreshCells()
+    // Only the first list is waited for: later rounds poll the last list, so the round that starts
+    // a refresh no longer skips its polls (one round, ~1 s, per refresh) while the read is slow.
+    if (cellsReadAt === undefined) await refresh
     // A slow cell holds only its own slot; the timer never waits on it.
     const polls = cells.map((cell) => poll(cell))
-    if (awaitPolls) await Promise.all(polls)
+    if (awaitPolls) await Promise.all([refresh, ...polls])
     if (now() - lastSummaryAt >= SUMMARY_INTERVAL_MS) {
       lastSummaryAt = now()
       log(JSON.stringify({ event: 'orca_relay_shadow_seat_summary', ...directory.summary(now()) }))

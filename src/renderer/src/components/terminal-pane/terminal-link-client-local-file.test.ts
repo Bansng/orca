@@ -189,7 +189,7 @@ describe('a link to this computer printed in a paired-server terminal', () => {
     expect(onOpenFailure).toHaveBeenCalledWith(expect.objectContaining({ verdict: 'unverifiable' }))
   })
 
-  it('never reads this computer for a path the host granted as its own', async () => {
+  it('opens a path the host granted read-only from the host, never from this computer', async () => {
     runtimeEnvironmentCallMock.mockResolvedValueOnce({
       id: 'rpc-1',
       ok: true,
@@ -212,8 +212,56 @@ describe('a link to this computer printed in a paired-server terminal', () => {
 
     openDetectedFilePath('/tmp/artifact.txt', null, null, {
       ...serverWorkspace,
+      terminalHandle: 'term-1',
+      openWithSystemDefault: true,
       onOpenFailure
     })
+    await flushDoubleRaf()
+
+    expect(runtimeEnvironmentCallMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'files.resolveTerminalPath',
+        params: {
+          worktree: 'id:wt-feat',
+          pathText: '/tmp/artifact.txt',
+          crossWorkspace: true,
+          terminal: 'term-1'
+        }
+      })
+    )
+    expect(statMock).not.toHaveBeenCalled()
+    expect(openFilePathMock).not.toHaveBeenCalled()
+    expect(downloadAndOpenRemoteTerminalFile).not.toHaveBeenCalled()
+    expect(onOpenFailure).not.toHaveBeenCalled()
+    expect(openFileMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filePath: '/tmp/artifact.txt',
+        relativePath: '/tmp/artifact.txt',
+        worktreeId: 'wt-feat',
+        runtimeEnvironmentId: 'env-1',
+        readOnly: true,
+        terminalArtifactGrantId: 'g-1'
+      }),
+      { forceContentReload: true }
+    )
+  })
+
+  it('never reads this computer for a host directory outside its workspaces', async () => {
+    runtimeEnvironmentCallMock.mockResolvedValueOnce({
+      id: 'rpc-1',
+      ok: true,
+      result: {
+        worktree: 'wt-feat',
+        relativePath: null,
+        absolutePath: '/tmp/out',
+        exists: true,
+        isDirectory: true
+      },
+      _meta: { runtimeId: 'remote-runtime' }
+    })
+    const onOpenFailure = vi.fn()
+
+    openDetectedFilePath('/tmp/out', null, null, { ...serverWorkspace, onOpenFailure })
     await flushDoubleRaf()
 
     expect(statMock).not.toHaveBeenCalled()

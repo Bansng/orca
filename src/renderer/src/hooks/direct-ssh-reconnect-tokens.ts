@@ -1,10 +1,6 @@
 import { toSshExecutionHostId } from '../../../shared/execution-host'
 import type { DirectSshAuthority } from '../../../shared/ssh-types'
-import type {
-  DirectSshPreparationInput,
-  DirectSshPreparationToken,
-  DirectSshSnapshotApplyToken
-} from './direct-ssh-reconnect-coordinator-types'
+import type { DirectSshPreparationInput } from './direct-ssh-reconnect-coordinator-types'
 
 export function directSshAuthoritiesEqual(
   left: DirectSshAuthority | null | undefined,
@@ -59,25 +55,4 @@ export function directSshPreparationOperationKey(input: DirectSshPreparationInpu
     input.snapshotRevision ?? null,
     input.reason
   ])
-}
-
-export function buildDirectSshSnapshotApplyToken(
-  token: DirectSshPreparationToken,
-  snapshotRevision: number
-): DirectSshSnapshotApplyToken | null {
-  if (token.snapshotRevision !== null && token.snapshotRevision !== snapshotRevision) {
-    return null
-  }
-  return { ...token, snapshotRevision }
-}
-
-export function admitDirectSshSnapshotApplyToken(
-  token: DirectSshSnapshotApplyToken,
-  authority: DirectSshAuthority,
-  snapshotRevision: number
-): boolean {
-  return (
-    token.snapshotRevision === snapshotRevision &&
-    directSshAuthoritiesEqual(token.authority, authority)
-  )
 }

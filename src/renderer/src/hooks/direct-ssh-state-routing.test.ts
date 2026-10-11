@@ -25,7 +25,7 @@ function harness() {
     },
     invalidateStaleTerminalBindings: vi.fn(() => 0),
     retryTargetPanes: vi.fn(() => 0),
-    prepareAndSync: vi.fn(),
+    prepareHost: vi.fn(),
     rememberReconnectAuthority: vi.fn()
   }
 }
@@ -42,7 +42,7 @@ describe('routeDirectSshConnectedState', () => {
         origin: 'initial-hydration'
       })
     ).toBe('initial-hydration')
-    expect(deps.prepareAndSync).toHaveBeenCalledWith(current, 'initial-hydration')
+    expect(deps.prepareHost).toHaveBeenCalledWith(current, 'initial-hydration')
     expect(deps.coordinator.requestReconnect).not.toHaveBeenCalled()
     expect(deps.coordinator.correctUnboundTerminals).not.toHaveBeenCalled()
   })
@@ -62,7 +62,7 @@ describe('routeDirectSshConnectedState', () => {
     expect(deps.rememberReconnectAuthority).toHaveBeenCalledWith(current)
     expect(deps.coordinator.requestReconnect).toHaveBeenCalledWith(current)
     expect(deps.coordinator.replaceAuthority).not.toHaveBeenCalled()
-    expect(deps.prepareAndSync).not.toHaveBeenCalled()
+    expect(deps.prepareHost).not.toHaveBeenCalled()
   })
 
   it('runs the disabled fallback terminal actions synchronously before bounded preparation', () => {
@@ -78,7 +78,7 @@ describe('routeDirectSshConnectedState', () => {
       order.push('retry')
       return 1
     })
-    deps.prepareAndSync.mockImplementation(() => {
+    deps.prepareHost.mockImplementation(() => {
       order.push('prepare')
       return new Promise(() => {})
     })
@@ -95,7 +95,7 @@ describe('routeDirectSshConnectedState', () => {
 
     expect(order).toEqual(['replace', 'invalidate', 'retry', 'prepare'])
     expect(deps.coordinator.requestReconnect).not.toHaveBeenCalled()
-    expect(deps.prepareAndSync).toHaveBeenCalledWith(current, 'reconnect', {
+    expect(deps.prepareHost).toHaveBeenCalledWith(current, 'reconnect', {
       authorityAlreadyReplaced: true
     })
     expect(deps.rememberReconnectAuthority).toHaveBeenCalledWith(current)
@@ -113,7 +113,7 @@ describe('routeDirectSshConnectedState', () => {
       })
     ).toBe('same-authority-wake')
     expect(deps.coordinator.correctUnboundTerminals).toHaveBeenCalledWith(current, 'wake-refresh')
-    expect(deps.prepareAndSync).toHaveBeenCalledWith(current, 'wake-refresh')
+    expect(deps.prepareHost).toHaveBeenCalledWith(current, 'wake-refresh')
     expect(deps.coordinator.requestReconnect).not.toHaveBeenCalled()
   })
 })

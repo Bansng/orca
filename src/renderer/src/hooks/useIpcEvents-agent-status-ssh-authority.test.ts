@@ -208,7 +208,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
         },
         setSshTargetsMetadata: vi.fn(),
         setRemovedSshTargetLabels: vi.fn(),
-        setRemoteWorkspaceSyncStatus: vi.fn(),
         clearRemoteDetectedAgents: vi.fn(),
         clearDirectSshTargetPtyBindings: vi.fn(),
         clearRemovedSshTargetState: vi.fn()
@@ -226,7 +225,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
           return { token: null }
         }),
         correctUnboundTerminals: vi.fn(() => 0),
-        finalizeHydratedTerminals: vi.fn(() => 0),
         invalidate: vi.fn(),
         stop: vi.fn()
       }
@@ -427,7 +425,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
       setDetectedPorts,
       setSshTargetsMetadata: vi.fn(),
       setRemovedSshTargetLabels: vi.fn(),
-      setRemoteWorkspaceSyncStatus: vi.fn(),
       fetchRuntimeEnvironmentRepos: vi.fn(async () => []),
       fetchWorktreeLineage: vi.fn(async () => undefined),
       clearRemoteDetectedAgents: vi.fn(),
@@ -441,7 +438,6 @@ describe('useIpcEvents agent status snapshot integration', () => {
       replaceAuthority: vi.fn(),
       prepareOnly: vi.fn(async () => ({ token: null })),
       correctUnboundTerminals: vi.fn(() => 0),
-      finalizeHydratedTerminals: vi.fn(() => 0),
       invalidate: vi.fn(),
       stop: vi.fn()
     }

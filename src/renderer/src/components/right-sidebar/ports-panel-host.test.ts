@@ -7,6 +7,7 @@ import type {
 import {
   getPortsPanelOwnerKey,
   portsPanelHostForOwnerKey,
+  portsPanelReachesSshHost,
   type PortsPanelHost
 } from './ports-panel-host'
 
@@ -146,5 +147,43 @@ describe('Ports panel host', () => {
     expect(portsPanelHostForOwnerKey(getPortsPanelOwnerKey({}, null))).toEqual({
       kind: 'unknown'
     })
+  })
+})
+
+describe('Ports tab visibility', () => {
+  const managed = {
+    id: 'env-managed',
+    orcadDeployment: { sshTargetId: 'box', sshTargetGeneration: 1 }
+  } as const
+  const environments = [{ id: 'env-paired' }, managed]
+
+  it.each<[string, PortsPanelHost, boolean]>([
+    ['a direct SSH workspace', { kind: 'direct-ssh', connectionId: 'box' }, true],
+    ['an SSH target behind a paired server', serverSsh('env-paired', 't'), true],
+    [
+      'a workspace on a managed server reached over SSH',
+      { kind: 'endpoint', target: { kind: 'environment', environmentId: 'env-managed' } },
+      true
+    ],
+    [
+      'a workspace on a paired server that is not an SSH host',
+      { kind: 'endpoint', target: { kind: 'environment', environmentId: 'env-paired' } },
+      false
+    ],
+    ['a local workspace', { kind: 'endpoint', target: { kind: 'local' } }, false],
+    ['an unknown owner', { kind: 'unknown' }, false]
+  ])('%s', (_name, host, visible) => {
+    expect(portsPanelReachesSshHost(host, environments)).toBe(visible)
+  })
+
+  it('follows the workspace owner, not the repo connection', () => {
+    const state: WorktreeOperationRouteState = {
+      repos: [{ id: 'repo-1' }],
+      worktreesByRepo: { 'repo-1': [worktree('runtime:env-managed', 'env-managed')] },
+      runtimeEnvironments: [{ id: 'env-managed' }],
+      runtimeEnvironmentCatalogHydrated: true
+    }
+    const host = portsPanelHostForOwnerKey(getPortsPanelOwnerKey(state, WORKTREE_ID))
+    expect(portsPanelReachesSshHost(host, environments)).toBe(true)
   })
 })

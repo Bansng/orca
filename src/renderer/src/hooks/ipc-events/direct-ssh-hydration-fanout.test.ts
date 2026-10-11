@@ -9,6 +9,7 @@ function connectingState(targetId: string): SshConnectionState {
 }
 
 function bridgeRuntime(): DirectSshBridgeRuntime {
+  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the routing under test reads only these members; the rest of the runtime is never touched.
   return {
     reconnectAuthorityByTarget: new Map(),
     reconnectCoordinator: {
@@ -19,7 +20,7 @@ function bridgeRuntime(): DirectSshBridgeRuntime {
     },
     currentAuthority: () => null,
     terminalActions: () => ({}),
-    prepareAndSync: vi.fn(async () => {}),
+    prepareHost: vi.fn(async () => {}),
     isStopped: () => false,
     addDeadline: vi.fn(),
     removeDeadline: vi.fn(),

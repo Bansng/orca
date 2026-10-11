@@ -106,11 +106,6 @@ function withoutMapKey<V>(map: Map<string, V>, key: string): Map<string, V> | un
   return next.delete(key) ? next : undefined
 }
 
-function withoutSetKey(set: Set<string>, key: string): Set<string> | undefined {
-  const next = new Set(set)
-  return next.delete(key) ? next : undefined
-}
-
 function filterIfChanged<T>(items: T[], keep: (item: T) => boolean): T[] | undefined {
   const next = items.filter(keep)
   return next.length === items.length ? undefined : next
@@ -252,13 +247,6 @@ export function buildRemovedSshTargetCleanupPatch(
     omitRemovedSshTargetRecovery(state.directSshPaneRetryHistoryByTabId, targetId, targetTabIds)
   )
   assign(
-    'pendingDirectSshLayoutEditsByTabId',
-    filterRecordIfChanged(
-      state.pendingDirectSshLayoutEditsByTabId ?? {},
-      (_tabId, entry) => entry.targetId !== targetId
-    )
-  )
-  assign(
     'deferredSshReconnectTargets',
     filterIfChanged(state.deferredSshReconnectTargets, (id) => id !== targetId)
   )
@@ -270,10 +258,6 @@ export function buildRemovedSshTargetCleanupPatch(
     'transientClearedAgentStatusConnectionIds',
     omitKey(state.transientClearedAgentStatusConnectionIds, targetId)
   )
-  assign(
-    'remoteWorkspaceSyncStatusByTargetId',
-    omitKey(state.remoteWorkspaceSyncStatusByTargetId, targetId)
-  )
   assign('portForwardsByConnection', omitKey(state.portForwardsByConnection, targetId))
   assign('detectedPortsByConnection', omitKey(state.detectedPortsByConnection, targetId))
   assign('sshConnectionStates', withoutMapKey(state.sshConnectionStates, targetId))
@@ -281,9 +265,5 @@ export function buildRemovedSshTargetCleanupPatch(
   // Why: a lingering generation would keep a deleted registration fenceable, and
   // the id is reissued fresh on re-add, so the old value can never become right.
   assign('sshTargetGenerations', withoutMapKey(state.sshTargetGenerations, targetId))
-  assign(
-    'remoteWorkspaceHydratedTargetIds',
-    withoutSetKey(state.remoteWorkspaceHydratedTargetIds, targetId)
-  )
   return Object.keys(patch).length > 0 ? patch : null
 }

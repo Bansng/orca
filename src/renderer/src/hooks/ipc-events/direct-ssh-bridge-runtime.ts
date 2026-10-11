@@ -15,10 +15,6 @@ import {
 } from '../direct-ssh-reconnect-coordinator'
 import { directSshAuthoritiesEqual } from '../direct-ssh-reconnect-tokens'
 import { createDirectSshWorktreeRefreshScheduler } from '../direct-ssh-worktree-refresh-scheduler'
-import {
-  createRemoteWorkspaceTargetSync,
-  type RemoteWorkspaceTargetSync
-} from '../remote-workspace-target-sync'
 import type { AppState } from '../../store/types'
 
 type DirectSshTerminalActions = Partial<
@@ -30,10 +26,9 @@ export type DirectSshBridgeRuntime = {
   reconnectAuthorityByTarget: Map<string, DirectSshAuthority>
   reconnectCoordinator: DirectSshReconnectCoordinator
   hostHydration: DirectSshHostHydration
-  remoteWorkspaceTargetSync: RemoteWorkspaceTargetSync | null
   currentAuthority: (targetId: string) => DirectSshAuthority | null
   terminalActions: () => DirectSshTerminalActions
-  prepareAndSync: (
+  prepareHost: (
     authority: DirectSshAuthority,
     reason: DirectSshPreparationReason,
     options?: { authorityAlreadyReplaced?: boolean }
@@ -110,7 +105,6 @@ export function createDirectSshBridgeRuntime(): DirectSshBridgeRuntime {
   })
   const terminalActions = (): DirectSshTerminalActions =>
     useAppStore.getState() as DirectSshTerminalActions
-  let remoteWorkspaceTargetSync: RemoteWorkspaceTargetSync | null = null
   const reconnectCoordinator = createDirectSshReconnectCoordinator({
     scheduler,
     isCurrentConnectedAuthority: (authority) =>
@@ -120,34 +114,11 @@ export function createDirectSshBridgeRuntime(): DirectSshBridgeRuntime {
     invalidateStaleTerminalBindings: (authority) =>
       terminalActions().invalidateStaleDirectSshTargetPtyBindings?.(authority) ?? 0,
     retryTargetPanes: (authority) => terminalActions().retryDirectSshTargetPanes?.(authority) ?? 0,
-    finalizeHydratedTerminalPanes: (authority) =>
-      terminalActions().retryDirectSshTargetPanes?.(authority) ?? 0,
     correctUnboundTerminalPanes: (authority) =>
       terminalActions().retryDirectSshTargetPanes?.(authority) ?? 0,
-    syncRemoteWorkspaceAfterConnect: (token) => remoteWorkspaceTargetSync?.syncAfterConnect(token),
     onTelemetry: createDirectSshReconnectProductTelemetryAdapter()
   })
-  const remoteWorkspaceApi = window.api.remoteWorkspace
-  if (remoteWorkspaceApi) {
-    remoteWorkspaceTargetSync = createRemoteWorkspaceTargetSync({
-      store: useAppStore,
-      remoteWorkspace: remoteWorkspaceApi,
-      getCurrentAuthority: currentAuthority,
-      isPreparationTokenCurrent: hostHydration.isPreparationTokenCurrent,
-      capturePreparationInput: (authority, reason, revision) =>
-        hostHydration.capturePreparationInput(authority, reason, revision),
-      prepareOnly: reconnectCoordinator.prepareOnly,
-      finalizeHydratedTerminals: (authority) =>
-        directSshAuthoritiesEqual(reconnectAuthorityByTarget.get(authority.targetId), authority)
-          ? reconnectCoordinator.finalizeHydratedTerminals(authority)
-          : 0
-    })
-  }
-  const prepareAndSync: DirectSshBridgeRuntime['prepareAndSync'] = async (
-    authority,
-    reason,
-    options
-  ) => {
+  const prepareHost: DirectSshBridgeRuntime['prepareHost'] = async (authority, reason, options) => {
     try {
       if (!options?.authorityAlreadyReplaced) {
         reconnectCoordinator.replaceAuthority(authority)
@@ -156,30 +127,20 @@ export function createDirectSshBridgeRuntime(): DirectSshBridgeRuntime {
         authority,
         reason
       )
-      if (!input) {
-        return
+      if (input) {
+        await reconnectCoordinator.prepareOnly(input)
       }
-      const prepared = await reconnectCoordinator.prepareOnly(input)
-      if (prepared.token && hostHydration.isPreparationTokenCurrent(prepared.token)) {
-        await remoteWorkspaceTargetSync?.syncAfterConnect(prepared.token)
-      }
-    } catch (error) {
-      if (directSshAuthoritiesEqual(currentAuthority(authority.targetId), authority)) {
-        useAppStore.getState().setRemoteWorkspaceSyncStatus(authority.targetId, {
-          phase: 'error',
-          message: error instanceof Error ? error.message : 'Workspace sync failed'
-        })
-      }
+    } catch {
+      // A failed preparation leaves the previous host picture; the next connect or wake retries.
     }
   }
   return {
     reconnectAuthorityByTarget,
     reconnectCoordinator,
     hostHydration,
-    remoteWorkspaceTargetSync,
     currentAuthority,
     terminalActions,
-    prepareAndSync,
+    prepareHost,
     isStopped: () => stopped,
     addDeadline: (deadline) => deadlines.add(deadline),
     removeDeadline: (deadline) => deadlines.delete(deadline),
@@ -190,7 +151,6 @@ export function createDirectSshBridgeRuntime(): DirectSshBridgeRuntime {
         deadline.settle()
       }
       deadlines.clear()
-      remoteWorkspaceTargetSync?.stop()
       hostHydration.stop()
       reconnectCoordinator.stop()
       reconnectAuthorityByTarget.clear()

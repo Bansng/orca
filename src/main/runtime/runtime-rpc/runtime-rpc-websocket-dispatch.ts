@@ -8,10 +8,14 @@ import type { AuthenticatedMobileSocket } from '../rpc/mobile-socket-wiring'
 import type { RpcRequest, RpcResponse } from '../rpc/core'
 import type { WebSocketTransport } from '../rpc/ws-transport'
 import type { DeviceScope } from '../device-registry'
-import { RuntimeRpcRequestAdmission } from './runtime-rpc-request-admission'
+import { RuntimeRpcMobileDevices } from './runtime-rpc-mobile-devices'
 import { classifyRuntimeLongPoll } from './runtime-rpc-long-poll'
+import type { RpcBinarySender } from '../rpc/rpc-binary-sender'
 import type { RpcCallerScope } from '../rpc/rpc-caller-scope'
 import { limitRuntimeRpcReplySize } from './runtime-rpc-reply-size-limit'
+import { MOBILE_RPC_METHOD_ALLOWLIST } from './runtime-rpc-mobile-method-allowlist'
+import { MOBILE_RPC_METHOD_ROUTES } from './runtime-rpc-mobile-method-routing'
+import { parseExecutionHostId } from '../../../shared/execution-host'
 
 // Why: status.get has no per-connection context in the dispatcher, so stamp the scope here at the transport boundary.
 function injectDeviceScope(response: string, scope: DeviceScope): string {
@@ -27,12 +31,77 @@ function injectDeviceScope(response: string, scope: DeviceScope): string {
   }
 }
 
-export class RuntimeRpcWebSocketDispatch extends RuntimeRpcRequestAdmission {
+export class RuntimeRpcWebSocketDispatch extends RuntimeRpcMobileDevices {
+  // Why: a phone names a server's workspace with `executionHost`; only configured servers are reached,
+  // and a target the desktop cannot reach is an error, never a silent local run.
+  private relayMobileRequest(
+    request: RpcRequest,
+    rawMessage: string,
+    reply: (response: string) => void,
+    sendBinary: RpcBinarySender,
+    socket: AuthenticatedMobileSocket | undefined
+  ): boolean {
+    const { executionHost } = request
+    if (executionHost === undefined) {
+      return false
+    }
+    const target = parseExecutionHostId(typeof executionHost === 'string' ? executionHost : null)
+    if (target?.kind === 'local' || target?.kind === 'ssh') {
+      return false
+    }
+    // Why: the phone tags every call on a workspace screen; only this Mac's routing table decides.
+    if (target && MOBILE_RPC_METHOD_ROUTES.get(request.method) !== 'execution-host') {
+      return false
+    }
+    if (!target) {
+      reply(
+        JSON.stringify(this.buildError(request.id, 'invalid_argument', 'Invalid executionHost'))
+      )
+    } else if (!socket) {
+      reply(
+        JSON.stringify(
+          this.buildError(
+            request.id,
+            'remote_runtime_unavailable',
+            'Servers are reachable only over an encrypted pairing'
+          )
+        )
+      )
+    } else if (!this.mobileDesktopRelay) {
+      reply(
+        JSON.stringify(
+          this.buildError(
+            request.id,
+            'remote_runtime_unavailable',
+            'This computer does not relay to servers'
+          )
+        )
+      )
+    } else {
+      this.mobileDesktopRelay.forward(
+        {
+          connectionId: socket.connectionId,
+          deviceId: socket.device.deviceId,
+          deviceToken: socket.device.deviceToken,
+          clientCapabilities: () => socket.clientCapabilities,
+          reply,
+          sendBinary: (bytes) => {
+            sendBinary(bytes)
+          }
+        },
+        target.environmentId,
+        request,
+        rawMessage
+      )
+    }
+    return true
+  }
+
   // Why: WebSocket dispatch is streaming (multiple responses) and auths via per-device tokens, not the shared token.
   protected async handleWebSocketMessage(
     rawMessage: string,
     reply: (response: string) => void,
-    sendBinary: (response: Uint8Array<ArrayBufferLike>) => boolean | void,
+    sendBinary: RpcBinarySender,
     wsTransport?: WebSocketTransport,
     ws?: WebSocket,
     authenticatedDeviceToken?: string | null,
@@ -77,8 +146,22 @@ export class RuntimeRpcWebSocketDispatch extends RuntimeRpcRequestAdmission {
     // Why: the dispatcher enforces this scope's permissions; it never trusts a request field.
     const callerScope: RpcCallerScope =
       device.scope === 'mobile'
-        ? { kind: 'mobile' }
+        ? { kind: 'mobile', delegated: device.parentDeviceId !== undefined }
         : { kind: 'runtime-paired', grants: device.grants ?? [] }
+
+    // Why: relayed calls skip this dispatcher's scope check, so only allowlisted methods may relay.
+    if (device.scope === 'mobile' && MOBILE_RPC_METHOD_ALLOWLIST.has(request.method)) {
+      // Why: the phone's open server sockets must see the same capabilities the desktop does.
+      if (authenticatedSocket && request.method === 'runtime.clientCapabilities.update') {
+        this.mobileDesktopRelay?.forwardClientCapabilities(
+          authenticatedSocket.connectionId,
+          rawMessage
+        )
+      }
+      if (this.relayMobileRequest(request, rawMessage, reply, sendBinary, authenticatedSocket)) {
+        return
+      }
+    }
 
     // Why: bind deviceToken to this socket so ws.on('close') knows which mobile client disconnected.
     if (wsTransport && ws) {
@@ -146,6 +229,11 @@ export class RuntimeRpcWebSocketDispatch extends RuntimeRpcRequestAdmission {
               }
             : undefined,
         pairing: pairingContext,
+        mobileRelayHosts: this.mobileRelayHostCatalog ?? undefined,
+        delegatedMobileDevices:
+          device.scope === 'runtime'
+            ? { sync: (phones) => this.syncDelegatedMobileDevices(device.deviceId, phones) }
+            : undefined,
         signal: abortRegistration?.signal,
         sendBinary,
         registerBinaryStreamHandler: (streamId, handler) =>

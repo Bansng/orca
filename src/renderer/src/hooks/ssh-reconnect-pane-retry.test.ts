@@ -60,9 +60,8 @@ describe('shouldRetryPaneSpawnOnSshReconnect', () => {
   })
 
   it('leaves a hydrated tab alone whose ptyId was nulled but whose layout still names its PTY', () => {
-    // clearTransientTerminalState nulls tab.ptyId on every hydrated row unconditionally, and
-    // finalizeHydratedTerminals runs this gate straight afterwards — while hydrating the host's
-    // own snapshot of the sessions it is still running.
+    // clearTransientTerminalState nulls tab.ptyId on every hydrated row unconditionally, and a
+    // reconnect retry pass runs this gate straight afterwards.
     expect(
       shouldRetryPaneSpawnOnSshReconnect({
         targetId: 'conn-1',

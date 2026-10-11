@@ -1,5 +1,6 @@
 import type { DaemonFileLog } from './daemon-file-log'
 import type { SubprocessHandle } from './session-subprocess-handle'
+import type { TerminalSpawnAdmissionMode } from './terminal-spawn-gate'
 
 export type DaemonServerOptions = {
   socketPath: string
@@ -27,6 +28,10 @@ export type DaemonServerOptions = {
   onPtySessionExit?: (sessionId: string) => void
   onAuthenticatedClientPair?: () => void
   log?: DaemonFileLog
+  /** Headless hosts enforce; desktop only observes until the client handles deferral. */
+  spawnAdmission?: TerminalSpawnAdmissionMode
+  /** Where the daemon remembers whether automatic restores were running when it died. */
+  automaticWorkMarkerPath?: string
   spawnSubprocess: (opts: {
     sessionId: string
     cols: number

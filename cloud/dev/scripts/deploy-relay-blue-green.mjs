@@ -377,6 +377,28 @@ export function parseArguments(argv) {
   if (!['true', 'false'].includes(values['bootstrap-runtime-identity'] ?? 'false')) {
     throw new Error('--bootstrap-runtime-identity must be true or false')
   }
+  if (
+    values['shape-baseline-revision'] !== undefined &&
+    !/^[a-z][a-z0-9-]{0,62}$/.test(values['shape-baseline-revision'])
+  ) {
+    throw new Error('--shape-baseline-revision must be a Cloud Run revision name')
+  }
+  if (values['shape-baseline-revision'] !== undefined) {
+    if (values.role !== 'director') {
+      throw new Error('--shape-baseline-revision requires --role director')
+    }
+    // A shape adoption moves only what the reviewed apply changed: no identity, topology or
+    // pruning rides along, whichever caller builds the arguments.
+    if (values['bootstrap-runtime-identity'] === 'true') {
+      throw new Error('--shape-baseline-revision cannot combine with a runtime identity bootstrap')
+    }
+    if (values['capacity-cell-id'] !== undefined || values['director-cells-json'] !== undefined) {
+      throw new Error('--shape-baseline-revision cannot combine with a director topology change')
+    }
+    if (values['prune-revisions'] === 'true') {
+      throw new Error('--shape-baseline-revision cannot combine with revision pruning')
+    }
+  }
   if (values.role === 'director') {
     directorDeploymentEnvironment(values)
     projectServiceAccount(values, 'runtime-service-account')
@@ -896,6 +918,31 @@ function assertDirectorRevisionIdentity(revision, config) {
   }
 }
 
+// The reviewed shape a deploy must preserve. Normally the serving revision's; after a Terraform
+// apply changes the template (a sidecar, a volume, a secret reference), the apply's own 0%
+// revision, named by the operator, is the reviewed shape instead.
+export function directorShapeBaseline(config, service, servingRevision, describe) {
+  const named = config['shape-baseline-revision']
+  if (named === undefined) return servingRevision
+  if (named === activeRevision(service)) {
+    throw new Error('shape baseline revision is already serving; deploy without it')
+  }
+  if (named !== service.status?.latestCreatedRevisionName) {
+    throw new Error('shape baseline revision is not the latest created revision')
+  }
+  const servingImage = servingRevision.spec?.containers?.[0]?.image
+  // A shape change and an image change never ride together: each is reviewed on its own.
+  if (config.image?.split('@').at(-1) !== servingImage?.split('@').at(-1)) {
+    throw new Error('a shape baseline deploy must keep the serving image')
+  }
+  const baseline = describe(config, named)
+  // Terraform ignores the image, so its revision runs what is serving; anything else was not an apply.
+  if (baseline.spec?.containers?.[0]?.image !== servingImage) {
+    throw new Error('shape baseline revision does not run the serving image')
+  }
+  return baseline
+}
+
 export async function deployDirector(config, tag, overrides = {}) {
   const operations = {
     deployCandidate,
@@ -916,6 +963,12 @@ export async function deployDirector(config, tag, overrides = {}) {
   // restating it here; public admission is per-instance, so losing it shrinks fleet capacity.
   const initialService = operations.describeService(config)
   const servingRevision = operations.describeRevision(config, activeRevision(initialService))
+  const shapeBaseline = directorShapeBaseline(
+    config,
+    initialService,
+    servingRevision,
+    operations.describeRevision
+  )
   const bootstrapRuntimeIdentity = config['bootstrap-runtime-identity'] === 'true'
   if (bootstrapRuntimeIdentity) {
     if (
@@ -1023,7 +1076,7 @@ export async function deployDirector(config, tag, overrides = {}) {
     const rollbackRevision = operations.describeRevision(config, rollback.revision)
     assertDirectorRevisionIdentity(rollbackRevision, config)
     assertPreservedRevisionShape(
-      servingRevision,
+      shapeBaseline,
       rollbackRevision,
       mutableEnvironment,
       bootstrapRuntimeIdentity
@@ -1058,7 +1111,7 @@ export async function deployDirector(config, tag, overrides = {}) {
     const candidateRevision = operations.describeRevision(config, candidate.revision)
     assertDirectorRevisionIdentity(candidateRevision, config)
     assertPreservedRevisionShape(
-      servingRevision,
+      shapeBaseline,
       candidateRevision,
       mutableEnvironment,
       bootstrapRuntimeIdentity

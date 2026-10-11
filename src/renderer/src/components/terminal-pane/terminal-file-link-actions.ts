@@ -24,6 +24,8 @@ export type TerminalFileLinkActionDeps = {
   worktreePath: string
   runtimeEnvironmentId?: string | null
   wslDistro?: string | null
+  /** The paired-server terminal that printed the link; lets its host grant a file outside workspaces. */
+  terminalHandle?: string | null
   onOpenFailure?: (failure: FileOpenFailure) => void
 }
 

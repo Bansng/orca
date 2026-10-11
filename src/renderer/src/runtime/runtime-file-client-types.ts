@@ -21,6 +21,8 @@ export type RuntimeFileReadArgs = {
   includeLocalLogMetadata?: boolean
   /** File access of the local fallback read; remote reads stay root-relative. */
   access?: LocalFileAccess
+  /** Host grant for a runtime file outside every workspace (see OpenFile.terminalArtifactGrantId). */
+  terminalArtifactGrantId?: string
 }
 
 export type RuntimeFileOperationArgs = {
