@@ -56,8 +56,10 @@ vi.mock('../terminal/terminal-tab-actions', () => ({
   closeTerminalTab: mocks.closeTerminalTab
 }))
 
-vi.mock('../../runtime/web-runtime-session', () => ({
-  closeWebRuntimeSessionTab: vi.fn(),
+vi.mock('../../runtime/web-runtime-session-tab-lifecycle', () => ({
+  closeWebRuntimeSessionTab: vi.fn()
+}))
+vi.mock('../../runtime/web-runtime-session-environment', () => ({
   isWebRuntimeSessionActive: vi.fn(() => false)
 }))
 

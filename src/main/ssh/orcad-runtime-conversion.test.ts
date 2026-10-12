@@ -20,12 +20,11 @@ import { SshConnectionStore } from './ssh-connection-store'
 
 const mocks = vi.hoisted(() => {
   const state: { targetStore: unknown } = { targetStore: null }
-  return { state, deploy: vi.fn(), ensureTunnel: vi.fn(), directAuthority: vi.fn() }
+  return { state, deploy: vi.fn(), ensureTunnel: vi.fn() }
 })
 vi.mock('./ssh-target-registry', () => ({
   getSshConnectionManager: () => ({}),
-  getSshTargetRegistryStore: () => mocks.state.targetStore,
-  hasRegisteredDirectSshAuthority: mocks.directAuthority
+  getSshTargetRegistryStore: () => mocks.state.targetStore
 }))
 vi.mock('./orcad-runtime-deployment', () => ({ createManagedOrcadEnvironment: mocks.deploy }))
 vi.mock('./orcad-managed-tunnel', () => ({
@@ -66,7 +65,6 @@ beforeEach(() => {
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: SshConnectionStore wraps the real test store it is given.
   mocks.state.targetStore = new SshConnectionStore(store as never)
   destination = fakeOrcadMigrationDestination()
-  mocks.directAuthority.mockReturnValue(false)
   mocks.ensureTunnel.mockResolvedValue(undefined)
   // Registers the server the fence named, as the real deploy would after pairing.
   mocks.deploy.mockImplementation(async (path: string, args: { name: string }) => {
@@ -147,33 +145,45 @@ describe('converting an SSH host into a managed server', () => {
     expect(destination.commits).toBe(1)
   })
 
-  it('refuses before touching the host while terminals run or cannot be counted', async () => {
+  // COMPAT(legacy-relay-bridge): converting stops nothing, so a relay terminal no longer blocks it.
+  it('converts while a relay terminal may still run, leaving its lease to the bridge', async () => {
     // Saved by a relay-era build; this build only reads it.
-    vi.spyOn(store, 'getSshRemotePtyLeases').mockReturnValue([
-      { targetId: TARGET.id, ptyId: 'p', state: 'expired', createdAt: 1, updatedAt: 1 }
-    ])
+    const lease = {
+      targetId: TARGET.id,
+      ptyId: 'p',
+      state: 'expired' as const,
+      createdAt: 1,
+      updatedAt: 1
+    }
+    // A clean 1.4.224 quit saves its leases detached; a crash leaves them expired.
+    const detached = { ...lease, ptyId: 'q', state: 'detached' as const }
+    vi.spyOn(store, 'getSshRemotePtyLeases').mockReturnValue([lease, detached])
+    const markLease = vi.spyOn(store, 'markSshRemotePtyLease')
     const uncounted = async () => ({ verdict: 'unverifiable' as const, count: 0 })
-    await expect(convert(uncounted)).resolves.toMatchObject({
-      outcome: 'refused',
-      verdict: 'unverifiable'
-    })
-    expect(releaseDirectSession).not.toHaveBeenCalled()
-    expect(store.getSshTarget(TARGET.id)?.orcadFence).toBeUndefined()
-    expect(listOrcadMigrationSourceCutovers(userDataPath)).toEqual([])
+    await expect(convert(uncounted)).resolves.toMatchObject({ outcome: 'converted' })
+    const [journal] = listOrcadMigrationSourceCutovers(userDataPath)
+    expect(journal).toMatchObject({ provenPtyIds: [], bridgedPtyIds: ['p', 'q'] })
+    expect(markLease).not.toHaveBeenCalled()
   })
 
   // No lease: only a host census may prove nothing runs, never the silence.
-  it('converts only on a host census that proves its relays idle', async () => {
+  it('refuses without any host census', async () => {
     await expect(convert(null)).resolves.toMatchObject({
       outcome: 'refused',
       verdict: 'unverifiable'
     })
-    await expect(convert(async () => ({ verdict: 'live', count: 1 }))).resolves.toMatchObject({
-      outcome: 'refused',
-      verdict: 'live'
-    })
     expect(store.getSshTarget(TARGET.id)?.orcadFence).toBeUndefined()
+  })
 
+  it('converts on a live host census, which no lease of this target names', async () => {
+    await expect(convert(async () => ({ verdict: 'live', count: 1 }))).resolves.toMatchObject({
+      outcome: 'converted'
+    })
+    const [journal] = listOrcadMigrationSourceCutovers(userDataPath)
+    expect(journal).toMatchObject({ provenPtyIds: [], bridgedPtyIds: [] })
+  })
+
+  it('converts on a host census that proves its relays idle', async () => {
     await expect(convert(async () => ({ verdict: 'exited', count: 0 }))).resolves.toMatchObject({
       outcome: 'converted'
     })

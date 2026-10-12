@@ -9,7 +9,7 @@ import {
   BROWSER_SCREENCAST_RUNTIME_CAPABILITY,
   BROWSER_TAB_CREATE_KNOWN_ID_RUNTIME_CAPABILITY
 } from '../../../shared/protocol-version'
-import { createWebRuntimeSessionBrowserTab } from './web-runtime-session'
+import { createWebRuntimeSessionBrowserTab } from './web-runtime-browser-creation'
 import {
   ENVIRONMENT_ID,
   WORKTREE_ID,
@@ -17,6 +17,7 @@ import {
   resetBrowserTabCreateEnvironment,
   stubBrowserTabCreateEnvironment
 } from './web-runtime-session-test-harness'
+import { stubRuntimeEnvironmentBridge } from './runtime-environment-bridge-fixture'
 
 const mocks = vi.hoisted(() => ({
   getState: vi.fn(),
@@ -140,15 +141,11 @@ async function stageHandleFor(
     }
     return { id: 'list', ok: true, result: makeSnapshot() }
   })
-  vi.stubGlobal('window', {
-    api: {
-      runtimeEnvironments: {
-        prepareBrowserClientHostPlacement: vi
-          .fn()
-          .mockResolvedValue({ kind: 'client', browserHostClientId: 'browser-client-a' }),
-        call: runtimeCall
-      }
-    }
+  stubRuntimeEnvironmentBridge({
+    prepareBrowserClientHostPlacement: vi
+      .fn()
+      .mockResolvedValue({ kind: 'client', browserHostClientId: 'browser-client-a' }),
+    call: runtimeCall
   })
 
   await createWebRuntimeSessionBrowserTab({

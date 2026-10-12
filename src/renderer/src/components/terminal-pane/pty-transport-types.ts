@@ -233,8 +233,6 @@ export type PtyTransport = {
   retryRecovery?: () => boolean
   /** True while the transport has a retry armed or parked; pane-level remounts must defer to it. */
   ownsRecovery?: () => boolean
-  /** Lets a wrapper retain input when recovery re-enters connect internally. */
-  setConnectForRecovery?: (connect: PtyTransport['connect']) => void
   /** The user dismissed the error surface; the next occurrence of the same message must surface again. */
   notifyErrorSurfaceDismissed?: () => void
   getPtyId: () => string | null

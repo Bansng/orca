@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { moveWebRuntimeSessionTab } from './web-runtime-session'
+import { moveWebRuntimeSessionTab } from './web-runtime-session-tab-move'
 import { resetWebSessionFocusIntentForTests } from './web-session-focus-intent'
 import { resetWebSessionCloseIntentForTests } from './web-session-close-intent'
 import { ENVIRONMENT_ID, WORKTREE_ID } from './web-runtime-session-test-harness'
+import { stubRuntimeEnvironmentBridge } from './runtime-environment-bridge-fixture'
 
 const mocks = vi.hoisted(() => ({
   getState: vi.fn(),
@@ -95,13 +96,7 @@ describe('moveWebRuntimeSessionTab', () => {
       result: { moved: true }
     })
 
-    vi.stubGlobal('window', {
-      api: {
-        runtimeEnvironments: {
-          call: runtimeCall
-        }
-      }
-    })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall })
 
     await expect(
       moveWebRuntimeSessionTab({
@@ -144,13 +139,7 @@ describe('moveWebRuntimeSessionTab', () => {
       result: { moved: true }
     })
 
-    vi.stubGlobal('window', {
-      api: {
-        runtimeEnvironments: {
-          call: runtimeCall
-        }
-      }
-    })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall })
 
     await expect(
       moveWebRuntimeSessionTab({
@@ -206,13 +195,7 @@ describe('moveWebRuntimeSessionTab', () => {
       result: { moved: true }
     })
 
-    vi.stubGlobal('window', {
-      api: {
-        runtimeEnvironments: {
-          call: runtimeCall
-        }
-      }
-    })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall })
 
     await expect(
       moveWebRuntimeSessionTab({
@@ -270,7 +253,7 @@ describe('moveWebRuntimeSessionTab', () => {
       ok: true,
       result: { moved: true }
     })
-    vi.stubGlobal('window', { api: { runtimeEnvironments: { call: runtimeCall } } })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall })
 
     await expect(
       moveWebRuntimeSessionTab({
@@ -316,7 +299,7 @@ describe('moveWebRuntimeSessionTab', () => {
       ok: true,
       result: { moved: true }
     })
-    vi.stubGlobal('window', { api: { runtimeEnvironments: { call: runtimeCall } } })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall })
 
     await expect(
       moveWebRuntimeSessionTab({
@@ -346,13 +329,7 @@ describe('moveWebRuntimeSessionTab', () => {
       result: { moved: true }
     })
 
-    vi.stubGlobal('window', {
-      api: {
-        runtimeEnvironments: {
-          call: runtimeCall
-        }
-      }
-    })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall })
 
     await expect(
       moveWebRuntimeSessionTab({

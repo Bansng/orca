@@ -8,7 +8,7 @@
 import { orcadRemoteBaseDir } from './orcad-remote-windows-node'
 import { randomUUID } from 'node:crypto'
 import type { OrcadDeployOptions, OrcadDeployResult } from './orcad-remote-deploy'
-import { isUnconfirmedSshCommandTermination } from './ssh-relay-deploy-helpers'
+import { isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
 import {
   withActivatedVersion,
   type OrcadActivationRecord,
@@ -57,7 +57,7 @@ import {
   stopTransactionIncumbent
 } from './orcad-transaction-incumbent'
 import { withOrcadLogTail } from './orcad-remote-log-tail'
-import { orcadCandidateLaunchFailureCode } from './orcad-host-unavailable'
+import { orcadCandidateLaunchFailureCode } from '../orcad/orcad-host-unavailable'
 import { errorMessage } from '../../shared/error-message'
 
 type Outcome = Extract<OrcadDeployResult, { outcome: 'installed-not-activated' }>

@@ -1,6 +1,6 @@
 import type { PairingOfferUnavailableReason } from '../runtime/runtime-rpc'
 import type { OrcadHealth } from '../orcad/orcad-health'
-import { toVerifiedPairingLink } from '../../shared/pairing'
+import { describePtyProcessCeiling } from '../daemon/pty-process-ceiling-state'
 
 export type ServePairingUnavailableReason = PairingOfferUnavailableReason | 'disabled_by_operator'
 
@@ -111,6 +111,9 @@ function renderHumanReadiness(readiness: ServeReadiness): string {
         ` (${daemon.selfTest.coverage}: ${daemon.selfTest.verdict})` +
         `; terminals survive an orcad restart: ${daemon.ownsFreshSessions ? 'yes' : 'NO'}`
     )
+    if (daemon.processCeiling !== undefined) {
+      lines.push(`Terminal process ceiling: ${describePtyProcessCeiling(daemon.processCeiling)}`)
+    }
   }
   if (readiness.pairing.available) {
     if (readiness.pairing.webClientUrl) {
@@ -120,12 +123,6 @@ function renderHumanReadiness(readiness: ServeReadiness): string {
       lines.push(`Mobile pairing QR:\n${readiness.pairing.qr}`)
     }
     lines.push(`Pairing URL: ${readiness.pairing.url}`)
-    // Why: tapping an `orca://` link on a phone hands the code to whichever app claimed the scheme.
-    const phoneLink =
-      readiness.pairing.scope === 'mobile' ? toVerifiedPairingLink(readiness.pairing.url) : null
-    if (phoneLink) {
-      lines.push(`Phone pairing link: ${phoneLink}`)
-    }
   } else {
     lines.push(`Pairing unavailable: ${readiness.pairing.reason}`)
     lines.push(`Pairing guidance: ${readiness.pairing.guidance}`)

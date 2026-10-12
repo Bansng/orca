@@ -23,7 +23,7 @@ import {
 import { loadLocalPtyRuntimeSpawn } from './local-pty-runtime-spawn'
 import { destroyPtyProcess } from './local-pty-termination'
 import { updateHistoryEnvForFallback } from '../terminal-history'
-import type { PtySpawnOptions, PtySpawnResult } from './types'
+import type { PtySpawnOptions, PtySpawnResult } from './pty-provider-contract'
 
 export async function spawnLocalPty(
   args: PtySpawnOptions,

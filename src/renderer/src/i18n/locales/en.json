@@ -2154,7 +2154,8 @@
         "expandNode": "Expand {{value0}}",
         "selectMachine": "Select all chats on {{value0}}",
         "sshHost": "SSH",
-        "done": "Done"
+        "done": "Done",
+        "resultListLabel": "Chats in this resume"
       },
       "StarNagCard": {
         "92b0f9d921": "is authenticated and try again.",
@@ -4763,7 +4764,6 @@
           "statusUpdateAvailable": "Update available",
           "statusCantUpdate": "Skipped",
           "cantUpdateReason": "Orca left this skill out of the update command.",
-          "skippedReasonUnrecognized": "The copy here doesn’t match the official version — it may be modified, or a different skill with the same name. Orca left it out of the update so it won’t overwrite it. Remove it if you want Orca to update this skill.",
           "skippedReasonReadOnly": "This copy is in a read-only location, so Orca left it out of the update. Change its permissions to let Orca update it.",
           "skippedReasonInaccessible": "Orca couldn’t read this copy, so it left the skill out of the update.",
           "skippedReasonInRepo": "This is a project skill, not a global one — Orca only updates your global skills, so it left this out of the update.",
@@ -4771,7 +4771,6 @@
           "skippedReasonExternalLink": "This copy is a shortcut pointing outside Orca’s skill folders, so Orca left it out of the update.",
           "skippedReasonBrokenLink": "This copy is a shortcut to something that no longer exists, so Orca left it out — you can safely delete it.",
           "chipCurrent": "Current",
-          "chipUnrecognized": "Unrecognized",
           "chipInaccessible": "Inaccessible",
           "chipDuplicate": "Duplicate",
           "chipExternalLink": "External link",
@@ -4780,7 +4779,6 @@
           "chipInRepo": "In a repo",
           "chipPluginCache": "Plugin cache",
           "tipCurrent": "This copy matches the current official version.",
-          "tipUnrecognized": "This copy doesn’t match any official version — it may be modified, or a different skill with the same name.",
           "tipInaccessible": "Orca couldn’t read this copy (a permissions or file error).",
           "tipDuplicate": "A separate copy of this skill, installed apart from the main one.",
           "tipExternalLink": "A shortcut pointing outside Orca’s skill folders.",
@@ -4788,11 +4786,7 @@
           "tipReadOnly": "This copy is in a read-only location.",
           "tipInRepo": "This copy lives inside a project, not your global skills.",
           "tipPluginCache": "This copy is managed by a plugin.",
-          "skippedReasonDuplicate": "This is a separate copy, so the update won’t reach it — the command only refreshes the main copy. Remove this copy, then reinstall the skill so this location follows the main one.",
-          "skippedReasonNewer": "This copy is a later version than the one this build of Orca ships, so Orca left it alone rather than roll it back. Updating Orca will bring the two back in line.",
-          "skippedReasonStaleRecord": "The skills updater has no usable record of this copy, so it reports the skill as already up to date and changes nothing. Reinstall it to bring the record back in line: {{value0}}",
-          "chipNewer": "Newer",
-          "tipNewer": "This copy is a later version than the one this build of Orca ships."
+          "skippedReasonDuplicate": "This is a separate copy, so the update won’t reach it — the command only refreshes the main copy. Remove this copy, then reinstall the skill so this location follows the main one."
         },
         "SkillFreshnessUpdateDialog": {
           "title": "Update skills",
@@ -4833,14 +4827,20 @@
           "scanOutsideRoot": "Orca skipped this plugin path because it points outside the plugin cache.",
           "scanIoErrorWithCode": "Orca could not read this plugin path ({{value0}}).",
           "scanIoError": "Orca could not read this plugin path.",
-          "scanIssueLimit": "Orca found too many skipped plugin folders to list individually."
+          "scanIssueLimit": "Orca found too many skipped plugin folders to list individually.",
+          "unselectedForeignOne": "1 skill not installed by Orca is unselected.",
+          "unselectedForeignMany": "{{value0}} skills not installed by Orca are unselected."
         },
         "SkillUpdateResultRows": {
           "stillOutdated": "Still out of date after the update ran."
         },
         "SkillUpdateRow": {
           "oneLocation": "1 location",
-          "manyLocations": "{{value0}} locations"
+          "manyLocations": "{{value0}} locations",
+          "notFromOrca": "Not from Orca",
+          "notFromOrcaSourceTip": "Installed from {{value0}}. Selecting it replaces it with Orca’s version.",
+          "notFromOrcaNoRecordTip": "No Orca install record for this copy. Selecting it replaces it with Orca’s version.",
+          "includeSkill": "Include {{value0}}"
         },
         "SkillFreshnessStatusPill": {
           "updateAvailable": "Update available",
@@ -11333,7 +11333,7 @@
           "sourceControlAiDefaults": "Recipes, prompts, and hosted-review defaults are shared by this client; model choices and discovery stay scoped to the host where the agent runs.",
           "projectOnThisHost": "Project on this host",
           "repositorySourceControlAi": "These overrides apply to this project setup and inherit the client Source Control AI defaults until customized.",
-          "agentLaunchDefaults": "Default agent, command overrides, CLI arguments, and launch environment are client preferences. SSH and remote server launches still validate host availability at run time.",
+          "agentLaunchDefaults": "Default agent, command overrides, CLI arguments, and launch environment are saved on the selected host.",
           "clientDefaultProjectScopes": "Client default + project scopes",
           "terminalQuickCommands": "Commands are saved on this client, then scoped globally or to a project setup so they run from the selected terminal context.",
           "hostOverride": "Host override",
@@ -17894,7 +17894,11 @@
         "resumingTitleOne": "Resuming 1 chat",
         "resumingTitle": "Resuming {{value0}} chats",
         "description": "Each chat is restored with its full context and asked to check where it stopped. You can close this; the status bar keeps track.",
-        "resumedTitleOne": "Resumed {{value0}} of 1 chat"
+        "resumedTitleOne": "Resumed {{value0}} of 1 chat",
+        "finished": "These chats were working when Orca closed. Orca restored each one where it stopped, with its full context, and asked the agent to check what it was doing before carrying on. Your own prompts weren’t re-sent.",
+        "finishedUpdate": "These chats were working when Orca installed an update. Orca restored each one where it stopped, with its full context, and asked the agent to check what it was doing before carrying on. Your own prompts weren’t re-sent.",
+        "finishedPartial": "These chats were working when Orca closed. The ones Orca resumed were restored where they stopped, with their full context, and asked to check what they were doing before carrying on. Your own prompts weren’t re-sent. Check the list for chats that still need attention or can be resumed.",
+        "finishedPartialUpdate": "These chats were working when Orca installed an update. The ones Orca resumed were restored where they stopped, with their full context, and asked to check what they were doing before carrying on. Your own prompts weren’t re-sent. Check the list for chats that still need attention or can be resumed."
       },
       "NativeChatResumeRunStatusIcon": {
         "waitingForReply": "Waiting for a reply",
@@ -17914,6 +17918,11 @@
         "attention": "Need you",
         "running": "Running {{value0}}",
         "filter": "Show chats"
+      },
+      "NativeChatResumeAutoNote": {
+        "resuming": "Resuming automatically after the restart.",
+        "resumed": "Resumed automatically after the restart.",
+        "changeInSettings": "Change in Settings"
       }
     },
     "i18n": {
@@ -19478,6 +19487,22 @@
       "learnMore": "Learn more",
       "dontShowAgain": "Don't show again",
       "dismiss": "Dismiss"
+    },
+    "newerDaemonBanner": {
+      "failedTitle": "Couldn't reopen this terminal",
+      "title": "This terminal was opened in a newer version of Orca",
+      "resumableBody": "Reopen it here to keep working. Your agent session will resume.",
+      "reopening": "Reopening…",
+      "tryAgain": "Try again",
+      "reopenTerminal": "Reopen {{count}} terminals",
+      "reopenTerminal_one": "Reopen terminal",
+      "reopenTerminal_other": "Reopen {{count}} terminals",
+      "reopened": "Reopened {{count}} terminals",
+      "reopened_one": "Reopened {{count}} terminal",
+      "reopened_other": "Reopened {{count}} terminals",
+      "resumed": "{{count}} agent sessions resumed.",
+      "resumed_one": "{{count}} agent session resumed.",
+      "resumed_other": "{{count}} agent sessions resumed."
     }
   },
   "fileExplorer": {
@@ -19726,6 +19751,17 @@
       "updateRuntimeSafely": "Update the remote runtime to safely change workspace links"
     }
   },
+  "settings.agents.environmentName": "Environment variable name",
+  "settings.agents.environmentValue": "Value for {{name}}",
+  "settings.agents.savedEnvironment": "Saved value · enter to replace",
+  "settings.agents.newEnvironment": "Value",
+  "settings.agents.removeEnvironment": "Remove",
+  "settings.agents.loadingHost": "Loading agent settings…",
+  "settings.agents.updateHost": "Update this server to edit its agent launch settings.",
+  "settings.agents.readFailed": "Couldn’t read agent settings. Check the host connection and try again.",
+  "settings.agents.saveFailed": "Couldn’t save agent settings. Check the host connection and try again.",
+  "settings.agents.hostDefaults": "Defaults for new agents on the selected host.",
+  "settings.agents.save": "Save",
   "tabHoverCard": {
     "browser": "Browser",
     "editor": "Editor",

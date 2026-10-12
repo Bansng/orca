@@ -129,7 +129,8 @@ describe('PR E2E gate contract', () => {
       'src/main/daemon/daemon-pty-spawn-result.ts',
       'src/renderer/src/components/terminal-pane/remote-runtime-pty-transport.ts',
       'src/renderer/src/components/terminal-pane/terminal-error-accumulation.ts',
-      'src/renderer/src/runtime/web-runtime-session.ts',
+      'src/renderer/src/runtime/web-runtime-terminal-creation.ts',
+      'src/renderer/src/runtime/web-runtime-session-tab-lifecycle.ts',
       'src/renderer/src/runtime/web-session-tabs-sync.ts',
       'src/renderer/src/runtime/web-session-terminal-orphan-recovery.ts',
       'src/renderer/src/runtime/web-session-terminal-orphan-recovery-adoption.ts',
@@ -187,7 +188,7 @@ describe('PR E2E gate contract', () => {
         'src/renderer/src/components/terminal-pane/remote-runtime-pty-transport-test-harness.ts'
       ])
     ).not.toContain('tests/e2e/paired-remote-terminal-materialization-reconnect.spec.ts')
-    expect(selectPrE2eSpecs(['src/main/ipc/pty.ts'])).not.toContain(
+    expect(selectPrE2eSpecs(['src/main/ipc/pty/register-handlers.ts'])).not.toContain(
       'tests/e2e/paired-remote-terminal-materialization-reconnect.spec.ts'
     )
   })

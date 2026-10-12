@@ -28,11 +28,17 @@ vi.mock('@/store', () => ({
   }
 }))
 
-vi.mock('@/runtime/web-runtime-session', () => ({
+vi.mock('@/runtime/web-runtime-session-tab-lifecycle', () => ({
   activateWebRuntimeSessionTab: activateWebRuntimeSessionTabMock,
-  closeWebRuntimeSessionTab: closeWebRuntimeSessionTabMock,
-  createWebRuntimeSessionTerminal: createWebRuntimeSessionTerminalMock,
-  isWebRuntimeSessionActive: isWebRuntimeSessionActiveMock,
+  closeWebRuntimeSessionTab: closeWebRuntimeSessionTabMock
+}))
+vi.mock('@/runtime/web-runtime-terminal-creation', () => ({
+  createWebRuntimeSessionTerminal: createWebRuntimeSessionTerminalMock
+}))
+vi.mock('@/runtime/web-runtime-session-environment', () => ({
+  isWebRuntimeSessionActive: isWebRuntimeSessionActiveMock
+}))
+vi.mock('@/runtime/web-terminal-surface-id', () => ({
   isWebTerminalSurfaceTabId: isWebTerminalSurfaceTabIdMock,
   toHostSessionTabId: toHostSessionTabIdMock
 }))

@@ -28,6 +28,11 @@ export const HANDLER_GROUPS: readonly HandlerGroup[] = [
     load: async () => (await import('./handlers/serve-restore.js')).SERVE_RESTORE_HANDLERS
   },
   {
+    name: 'serve-service',
+    keys: ['serve service install', 'serve service status', 'serve service uninstall'],
+    load: async () => (await import('./handlers/serve-service.js')).SERVE_SERVICE_HANDLERS
+  },
+  {
     name: 'account',
     keys: ['account add', 'account list', 'account select', 'account rm'],
     load: async () => (await import('./handlers/account.js')).ACCOUNT_HANDLERS
@@ -199,6 +204,11 @@ export const HANDLER_GROUPS: readonly HandlerGroup[] = [
     name: 'agent-hooks',
     keys: ['agent hooks prepare-codex', 'agent hooks status', 'agent hooks off', 'agent hooks on'],
     load: async () => (await import('./handlers/agent-hooks.js')).AGENT_HOOK_HANDLERS
+  },
+  {
+    name: 'agent-launch',
+    keys: ['agent launch'],
+    load: async () => (await import('./handlers/agent-launch.js')).AGENT_LAUNCH_HANDLERS
   },
   {
     name: 'profile-state',

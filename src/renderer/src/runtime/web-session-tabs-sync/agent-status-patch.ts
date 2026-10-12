@@ -5,7 +5,7 @@ import {
 import { agentEntryCompletionAt } from '../../../../shared/agent-completion-time'
 import { agentMainAgentVerdict } from '../../../../shared/agent-main-agent-verdict'
 import { normalizeCompatibleAgentStatusEntryForOwner } from '../../../../shared/agent-title-owner'
-import { isWebTerminalSurfaceTabId, toWebTerminalSurfaceTabId } from '../web-runtime-session'
+import { isWebTerminalSurfaceTabId, toWebTerminalSurfaceTabId } from '../web-terminal-surface-id'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type {
   MirroredTerminalTab,

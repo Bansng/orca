@@ -26,6 +26,7 @@ import { MacosLoginSessionDeathWatch } from './macos-login-session-death-watch'
 import { readCurrentProcessMacSystemResolverHealth } from '../network/macos-system-resolver-health'
 import { readCurrentDaemonReadyIdentity } from './daemon-ready-identity'
 import { publishDaemonPidFile } from './daemon-spawner'
+import { initializePtyProcessCeiling } from './pty-process-ceiling-runtime'
 import { isNativePtyException } from './daemon-native-pty-exception'
 import { startDaemonScopeDeathWatch } from './daemon-scope-death-watch'
 import { isWindowsProcessTableAvailable } from '../windows/windows-process-table'
@@ -135,9 +136,11 @@ async function main(): Promise<void> {
   // Fail-open: a broken log path must never block daemon startup.
   const daemonLog = logFilePath ? createDaemonFileLog(logFilePath) : createNoopDaemonFileLog()
   daemonLog.log('startup', { protocolVersion: PROTOCOL_VERSION, socketPath })
+  const processCeiling = initializePtyProcessCeiling(launchNonce ?? '')
   startDaemonScopeDeathWatch({
     freshScope: freshDaemonScope === true,
     launchNonce,
+    ceilingSlice: processCeiling.state === 'on' ? processCeiling.unit : null,
     log: (event, details) => daemonLog.log(event, details)
   })
   void warmPwshAvailabilityCache()
@@ -291,6 +294,7 @@ async function main(): Promise<void> {
               // where the daemon's own cgroup landed, verified from inside the process that
               // matters. See daemon-cgroup-scope.ts.
               cgroupUnit: detectOwnCgroupScopeUnit(),
+              processCeiling,
               launchNonce
             })
         }

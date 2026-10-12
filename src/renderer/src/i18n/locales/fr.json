@@ -4605,7 +4605,6 @@
           "statusUpdateAvailable": "Mise à jour disponible",
           "statusCantUpdate": "Ignoré",
           "cantUpdateReason": "Orca a exclu ce skill de la commande de mise à jour.",
-          "skippedReasonUnrecognized": "La copie ici ne correspond pas à la version officielle — elle a peut-être été modifiée, ou il s'agit d'un autre skill portant le même nom. Orca l'a exclue de la mise à jour pour ne pas l'écraser. Supprimez-la si vous voulez qu'Orca mette à jour ce skill.",
           "skippedReasonReadOnly": "Cette copie se trouve dans un emplacement en lecture seule, donc Orca l'a exclue de la mise à jour. Modifiez ses permissions pour permettre à Orca de la mettre à jour.",
           "skippedReasonInaccessible": "Orca n'a pas pu lire cette copie, il a donc exclu le skill de la mise à jour.",
           "skippedReasonInRepo": "C'est un skill de projet, pas un skill global — Orca ne met à jour que vos skills globaux, il a donc exclu celui-ci de la mise à jour.",
@@ -4613,7 +4612,6 @@
           "skippedReasonExternalLink": "Cette copie est un raccourci pointant hors des dossiers de skills d'Orca, donc Orca l'a exclue de la mise à jour.",
           "skippedReasonBrokenLink": "Cette copie est un raccourci vers quelque chose qui n'existe plus, donc Orca l'a exclue — vous pouvez la supprimer sans risque.",
           "chipCurrent": "Actuel",
-          "chipUnrecognized": "Non reconnu",
           "chipInaccessible": "Inaccessible",
           "chipDuplicate": "Doublon",
           "chipExternalLink": "Lien externe",
@@ -4622,7 +4620,6 @@
           "chipInRepo": "Dans un dépôt",
           "chipPluginCache": "Cache de plugins",
           "tipCurrent": "Cette copie correspond à la version officielle actuelle.",
-          "tipUnrecognized": "Cette copie ne correspond à aucune version officielle — elle a peut-être été modifiée, ou il s'agit d'un autre skill portant le même nom.",
           "tipInaccessible": "Orca n'a pas pu lire cette copie (erreur de permissions ou de fichier).",
           "tipDuplicate": "Une copie séparée de ce skill, installée à part de la principale.",
           "tipExternalLink": "Un raccourci pointant hors des dossiers de skills d'Orca.",
@@ -4630,11 +4627,7 @@
           "tipReadOnly": "Cette copie se trouve dans un emplacement en lecture seule.",
           "tipInRepo": "Cette copie vit dans un projet, pas dans vos skills globaux.",
           "tipPluginCache": "Cette copie est gérée par un plugin.",
-          "skippedReasonDuplicate": "Il s'agit d'une copie séparée : la mise à jour ne l'atteindra pas — la commande ne rafraîchit que la copie principale. Supprimez cette copie puis réinstallez le skill pour que cet emplacement suive le principal.",
-          "skippedReasonNewer": "Cette copie est plus récente que celle fournie avec cette build d'Orca ; Orca l'a donc laissée telle quelle plutôt que de la rétrograder. La mise à jour d'Orca remettra les deux en phase.",
-          "skippedReasonStaleRecord": "Le programme de mise à jour des skills n'a aucun enregistrement exploitable pour cette copie ; il signale donc le skill comme déjà à jour sans rien modifier. Réinstallez-le pour remettre l'enregistrement en cohérence : {{value0}}",
-          "chipNewer": "Plus récent",
-          "tipNewer": "Cette copie est plus récente que celle fournie avec cette build d'Orca."
+          "skippedReasonDuplicate": "Il s'agit d'une copie séparée : la mise à jour ne l'atteindra pas — la commande ne rafraîchit que la copie principale. Supprimez cette copie puis réinstallez le skill pour que cet emplacement suive le principal."
         },
         "SkillFreshnessUpdateDialog": {
           "title": "Mettre à jour les skills",
@@ -4675,14 +4668,20 @@
           "scanOutsideRoot": "Orca a ignoré ce chemin de plugin car il pointe hors du cache de plugins.",
           "scanIoErrorWithCode": "Orca n'a pas pu lire ce chemin de plugin ({{value0}}).",
           "scanIoError": "Orca n'a pas pu lire ce chemin de plugin.",
-          "scanIssueLimit": "Orca a trouvé trop de dossiers de plugins ignorés pour pouvoir les lister un par un."
+          "scanIssueLimit": "Orca a trouvé trop de dossiers de plugins ignorés pour pouvoir les lister un par un.",
+          "unselectedForeignOne": "1 skill non installé par Orca n’est pas sélectionné.",
+          "unselectedForeignMany": "{{value0}} skills non installés par Orca ne sont pas sélectionnés."
         },
         "SkillUpdateResultRows": {
           "stillOutdated": "Toujours pas à jour après l'exécution de la mise à jour."
         },
         "SkillUpdateRow": {
           "oneLocation": "1 emplacement",
-          "manyLocations": "{{value0}} emplacements"
+          "manyLocations": "{{value0}} emplacements",
+          "notFromOrca": "Hors Orca",
+          "notFromOrcaSourceTip": "Installé depuis {{value0}}. Le sélectionner le remplace par la version d’Orca.",
+          "notFromOrcaNoRecordTip": "Aucune trace d’installation par Orca pour cette copie. La sélectionner la remplace par la version d’Orca.",
+          "includeSkill": "Inclure {{value0}}"
         },
         "SkillFreshnessStatusPill": {
           "updateAvailable": "Mise à jour disponible",
@@ -11161,7 +11160,7 @@
           "sourceControlAiDefaults": "Recettes, prompts et valeurs par défaut de hosted review sont partagés par ce client ; les choix de modèle et la découverte restent limités à l'hôte où l'agent s'exécute.",
           "projectOnThisHost": "Projet sur cette machine",
           "repositorySourceControlAi": "Ces substitutions s'appliquent à cette configuration de projet et héritent des valeurs par défaut IA du contrôle source côté client tant qu'elles ne sont pas personnalisées.",
-          "agentLaunchDefaults": "L'agent par défaut, les substitutions de commandes, les arguments CLI et l'environnement de lancement sont des préférences du client. Les lancements SSH et serveur distant valident toujours la disponibilité de l'hôte à l'exécution.",
+          "agentLaunchDefaults": "L’agent par défaut, les commandes personnalisées, les arguments de la CLI et l’environnement de lancement sont enregistrés sur l’hôte sélectionné.",
           "clientDefaultProjectScopes": "Par défaut du client + portées projet",
           "terminalQuickCommands": "Les commandes sont enregistrées sur ce client, puis définies globalement ou pour une configuration de projet afin de s'exécuter depuis le contexte de terminal sélectionné.",
           "hostOverride": "Substitution par hôte",
@@ -17651,7 +17650,8 @@
         "expandNode": "Développer {{value0}}",
         "selectMachine": "Sélectionner toutes les discussions sur {{value0}}",
         "sshHost": "SSH",
-        "done": "Terminé"
+        "done": "Terminé",
+        "resultListLabel": "Discussions de cette reprise"
       },
       "linear-issue-attribute-filter-coverage-notice": {
         "statusPartialTeamCoverage": "Filtrage des statuts des équipes {{value0}} sur {{value1}} : les problèmes des équipes restantes ne sont pas inclus.",
@@ -17738,7 +17738,11 @@
         "resumedTitleOne": "{{value0}} discussion sur 1 reprise",
         "resumingTitleOne": "Reprise d’une discussion",
         "resumingTitle": "Reprise de {{value0}} discussions",
-        "description": "Chaque discussion est restaurée avec tout son contexte, et l’agent vérifie où il s’était arrêté. Vous pouvez fermer cette fenêtre ; la barre d’état suit la progression."
+        "description": "Chaque discussion est restaurée avec tout son contexte, et l’agent vérifie où il s’était arrêté. Vous pouvez fermer cette fenêtre ; la barre d’état suit la progression.",
+        "finished": "Ces discussions étaient en cours quand Orca s’est fermé. Orca a restauré chacune là où elle s’était arrêtée, avec tout son contexte, et a demandé à l’agent de vérifier ce qu’il faisait avant de continuer. Vos propres messages n’ont pas été renvoyés.",
+        "finishedUpdate": "Ces discussions étaient en cours quand Orca a installé une mise à jour. Orca a restauré chacune là où elle s’était arrêtée, avec tout son contexte, et a demandé à l’agent de vérifier ce qu’il faisait avant de continuer. Vos propres messages n’ont pas été renvoyés.",
+        "finishedPartial": "Ces discussions étaient en cours quand Orca s’est fermé. Celles qu’Orca a reprises ont été restaurées là où elles s’étaient arrêtées, avec tout leur contexte, et invitées à vérifier ce qu’elles faisaient avant de continuer. Vos propres messages n’ont pas été renvoyés. Consultez la liste pour voir les discussions qui nécessitent encore votre attention ou qui peuvent être reprises.",
+        "finishedPartialUpdate": "Ces discussions étaient en cours quand Orca a installé une mise à jour. Celles qu’Orca a reprises ont été restaurées là où elles s’étaient arrêtées, avec tout leur contexte, et invitées à vérifier ce qu’elles faisaient avant de continuer. Vos propres messages n’ont pas été renvoyés. Consultez la liste pour voir les discussions qui nécessitent encore votre attention ou qui peuvent être reprises."
       },
       "NativeChatResumeRunStatusIcon": {
         "waitingForReply": "En attente de réponse",
@@ -17758,6 +17762,11 @@
         "attention": "À traiter",
         "running": "En cours depuis {{value0}}",
         "filter": "Afficher les discussions"
+      },
+      "NativeChatResumeAutoNote": {
+        "resuming": "Reprise automatique après le redémarrage.",
+        "resumed": "Reprises automatiquement après le redémarrage.",
+        "changeInSettings": "Modifier dans les paramètres"
       }
     },
     "i18n": {
@@ -19510,5 +19519,16 @@
   },
   "projectField": {
     "updateFailed": "Échec de la mise à jour du champ du projet"
-  }
+  },
+  "settings.agents.environmentName": "Nom de la variable d’environnement",
+  "settings.agents.environmentValue": "Valeur de {{name}}",
+  "settings.agents.savedEnvironment": "Valeur enregistrée · saisir pour remplacer",
+  "settings.agents.newEnvironment": "Valeur",
+  "settings.agents.removeEnvironment": "Supprimer",
+  "settings.agents.loadingHost": "Chargement des paramètres des agents…",
+  "settings.agents.updateHost": "Mettez ce serveur à jour pour modifier ses paramètres de lancement des agents.",
+  "settings.agents.readFailed": "Impossible de lire les paramètres des agents. Vérifiez la connexion à l’hôte et réessayez.",
+  "settings.agents.saveFailed": "Impossible d’enregistrer les paramètres des agents. Vérifiez la connexion à l’hôte et réessayez.",
+  "settings.agents.hostDefaults": "Paramètres par défaut des nouveaux agents sur l’hôte sélectionné.",
+  "settings.agents.save": "Enregistrer"
 }

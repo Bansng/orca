@@ -3,6 +3,7 @@ import { useAppStore } from '@/store'
 import type { AppState } from '@/store/types'
 import { makeRepo, makeTerminalTab, makeWorktree } from '../worktree-jump-palette-test-fixtures'
 import { makeAgentStatusEntry } from '@/runtime/sync-runtime-graph-test-harness'
+import { collectAiVaultTitleRequests } from '@/lib/ai-vault-tab-title-requests'
 import type { AiVaultListArgs, AiVaultSession } from '../../../../shared/ai-vault-types'
 import {
   claimAiVaultForcedRescan,
@@ -147,6 +148,103 @@ describe('resolveTabSessionHistorySubject', () => {
   it('finds a terminal tab by the conversation its agent reported', () => {
     expect(
       resolveTabSessionHistorySubject(makeState(liveClaudeEntry), {
+        tab: { id: 'term-1', worktreeId: WORKTREE_ID }
+      })
+    ).toEqual(cliSubject)
+  })
+
+  it('finds an agent a restart reattached to before it reports again', () => {
+    const [[paneKey, entry]] = Object.entries(liveClaudeEntry)
+    expect(
+      resolveTabSessionHistorySubject(
+        makeState({ [paneKey]: { ...entry, restoredUnconfirmed: true } }),
+        { tab: { id: 'term-1', worktreeId: WORKTREE_ID } }
+      )
+    ).toEqual(cliSubject)
+  })
+
+  // What Orca remembers once the agent exits and the pane is back at its shell prompt.
+  const exitedAgentRecords: Record<string, Partial<AppState>> = {
+    retained: {
+      retainedAgentsByPaneKey: {
+        'term-1:leaf-1': {
+          entry: liveClaudeEntry['term-1:leaf-1'],
+          worktreeId: WORKTREE_ID,
+          tab: makeTerminalTab('term-1', WORKTREE_ID, 'claude'),
+          agentType: 'claude',
+          startedAt: 1
+        }
+      }
+    },
+    sleeping: {
+      sleepingAgentSessionsByPaneKey: {
+        'term-1:leaf-1': {
+          paneKey: 'term-1:leaf-1',
+          tabId: 'term-1',
+          worktreeId: WORKTREE_ID,
+          agent: 'claude',
+          providerSession: { key: 'session_id', id: 'claude-session-1' },
+          prompt: '',
+          state: 'working',
+          capturedAt: 1,
+          updatedAt: 1,
+          origin: 'live'
+        }
+      }
+    }
+  }
+
+  it.each(Object.keys(exitedAgentRecords))(
+    'offers nothing from a %s record once the agent has exited, though the tab title keeps it',
+    (kind) => {
+      makeState()
+      useAppStore.setState(exitedAgentRecords[kind])
+      const state = useAppStore.getState()
+      expect(
+        resolveTabSessionHistorySubject(state, { tab: { id: 'term-1', worktreeId: WORKTREE_ID } })
+      ).toBeNull()
+      expect(collectAiVaultTitleRequests(state)).toEqual([
+        expect.objectContaining({
+          tabId: 'term-1',
+          providerSession: { key: 'session_id', id: 'claude-session-1' }
+        })
+      ])
+    }
+  )
+
+  it("prefers a split pane's running agent over the focused pane's exited one", () => {
+    makeState({
+      'term-1:leaf-2': makeAgentStatusEntry({
+        agentType: 'claude',
+        paneKey: 'term-1:leaf-2',
+        tabId: 'term-1',
+        worktreeId: WORKTREE_ID,
+        providerSession: { key: 'session_id', id: 'claude-session-1' }
+      })
+    })
+    const exited = makeAgentStatusEntry({
+      agentType: 'claude',
+      paneKey: 'term-1:leaf-1',
+      tabId: 'term-1',
+      worktreeId: WORKTREE_ID,
+      providerSession: { key: 'session_id', id: 'claude-session-old' }
+    })
+    useAppStore.setState({
+      terminalLayoutsByTabId: {
+        'term-1': { root: null, activeLeafId: 'leaf-1', expandedLeafId: null }
+      },
+      retainedAgentsByPaneKey: {
+        'term-1:leaf-1': {
+          entry: exited,
+          worktreeId: WORKTREE_ID,
+          tab: makeTerminalTab('term-1', WORKTREE_ID, 'claude'),
+          agentType: 'claude',
+          startedAt: exited.stateStartedAt
+        }
+      }
+    })
+    expect(
+      resolveTabSessionHistorySubject(useAppStore.getState(), {
         tab: { id: 'term-1', worktreeId: WORKTREE_ID }
       })
     ).toEqual(cliSubject)

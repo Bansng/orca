@@ -29,8 +29,8 @@ import {
 } from '../../shared/orcad-local-serve-selection'
 import { resolveBundledOrcadRuntime } from './orcad-bundled-runtime'
 import { detectNativeHostAbi, nativeSlotName } from './native-host-abi'
-import { materializeOrcadArtifact } from '../ssh/orcad-artifact-materializer'
-import { materializeCachedNodeRuntime } from '../ssh/pinned-runtime-materializer'
+import { materializeOrcadArtifact } from './orcad-artifact-materializer'
+import { materializeCachedNodeRuntime } from '../node-runtime/pinned-runtime-materializer'
 import { serveProfileHasSshTargets } from './serve-profile-ssh-targets'
 import { errorMessage } from '../../shared/error-message'
 

@@ -91,8 +91,9 @@ export function resolveTabSessionHistorySubject(
       : null
     return target ? { ...target, kind: 'chat', sessionId: args.structuredSessionId } : null
   }
-  // The same pane-to-conversation mapping tab titles use: live agent, then sleeping, then retained.
-  const titleRequest = collectAiVaultTitleRequests(state).find(
+  // The pane-to-conversation mapping tab titles use, limited to agents still running: once the agent
+  // exits, the tab title keeps its conversation but the move is no longer offered.
+  const titleRequest = collectAiVaultTitleRequests(state, { runningAgentsOnly: true }).find(
     (candidate) => candidate.tabId === args.tab.id
   )
   const target = titleRequest ? workspace(titleRequest.worktreeId, 'cli') : null

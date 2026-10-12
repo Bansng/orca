@@ -1,8 +1,8 @@
 import { toast } from 'sonner'
 import {
+  getConnectionExecutionHostId,
   parseRoutableExecutionHostId,
   toRuntimeExecutionHostId,
-  toSshExecutionHostId,
   type ExecutionHostId
 } from '../../../shared/execution-host'
 import type { ExecutionHostOwnerMatch } from '../../../shared/worktree-execution-host-resolution'
@@ -34,8 +34,7 @@ export function getLocalPathOpenOwnerForRoute(route: {
   if (runtimeEnvironmentId) {
     return toRuntimeExecutionHostId(runtimeEnvironmentId)
   }
-  const connectionId = route.connectionId?.trim()
-  return connectionId ? toSshExecutionHostId(connectionId) : 'local'
+  return getConnectionExecutionHostId(route.connectionId?.trim())
 }
 
 /** The inverse of {@link getLocalPathOpenOwnerForRoute}, for callers that still take a route. */

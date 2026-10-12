@@ -11,9 +11,13 @@ const { closeWebRuntimeSessionTabMock, getStateMock, isWebRuntimeSessionActiveMo
 
 vi.mock('@/store', () => ({ useAppStore: { getState: getStateMock } }))
 
-vi.mock('@/runtime/web-runtime-session', () => ({
-  closeWebRuntimeSessionTab: closeWebRuntimeSessionTabMock,
-  isWebRuntimeSessionActive: isWebRuntimeSessionActiveMock,
+vi.mock('@/runtime/web-runtime-session-tab-lifecycle', () => ({
+  closeWebRuntimeSessionTab: closeWebRuntimeSessionTabMock
+}))
+vi.mock('@/runtime/web-runtime-session-environment', () => ({
+  isWebRuntimeSessionActive: isWebRuntimeSessionActiveMock
+}))
+vi.mock('@/runtime/web-terminal-surface-id', () => ({
   toHostSessionTabId: (tabId: string) => tabId
 }))
 

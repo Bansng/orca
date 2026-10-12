@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto'
+import type { PtyProcessCeilingState } from './pty-process-ceiling-state'
 import {
   constants,
   copyFileSync,
@@ -32,6 +33,8 @@ export type DaemonPidFile = {
    *  `null` when it detected none. Absent on records no daemon wrote (adoption) or that predate
    *  durable-scope launching. */
   cgroupUnit?: string | null
+  /** Whether this daemon's terminals run under an OS process ceiling, and why not when off. */
+  processCeiling?: PtyProcessCeilingState
 }
 
 export type DaemonProcessHandle = {

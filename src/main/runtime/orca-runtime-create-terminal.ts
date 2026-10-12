@@ -27,7 +27,7 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
     const rendererWindow = opts.rendererBacked === true ? availableAuthoritativeWindow : null
     const shouldCreateInBackground =
       worktreeSelector !== undefined &&
-      (Boolean(opts.agentSessionClaim) ||
+      (Boolean(opts.agentSessionClaim || opts.requireFreshPane) ||
         (!requiresRendererFocus && opts.rendererBacked !== true) ||
         availableAuthoritativeWindow === null)
     if (shouldCreateInBackground) {
@@ -260,7 +260,7 @@ export class OrcaRuntimeWithCreateTerminal extends OrcaRuntimeWithTerminalCreate
               ...(launchOpts.viewMode ? { viewMode: launchOpts.viewMode } : {}),
               activate: presentation === 'focused',
               ...(presentation ? { presentation } : {}),
-              ...dependencies.ownerSurfacing(opts.surfaceOwner !== false),
+              ...dependencies.terminalRevealViewerOptions(opts),
               tabId,
               leafId
             })

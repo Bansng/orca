@@ -226,9 +226,11 @@ export function createDaemonInitModuleFactories(state: DaemonInitMockState) {
     daemonPtyAdapter: () => ({
       DaemonPtyAdapter: MockDaemonPtyAdapter
     }),
-    ipcPty: () => ({
+    ptyProviderRegistry: () => ({
       getLocalPtyProvider: getLocalPtyProviderMock,
-      setLocalPtyProvider: setLocalPtyProviderMock,
+      setLocalPtyProvider: setLocalPtyProviderMock
+    }),
+    ptyListenerLifecycle: () => ({
       unbindLocalProviderListeners: unbindLocalProviderListenersMock,
       rebindLocalProviderListeners: rebindLocalProviderListenersMock
     }),

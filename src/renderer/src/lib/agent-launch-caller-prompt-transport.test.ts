@@ -27,7 +27,9 @@ vi.mock('@/lib/connection-context', () => ({ getConnectionIdFromState: () => nul
 vi.mock('@/lib/native-chat-transcript-readability', () => ({
   isNativeChatTranscriptLocalReadable: () => true
 }))
-vi.mock('@/runtime/web-runtime-session', () => ({ isWebRuntimeSessionActive: () => false }))
+vi.mock('@/runtime/web-runtime-session-environment', () => ({
+  isWebRuntimeSessionActive: () => false
+}))
 vi.mock('@/lib/worktree-runtime-owner', () => ({
   getExecutionHostIdForWorktree: () => 'local',
   getRuntimeEnvironmentIdForWorktree: () => null

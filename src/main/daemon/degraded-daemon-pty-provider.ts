@@ -6,11 +6,11 @@ import type {
   IPtyProvider,
   PtyBackgroundStreamEvent,
   PtyDataEvent,
-  PtyProviderBufferSnapshot,
   PtyProcessInfo,
+  PtyProviderBufferSnapshot,
   PtySpawnOptions,
   PtySpawnResult
-} from '../providers/types'
+} from '../providers/pty-provider-contract'
 import {
   adoptOwningProvider,
   attachDaemonOwnedSession,

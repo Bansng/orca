@@ -1,7 +1,7 @@
 import { isValidTerminalTabId } from '../../../../shared/terminal-tab-id'
 import { agentHookServer } from '../../../agent-hooks/server'
 import { registerPty } from '../../../memory/pty-registry'
-import type { PtySpawnResult } from '../../../providers/types'
+import type { PtySpawnResult } from '../../../providers/pty-provider-contract'
 import { clearMigrationUnsupportedPtysForPaneKey } from '../../../agent-hooks/migration-unsupported-pty-state'
 import { recordPtySpawnTelemetry } from '../pane/spawn-telemetry'
 import {

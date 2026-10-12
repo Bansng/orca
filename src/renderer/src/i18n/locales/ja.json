@@ -4583,9 +4583,8 @@
         "SkillFreshnessRow": {
           "statusUpdateAvailable": "更新があります",
           "statusCantUpdate": "スキップ済み",
-          "cantUpdateReason": "このスキルは Orca が安全に更新できない場所にインストールされているため、npx skills update コマンドは変更しません。",
+          "cantUpdateReason": "このスキルは Orca が安全に更新できない場所にインストールされているため、更新コマンドは変更しません。",
           "chipCurrent": "現在",
-          "chipUnrecognized": "未認識",
           "chipInaccessible": "アクセス不可",
           "chipDuplicate": "重複",
           "chipExternalLink": "外部リンク",
@@ -4594,26 +4593,20 @@
           "chipInRepo": "リポジトリ内",
           "chipPluginCache": "プラグインキャッシュ",
           "tipCurrent": "ここのスキルはすでに最新です。更新しても変更されません。",
-          "tipUnrecognized": "ここのスキルの内容が公式バージョンのいずれとも一致しないため、Orca は安全に更新できません。更新を許可するには、ここにあるものを削除または置き換えてください。",
           "tipInaccessible": "Orca はここのスキルを読み取れなかったため（権限またはファイルのエラー）、確認も更新もできません。",
-          "tipDuplicate": "このスキルはメインとは別に、ここにもインストールされています。そのため npx skills update コマンドは到達できません。更新を許可するには削除してください。",
+          "tipDuplicate": "このスキルはメインとは別に、ここにもインストールされています。そのため 更新コマンドは到達できません。更新を許可するには削除してください。",
           "tipExternalLink": "これは Orca のスキルフォルダーの外を指すショートカットです。更新では追跡されません。",
           "tipBrokenLink": "これは存在しないものを指すショートカットです。削除しても問題ありません。",
           "tipReadOnly": "ここのスキルは読み取り専用の場所にあるため、権限を変更するまで更新できません。",
           "tipInRepo": "ここのスキルはグローバルスキルではなくプロジェクト内にあります。Orca はグローバルなものだけを更新します。",
           "tipPluginCache": "ここのスキルはプラグインによって管理されています。代わりにプラグインを更新してください。",
-          "skippedReasonUnrecognized": "こちらのコピーは公式版と一致しません。変更されているか、同名の別のスキルの可能性があります。上書きしないよう、Orca は更新対象から除外しました。このスキルを Orca に更新させたい場合は、コピーを削除してください。",
           "skippedReasonReadOnly": "このコピーは読み取り専用の場所にあるため、Orca は更新対象から除外しました。Orca が更新できるように、権限を変更してください。",
           "skippedReasonInaccessible": "Orca はこのコピーを読み取れなかったため、このスキルを更新対象から除外しました。",
           "skippedReasonInRepo": "これはグローバルスキルではなくプロジェクトスキルです。Orca はグローバルスキルのみを更新するため、更新対象から除外しました。",
           "skippedReasonPluginCache": "このスキルはプラグインが管理しているため、Orca は更新対象から除外しました。代わりにプラグインを更新してください。",
           "skippedReasonExternalLink": "このコピーは Orca のスキルフォルダー外を指すショートカットのため、Orca は更新対象から除外しました。",
           "skippedReasonBrokenLink": "このコピーは存在しない対象へのショートカットのため、Orca は更新対象から除外しました。削除して問題ありません。",
-          "skippedReasonDuplicate": "これは別のコピーのため、更新は反映されません。コマンドはメインのコピーのみを更新します。このコピーを削除してからスキルを再インストールすると、この場所もメインに追従します。",
-          "skippedReasonNewer": "このコピーは、このビルドの Orca に同梱されているものより新しいバージョンです。そのため Orca はロールバックせず、そのままにしました。Orca を更新すると整合します。",
-          "skippedReasonStaleRecord": "スキル更新機能はこのコピーの記録を利用できないため、スキルは最新であると報告し、何も変更しません。記録を整合させるには再インストールしてください: {{value0}}",
-          "chipNewer": "Newer",
-          "tipNewer": "このコピーは、このビルドの Orca に同梱されているものより新しいバージョンです。"
+          "skippedReasonDuplicate": "これは別のコピーのため、更新は反映されません。コマンドはメインのコピーのみを更新します。このコピーを削除してからスキルを再インストールすると、この場所もメインに追従します。"
         },
         "SkillFreshnessUpdateDialog": {
           "title": "スキルを更新",
@@ -4654,7 +4647,9 @@
           "scanOutsideRoot": "プラグインキャッシュの外部を指しているため、このプラグインパスをスキップしました。",
           "scanIoErrorWithCode": "このプラグインパスを読み取れませんでした（{{value0}}）。",
           "scanIoError": "このプラグインパスを読み取れませんでした。",
-          "scanIssueLimit": "スキップされたプラグインフォルダーが多すぎるため、個別に表示できません。"
+          "scanIssueLimit": "スキップされたプラグインフォルダーが多すぎるため、個別に表示できません。",
+          "unselectedForeignOne": "Orca 以外からインストールされた 1 件のスキルは選択されていません。",
+          "unselectedForeignMany": "Orca 以外からインストールされた {{value0}} 件のスキルは選択されていません。"
         },
         "SkillFreshnessStatusPill": {
           "updateAvailable": "更新があります",
@@ -4670,7 +4665,11 @@
         },
         "SkillUpdateRow": {
           "oneLocation": "1 件の場所",
-          "manyLocations": "{{value0}} 件の場所"
+          "manyLocations": "{{value0}} 件の場所",
+          "notFromOrca": "Orca 以外から導入",
+          "notFromOrcaSourceTip": "{{value0}} からインストールされています。選択すると Orca のバージョンに置き換えられます。",
+          "notFromOrcaNoRecordTip": "このコピーには Orca によるインストール記録がありません。選択すると Orca のバージョンに置き換えられます。",
+          "includeSkill": "{{value0}} を含める"
         },
         "host": {
           "local": "このマシン",
@@ -11077,7 +11076,7 @@
           "sourceControlAiDefaults": "レシピ、プロンプト、ホスト型レビューの既定値は、このクライアントで共有されます。モデルの選択と検出は、Agent が実行されるホストの範囲に限定されます。",
           "projectOnThisHost": "このホスト上のプロジェクト",
           "repositorySourceControlAi": "これらの上書き設定はこのプロジェクトのセットアップに適用され、変更するまではクライアントのソース管理 AI 既定値を継承します。",
-          "agentLaunchDefaults": "既定の Agent、コマンドの上書き、CLI 引数、起動時の環境変数はクライアントの設定です。SSH やリモートサーバーでの起動時には、実行時にホストの利用可否を確認します。",
+          "agentLaunchDefaults": "既定のAgent、コマンドの上書き、CLI 引数、起動環境は選択したホストに保存されます。",
           "clientDefaultProjectScopes": "クライアントの既定値とプロジェクトのスコープ",
           "terminalQuickCommands": "コマンドはこのクライアントに保存され、全体またはプロジェクトのセットアップにスコープを設定して、選択したターミナルのコンテキストで実行されます。",
           "hostOverride": "ホストごとの上書き",
@@ -17534,7 +17533,8 @@
         "expandNode": "{{value0}} を展開します",
         "selectMachine": "{{value0}} のチャットをすべて選択",
         "sshHost": "SSH",
-        "done": "完了"
+        "done": "完了",
+        "resultListLabel": "今回再開したチャット"
       },
       "linear-issue-attribute-filter-coverage-notice": {
         "statusPartialTeamCoverage": "{{value0}}/{{value1}} チームステータスをフィルタリングしています。残りのチームからの問題は含まれません。",
@@ -17636,7 +17636,11 @@
         "resumedTitleOne": "1 件中 {{value0}} 件のチャットを再開しました",
         "resumingTitleOne": "1 件のチャットを再開中",
         "resumingTitle": "{{value0}} 件のチャットを再開中",
-        "description": "各チャットは全コンテキストとともに復元され、中断した箇所を確認するよう依頼されます。このダイアログは閉じても構いません。進行状況はステータスバーで確認できます。"
+        "description": "各チャットは全コンテキストとともに復元され、中断した箇所を確認するよう依頼されます。このダイアログは閉じても構いません。進行状況はステータスバーで確認できます。",
+        "finished": "これらのチャットは Orca が終了したときに作業中でした。Orca は各チャットを停止した時点から、すべてのコンテキストとともに復元し、続行する前に何をしていたかを確認するよう Agent に依頼しました。あなた自身のプロンプトは再送信されていません。",
+        "finishedUpdate": "これらのチャットは Orca がアップデートをインストールしたときに作業中でした。Orca は各チャットを停止した時点から、すべてのコンテキストとともに復元し、続行する前に何をしていたかを確認するよう Agent に依頼しました。あなた自身のプロンプトは再送信されていません。",
+        "finishedPartial": "これらのチャットは Orca が終了したときに作業中でした。Orca が再開したチャットは停止した時点から、すべてのコンテキストとともに復元され、続行する前に何をしていたかを確認するよう依頼されました。あなた自身のプロンプトは再送信されていません。対応が必要なチャットや再開できるチャットは、この一覧で確認してください。",
+        "finishedPartialUpdate": "これらのチャットは Orca がアップデートをインストールしたときに作業中でした。Orca が再開したチャットは停止した時点から、すべてのコンテキストとともに復元され、続行する前に何をしていたかを確認するよう依頼されました。あなた自身のプロンプトは再送信されていません。対応が必要なチャットや再開できるチャットは、この一覧で確認してください。"
       },
       "NativeChatResumeRunStatusIcon": {
         "waitingForReply": "返信を待っています",
@@ -17656,6 +17660,11 @@
         "attention": "要対応",
         "running": "経過 {{value0}}",
         "filter": "表示するチャット"
+      },
+      "NativeChatResumeAutoNote": {
+        "resuming": "再起動後に自動で再開しています。",
+        "resumed": "再起動後に自動で再開しました。",
+        "changeInSettings": "設定で変更"
       }
     },
     "i18n": {
@@ -19509,5 +19518,16 @@
   },
   "projectField": {
     "updateFailed": "プロジェクトフィールドを更新できませんでした"
-  }
+  },
+  "settings.agents.environmentName": "環境変数名",
+  "settings.agents.environmentValue": "{{name}} の値",
+  "settings.agents.savedEnvironment": "保存済みの値 · 置き換えるには入力",
+  "settings.agents.newEnvironment": "値",
+  "settings.agents.removeEnvironment": "削除",
+  "settings.agents.loadingHost": "Agent設定を読み込み中…",
+  "settings.agents.updateHost": "Agentの起動設定を編集するには、このサーバーを更新してください。",
+  "settings.agents.readFailed": "Agent設定を読み込めませんでした。ホストへの接続を確認して再試行してください。",
+  "settings.agents.saveFailed": "Agent設定を保存できませんでした。ホストへの接続を確認して再試行してください。",
+  "settings.agents.hostDefaults": "選択したホストで起動する新しいAgentの既定値。",
+  "settings.agents.save": "保存"
 }

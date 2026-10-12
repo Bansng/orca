@@ -1,3 +1,4 @@
+import { presentAgentLaunchTab } from '@/lib/agent-launch-tab-presentation'
 import { releaseAgentLaunchPaneSpawn } from '@/lib/agent-launch-pane-spawn-hold'
 import { requestBackgroundTerminalWorktreeMount } from '@/components/terminal/background-terminal-worktree-mount'
 import { hasRegisteredRuntimeTerminalTab } from '@/runtime/mounted-terminal-tab-registry'
@@ -38,6 +39,7 @@ export function registerTerminalPresentationIpcBridge(unsubs: (() => void)[]): v
         focus,
         presentation,
         surfaceOwner,
+        agentLaunchViewer,
         tabId,
         leafId,
         splitFromLeafId,
@@ -51,8 +53,12 @@ export function registerTerminalPresentationIpcBridge(unsubs: (() => void)[]): v
             activate,
             focus
           })
-          const shouldActivate = terminalPresentation === 'focused'
-          const shouldSurfaceOwner = terminalPresentation !== 'background' && surfaceOwner !== false
+          const shouldActivate =
+            agentLaunchViewer === undefined && terminalPresentation === 'focused'
+          const shouldSurfaceOwner =
+            agentLaunchViewer === undefined &&
+            terminalPresentation !== 'background' &&
+            surfaceOwner !== false
           if (shouldActivate) {
             activateTerminalInitiatedWorktree(store, worktreeId)
           }
@@ -96,7 +102,10 @@ export function registerTerminalPresentationIpcBridge(unsubs: (() => void)[]): v
             (ptyId
               ? store.createTab(worktreeId, undefined, undefined, {
                   initialPtyId: ptyId,
-                  activate: shouldActivate,
+                  activate:
+                    shouldActivate ||
+                    agentLaunchViewer === 'focus-window' ||
+                    agentLaunchViewer === 'focus-in-workspace',
                   ...(launchAgent
                     ? {
                         launchAgent,
@@ -135,6 +144,9 @@ export function registerTerminalPresentationIpcBridge(unsubs: (() => void)[]): v
           if (shouldSurfaceOwner) {
             store.revealWorktreeInSidebar(worktreeId)
             focusTerminalInitiatedTab(tab.id, leafId, worktreeId)
+          }
+          if (agentLaunchViewer) {
+            presentAgentLaunchTab(agentLaunchViewer, worktreeId, tab.id, leafId)
           }
           // Why: only stamp the runtime title on fresh tabs; reused tabs may have a user customTitle it would overwrite on focus.
           if (title && !reusedTab) {

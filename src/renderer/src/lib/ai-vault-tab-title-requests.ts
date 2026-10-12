@@ -67,15 +67,25 @@ function registerCandidate(
   })
 }
 
-export function collectAiVaultTitleRequests(state: AppState): AiVaultTitleRequest[] {
+export function collectAiVaultTitleRequests(
+  state: AppState,
+  options: {
+    /** Skip retained and sleeping records: those remember a conversation after its agent exited. */
+    runningAgentsOnly?: boolean
+  } = {}
+): AiVaultTitleRequest[] {
   const tabsById = new Map(
     Object.values(state.tabsByWorktree)
       .flat()
       .map((tab) => [tab.id, tab] as const)
   )
   const candidates = new Map<string, RequestCandidate>()
+  const retained = options.runningAgentsOnly ? [] : Object.values(state.retainedAgentsByPaneKey)
+  const sleeping = options.runningAgentsOnly
+    ? []
+    : Object.values(state.sleepingAgentSessionsByPaneKey)
 
-  for (const entry of Object.values(state.retainedAgentsByPaneKey)) {
+  for (const entry of retained) {
     registerCandidate(state, tabsById, candidates, {
       agent: entry.agentType,
       paneKey: entry.entry.paneKey,
@@ -86,7 +96,7 @@ export function collectAiVaultTitleRequests(state: AppState): AiVaultTitleReques
       worktreeId: entry.worktreeId
     })
   }
-  for (const record of Object.values(state.sleepingAgentSessionsByPaneKey)) {
+  for (const record of sleeping) {
     registerCandidate(state, tabsById, candidates, {
       agent: record.agent,
       paneKey: record.paneKey,

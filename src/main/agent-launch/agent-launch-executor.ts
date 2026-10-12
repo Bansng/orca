@@ -374,7 +374,7 @@ async function createTerminalSurface(
  * Mirrors how the create combines its own failures — `appendFailure` in
  * runtime-local-worktree-terminal-startup.ts — which append rather than replace.
  */
-function combineLaunchWarnings(
+export function combineLaunchWarnings(
   create: string | undefined,
   surface: string | undefined
 ): string | undefined {

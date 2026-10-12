@@ -686,7 +686,7 @@ describe('serveOrcaApp', () => {
     expect(child.unref).toHaveBeenCalledOnce()
   })
 
-  it('uses a shell when a Windows npm command shim is the Electron executable', async () => {
+  it('runs a Windows command-shim Electron executable through cmd.exe without a raw shell', async () => {
     const platformDescriptor = Object.getOwnPropertyDescriptor(process, 'platform')
     Object.defineProperty(process, 'platform', { value: 'win32' })
     process.env.ORCA_APP_EXECUTABLE = 'C:\\repo\\node_modules\\.bin\\electron.cmd'
@@ -705,12 +705,12 @@ describe('serveOrcaApp', () => {
 
     try {
       await expect(serveOrcaApp({ json: true })).resolves.toBe(0)
-      expect(spawnMock).toHaveBeenCalledWith(
-        'C:\\repo\\node_modules\\.bin\\electron.cmd',
-        [PIN_PROFILE, '--serve', '--serve-json'],
-        expect.objectContaining({
-          shell: true
-        })
+      const [program, [commandLine], options] = spawnMock.mock.calls[0]
+      expect(program).toMatch(/cmd\.exe$/i)
+      expect(commandLine).toContain('C:\\repo\\node_modules\\.bin\\electron.cmd')
+      expect(commandLine).toContain('--serve-json')
+      expect(options).toEqual(
+        expect.objectContaining({ shell: false, windowsHide: true, windowsVerbatimArguments: true })
       )
     } finally {
       if (platformDescriptor) {
