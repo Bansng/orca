@@ -119,6 +119,23 @@ export function assertSupportedObject(flags, runtime) {
   }
 }
 
+// A reserve cell's dead-man is fed only by director polls through the load balancer. With SQL
+// readiness the balancer drops the cell in a database outage, the polls fail, and the cell trips
+// (staging drill 2026-10-11), so reserve requires readinessLocal=true in the object it writes.
+export function assertReserveKeepsLocalReadiness(flags, changes) {
+  if ((flags.admitMode ?? 'db') !== 'reserve' || flags.readinessLocal === true) return
+  if ('readinessLocal' in changes && !('admitMode' in changes)) {
+    throw new Error(
+      'readinessLocal must stay true while the cell is reserve; flip it back with admitMode=db first, or in the same write'
+    )
+  }
+  throw new Error(
+    'admitMode=reserve requires readinessLocal=true on the cell, already written or in the same write ' +
+      '(e.g. --set readinessLocal=true,admitMode=reserve): with SQL readiness the load balancer drops the cell ' +
+      "in a database outage and the directors' polls can no longer feed its dead-man"
+  )
+}
+
 // `key=value,key=value`; `key=default` removes the key so the cell uses its default.
 export function parseFlagChanges(text) {
   const changes = {}
@@ -428,6 +445,7 @@ export async function operateCellFlags(request, dependencies) {
         'Name admitMode=db in the same write, e.g. --set admitMode=db,reregisterInFlight=N'
     )
   }
+  assertReserveKeepsLocalReadiness(object.flags, request.changes)
   const plan = {
     event: 'orca_relay_cell_flags_plan',
     mode: request.mode,

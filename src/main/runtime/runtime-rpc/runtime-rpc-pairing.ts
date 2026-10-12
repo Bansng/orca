@@ -1,5 +1,5 @@
 import type { RuntimeDeviceGrant } from '../rpc/rpc-caller-scope'
-import type { DeviceEntry, DeviceRegistry, DeviceScope } from '../device-registry'
+import type { DeviceRegistry, DeviceScope, TokenDeviceEntry } from '../device-registry'
 import type { E2EEKeypair } from '../e2ee-keypair'
 import type { MobileSocketWiring } from '../rpc/mobile-socket-wiring'
 import type { RelayDeviceBinding, RelayRevokeOutbox } from '../relay/relay-revoke-outbox'
@@ -171,7 +171,7 @@ export class RuntimeRpcPairing extends RuntimeRpcNetworkExposure {
     const endpoint = advertised.endpoint
     const deviceName = args.name ?? `CLI ${new Date().toLocaleDateString()}`
     const scope = args.scope ?? 'runtime'
-    let device: DeviceEntry
+    let device: TokenDeviceEntry
     try {
       const reach = args.reach ?? 'network'
       const grants = args.grants ?? []

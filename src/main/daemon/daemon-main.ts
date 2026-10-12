@@ -3,6 +3,7 @@ import type { DaemonServerOptions } from './daemon-server-options'
 import type { DaemonFileLog } from './daemon-file-log'
 import { readTerminalSpawnAdmissionArg } from './terminal-spawn-gate'
 import { automaticWorkMarkerPathFor } from './automatic-work-run-marker-store'
+import { defaultHostTerminalLedgerDir } from './host-terminal-ledger'
 
 export type DaemonStartOptions = {
   socketPath: string
@@ -23,6 +24,7 @@ export type DaemonStartOptions = {
   log?: DaemonFileLog
   spawnAdmission?: DaemonServerOptions['spawnAdmission']
   automaticWorkMarkerPath?: string
+  hostTerminalLedgerDir?: string
   onIdleShutdown?: () => void
   onRpcShutdown?: () => void
   initialAdoptionTestConfig?: DaemonServerOptions['initialAdoptionTestConfig']
@@ -35,6 +37,9 @@ export type DaemonHandle = {
 }
 
 export async function startDaemon(opts: DaemonStartOptions): Promise<DaemonHandle> {
+  // Why launched daemons only: a directly started test daemon must not join the real host count.
+  const hostTerminalLedgerDir =
+    opts.hostTerminalLedgerDir ?? (opts.pidPath ? defaultHostTerminalLedgerDir() : null)
   const server = new DaemonServer({
     socketPath: opts.socketPath,
     tokenPath: opts.tokenPath,
@@ -64,6 +69,7 @@ export async function startDaemon(opts: DaemonStartOptions): Promise<DaemonHandl
             opts.automaticWorkMarkerPath ?? automaticWorkMarkerPathFor(opts.pidPath ?? '')
         }
       : {}),
+    ...(hostTerminalLedgerDir ? { hostTerminalLedgerDir } : {}),
     ...(opts.onIdleShutdown ? { onIdleShutdown: opts.onIdleShutdown } : {}),
     ...(opts.onRpcShutdown ? { onRpcShutdown: opts.onRpcShutdown } : {}),
     ...(opts.initialAdoptionTestConfig

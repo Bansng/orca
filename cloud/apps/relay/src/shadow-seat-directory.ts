@@ -1,5 +1,10 @@
 import type { RelayRegion } from '@orca-cloud/relay-contract'
 import { z } from 'zod'
+import {
+  CellPollReachability,
+  type DeadCellVerdict,
+  isNoBackendStatus
+} from './cell-poll-reachability.js'
 import type { RelayConfig } from './config.js'
 import { googleMetadataIdentityToken, reusedIdentityToken } from './google-metadata-identity-token.js'
 
@@ -15,6 +20,7 @@ const RECENTLY_LEFT_PER_HOST = 4
 // Google identity tokens live an hour; one per poll would be 26 metadata reads a second.
 const IDENTITY_TOKEN_REUSE_MS = 10 * 60_000
 const SUMMARY_INTERVAL_MS = 60_000
+const WITHHELD_LOG_INTERVAL_MS = 60_000
 const CELL_LIST_RETRY_BASE_MS = 1_000
 const CELL_LIST_RETRY_MAX_MS = SHADOW_SEAT_CELL_LIST_REFRESH_MS
 // A drain backlog drains over a few polls rather than holding one slot indefinitely.
@@ -101,6 +107,8 @@ export type SeatFeedCell = {
   incarnation?: string
   // Admission state general and not roll-isolated: step 5 places only on these.
   general?: boolean
+  // Zero for a row that can hold no host; absent from callers that do not read it.
+  capacityRequests?: number
 }
 
 export type ShadowSeat = {
@@ -612,6 +620,9 @@ export type ShadowSeatPoller = {
   startedAt: number
   // One round: refreshes the cell list when due, then polls every idle cell.
   tick: () => Promise<void>
+  // This director's polls to the cell have gone unanswered long enough to count as death evidence;
+  // null while they are answered.
+  deadCellVerdict: (cellId: string, now: number) => DeadCellVerdict | null
   stop: () => void
 }
 
@@ -637,6 +648,8 @@ export function startShadowSeatPoller(
     options.identityToken ??
     ((tokenAudience: string) => googleMetadataIdentityToken(tokenAudience, fetchImpl))
   const directory = new ShadowSeatDirectory()
+  const reachability = new CellPollReachability()
+  const withheldLoggedAt = new Map<string, number>()
   const startedAt = now()
   const inFlight = new Set<string>()
   let cells: SeatFeedCell[] = []
@@ -671,6 +684,7 @@ export function startShadowSeatPoller(
           )
         }
       )
+      reachability.forget(new Set(cells.map((cell) => cell.cellId)))
       cellsReadAt = now()
       cellListFailures = 0
     } catch (error) {
@@ -699,11 +713,18 @@ export function startShadowSeatPoller(
     if (since !== undefined) url.searchParams.set('since', since)
     // Placing on reserve cells: keeps each cell's dead-man from flipping it back to db.
     if (options.reserver?.()) url.searchParams.set('reserver', '1')
+    // Outside the request: a token this director cannot mint says nothing about the cell.
+    const token = await identity()
     const response = await fetchImpl(url, {
-      headers: { authorization: `Bearer ${await identity()}` },
+      headers: { authorization: `Bearer ${token}` },
       signal: AbortSignal.timeout(SHADOW_SEAT_POLL_TIMEOUT_MS)
+    }).catch((error: unknown) => {
+      reachability.unanswered(cell.cellId, now())
+      throw error
     })
     if (stopped) return false
+    if (isNoBackendStatus(response.status)) reachability.unanswered(cell.cellId, now())
+    else reachability.answered(cell.cellId)
     if (response.status === 404) {
       await response.body?.cancel().catch(() => undefined)
       directory.markNoFeed(cell.cellId, now(), cell.incarnation)
@@ -770,6 +791,24 @@ export function startShadowSeatPoller(
     cells: () => cells,
     startedAt,
     tick: () => round(true),
+    deadCellVerdict: (cellId, at) => {
+      // Peers count once they have served this director a feed. The candidate always does: the
+      // store asks only for a cell Postgres records as reserve, which only a feed image runs, and a
+      // director restarted after it died would otherwise never hear from it.
+      const feedCells = cells.filter((cell) => {
+        if ((cell.capacityRequests ?? 1) <= 0) return false
+        if (cell.cellId === cellId) return true
+        const state = directory.cellState(cell.cellId)
+        return state?.status !== 'no-feed' && state?.lastLiveAt !== undefined
+      })
+      const verdict = reachability.verdict(cellId, feedCells, at)
+      // A withheld verdict strands that cell's hosts until an operator fences it, so it alerts.
+      if (verdict?.withheld && at - (withheldLoggedAt.get(cellId) ?? -Infinity) >= WITHHELD_LOG_INTERVAL_MS) {
+        withheldLoggedAt.set(cellId, at)
+        log(JSON.stringify({ event: 'orca_relay_dead_cell_verdict_withheld', cellId, ...verdict }))
+      }
+      return verdict
+    },
     stop: () => {
       stopped = true
       clearInterval(timer)

@@ -16,7 +16,6 @@ const repo: Repo = {
 }
 
 describe('qualified refs in repository searches', () => {
-
   it('keeps folder workspaces outside Git searches', async () => {
     vi.mocked(getSshGitProvider).mockClear()
     const queries = new RuntimeRepositoryRefQueries({

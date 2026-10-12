@@ -42,6 +42,24 @@ describe('AutomaticWorkRunMarker', () => {
     )
   })
 
+  it('keeps a crash pause until an explicit resume, which survives the next start', () => {
+    open().arm()
+    const paused = open(20)
+    expect(open(30).mode).toMatchObject({ kind: 'paused', reason: 'unclean_host_death' })
+
+    const carried = open(40)
+    carried.resume()
+    expect(carried.mode).toEqual({ kind: 'normal' })
+    expect(JSON.parse(readFileSync(path, 'utf8'))).toMatchObject({ mode: { kind: 'normal' } })
+    expect(logger.log).toHaveBeenCalledWith(
+      'automatic-work-resumed',
+      expect.objectContaining({ reason: 'unclean_host_death' })
+    )
+    carried.markCleanExit()
+    expect(open(50).mode).toEqual({ kind: 'normal' })
+    expect(paused.mode.kind).toBe('paused')
+  })
+
   it('does not pause after an orderly exit, or when nothing automatic ran', () => {
     const first = open()
     first.arm()

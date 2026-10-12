@@ -100,7 +100,6 @@ export function buildWorktreePurgeState(
     omitWorkspaceLineageByWorktree,
     pruneRightSidebarTabByWorktree,
     omitByTabId,
-    omitRetiredDirectSshLedgerByTabId,
     omitByPtyId,
     omitByPaneKeyTabPrefix,
     omitByBrowserWorkspaceId,
@@ -160,13 +159,6 @@ export function buildWorktreePurgeState(
     pendingIssueCommandSplitByTabId: omitByTabId(s.pendingIssueCommandSplitByTabId),
     pendingSetupSplitByTabId: omitByTabId(s.pendingSetupSplitByTabId),
     pendingStartupByTabId: omitByTabId(s.pendingStartupByTabId),
-    directSshPaneRetryByTabId: omitRetiredDirectSshLedgerByTabId(s.directSshPaneRetryByTabId),
-    directSshLivePtyBindingByTabId: omitRetiredDirectSshLedgerByTabId(
-      s.directSshLivePtyBindingByTabId
-    ),
-    directSshPaneRetryHistoryByTabId: omitRetiredDirectSshLedgerByTabId(
-      s.directSshPaneRetryHistoryByTabId
-    ),
     codexRestartNoticeByPtyId: omitByPtyId(s.codexRestartNoticeByPtyId),
     migrationUnsupportedByPtyId: omitByPtyId(s.migrationUnsupportedByPtyId),
     suppressedPtyExitIds: omitByPtyId(s.suppressedPtyExitIds),

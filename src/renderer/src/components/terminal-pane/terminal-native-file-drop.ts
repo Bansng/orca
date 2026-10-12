@@ -17,7 +17,6 @@ import {
   resolveTerminalDropTargetShell
 } from './terminal-drop-shell'
 import { writeTerminalDropPathsToCapturedTarget } from './terminal-drop-path-writer'
-import { getTerminalPasteSshRemotePlatform } from './terminal-paste-ssh-platform'
 import { showTerminalDropWriteFailure } from './terminal-drop-write-failure'
 import { joinRuntimeTerminalDropDir } from './terminal-drop-worktree-path'
 import type { captureTerminalDropTransportOwner } from './terminal-drop-transport-owner'
@@ -72,8 +71,7 @@ export async function deliverNativeTerminalFileDrop(
   const targetShell = resolveTerminalDropTargetShell({
     activeRuntimeEnvironmentId: null,
     worktreePath,
-    connectionId,
-    remotePlatform: getTerminalPasteSshRemotePlatform(connectionId)
+    connectionId
   })
   const isRemote = connectionId !== null
 

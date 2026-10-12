@@ -224,6 +224,8 @@ it('pins every foreground and background step to its selected phase', () => {
     ['Enforce ts-nocheck ratchet', staticPhase],
     ['Enforce runtime Electron-import ratchet', staticPhase],
     ['Enforce focus-read ratchet', staticPhase],
+    ['Enforce layout-writer ratchets', staticPhase],
+    ['Check compatibility-folder imports', staticPhase],
     ['Check Node runtime pin', staticPhase],
     ['Boot orcad and round-trip a terminal', staticPhase],
     ['Verify the generated RPC params catalog', staticPhase],

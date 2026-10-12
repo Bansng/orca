@@ -6,7 +6,6 @@ import {
 } from '../../shared/managed-orcad-ssh-owner'
 import { listEnvironments } from '../../shared/runtime-environment-store'
 import { findOrcadMigrationSourceCutoverForTarget } from '../ssh/orcad-migration-cutover-journal'
-import { orcadMigrationRelayPtyLister } from '../ssh/orcad-migration-relay-pty-lister'
 import { abandonOrcadConversion } from '../ssh/orcad-conversion-abandon'
 import { retainOrcadMigrationSource } from '../ssh/orcad-migration-source-retention'
 import { hasOrcadTemplate } from '../ssh/orcad-artifact-materializer'
@@ -83,7 +82,6 @@ export function hostServerOnConnectDeps(userDataPath: string): HostServerOnConne
       relayTerminalsOnConnect({
         store,
         targetId: target.id,
-        listRelayPtyIds: orcadMigrationRelayPtyLister(target.id),
         censusHost: async () =>
           censusSshHostRelaysBeforeSession(
             await requireManagedOrcadInfrastructure().connectionManager.connect(target),
@@ -99,7 +97,6 @@ export function hostServerOnConnectDeps(userDataPath: string): HostServerOnConne
       convertSshTargetToManagedOrcad(userDataPath, {
         sshTargetId: target.id,
         name: managedOrcadServerName(target),
-        listRelayPtyIds: orcadMigrationRelayPtyLister(target.id),
         // The connect's own census already answered; a conversion before any session reuses it.
         censusHost: (host) =>
           hostProof ? Promise.resolve(hostProof) : censusHostRelayTerminalsFor(host)(),

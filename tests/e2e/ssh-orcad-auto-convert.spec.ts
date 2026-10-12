@@ -29,6 +29,7 @@ import {
   readHostOrcadActivation
 } from './helpers/orcad-template-variant'
 import { seedRelayEraProfile } from './helpers/orcad-upgrade-profile'
+import { toSshExecutionHostId } from '../../src/shared/execution-host'
 import {
   ORCAD_CONVERT_HOST_ENV,
   startOrcadConvertHost,
@@ -93,10 +94,12 @@ test('a relay-era profile converts its SSH host on the first connect after upgra
     await first.page.evaluate((repoPath) => window.api.repos.add({ path: repoPath }), testRepoPath)
     await session.close(app)
     app = null
-    const seeded = seedRelayEraProfile(session.userDataDir, host.input, {
-      repoPath: host.remoteRepoPath,
-      folderPath: host.remoteFolderPath
-    })
+    const seeded = seedRelayEraProfile(
+      session.userDataDir,
+      host.input,
+      { repoPath: host.remoteRepoPath, folderPath: host.remoteFolderPath },
+      { terminalTab: true }
+    )
     // No relay ever ran here, so the terminal gate must prove `exited` from an empty lease set.
     // This launch bypasses the fixture's log relay; keep the SSH lines a failed move explains itself by.
     const upgraded = await session.launch({
@@ -108,6 +111,25 @@ test('a relay-era profile converts its SSH host on the first connect after upgra
     })
     app = upgraded.app
     await waitForSessionReady(upgraded.page)
+    // The relay-era terminal tab never spawns on the unconverted row; mounting it dials the host,
+    // as the relay-era pane did, and that connect converts it.
+    await upgraded.page.evaluate(
+      ({ worktreeId, hostId, tabId }) => {
+        const state = window.__store!.getState()
+        state.setActiveWorktree(worktreeId, hostId)
+        state.setActiveTab(tabId)
+        state.setActiveTabType('terminal', worktreeId)
+      },
+      {
+        worktreeId: seeded.worktreeId,
+        hostId: toSshExecutionHostId(seeded.targetId),
+        tabId: seeded.terminalTabId!
+      }
+    )
+    await expect
+      .poll(() => managedServer(upgraded.page, seeded.targetId), { timeout: 8 * 60_000 })
+      .toMatchObject({ kind: 'managed' })
+    await upgraded.page.screenshot({ path: testInfo.outputPath('relay-era-terminal-dialed.png') })
     await convertAndRetain(upgraded.page, session.userDataDir, seeded)
     const environment = (
       await upgraded.page.evaluate(() => window.api.runtimeEnvironments.list())

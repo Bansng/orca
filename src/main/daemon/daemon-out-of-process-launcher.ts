@@ -8,7 +8,9 @@ import {
   holdDaemonAdoptionLease,
   reconcileDaemonPidOwnership
 } from './daemon-endpoint-adoption'
+import { LOCAL_PTY_STARTUP_FAIL_OPEN_TIMEOUT_MS } from '../startup/first-window-startup-services'
 import {
+  DAEMON_CHILD_STARTUP_TIMEOUT_MS,
   DaemonEndpointUnavailableError,
   launchDaemonChild,
   terminateLaunchedDaemonChild
@@ -16,6 +18,7 @@ import {
 import { getDaemonEntryPath, probeDaemonSocket as probeSocket } from './daemon-launch-paths'
 import { materializeRelocatedDaemonHost, pruneDaemonHostStaging } from './daemon-host-relocation'
 import { appImageDaemonIdentityPath, resolveAppImageDaemonLaunch } from './daemon-appimage-launch'
+import { launchMacDaemonFromStableBundle } from './macos-daemon-launchd'
 import { DAEMON_RECOVERY_BUDGET_MS, daemonRecoveryProbeTimeoutMs } from './daemon-recovery-budget'
 import { cleanupDaemonForProtocol } from './daemon-protocol-cleanup'
 import {
@@ -33,6 +36,10 @@ import { ensureDaemonSocketDir } from './daemon-socket-endpoint-path'
 // there is nothing left to kill and the launcher's own confirmed-kill gate would report nothing.
 // The adapter hands the reason across so the launch it triggers reports what actually drove it.
 let attributedReplaceReason: DaemonReplaceReason | null = null
+
+// The fork fallback's readiness wait plus the lease and adapter connects must still fit the gate.
+const MAC_STABLE_LAUNCH_HANDOFF_MS =
+  LOCAL_PTY_STARTUP_FAIL_OPEN_TIMEOUT_MS - DAEMON_CHILD_STARTUP_TIMEOUT_MS - 5_000
 
 export function attributeNextDaemonReplacement(reason: DaemonReplaceReason): void {
   attributedReplaceReason = reason
@@ -68,7 +75,8 @@ export function createOutOfProcessLauncher(
     const entryPath = getDaemonEntryPath()
     // Why here: everything up to the fork is one recovery, so the adoption connect and the
     // preflight's probes share a single absolute budget rather than each carrying its own.
-    const recoveryDeadlineMs = Date.now() + DAEMON_RECOVERY_BUDGET_MS
+    const launchStartedAtMs = Date.now()
+    const recoveryDeadlineMs = launchStartedAtMs + DAEMON_RECOVERY_BUDGET_MS
     const pidPath = suppliedPidPath ?? getDaemonPidPath(runtimeDir)
     const launchNonce = suppliedLaunchNonce ?? randomUUID()
     // One-shot: whichever launch consumes it owns the attribution, so a later unrelated launch can't
@@ -133,6 +141,22 @@ export function createOutOfProcessLauncher(
       }
 
       const userDataPath = environment.getPath('userData')
+      const macHandle = await launchMacDaemonFromStableBundle(
+        {
+          entryPath,
+          userDataPath,
+          socketPath,
+          tokenPath,
+          pidPath,
+          launchNonce,
+          macosLoginSessionWatch,
+          ...(spawnAdmission ? { spawnAdmission } : {})
+        },
+        launchStartedAtMs + MAC_STABLE_LAUNCH_HANDOFF_MS
+      )
+      if (macHandle) {
+        return macHandle
+      }
       // Why: on win32 packaged, stage a daemon-host copy in userData so its image escapes the NSIS updater's kill zone; lazy so it's off first-paint. Fail-open: null → in-dir host.
       const relocatedHost = materializeRelocatedDaemonHost()
       pruneDaemonHostStaging()

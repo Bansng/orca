@@ -67,8 +67,25 @@ describe('DaemonAutomaticWorkGuard growth breaker', () => {
         trips: expect.arrayContaining([expect.objectContaining({ scope: 'session-0001' })])
       })
     )
-    // Nothing can resume a recorded pause yet, so the breaker never writes one.
+    // A pressure pause lives for this run only, so the breaker never writes one.
     expect(JSON.parse(readFileSync(markerPath, 'utf8'))).toMatchObject({ mode: { kind: 'normal' } })
+  })
+
+  it('lets the operator clear a pressure pause and reports what it cleared', async () => {
+    const { guard } = await stormUnderOneAgent('enforce')
+    const wake = vi.spyOn(guard.gate, 'onPressureChanged')
+
+    expect(guard.status()).toMatchObject({
+      admission: 'enforce',
+      mode: { kind: 'paused', reason: 'pressure' }
+    })
+    expect(guard.resume()).toMatchObject({
+      admission: 'enforce',
+      mode: { kind: 'normal' },
+      cleared: { kind: 'paused', reason: 'pressure' }
+    })
+    expect(wake).toHaveBeenCalled()
+    expect(guard.resume()).toMatchObject({ cleared: null })
   })
 
   it('only reports a storm on an observe-only host', async () => {

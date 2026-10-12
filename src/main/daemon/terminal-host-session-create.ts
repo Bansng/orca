@@ -17,6 +17,7 @@ import type { TerminalHostOptions } from './terminal-host-options'
 import type { TerminalHostTombstones } from './terminal-host-tombstones'
 import type { TerminalSessionTeardown } from './terminal-session-teardown'
 import type { TerminalSpawnGate } from './terminal-spawn-gate'
+import type { LegacyRestoreDetails } from './legacy-restore-records'
 import { resolveDaemonSessionScrollbackRows } from './daemon-session-scrollback-window'
 import { TerminalAttachCanceledError } from './daemon-errors'
 import { waitForTerminalAttachOperation } from './terminal-attach-cancellation'
@@ -120,7 +121,8 @@ export async function createOrAttachTerminalSession(
     },
     opts.cancelSignal
       ? { signal: opts.cancelSignal, error: () => new TerminalAttachCanceledError(sessionId) }
-      : undefined
+      : undefined,
+    describeAgentRestore(opts)
   )
   const paced = lease instanceof Promise
   if (lease instanceof Promise) {
@@ -288,6 +290,23 @@ function createSessionExitHandler(
     discardStagedCommand()
     spawnGate?.onSessionExit(sessionId)
     onSessionExit(sessionId, generation)
+  }
+}
+
+/** What an agent launch resumes, never its environment, which can carry credentials. */
+function describeAgentRestore(
+  opts: InternalCreateOrAttachOptions
+): LegacyRestoreDetails | undefined {
+  if (!opts.command || (!opts.launchAgent && !opts.agentSessionEnsure)) {
+    return undefined
+  }
+  return {
+    sessionId: opts.sessionId,
+    agent: opts.launchAgent ?? opts.agentSessionEnsure?.claim.agent ?? null,
+    cwd: opts.cwd ?? null,
+    worktreeId: opts.agentSessionEnsure?.surface.worktreeId ?? null,
+    command: opts.command,
+    identityDigest: opts.agentSessionEnsure?.claim.identityDigest ?? null
   }
 }
 

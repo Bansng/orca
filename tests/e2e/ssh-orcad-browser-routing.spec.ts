@@ -24,9 +24,9 @@ import { deriveBrowserRoutePartition } from '../../src/main/browser/browser-rout
 import { sshExecutionHostStorageIdentity } from '../../src/main/browser/browser-execution-host-storage-identity'
 import { reconnect } from './helpers/orcad-convert-flow'
 import { navigateGuest } from './helpers/browser-split-guest-probes'
+import { ORCAD_TEMPLATE, skipUnlessManagedDockerHost } from './helpers/orcad-managed-workspace'
 
-const TEMPLATE = process.env.ORCA_E2E_ORCAD_CONVERT_TEMPLATE
-test.skip(!TEMPLATE || process.env.ORCA_E2E_SSH_DOCKER !== '1', 'Needs Docker and server template')
+skipUnlessManagedDockerHost()
 
 /** The partition a relay-era build kept this host's browser storage in (local-ssh-browser-partitions). */
 function relayEraPartition(targetId: string): string {
@@ -147,7 +147,7 @@ test('retained and new browser tabs keep SSH routing and login cookies after man
         value: SSH_REMOTE_ONLY_COOKIE_VALUE
       }
     )
-    cpSync(TEMPLATE!, template, { recursive: true })
+    cpSync(ORCAD_TEMPLATE!, template, { recursive: true })
     const server = await reconnect(page, remote.targetId)
     console.log('[browser-conversion-connect]', server)
     expect(JSON.parse(server)).toMatchObject({ kind: 'managed' })

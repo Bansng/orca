@@ -1,19 +1,11 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AiVaultListResult } from '../../shared/ai-vault-types'
-import type { IFilesystemProvider } from '../providers/types'
-import { getRemoteHostPlatform } from '../ssh/ssh-remote-platform'
 
 const mocks = vi.hoisted(() => ({
   scanAiVaultSessionsInService: vi.fn(),
   resolveAiVaultSessionTitlesInService: vi.fn(),
-  scanRemoteAiVaultSessions: vi.fn(),
   scanRuntimeAiVaultSessions: vi.fn(),
-  getSshFilesystemProvider: vi.fn(),
-  getActiveSshAiVaultHostInfo: vi.fn(),
-  getActiveSshAiVaultHostInfos: vi.fn(),
-  requestActiveSshAiVaultSessionList: vi.fn(),
-  requestActiveSshAiVaultSessionTitles: vi.fn(),
   ipcHandle: vi.fn()
 }))
 
@@ -23,9 +15,6 @@ vi.mock('../ai-vault/session-scanner-service-spawn', async (importOriginal) => (
   scanAiVaultSessionsInService: mocks.scanAiVaultSessionsInService,
   resolveAiVaultSessionTitlesInService: mocks.resolveAiVaultSessionTitlesInService
 }))
-vi.mock('../ai-vault/remote-session-scanner', () => ({
-  scanRemoteAiVaultSessions: mocks.scanRemoteAiVaultSessions
-}))
 vi.mock('../wsl', () => ({
   listRunningWslHomeDirsAsync: vi.fn().mockResolvedValue([]),
   hasCachedWslDistros: vi.fn(() => false)
@@ -33,17 +22,6 @@ vi.mock('../wsl', () => ({
 vi.mock('../wsl-running-path-filter', () => ({
   filterPathsToRunningWslDistrosAsync: vi.fn(async (paths: readonly string[]) => [...paths])
 }))
-vi.mock('../providers/ssh-filesystem-dispatch', () => ({
-  SSH_FILESYSTEM_PROVIDER_UNAVAILABLE_MESSAGE: 'SSH unavailable',
-  getSshFilesystemProvider: mocks.getSshFilesystemProvider
-}))
-vi.mock('./ssh', () => ({
-  getActiveSshAiVaultHostInfo: mocks.getActiveSshAiVaultHostInfo,
-  getActiveSshAiVaultHostInfos: mocks.getActiveSshAiVaultHostInfos,
-  requestActiveSshAiVaultSessionList: mocks.requestActiveSshAiVaultSessionList,
-  requestActiveSshAiVaultSessionTitles: mocks.requestActiveSshAiVaultSessionTitles
-}))
-
 const { _internals, registerAiVaultHandlers } = await import('./ai-vault')
 const EMPTY_RESULT: AiVaultListResult = {
   sessions: [],
@@ -56,13 +34,7 @@ beforeEach(() => {
   _internals.resetAiVaultCacheForTests()
   mocks.scanAiVaultSessionsInService.mockResolvedValue(EMPTY_RESULT)
   mocks.resolveAiVaultSessionTitlesInService.mockResolvedValue({ titles: [] })
-  mocks.scanRemoteAiVaultSessions.mockResolvedValue(EMPTY_RESULT)
   mocks.scanRuntimeAiVaultSessions.mockResolvedValue(EMPTY_RESULT)
-  mocks.getSshFilesystemProvider.mockReturnValue({} as IFilesystemProvider)
-  mocks.getActiveSshAiVaultHostInfo.mockReturnValue(hostInfo())
-  mocks.getActiveSshAiVaultHostInfos.mockReturnValue([hostInfo()])
-  mocks.requestActiveSshAiVaultSessionList.mockResolvedValue(null)
-  mocks.requestActiveSshAiVaultSessionTitles.mockResolvedValue(null)
 })
 
 describe('Agent Session History scan coalescing', () => {
@@ -153,15 +125,6 @@ function registerRuntimeHost(): void {
     ],
     scanRuntimeAiVaultSessions: mocks.scanRuntimeAiVaultSessions
   })
-}
-
-function hostInfo() {
-  return {
-    targetId: 'dev-box',
-    executionHostId: 'ssh:dev-box' as const,
-    remoteHome: '/home/ada',
-    hostPlatform: getRemoteHostPlatform('linux-x64')
-  }
 }
 
 function ipcHandler(channel: string): (...args: unknown[]) => unknown {

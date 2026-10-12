@@ -65,7 +65,7 @@ export class OrcaRuntimeWithCreateRuntimeOwnedMobileSessionTerminal extends Orca
     this.pruneOwnedMobileDispatchRecipes()
     const workspace = await this.resolveTerminalWorkspaceLaunchScope(`id:${worktreeId}`)
     const cwd = this.resolveWorkspaceTerminalStartupCwd(workspace, opts.cwd)
-    // Why: SshPtyProvider treats sessionId as a relay reattach; only synthesize local serve ids so SSH fresh terminals still call pty.spawn.
+    // Why: an SSH sessionId means reattach; only synthesize local serve ids so SSH fresh terminals still call pty.spawn.
     const stableSessionId =
       opts.identity?.sessionId ?? (workspace.connectionId ? undefined : `serve-${randomUUID()}`)
     const isNewSession = stableSessionId !== undefined && opts.identity?.sessionId === undefined

@@ -16,6 +16,39 @@ export type AutomaticWorkMode =
       since: number
     }
 
+/** An automatic restore from a client that predates `spawnIntent`, which the host refused.
+ *  That client already cleared its own resume record, so this is the only copy left. */
+export type LegacyRestoreRecord = {
+  sessionId: string
+  reason: 'pressure' | 'host_cap'
+  refusedAt: number
+  agent: string | null
+  cwd: string | null
+  worktreeId: string | null
+  /** The resume command line the client sent; running it in `cwd` resumes the agent. */
+  command: string | null
+  identityDigest: string | null
+}
+
+/** What a daemon reports about automatic restores; `admission` says whether its gate enforces. */
+export type AutomaticWorkStatus = {
+  admission: 'observe' | 'enforce'
+  mode: AutomaticWorkMode
+  /** Absent from daemons that predate the record; clients treat absence as none. */
+  legacyRestores?: readonly LegacyRestoreRecord[]
+}
+
+/** `cleared` is the pause the resume lifted, or null when automatic restores were running. */
+export type AutomaticWorkResumeResult = AutomaticWorkStatus & { cleared: AutomaticWorkMode | null }
+
+/** A gate-bearing terminal host from before resume existed: its pause is real but unreachable. */
+export const AUTOMATIC_WORK_RESUME_UNSUPPORTED = 'terminal-host-predates-resume'
+
+export type AutomaticWorkResumeOutcome =
+  | AutomaticWorkResumeResult
+  | typeof AUTOMATIC_WORK_RESUME_UNSUPPORTED
+  | null
+
 export type SpawnRequestFacts = {
   clientId: string
   /** Null when the caller predates the field; presence opts the request into `defer`. */
@@ -26,21 +59,35 @@ export type SpawnRequestFacts = {
   deadlineAt: number
 }
 
-export const SPAWN_INTENTS: readonly SpawnIntent[] = [
+export const SPAWN_INTENTS = [
   'interactive',
   'user-resume',
   'automatic-restore',
   'automation'
-]
+] as const satisfies readonly SpawnIntent[]
 
 export function isSpawnIntent(value: unknown): value is SpawnIntent {
   return typeof value === 'string' && SPAWN_INTENTS.some((intent) => intent === value)
 }
 
+/** The only intents a client may declare. `interactive` skips the gate, and a daemon kept running
+ *  across an update still trusts it, so it is never accepted from a client. */
+export const RESTORE_SPAWN_INTENTS = [
+  'user-resume',
+  'automatic-restore'
+] as const satisfies readonly SpawnIntent[]
+
+export type RestoreSpawnIntent = (typeof RESTORE_SPAWN_INTENTS)[number]
+
+export function isRestoreSpawnIntent(value: unknown): value is RestoreSpawnIntent {
+  return typeof value === 'string' && RESTORE_SPAWN_INTENTS.some((intent) => intent === value)
+}
+
 export type SpawnDeferralReason = 'paused' | 'live_cap' | 'pressure' | 'deadline'
 
 /** Sent only to requests that declared an intent; the fork never started. */
-export const TERMINAL_SPAWN_DEFERRED_PREFIX = 'terminal_spawn_deferred:'
+export const TERMINAL_SPAWN_DEFERRED_CODE = 'terminal_spawn_deferred'
+export const TERMINAL_SPAWN_DEFERRED_PREFIX = `${TERMINAL_SPAWN_DEFERRED_CODE}:`
 /** An undeclared caller at critical pressure; deliberately not a "daemon gone" message,
  *  which would make the caller replace a healthy daemon. */
 export const TERMINAL_SPAWN_REFUSED_MESSAGE = 'terminal_spawn_refused: host under pressure'
@@ -56,6 +103,13 @@ export function parseTerminalSpawnDeferral(message: string): SpawnDeferralReason
     reason === 'deadline'
     ? reason
     : null
+}
+
+/** Finds a deferral in a spawn error, whether an RPC failure or the local IPC's wrapped message. */
+export function readTerminalSpawnDeferral(error: unknown): SpawnDeferralReason | null {
+  const message = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+  const index = message.indexOf(TERMINAL_SPAWN_DEFERRED_PREFIX)
+  return index === -1 ? null : parseTerminalSpawnDeferral(message.slice(index).split(/\s/)[0])
 }
 
 export type SpawnAdmissionDecision =
@@ -136,8 +190,10 @@ export function resolveSpawnCharge(
   // Why a claim alone: a remote client's `--resume` arrives on a fresh terminal id with no
   // history seed, so requiring one let every reconnect storm through. An old caller is only
   // ever paced, so a user-started agent costs at most a short wait during a storm.
+  const inferred = facts.hasAgentSessionClaim ? 'automatic-restore' : 'interactive'
+  // Why: `interactive` skips the gate entirely, so a claimed resume cannot declare its way past it.
   const intent =
-    facts.declaredIntent ?? (facts.hasAgentSessionClaim ? 'automatic-restore' : 'interactive')
+    facts.declaredIntent === 'interactive' ? inferred : (facts.declaredIntent ?? inferred)
   if (intent === 'interactive') {
     return 'interactive'
   }

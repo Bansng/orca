@@ -1,3 +1,4 @@
+import { pairedRuntimeConnectionFromOffer } from '../../../shared/paired-runtime-connection'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -166,7 +167,12 @@ describe('mobile desktop relay: phone -> desktop -> server', () => {
           const { phones } = DelegatedMobileDeviceSyncParamsSchema.parse(params)
           syncedNames.push(phones.map((phone) => phone.name))
         }
-        const response = await sendRemoteRuntimeRequest(desktopOnHost, method, params, 5_000)
+        const response = await sendRemoteRuntimeRequest(
+          pairedRuntimeConnectionFromOffer(desktopOnHost),
+          method,
+          params,
+          5_000
+        )
         // An older server: the same status without the delegated-devices capability.
         return method === 'status.get' && !state.capable && response.ok
           ? {

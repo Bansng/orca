@@ -49,6 +49,7 @@ import { EMULATOR_METHODS } from './emulator'
 import { PAIRING_METHODS } from './pairing'
 import { MOBILE_RELAY_HOSTS_METHODS } from './mobile-relay-hosts'
 import { UPDATER_METHODS } from './updater'
+import { AUTOMATIC_WORK_METHODS } from './automatic-work'
 import { AGENT_SESSION_METHODS } from './agent-session'
 import { STRUCTURED_AGENT_SESSION_METHODS } from './structured-agent-session'
 import { STRUCTURED_AGENT_SESSION_ATTACHMENT_METHODS } from './structured-agent-session-attachments'
@@ -122,5 +123,6 @@ export const ALL_RPC_METHODS = [
   ...EMULATOR_METHODS,
   ...PAIRING_METHODS,
   ...MOBILE_RELAY_HOSTS_METHODS,
-  ...UPDATER_METHODS
+  ...UPDATER_METHODS,
+  ...AUTOMATIC_WORK_METHODS
 ]

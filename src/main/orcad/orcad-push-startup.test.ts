@@ -82,8 +82,7 @@ vi.mock('../runtime/agent-state-rules/agent-state-rules-live-update', () => ({
 vi.mock('../daemon/daemon-provider-state', () => ({ daemonOwnsFreshPersistentPtys: () => false }))
 vi.mock('../ipc/pty', () => ({
   registerHeadlessPtyRuntime: async () => {},
-  getLocalPtyProvider: () => null,
-  getSshPtyProvider: () => null
+  getLocalPtyProvider: () => null
 }))
 vi.mock('./orcad-profile-state-startup', () => ({
   createOrcadProfileStateStartup: async () => {

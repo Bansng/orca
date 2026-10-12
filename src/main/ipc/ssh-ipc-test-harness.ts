@@ -1,47 +1,21 @@
 import { vi } from 'vitest'
 import type { Mock } from 'vitest'
 import { registerSshHandlers, resetSshHandlerStateForTests } from './ssh'
-import { PTY_CONSUMER_SESSION_PROTOCOL_VERSION } from '../../shared/pty-consumer-session'
-import { DEFAULT_PTY_SOURCE_WINDOW_SU } from '../../shared/pty-source-credit-contract'
-import {
-  clearProviderPtyState,
-  deletePtyOwnership,
-  getSshPtyProvider,
-  getPtyIdsForConnection
-} from './pty'
+import { clearProviderPtyState, deletePtyOwnership, getPtyIdsForConnection } from './pty'
 import type { SshIpcMocks } from './ssh-ipc-module-mocks'
-import type {
-  SshConnectionManagerMock,
-  SshIpcTestSource,
-  SshPortForwardManagerMock
-} from './ssh-ipc-mock-shapes'
+import type { SshConnectionManagerMock, SshPortForwardManagerMock } from './ssh-ipc-mock-shapes'
 
-/** Lease + consumer-recovery slice of the app store the SSH handlers write through. */
+/** Lease slice of the app store the SSH handlers write through. */
 export type SshLeaseStoreMock = {
   getRepos: () => unknown[]
-  getSshPtyConsumerRecovery: Mock
-  upsertSshPtyConsumerRecovery: Mock
-  removeSshPtyConsumerRecovery: Mock
   getSshRemotePtyLeases: Mock
-  reconcileSshRemotePtyLeasesForTarget: Mock
   markSshRemotePtyLease: Mock
-  markSshRemotePtyLeases: Mock
-  markSshRemotePtyLeasesAsync: Mock
-  markSshRemotePtyLeasesForShutdown: Mock
-  markSshRemotePtyLeasesAttachedAsync: Mock
   removeSshRemotePtyLeases: Mock
-  getSshRemotePtyKillIntents: Mock
-  pruneExpiredSshRemotePtyKillIntents: Mock
-  recordSshRemotePtyKillIntent: Mock
-  clearSshRemotePtyKillIntent: Mock
-  noteSshRemotePtyKillReplayAttempt: Mock
 }
 
 export type MockBrowserWindow = { isDestroyed: () => boolean; webContents: { send: Mock } }
 
 export type SshIpcHarness = {
-  relayBuildId: string
-  ipcTestSource: SshIpcTestSource
   handlers: Map<string, (_event: unknown, args: unknown) => unknown>
   mockStore: SshLeaseStoreMock
   mockWindow: MockBrowserWindow
@@ -61,45 +35,19 @@ export function createSshIpcHarness(mocks: SshIpcMocks): SshIpcHarness {
     powerMonitorOnMock,
     mockSshStore,
     mockConnectionManager,
-    mockAcceptSshPtyOutputData,
-    mockAcceptSshPtyOutputExit,
     mockMux,
-    mockPtyProvider,
     mockRegisterSshGitProvider,
     mockPortForwardManager,
     mockPortScannerCallbacks,
     mockNextConnectionManagers,
     mockNextPortForwardManagers
   } = mocks
-  const relayBuildId = '0.1.0+ipc-test'
-  const ipcTestSource = {
-    relayPtyId: 'remote-pty',
-    spanId: 'ipc-test-delivery:0:5',
-    clientGeneration: 1,
-    ownerGeneration: 1,
-    deliveryToken: 'ipc-test-delivery',
-    sourceStartSu: 0,
-    sourceEndSu: 5
-  } as const
   const handlers = new Map<string, (_event: unknown, args: unknown) => unknown>()
   const mockStore = {
     getRepos: () => [],
-    getSshPtyConsumerRecovery: vi.fn().mockReturnValue(null),
-    upsertSshPtyConsumerRecovery: vi.fn(),
-    removeSshPtyConsumerRecovery: vi.fn(),
     getSshRemotePtyLeases: vi.fn().mockReturnValue([]),
-    reconcileSshRemotePtyLeasesForTarget: vi.fn(),
     markSshRemotePtyLease: vi.fn(),
-    markSshRemotePtyLeases: vi.fn(),
-    markSshRemotePtyLeasesAsync: vi.fn(),
-    markSshRemotePtyLeasesForShutdown: vi.fn(),
-    markSshRemotePtyLeasesAttachedAsync: vi.fn(),
-    removeSshRemotePtyLeases: vi.fn(),
-    getSshRemotePtyKillIntents: vi.fn().mockReturnValue([]),
-    pruneExpiredSshRemotePtyKillIntents: vi.fn(),
-    recordSshRemotePtyKillIntent: vi.fn(),
-    clearSshRemotePtyKillIntent: vi.fn(),
-    noteSshRemotePtyKillReplayAttempt: vi.fn()
+    removeSshRemotePtyLeases: vi.fn()
   }
   const mockWindow = {
     isDestroyed: () => false,
@@ -151,11 +99,7 @@ export function createSshIpcHarness(mocks: SshIpcMocks): SshIpcHarness {
     mockWindow.webContents.send.mockReset()
     mockStore.getSshRemotePtyLeases.mockReset().mockReturnValue([])
     mockStore.markSshRemotePtyLease.mockReset()
-    mockStore.markSshRemotePtyLeases.mockReset()
-    mockStore.markSshRemotePtyLeasesAsync.mockReset()
-    mockStore.markSshRemotePtyLeasesAttachedAsync.mockReset()
     mockStore.removeSshRemotePtyLeases.mockReset()
-    mockStore.upsertSshPtyConsumerRecovery.mockReset()
 
     mockConnectionManager.connect.mockReset()
     mockConnectionManager.disconnect.mockReset()
@@ -166,40 +110,14 @@ export function createSshIpcHarness(mocks: SshIpcMocks): SshIpcHarness {
     mockConnectionManager.disconnectAll.mockReset()
     mockConnectionManager.setCallbacks.mockReset()
     mockConnectionManager.callbacksRef.current = null
-    mockAcceptSshPtyOutputData.mockReset().mockResolvedValue({})
-    mockAcceptSshPtyOutputExit.mockReset().mockResolvedValue(undefined)
 
     mockMux.dispose.mockReset()
     mockMux.isDisposed.mockReset().mockReturnValue(false)
     mockMux.onNotification.mockReset()
     mockMux.onNotificationByMethod.mockReset().mockReturnValue(() => {})
     mockMux.onDispose.mockReset().mockReturnValue(() => {})
-    mockMux.request.mockReset().mockImplementation((method: string) =>
-      Promise.resolve(
-        method === 'pty.openClient'
-          ? {
-              protocolVersion: PTY_CONSUMER_SESSION_PROTOCOL_VERSION,
-              serverBuildId: relayBuildId,
-              clientGeneration: 1,
-              role: 'session-owner',
-              ownerGeneration: 1,
-              ownerLease: 'ipc-test-owner',
-              resumed: false,
-              capabilities: {
-                outputFlowControl: { version: 1, windowSu: DEFAULT_PTY_SOURCE_WINDOW_SU }
-              }
-            }
-          : {}
-      )
-    )
+    mockMux.request.mockReset().mockResolvedValue({})
     mockMux.probeLiveness.mockReset().mockResolvedValue(false)
-    mockPtyProvider.onData.mockReset()
-    mockPtyProvider.onExit.mockReset()
-    mockPtyProvider.onReplay.mockReset()
-    mockPtyProvider.attachForReconnect.mockReset().mockResolvedValue({})
-    mockPtyProvider.shutdown.mockReset()
-    mockPtyProvider.listProcesses.mockReset().mockResolvedValue([])
-    mockPtyProvider.providerGeneration = 0
     mockRegisterSshGitProvider.mockReset()
     mockPortForwardManager.addForward.mockReset()
     mockPortForwardManager.updateForward.mockReset()
@@ -212,7 +130,6 @@ export function createSshIpcHarness(mocks: SshIpcMocks): SshIpcHarness {
     mockPortForwardManager.callbacksRef.current = null
     powerMonitorOnMock.mockReset()
     powerMonitorOffMock.mockReset()
-    vi.mocked(getSshPtyProvider).mockReset()
     vi.mocked(getPtyIdsForConnection).mockReset().mockReturnValue([])
     vi.mocked(clearProviderPtyState).mockReset()
     vi.mocked(deletePtyOwnership).mockReset()
@@ -221,8 +138,6 @@ export function createSshIpcHarness(mocks: SshIpcMocks): SshIpcHarness {
   }
 
   return {
-    relayBuildId,
-    ipcTestSource,
     handlers,
     mockStore,
     mockWindow,

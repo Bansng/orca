@@ -35,7 +35,7 @@ export class RuntimeRpcMobileDevices extends RuntimeRpcRequestAdmission {
     }
     this.mobileRelayPairingProvider?.onDemandStateChanged?.()
     this.runtime.forgetClientNavigationState(deviceId)
-    this.mobileSocketWiring?.terminateDeviceConnections(device.token)
+    this.mobileSocketWiring?.terminateDeviceConnections(deviceId)
     return true
   }
 
@@ -54,7 +54,7 @@ export class RuntimeRpcMobileDevices extends RuntimeRpcRequestAdmission {
       return false
     }
     this.runtime.forgetClientNavigationState(deviceId)
-    this.mobileSocketWiring?.terminateDeviceConnections(device.token)
+    this.mobileSocketWiring?.terminateDeviceConnections(deviceId)
     return true
   }
 

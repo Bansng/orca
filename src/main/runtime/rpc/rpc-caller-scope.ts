@@ -29,7 +29,8 @@ const RUNTIME_PAIRED_STANDARD: ReadonlySet<RpcMethodPermission> = new Set([
   'settings-write',
   'accounts-admin',
   'skills-admin',
-  'host-admin'
+  'host-admin',
+  'device-self'
 ])
 
 /**

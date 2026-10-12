@@ -519,6 +519,18 @@
             "07f788de83": "WebSocket"
           }
         }
+      },
+      "pairingSecurity": {
+        "hide": "Hide",
+        "storedCodeInsecureOrigin": "This browser keeps a reusable pairing code, because this page is plain http on another machine. Anyone who can read this browser’s storage could use it. For a safer pairing, open Orca over https, at localhost on this computer, or through an SSH tunnel, and pair again.",
+        "storedCodeNoEd25519": "This browser keeps a reusable pairing code, because it cannot create secure sign-in keys (Ed25519). Use a current browser and pair again for a safer pairing.",
+        "sessionInsecureOrigin": "This pairing lasts only while this tab is open, because this page is plain http on another machine. For a pairing this browser remembers, open Orca over https, at localhost on this computer, or through an SSH tunnel.",
+        "sessionNoEd25519": "This pairing lasts only while this tab is open, because this browser cannot create secure sign-in keys (Ed25519). Use a current browser for a pairing it remembers."
+      },
+      "runtimeAuth": {
+        "insecureOrigin": "Orca refused to pair from this page: it is plain http on another machine, so anyone on the network path could replace it and take the pairing code. Open the web client over https, at localhost on this computer, or through an SSH tunnel. To allow it anyway, the server operator can restart Orca with ORCA_ALLOW_INSECURE_WEB_PAIRING=1.",
+        "deviceDowngraded": "This Orca server no longer supports this browser’s sign-in key (it may have been downgraded). Update the server, or pair this browser again.",
+        "unauthorized": "Unauthorized. Pair this web client again."
       }
     },
     "store": {
@@ -3375,12 +3387,12 @@
             "42b283ecfc": "Orca couldn't safely reconnect this terminal because the host couldn't verify its saved session. Orca left the saved session unchanged. Click Retry to try reconnecting now. If it still cannot reconnect, open a new terminal.",
             "e16012e31e": "The terminal daemon that owned this session exited, so the session and its scrollback could not be recovered. Open a new terminal to continue.",
             "sessionUnavailable": "Orca couldn't reattach to this pane's terminal session on the host. Open a new terminal to continue.",
-            "heldByPreviousRelay": "This terminal is still running on the host under the previous Orca version, which this version cannot connect to. It keeps running until it exits. Open a new terminal to keep working here.",
             "ownerHostMismatch": "This terminal's saved session belongs to another host connection, so Orca can't reattach it here. Open a new terminal to continue.",
             "sourceRestoring": "Reconnecting this terminal — its output is being re-established. The session is still running.",
             "remoteTerminalClosed": "Remote terminal was closed.",
             "ptyAllocationLimit": "Your system cannot allocate any more pty devices. Close some terminals you are not using, in Orca or another program, then try again.",
-            "terminalProcessLimit": "Your system cannot start another terminal process. Close unused terminals or quit unused processes, then try again."
+            "terminalProcessLimit": "Your system cannot start another terminal process. Close unused terminals or quit unused processes, then try again.",
+            "hostTerminalCap": "The host is already running as many terminals as Orca allows. Close a terminal you no longer need, then try again."
           },
           "TerminalProcessExitOverlay": {
             "capacityTitle": "Git Bash console limit reached",
@@ -3565,6 +3577,15 @@
             "notStarted": "The agent couldn't start.",
             "unconfirmed": "Couldn't confirm the agent started.",
             "workspaceGone": "Its workspace is no longer available."
+          },
+          "TerminalSleepingPaneOverlay": {
+            "pausedDetail": "Automatic restores are paused because the host stopped unexpectedly. Your session is saved.",
+            "liveCapDetail": "Enough agents are already running on this host. Your session is saved.",
+            "pressureDetail": "The host is under heavy load. Your session is saved.",
+            "deadlineDetail": "The host was busy restoring other terminals. Your session is saved.",
+            "title": "Sleeping — click to resume",
+            "resume": "Resume",
+            "resumeAutomaticRestores": "Resume automatic restores"
           }
         }
       },
@@ -5313,8 +5334,7 @@
         "AddProjectFromFolderDialog": {
           "7d1f51678c": "Add Project",
           "7726a16374": "Cancel",
-          "046751dbfb": "Add this folder as a separate Orca project.",
-          "e643b30398": "Project added on SSH host"
+          "046751dbfb": "Add this folder as a separate Orca project."
         },
         "AddRepoCreateStep": {
           "0ae45b8238": "my-project",
@@ -5331,7 +5351,6 @@
           "5e97f0c4b9": "Project created",
           "2c12db1511": "Project already added",
           "875dda0995": "Enter a host parent path.",
-          "ssh_parent_manual": "Enter an SSH parent path.",
           "45b7c26034": "Create project",
           "85085d74d2": "Creating…"
         },
@@ -5373,13 +5392,9 @@
           "e52454b7f6": "Open as Folder"
         },
         "AddRepoRemoteStep": {
-          "5b205b5281": "Stop scan",
           "6680289908": "/home/user/project",
           "ef410aa881": "Host path",
-          "0416bde073": "Add in Settings",
-          "df6fbcf880": "No SSH targets configured.",
           "44637f43bd": "SSH target",
-          "80557be85a": "Choose a connected SSH target and enter the path to a Git repository.",
           "serverDescription": "Choose an SSH host that {{server}} connects to, and enter the path to a Git repository on it.",
           "serverEmpty": "{{server}} has no SSH hosts yet.",
           "serverAddHost": "Add SSH host",
@@ -5387,10 +5402,7 @@
           "007651bdf9": "Navigate to a directory and click Select to choose it.",
           "dd3ff65486": "Browse remote filesystem",
           "36d427bb66": "Add project on SSH host",
-          "35831a7312": "Adding...",
-          "lockedDescription": "Enter the path to a Git repository on {{value0}}.",
-          "lockedDisconnected": "{{value0}} is disconnected.",
-          "93e0221434": "Connect"
+          "35831a7312": "Adding..."
         },
         "AddRepoServerStartStep": {
           "ae990c86a0": "Back to add options",
@@ -6122,12 +6134,8 @@
                   "serverSshTitle": "Project on this server's SSH host",
                   "serverSshDescription": "Open a project folder from an SSH host this server connects to",
                   "serverSshUpdate": "Update this server to add projects on its SSH hosts",
-                  "sshCreateUnavailable": "Not available for SSH hosts yet",
-                  "3d162cc76f": "Project on SSH host",
                   "fb4fc5380e": "Local project, Git repo, or folder with many repos",
                   "2281fdc8c7": "Browse folder",
-                  "sshBrowseTitle": "Open project on SSH host",
-                  "sshBrowseDescription": "Existing Git repository or folder on this SSH host",
                   "runtimeBrowseDescription": "Existing Git repository or folder on this host"
                 }
               }
@@ -7413,7 +7421,10 @@
           "connectionTestHost": "Host",
           "connectionTestPort": "Port",
           "connectionTestRunning": "Testing...",
-          "connectionTestAction": "Test Connection"
+          "connectionTestAction": "Test Connection",
+          "appStatus": "App: ",
+          "terminalHostStatus": "Terminal hosts: ",
+          "terminalHostRecovery": "If a terminal cannot read protected files, save its work and close it in Terminal → Manage Sessions. Restart the daemon if new terminals are also affected; restarting closes its current terminals."
         },
         "ExperimentalPane": {
           "9762364929": "Uses APFS clone-copy on macOS when possible, otherwise symlinks configured folders or files into created worktrees.",
@@ -11774,7 +11785,7 @@
           "failed": "Update failed",
           "serviceManagerHelp": "Update Orca on the server host — through its system package manager if it was installed from a .deb or .rpm, otherwise through the service manager that starts it.",
           "unpackedHelp": "Development builds must be updated from their source checkout.",
-          "legacyHelp": "Update this server manually once to enable remote updates."
+          "legacyHelp": "Remote updates are unavailable for this server. Update Orca on the server host."
         },
         "BrowserLinkRoutingSetting": {
           "description": "Open http(s) links in Orca's built-in browser — from the terminal, markdown, and the editor. {{shortcut}} always uses your system browser.",
@@ -12571,7 +12582,7 @@
           }
         },
         "sshHostServer": {
-          "sourceChanged": "Changed on an older Orca: runs the relay until it is moved to its managed server again.",
+          "sourceChanged": "An older version of Orca changed this host’s projects. Move those changes to its managed server, or keep the server’s version, to connect again.",
           "deploying": "Setting up a managed Orca server…",
           "converting": "Moving this host’s projects to its managed Orca server…",
           "connecting": "Connecting to the managed Orca server…",
@@ -13903,7 +13914,8 @@
             "resumeInChatTranscriptMissing": "This conversation's history could not be loaded, so it cannot be resumed in chat.",
             "resumeInChatFailed": "Could not resume this session in a new chat.",
             "resumeInNewCliUnavailable": "This session cannot be opened in the CLI.",
-            "resumeInNewCliHostTooOld": "Update Orca on the host that runs this chat to resume it in a new CLI."
+            "resumeInNewCliHostTooOld": "Update Orca on the host that runs this chat to resume it in a new CLI.",
+            "folderWorkspaceUnavailable": "Folder workspace is no longer available."
           },
           "AiVaultPanelControls": {
             "scanningSessions": "Scanning sessions",
@@ -14005,7 +14017,9 @@
             "copied": "Copied",
             "copy": "Copy",
             "noFirstPromptAvailable": "No first prompt available",
-            "loadingFirstPrompt": "Loading first prompt…"
+            "loadingFirstPrompt": "Loading first prompt…",
+            "folder": "Folder",
+            "resumeInFolder": "Resume in Folder"
           },
           "AiVaultSessionRow": {
             "noPreviewAvailable": "No conversation preview available",
@@ -14101,7 +14115,12 @@
             "noRecordedWorktree": "No worktree was recorded for this session.",
             "archivedJumpUnavailable": "This session is in an archived worktree.",
             "noActiveWorktreeMatch": "No active worktree matches this session.",
-            "noActiveWorktreeTarget": "No active worktree is available."
+            "noActiveWorktreeTarget": "No active worktree is available.",
+            "jumpToFolder": "Jump to Folder",
+            "archivedFolderJumpUnavailable": "This session is in an archived folder.",
+            "currentFolder": "Current folder",
+            "archivedFolder": "Archived folder",
+            "activeFolder": "Folder"
           },
           "AiVaultSessionSubagents": {
             "subagentsCount": "Subagents ({{value0}})",
@@ -18214,7 +18233,8 @@
         "orcaStopQuit": "Orca on {{machine}} was closed while this response was in progress.",
         "orcaStopCrash": "Orca on {{machine}} stopped unexpectedly while this response was in progress.",
         "orcaStopRemote": "Orca on {{machine}} stopped while this response was in progress.",
-        "orcaStopCanContinue": "You can continue in this conversation."
+        "orcaStopCanContinue": "You can continue in this conversation.",
+        "orcaStopUnnamedServer": "the remote server"
       },
       "composer": {
         "imageUnsupported": "Image paste is not supported for this agent.",
@@ -18262,7 +18282,6 @@
         "imageSaving": "Saving pasted image…",
         "worktreeNotReady": "Worktree not ready — try again in a moment.",
         "pasteUnavailable": "Can't paste — this chat isn't accepting input right now.",
-        "uploadingAttachments": "Uploading {{value0}} file(s) to remote…",
         "model": "Model",
         "effort": "Effort",
         "fastMode": "Fast mode",
