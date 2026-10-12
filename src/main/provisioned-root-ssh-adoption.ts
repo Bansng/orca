@@ -12,18 +12,7 @@ import {
 } from '../shared/ephemeral-vm-recipes'
 import { listEphemeralVmRuntimes } from '../shared/ephemeral-vm-runtime-store'
 import type { EphemeralVmRuntimeRecord } from '../shared/ephemeral-vm-runtimes'
-import { getSshGitProvider } from './providers/ssh-git-dispatch'
-import {
-  getSshProviderAuthority,
-  isCurrentSshProviderAuthority
-} from './ssh/ssh-provider-authority'
-import { attachEphemeralVmRuntimeToWorkspace } from './ephemeral-vm-runtime-attachment'
-import { mergeWorktree } from './ipc/worktree-logic'
-import {
-  buildProvisionedRootMeta,
-  provisionedRootPathsEqual,
-  verifyProvisionedRootCheckout
-} from './provisioned-root-checkout'
+import { provisionedRootPathsEqual } from './provisioned-root-checkout'
 
 type AdoptionArgs = AdoptProvisionedRootArgs & {
   automationProvenance?: AutomationWorkspaceProvenance
@@ -36,7 +25,7 @@ export async function adoptProvisionedRootSshCheckout(args: {
   store: Store
   isRepoCurrent: () => boolean
 }): Promise<CreateWorktreeResult> {
-  const { request, repo, store } = args
+  const { request, repo } = args
   if (request.sparseCheckout) {
     throw new Error('Provisioned-root recipes do not support sparse checkout.')
   }
@@ -61,59 +50,8 @@ export async function adoptProvisionedRootSshCheckout(args: {
     throw new Error('The recipe projectRoot does not match the imported Git checkout root.')
   }
 
-  const provider = getSshGitProvider(connectionId)
-  if (!provider) {
-    throw new Error('The recipe-created SSH connection is no longer available.')
-  }
-  const authority = { ...getSshProviderAuthority(connectionId) }
-  const [worktrees, sparseCheckoutEnabled] = await Promise.all([
-    provider.listWorktrees(repo.path),
-    isSparseCheckoutEnabled(provider, projectRoot)
-  ])
-  if (
-    getSshGitProvider(connectionId) !== provider ||
-    !isCurrentSshProviderAuthority(authority) ||
-    !args.isRepoCurrent()
-  ) {
-    throw new Error('The recipe-created SSH connection changed during checkout verification.')
-  }
-  requireOwnedProvisionedRootRuntime(args.userDataPath, request.runtimeId, connectionId)
-
-  const gitWorktree = verifyProvisionedRootCheckout({
-    worktrees,
-    sparseCheckoutEnabled,
-    projectRoot,
-    request
-  })
-
-  const worktreeId = `${repo.id}::${gitWorktree.path}`
-  attachEphemeralVmRuntimeToWorkspace({
-    userDataPath: args.userDataPath,
-    runtimeId: request.runtimeId,
-    workspaceId: worktreeId
-  })
-  const now = Date.now()
-  const meta = store.setWorktreeMeta(
-    worktreeId,
-    buildProvisionedRootMeta(store, repo, request, {
-      branchName: gitWorktree.branch.replace(/^refs\/heads\//, ''),
-      now,
-      hostId: args.request.executionHostId,
-      source: 'ssh'
-    })
-  )
-  return { worktree: mergeWorktree(repo.id, gitWorktree, meta) }
-}
-
-async function isSparseCheckoutEnabled(
-  provider: NonNullable<ReturnType<typeof getSshGitProvider>>,
-  projectRoot: string
-): Promise<boolean> {
-  const { stdout } = await provider.exec(
-    ['config', '--bool', '--get', '--default=false', 'core.sparseCheckout'],
-    projectRoot
-  )
-  return stdout.trim() === 'true'
+  // Why: this process serves no SSH git, so a provisioned SSH checkout is never adopted here.
+  throw new Error('The recipe-created SSH connection is no longer available.')
 }
 
 function requireOwnedProvisionedRootRuntime(

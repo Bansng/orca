@@ -5,11 +5,8 @@ import {
 import type { RuntimeFileListResult } from '../../shared/runtime-types'
 import type { SearchOptions, SearchResult } from '../../shared/code-search-types'
 import { throwIfSignalAborted, waitForPromiseWithSignal } from '../../shared/abort-signal-reason'
-import { QUICK_OPEN_LISTING_MAX_RESULTS } from '../../shared/quick-open-listing-limits'
-import { limitQuickOpenFilesBySerializedBytes } from '../../shared/quick-open-transport-budget'
 import { listQuickOpenFiles } from '../ipc/filesystem-list-files'
 import { searchQuickOpenFilePaths as searchHostQuickOpenFilePaths } from '../ipc/filesystem-search-file-paths'
-import type { IFilesystemProvider } from '../providers/types'
 import { isMobileBinaryPath, isSafeMobileRelativePath } from './runtime-file-command-host'
 import {
   requireRuntimeFileProvider,
@@ -28,7 +25,6 @@ import {
   RuntimeMobileFilePathSearchCache,
   rankRuntimeMobileFilePaths
 } from './runtime-mobile-file-path-search'
-import { searchRemoteQuickOpenFilePaths } from './runtime-remote-quick-open-search'
 
 type RuntimeFileSearchTarget = {
   worktree: Pick<ResolvedRuntimeFileTarget['worktree'], 'id' | 'path'>
@@ -56,14 +52,10 @@ export class RuntimeFileSearch {
     const target = await this.host.resolveRuntimeFileTarget(worktreeSelector)
     const { worktree } = target
     const route = runtimeFileRouteForTarget(target)
+    // Why: an `ssh:` host lists nothing rather than failing, and never lists this machine.
     const files =
       route.kind === 'ssh'
-        ? await this.listRemoteMobileFiles(
-            worktree.path,
-            route.provider,
-            MOBILE_FILE_LIST_LIMIT + 1,
-            options.signal
-          )
+        ? []
         : await listQuickOpenFiles(
             worktree.path,
             store,
@@ -105,11 +97,7 @@ export class RuntimeFileSearch {
     const inventory = await this.mobileFilePathSearchCache.get(cacheKey, async () => {
       const listed =
         route.kind === 'ssh'
-          ? await this.listRemoteMobileFiles(
-              worktree.path,
-              route.provider,
-              MOBILE_FILE_PATH_SEARCH_CACHE_LIMIT + 1
-            )
+          ? []
           : await listQuickOpenFiles(
               worktree.path,
               store,
@@ -155,36 +143,18 @@ export class RuntimeFileSearch {
     const target = await this.host.resolveRuntimeFileTarget(worktreeSelector)
     const { worktree } = target
     const route = runtimeFileRouteForTarget(target)
-    const quickOpenSearchVersion =
-      route.kind !== 'ssh'
-        ? QUICK_OPEN_SEARCH_VERSION
-        : (await route.provider?.supportsQuickOpenSearch?.({ signal, minimumVersion: 3 }))
-          ? 3
-          : (await route.provider?.supportsQuickOpenSearch?.({ signal, minimumVersion: 2 }))
-            ? 2
-            : (await route.provider?.supportsQuickOpenSearch?.({ signal, minimumVersion: 1 }))
-              ? 1
-              : 0
+    // Why: an `ssh:` host reports no matches (version 0) rather than failing the keystroke.
+    const quickOpenSearchVersion = route.kind === 'ssh' ? 0 : QUICK_OPEN_SEARCH_VERSION
     const result =
-      !query.trim() || isQuickOpenQueryTooLarge(query)
+      !query.trim() || isQuickOpenQueryTooLarge(query) || route.kind === 'ssh'
         ? { paths: [], totalCount: 0, truncated: false }
-        : route.kind === 'ssh'
-          ? await searchRemoteQuickOpenFilePaths(
-              worktree.path,
-              route.provider,
-              query,
-              limit,
-              excludePaths,
-              signal,
-              options
-            )
-          : await searchHostQuickOpenFilePaths(worktree.path, this.host.requireStore(), {
-              ...options,
-              query,
-              limit,
-              excludePaths,
-              signal
-            })
+        : await searchHostQuickOpenFilePaths(worktree.path, this.host.requireStore(), {
+            ...options,
+            query,
+            limit,
+            excludePaths,
+            signal
+          })
     return {
       worktree: worktree.id,
       rootPath: worktree.path,
@@ -231,40 +201,8 @@ export class RuntimeFileSearch {
     const target = await this.host.resolveRuntimeFileTarget(worktreeSelector)
     const route = runtimeFileRouteForTarget(target)
     if (route.kind === 'ssh') {
-      // Why: quick-open listings degrade to empty for an unreachable host rather than throwing.
-      const provider = route.provider
-      if (!provider) {
-        return []
-      }
-      const maxResults =
-        options.maxResults ??
-        (options.maxContentBytes === undefined ? undefined : QUICK_OPEN_LISTING_MAX_RESULTS)
-      if (
-        (options.candidatePaths !== undefined ||
-          options.includeIgnored === false ||
-          options.followSymlinks) &&
-        !(await provider.supportsQuickOpenSearch?.({
-          signal: options.signal,
-          minimumVersion: options.candidatePaths !== undefined ? 3 : 2
-        }))
-      ) {
-        throw new Error(
-          options.candidatePaths !== undefined
-            ? 'Update the remote host to validate Quick Open recent files.'
-            : 'Update the remote host to use Quick Open listing options.'
-        )
-      }
-      const files = await provider.listFiles(target.worktree.path, {
-        excludePaths: options.excludePaths,
-        ...(options.candidatePaths === undefined ? {} : { candidatePaths: options.candidatePaths }),
-        includeIgnored: options.includeIgnored,
-        followSymlinks: options.followSymlinks,
-        maxResults,
-        signal: options.signal
-      })
-      return options.maxContentBytes === undefined
-        ? files
-        : limitQuickOpenFilesBySerializedBytes(files, options.maxContentBytes)
+      // Why: quick-open listings degrade to empty for an `ssh:` host rather than throwing.
+      return []
     }
     return listQuickOpenFiles(
       target.worktree.path,
@@ -276,18 +214,5 @@ export class RuntimeFileSearch {
       undefined,
       options
     )
-  }
-
-  // `null` provider is the caller's "this host is unreachable" answer, not "list it here".
-  private async listRemoteMobileFiles(
-    rootPath: string,
-    provider: IFilesystemProvider | null,
-    maxResults?: number,
-    signal?: AbortSignal
-  ): Promise<string[]> {
-    if (!provider) {
-      return []
-    }
-    return provider.listFiles(rootPath, { maxResults, signal })
   }
 }

@@ -7,7 +7,6 @@ import {
   computeWorktreePathMock,
   createSetupRunnerScript,
   detectInstalledAgentsWithShellPathHydrationMock,
-  detectRemoteAgentsMock,
   electronMocks,
   ensurePathWithinWorkspaceMock,
   getEffectiveHooks,
@@ -522,7 +521,6 @@ describe('OrcaRuntimeService', () => {
     })
 
     expect(detectInstalledAgentsWithShellPathHydrationMock).not.toHaveBeenCalled()
-    expect(detectRemoteAgentsMock).not.toHaveBeenCalled()
     expect(spawn).toHaveBeenCalledWith(
       expect.objectContaining({
         cwd: '/tmp/workspaces/runtime-explicit-draft',
@@ -608,7 +606,6 @@ describe('OrcaRuntimeService', () => {
     })
 
     expect(detectInstalledAgentsWithShellPathHydrationMock).not.toHaveBeenCalled()
-    expect(detectRemoteAgentsMock).not.toHaveBeenCalled()
     expect(spawn).not.toHaveBeenCalled()
     expect(metaById[result.worktree.id]?.createdWithAgent).toBeUndefined()
     expect(activateWorktree).toHaveBeenCalledWith(

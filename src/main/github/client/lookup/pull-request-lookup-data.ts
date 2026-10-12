@@ -218,11 +218,7 @@ export async function getCurrentHeadOid(
   connectionId?: string | null,
   localGitOptions: { wslDistro?: string; admissionTier?: GitAdmissionTier } = {}
 ): Promise<string | null> {
-  const route = requireReachableGitRoute(getConnectionExecutionHostId(connectionId))
-  if (route.kind === 'ssh') {
-    const result = await route.provider.exec(['rev-parse', 'HEAD'], repoPath)
-    return result.stdout.trim() || null
-  }
+  requireReachableGitRoute(getConnectionExecutionHostId(connectionId))
   try {
     const result = await gitExecFileAsync(['rev-parse', 'HEAD'], {
       cwd: repoPath,

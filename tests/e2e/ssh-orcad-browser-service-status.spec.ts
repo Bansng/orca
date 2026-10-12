@@ -16,9 +16,9 @@ import {
 } from './helpers/ssh-remote-only-browser-fixture'
 import { createRetentionFixtureDirectory } from './helpers/host-created-terminal-retention-oracle'
 import { reconnect, serverCall } from './helpers/orcad-convert-flow'
+import { ORCAD_TEMPLATE, skipUnlessManagedDockerHost } from './helpers/orcad-managed-workspace'
 
-const TEMPLATE = process.env.ORCA_E2E_ORCAD_CONVERT_TEMPLATE
-test.skip(!TEMPLATE || process.env.ORCA_E2E_SSH_DOCKER !== '1', 'Needs Docker and server template')
+skipUnlessManagedDockerHost()
 
 test('an unavailable browser on a responding managed host does not report a server outage', async (// oxlint-disable-next-line no-empty-pattern -- Owns app launch.
 {}, testInfo) => {
@@ -58,7 +58,7 @@ test('an unavailable browser on a responding managed host does not report a serv
       }
     })
     await waitForSessionReady(page)
-    cpSync(TEMPLATE!, template, { recursive: true })
+    cpSync(ORCAD_TEMPLATE!, template, { recursive: true })
     const server = await reconnect(page, remote.targetId)
     console.log('[browser-conversion-connect]', server)
     expect(JSON.parse(server)).toMatchObject({ kind: 'managed' })

@@ -95,6 +95,18 @@ export class AutomaticWorkRunMarker {
     this.writeSync('running')
   }
 
+  /** Lifts a recorded pause; only an explicit operator resume calls this, never a timer. */
+  resume(): void {
+    if (this.currentMode.kind === 'normal') {
+      return
+    }
+    this.log('automatic-work-resumed', { reason: this.currentMode.reason })
+    this.currentMode = { kind: 'normal' }
+    if (this.opened) {
+      this.writeSync(this.armed ? 'running' : 'clean-exit')
+    }
+  }
+
   markCleanExit(): void {
     if (this.opened) {
       this.writeSync('clean-exit')

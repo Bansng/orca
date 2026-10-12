@@ -36,7 +36,14 @@ function setup(overrides?: Partial<E2EEChannelOptions>) {
     serverSecretKey: serverKeys.secretKey,
     resolveAuthenticatedDevice: (token) =>
       token === 'valid-token'
-        ? { deviceId: 'device-1', deviceToken: token, scope: 'mobile' }
+        ? {
+            deviceId: 'device-1',
+            deviceToken: token,
+            scope: 'mobile',
+            clientId: token,
+            callerFingerprint: 'test-fingerprint',
+            credentialRevision: 0
+          }
         : null,
     onReady,
     onError,
@@ -76,7 +83,10 @@ describe('E2EEChannel', () => {
       expect(ctx.onReady).toHaveBeenCalledWith(ctx.channel, {
         deviceId: 'device-1',
         deviceToken: 'valid-token',
-        scope: 'mobile'
+        scope: 'mobile',
+        clientId: 'valid-token',
+        callerFingerprint: 'test-fingerprint',
+        credentialRevision: 0
       })
       expect(ctx.onError).not.toHaveBeenCalled()
       expect(ctx.channel.deviceToken).toBe('valid-token')
@@ -107,7 +117,14 @@ describe('E2EEChannel', () => {
       const ctx = setup({
         resolveAuthenticatedDevice: (token) =>
           token === 'valid-token'
-            ? { deviceId: 'device-1', deviceToken: token, scope: 'runtime' }
+            ? {
+                deviceId: 'device-1',
+                deviceToken: token,
+                scope: 'runtime',
+                clientId: token,
+                callerFingerprint: 'test-fingerprint',
+                credentialRevision: 0
+              }
             : null
       })
       ctx.channel.handleRawMessage(

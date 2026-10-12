@@ -48,7 +48,14 @@ type PartSources = {
         'workspace',
         Exclude<
           keyof WorkspaceLayout,
-          'tabs' | 'groups' | 'editorFiles' | 'browserTabs' | 'leaves' | 'closedTerminalTabs'
+          // `editorViews` is in memory only: the view is not saved.
+          | 'tabs'
+          | 'groups'
+          | 'editorFiles'
+          | 'editorViews'
+          | 'browserTabs'
+          | 'leaves'
+          | 'closedTerminalTabs'
         >
       >
     | Prefixed<

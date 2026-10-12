@@ -6,7 +6,7 @@ import {
 import { app, ipcMain } from 'electron'
 import { listEnvironments } from '../../shared/runtime-environment-store'
 import type { Store } from '../persistence'
-import { recordRemoteLayoutFrame } from './remote-layout-snapshot-recorder'
+import { recordRemoteLayoutFrame } from '../remote-layout-snapshot'
 import {
   isRuntimeEnvironmentManuallyDisconnected,
   registerRuntimeEnvironmentConnectivityHandlers,

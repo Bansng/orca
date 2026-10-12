@@ -3153,6 +3153,7 @@
             "remoteTerminalClosed": "La terminal remota se cerró.",
             "ptyAllocationLimit": "Tu sistema no puede asignar más dispositivos pty. Cierra algunas terminales que no estés usando, en Orca o en otro programa, y vuelve a intentarlo.",
             "terminalProcessLimit": "Tu sistema no puede iniciar otro proceso de terminal. Cierra las terminales que no uses o sal de los procesos que no necesites y vuelve a intentarlo.",
+            "hostTerminalCap": "El host ya está ejecutando tantas terminales como permite Orca. Cierra una terminal que ya no necesites y vuelve a intentarlo.",
             "retry": "Reintentar",
             "retrying": "Reintentando…",
             "retryUnavailable": "Reintentar no pudo volver a conectarse todavía. Vuelve a intentarlo en breve.",
@@ -3161,7 +3162,6 @@
             "e16012e31e": "El demonio de terminal propietario de esta sesión salió, por lo que no se pudo recuperar la sesión y su desplazamiento hacia atrás. Abra una nueva terminal para continuar.",
             "sessionUnavailable": "Orca no pudo volver a conectarse a la sesión de terminal de este panel en el host. Abra una nueva terminal para continuar.",
             "sourceRestoring": "Reconectando este terminal: se está restableciendo su salida. La sesión aún está en marcha.",
-            "heldByPreviousRelay": "Este terminal sigue ejecutándose en el host con la versión anterior de Orca, a la que esta versión no puede conectarse. Sigue ejecutándose hasta que salga. Abre un terminal nuevo para seguir trabajando aquí.",
             "ownerHostMismatch": "La sesión guardada de este terminal pertenece a otra conexión de host, así que Orca no puede reconectarlo aquí. Abre un terminal nuevo para continuar."
           },
           "TerminalProcessExitOverlay": {
@@ -5070,8 +5070,7 @@
         "AddProjectFromFolderDialog": {
           "7d1f51678c": "Agregar proyecto",
           "7726a16374": "Cancelar",
-          "046751dbfb": "Agrega esta carpeta como un proyecto de Orca separado.",
-          "e643b30398": "Proyecto agregado en host SSH"
+          "046751dbfb": "Agrega esta carpeta como un proyecto de Orca separado."
         },
         "AddRepoCreateStep": {
           "0ae45b8238": "my-project",
@@ -5089,8 +5088,7 @@
           "fe1e616c5b": "Git es necesario para crear un proyecto.",
           "c234df77f7": "Elige o introduce una carpeta padre del host antes de crear.",
           "3a13f6e88b": "ubicación no seleccionada",
-          "6ed14c0281": "carpeta del host no seleccionada",
-          "ssh_parent_manual": "Introduce una ruta padre SSH."
+          "6ed14c0281": "carpeta del host no seleccionada"
         },
         "AddRepoNestedImportStep": {
           "496f68cf8c": "Escaneando repositorios. Haz clic para detener.",
@@ -5115,13 +5113,9 @@
           "e52454b7f6": "Abrir como carpeta"
         },
         "AddRepoRemoteStep": {
-          "5b205b5281": "Detener escaneo",
           "6680289908": "/inicio/usuario/proyecto",
           "ef410aa881": "Ruta del host",
-          "0416bde073": "Agregar en Ajustes",
-          "df6fbcf880": "No hay destinos SSH configurados.",
           "44637f43bd": "Destino SSH",
-          "80557be85a": "Elige un destino SSH conectado e introduce la ruta a un repositorio Git.",
           "serverDescription": "Elige un host SSH al que se conecta {{server}} e introduce la ruta a un repositorio Git en él.",
           "serverEmpty": "{{server}} aún no tiene hosts SSH.",
           "serverAddHost": "Añadir host SSH",
@@ -5129,10 +5123,7 @@
           "007651bdf9": "Navega hasta un directorio y haz clic en Seleccionar para elegirlo.",
           "dd3ff65486": "Explorar el sistema de archivos remoto",
           "36d427bb66": "Agregar proyecto en host SSH",
-          "35831a7312": "Agregando...",
-          "lockedDescription": "Introduce la ruta a un repositorio Git en {{value0}}.",
-          "lockedDisconnected": "{{value0}} está desconectado.",
-          "93e0221434": "Conectar"
+          "35831a7312": "Agregando..."
         },
         "AddRepoServerStartStep": {
           "ae990c86a0": "Volver a opciones de agregado",
@@ -5882,12 +5873,8 @@
                   "serverSshTitle": "Proyecto en un host SSH de este servidor",
                   "serverSshDescription": "Abre una carpeta de proyecto de un host SSH al que se conecta este servidor",
                   "serverSshUpdate": "Actualiza este servidor para añadir proyectos en sus hosts SSH",
-                  "3d162cc76f": "Proyecto remoto",
                   "fb4fc5380e": "Proyecto local, repositorio de Git o carpeta con muchos repositorios",
                   "2281fdc8c7": "Explorar carpeta",
-                  "sshCreateUnavailable": "Aún no disponible para hosts SSH",
-                  "sshBrowseTitle": "Abrir proyecto en host SSH",
-                  "sshBrowseDescription": "Repositorio Git o carpeta existente en este host SSH",
                   "runtimeBrowseDescription": "Repositorio Git o carpeta existente en este host"
                 }
               }
@@ -11541,7 +11528,7 @@
           "failed": "Update failed",
           "serviceManagerHelp": "Update Orca through the service manager that starts this server.",
           "unpackedHelp": "Development builds must be updated from their source checkout.",
-          "legacyHelp": "Update this server manually once to enable remote updates."
+          "legacyHelp": "Las actualizaciones remotas no están disponibles para este servidor. Actualiza Orca en el servidor."
         },
         "BrowserLinkRoutingSetting": {
           "description": "Abre los enlaces http(s) del terminal, Markdown y el editor en el navegador integrado de Orca. {{shortcut}} siempre usa el navegador del sistema.",
@@ -12368,7 +12355,7 @@
           }
         },
         "sshHostServer": {
-          "sourceChanged": "Se modificó en una versión anterior de Orca: ejecuta el relé hasta que se mueva de nuevo a su servidor gestionado.",
+          "sourceChanged": "Una versión anterior de Orca cambió los proyectos de este host. Mueve esos cambios a su servidor gestionado o conserva la versión del servidor para volver a conectarte.",
           "deploying": "Configurando un servidor Orca gestionado…",
           "converting": "Moviendo los proyectos de este host a su servidor Orca gestionado…",
           "connecting": "Conectando al servidor Orca gestionado…",
@@ -13631,7 +13618,8 @@
             "resumeInChatTranscriptMissing": "El historial de esta conversación no se pudo cargar, por lo que no se puede reanudar en el chat.",
             "resumeInChatFailed": "No se pudo reanudar esta sesión en un chat nuevo.",
             "resumeInNewCliUnavailable": "Esta sesión no se puede abrir en la CLI.",
-            "resumeInNewCliHostTooOld": "Actualiza Orca en el host que ejecuta este chat para reanudarlo en una nueva CLI."
+            "resumeInNewCliHostTooOld": "Actualiza Orca en el host que ejecuta este chat para reanudarlo en una nueva CLI.",
+            "folderWorkspaceUnavailable": "El espacio de trabajo de carpeta ya no está disponible."
           },
           "AiVaultPanelControls": {
             "scanningSessions": "Buscando sesiones",
@@ -13733,7 +13721,9 @@
             "copied": "Copiado",
             "copy": "Copiar",
             "noFirstPromptAvailable": "No hay primer prompt disponible",
-            "loadingFirstPrompt": "Cargando primer prompt…"
+            "loadingFirstPrompt": "Cargando primer prompt…",
+            "folder": "Carpeta",
+            "resumeInFolder": "Reanudar en carpeta"
           },
           "AiVaultSessionRow": {
             "resumeAgentSession": "Reanudar sesión de {{value0}}",
@@ -13829,7 +13819,12 @@
             "noRecordedWorktree": "No se registró ningún worktree para esta sesión.",
             "archivedJumpUnavailable": "Esta sesión está en un worktree archivado.",
             "noActiveWorktreeMatch": "Ningún worktree activo coincide con esta sesión.",
-            "noActiveWorktreeTarget": "No hay ningún worktree activo disponible."
+            "noActiveWorktreeTarget": "No hay ningún worktree activo disponible.",
+            "activeFolder": "Carpeta",
+            "archivedFolder": "Carpeta archivada",
+            "archivedFolderJumpUnavailable": "Esta sesión está en una carpeta archivada.",
+            "currentFolder": "Carpeta actual",
+            "jumpToFolder": "Saltar a la carpeta"
           },
           "AiVaultSessionSubagents": {
             "subagentsCount": "Subagentes ({{value0}})",
@@ -17926,7 +17921,6 @@
         "imagePasteFailed": "Error al pegar imagen.",
         "worktreeNotReady": "Worktree no está listo — intenta de nuevo en un momento.",
         "pasteUnavailable": "No se puede pegar — este chat no acepta entradas en este momento.",
-        "uploadingAttachments": "Subiendo {{value0}} archivo(s) al remoto…",
         "model": "Modelo",
         "effort": "Esfuerzo",
         "fastMode": "Modo rápido",
@@ -18327,7 +18321,8 @@
         "orcaStopQuit": "Orca en {{machine}} se cerró mientras esta respuesta estaba en curso.",
         "orcaStopCrash": "Orca en {{machine}} se detuvo inesperadamente mientras esta respuesta estaba en curso.",
         "orcaStopRemote": "Orca en {{machine}} se detuvo mientras esta respuesta estaba en curso.",
-        "orcaStopCanContinue": "Puedes continuar en esta conversación."
+        "orcaStopCanContinue": "Puedes continuar en esta conversación.",
+        "orcaStopUnnamedServer": "el servidor remoto"
       },
       "providerFrame": {
         "byteLength": "{{value0}} bytes"

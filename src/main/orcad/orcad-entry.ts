@@ -159,8 +159,7 @@ async function startOrcadRuntime(
 ): Promise<Pick<OrcadHandle, 'readiness'>> {
   const { OrcaRuntimeService } = await import('../runtime/orca-runtime')
   const { OrcaRuntimeRpcServer } = await import('../runtime/runtime-rpc')
-  const { registerHeadlessPtyRuntime, getLocalPtyProvider, getSshPtyProvider } =
-    await import('../ipc/pty')
+  const { registerHeadlessPtyRuntime, getLocalPtyProvider } = await import('../ipc/pty')
   const { getAppEnvironment } = await import('../../shared/app-environment')
   const { installOrcadObservability } = await import('./orcad-observability')
   closeOrcadObservability = installOrcadObservability()
@@ -207,6 +206,8 @@ async function startOrcadRuntime(
   const { resolvePushGatewayOrigin } = await import('../runtime/push/push-gateway-origin')
 
   const runtimeUserDataPath = getAppEnvironment().getPath('userData')
+  const { startEventLoopDelayProbe } = await import('../diagnostics/event-loop-delay-probe')
+  startEventLoopDelayProbe('orcad', runtimeUserDataPath)
   // A missing `orca` command must never keep the server from starting.
   await prepareOrcadCliLauncher().catch((error: unknown) => {
     console.warn('[orcad] Could not prepare the profile CLI launcher', error)
@@ -245,9 +246,6 @@ async function startOrcadRuntime(
     // Why lazy: a daemon swap replaces the provider after construction, so an eager
     // reference would freeze the pre-daemon one.
     getLocalProvider: () => getLocalPtyProvider(),
-    // Why: destructive worktree removal refuses to run without a provider to stop
-    // processes through — correctly, since it cannot otherwise verify the tree is idle.
-    getSshProvider: (connectionId) => getSshPtyProvider(connectionId),
     // Why the daemon predicate and not a constant: orcad now spawns the terminal daemon, so
     // its PTYs DO survive an orcad restart — but only while a daemon that owns fresh
     // sessions is installed. A failed or degraded launch has to answer false, and this reads

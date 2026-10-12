@@ -2,7 +2,11 @@ import { mintDeviceCredential } from './device-credential'
 import type { DelegatedPhone } from '../../shared/delegated-mobile-device-contract'
 import type { DeviceEntry } from './device-registry'
 
-export type DelegatedMobileDeviceEntry = DeviceEntry & { parentDeviceId: string; phoneKey: string }
+export type DelegatedMobileDeviceEntry = DeviceEntry & {
+  parentDeviceId: string
+  phoneKey: string
+  token: string
+}
 
 /** The registry after making `parent`'s children cover `phones`, and those children in `phones` order. */
 export function planDelegatedMobileDevices(

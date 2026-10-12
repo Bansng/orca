@@ -1,5 +1,6 @@
-// The read-only layout stream (design 2.4). Not advertised as a capability and not on the mobile
-// allowlist: no client calls it until the switch, so it is inert.
+// The read-only layout stream (design 2.4) and the server snapshot read (design 6.3). Not
+// advertised as a capability and not on the mobile allowlist: no client calls them until the
+// switch, so they are inert.
 
 import {
   LayoutSubscribeParams,
@@ -63,5 +64,11 @@ export const WORKSPACE_LAYOUT_METHODS = [
       runtime.cleanupSubscription(layoutCleanupKey(connectionId, params.subscriptionId))
       return { unsubscribed: true }
     }
+  }),
+  defineMethod({
+    name: 'layout.getRemoteSnapshots',
+    permission: 'workspace',
+    params: null,
+    handler: async (_params, { runtime }) => ({ snapshots: runtime.getRemoteLayoutSnapshots() })
   })
 ]

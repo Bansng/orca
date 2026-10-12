@@ -4,6 +4,8 @@ import type { SubprocessHandle } from './session-subprocess-handle'
 import { TerminalHost, type TerminalHostOptions } from './terminal-host'
 import { TerminalSpawnGate, type TerminalSpawnAdmissionMode } from './terminal-spawn-gate'
 import type { HostPressureLevel, SpawnIntent } from '../../shared/host-spawn-admission'
+import { TERMINAL_HOST_CAP_HINT } from '../../shared/terminal-spawn-error-copy'
+import { HostTerminalLedger } from './host-terminal-ledger'
 
 type SpawnSubprocess = TerminalHostOptions['spawnSubprocess']
 
@@ -212,6 +214,76 @@ describe('TerminalSpawnGate', () => {
     release?.()
     await expect(pending).rejects.toThrow(/canceled/i)
     expect(gate.snapshot()).toMatchObject({ liveAutomatic: 0, inFlight: { automatic: 0 } })
+  })
+
+  describe('host terminal cap', () => {
+    function capAt(maxTerminals: number, mode: TerminalSpawnAdmissionMode = 'observe') {
+      gate = new TerminalSpawnGate({
+        log,
+        mode,
+        now: () => Date.now(),
+        hostTerminals: new HostTerminalLedger({ dir: null, maxTerminals, log })
+      })
+      host = new TerminalHost({ spawnSubprocess, spawnGate: gate })
+    }
+    const shell = (sessionId: string) =>
+      host.createOrAttach({ sessionId, cols: 80, rows: 24, streamClient: stream() })
+
+    it('refuses a new shell at the cap with a clear message and leaves running ones alone', async () => {
+      capAt(2)
+      await shell('a')
+      await restore('b')
+      await expect(shell('c')).rejects.toThrow(TERMINAL_HOST_CAP_HINT)
+      await expect(restore('d')).rejects.toThrow(TERMINAL_HOST_CAP_HINT)
+      expect(spawnSubprocess).toHaveBeenCalledTimes(2)
+      expect(host.listSessions().filter((session) => session.isAlive)).toHaveLength(2)
+      expect(gate.snapshot()).toMatchObject({ terminals: 2, hostCapRefused: 2 })
+    })
+
+    it('keeps a declared restore sleeping at the cap instead of failing its pane', async () => {
+      capAt(1)
+      await shell('a')
+      await expect(restore('b', { declaredIntent: 'automatic-restore' })).rejects.toThrow(
+        'terminal_spawn_deferred:live_cap'
+      )
+      await expect(restore('c', { declaredIntent: 'user-resume' })).rejects.toThrow(
+        'terminal_spawn_deferred:live_cap'
+      )
+    })
+
+    it('frees a slot when a terminal exits, and never charges an attach', async () => {
+      capAt(1)
+      await shell('a')
+      await expect(
+        host.createOrAttach({
+          sessionId: 'a',
+          cols: 80,
+          rows: 24,
+          attachOnly: true,
+          streamClient: stream()
+        })
+      ).resolves.toMatchObject({ isNew: false })
+      exits.get(1000)?.(0)
+      await expect(shell('b')).resolves.toMatchObject({ isNew: true })
+    })
+
+    it('frees the slot of a fork that failed', async () => {
+      capAt(1)
+      spawnSubprocess.mockImplementationOnce(() => {
+        throw new Error('spawn failed')
+      })
+      await expect(shell('a')).rejects.toThrow('spawn failed')
+      await expect(shell('b')).resolves.toMatchObject({ isNew: true })
+    })
+
+    it('refuses a paced restore at once rather than after its wait', async () => {
+      vi.useFakeTimers({ now: 0 })
+      capAt(3, 'enforce')
+      for (let i = 0; i < 3; i++) {
+        await restore(`burst-${i}`)
+      }
+      await expect(restore('late', { deadlineAt: 5_000 })).rejects.toThrow(TERMINAL_HOST_CAP_HINT)
+    })
   })
 
   describe('enforce', () => {

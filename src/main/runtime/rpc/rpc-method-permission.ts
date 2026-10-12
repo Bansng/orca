@@ -28,6 +28,8 @@ export type RpcMethodPermission =
   | 'pairing-admin'
   /** Updates, managed servers, SSH connections, plugins and network tunnels on this host. */
   | 'host-admin'
+  /** Changes only the caller's own paired-device credential (never another device's). */
+  | 'device-self'
 
 /** Administrative permissions a paired runtime client holds only when granted at pairing time. */
 export const RUNTIME_DEVICE_GRANTS = [
@@ -42,5 +44,6 @@ export const RPC_METHOD_PERMISSIONS: readonly RpcMethodPermission[] = [
   'settings-write',
   'skills-admin',
   'pairing-admin',
-  'host-admin'
+  'host-admin',
+  'device-self'
 ]

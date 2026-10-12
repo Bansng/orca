@@ -13,14 +13,11 @@ import {
   type DockerSshHostTarget
 } from './helpers/docker-ssh-host-target'
 import { ensureTerminalVisible, waitForSessionReady } from './helpers/store'
-import { ORCAD_TEMPLATE } from './helpers/orcad-managed-workspace'
+import { ORCAD_TEMPLATE, skipUnlessManagedDockerHost } from './helpers/orcad-managed-workspace'
 import { quotePosixShell } from '../../src/shared/wsl-login-shell-command'
 
 /** A recipe VM's SSH root, served by a managed orcad the first connect deploys. */
-test.skip(
-  !ORCAD_TEMPLATE || process.env.ORCA_E2E_SSH_DOCKER !== '1',
-  'Needs Docker and server template'
-)
+skipUnlessManagedDockerHost()
 test.skip(process.platform === 'win32', 'The recipe scripts are POSIX shell')
 test.use({
   seedTestRepo: false,

@@ -88,7 +88,6 @@ afterEach(async () => {
 })
 
 describe('worktree safety with the real Git binary', () => {
-
   it.each([
     ['feature', 'Feature'],
     ['Ä', 'ä'],
@@ -117,5 +116,4 @@ describe('worktree safety with the real Git binary', () => {
     },
     90_000
   )
-
 })

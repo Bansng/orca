@@ -5,8 +5,8 @@ import { isRemoteRuntimePtyId } from '../../../../shared/remote-runtime-pty-id'
 
 /**
  * A missing buffer snapshot only proves the pane exited when the client could have
- * observed it. `SshPtyProvider` reports no authoritative buffer snapshot and the relay
- * exposes no snapshot RPC, so for a remote pty the absence is loss of contact —
+ * observed it. This client holds no SSH PTY provider and the host exposes no snapshot RPC to
+ * it, so for a remote pty the absence is loss of contact —
  * `unverifiable`, never `exited`. A paired server's pane is likewise held by that server, not by
  * this client. See docs/reference/ssh-execution-boundary.md.
  */

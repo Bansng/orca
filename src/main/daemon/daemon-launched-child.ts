@@ -11,10 +11,11 @@ import { parseDaemonReadyIdentity } from './daemon-ready-identity'
 import { unlinkOwnedDaemonPidFile } from './daemon-spawner'
 import { childProcessHasExited } from '@orca/process-host/process-tree-termination'
 
+/** How long a forked daemon gets to report ready over IPC, unless the caller overrides it. */
+export const DAEMON_CHILD_STARTUP_TIMEOUT_MS = 10_000
 const DAEMON_CHILD_TERMINATION_GRACE_MS = 5_000
 const DAEMON_CHILD_FORCE_EXIT_WAIT_MS = 1_000
 const STARTUP_STDERR_MAX_BYTES = 8192
-const DEFAULT_DAEMON_STARTUP_TIMEOUT_MS = 10_000
 
 export class DaemonEndpointUnavailableError extends Error {
   constructor(
@@ -225,7 +226,7 @@ async function launchDaemonChildAttempt(
 
     timer = setTimeout(() => {
       void fail(new Error('Daemon startup timed out'))
-    }, options.startupTimeoutMs ?? DEFAULT_DAEMON_STARTUP_TIMEOUT_MS)
+    }, options.startupTimeoutMs ?? DAEMON_CHILD_STARTUP_TIMEOUT_MS)
 
     child.on('message', onReadyMessage)
     child.on('error', onStartupError)

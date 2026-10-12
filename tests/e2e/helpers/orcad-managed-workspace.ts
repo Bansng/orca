@@ -4,18 +4,26 @@
  * managed-host journey specs share, driven through the tab bar and the keyboard.
  */
 import type { ElectronApplication, Page, TestInfo } from '@stablyai/playwright-test'
-import { expect } from './orca-app'
+import { expect, test } from './orca-app'
 import { createRestartSession } from './orca-restart'
 import { startOrcadConvertHost, type OrcadConvertHost } from './orcad-convert-host'
 import { seedRelayEraProfile, type RelayEraProfile } from './orcad-upgrade-profile'
 import { convertAndRetain } from './orcad-convert-flow'
 import { readPairedPaneContent } from './paired-host-terminal'
-import { waitForSessionReady } from './store'
+import { waitForSessionReady, waitForStartupWorktreeRefresh } from './store'
 import { dismissTransientAnnouncement } from './ssh-config-host-picker'
 import { focusActiveTerminalInput } from './terminal'
 import { toRuntimeExecutionHostId } from '../../../src/shared/execution-host'
 
 export const ORCAD_TEMPLATE = process.env.ORCA_E2E_ORCAD_CONVERT_TEMPLATE
+
+/** Skips the calling spec file unless the Docker SSH host and the orcad template are available. */
+export function skipUnlessManagedDockerHost(): void {
+  test.skip(
+    !ORCAD_TEMPLATE || process.env.ORCA_E2E_SSH_DOCKER !== '1',
+    'Needs Docker and server template'
+  )
+}
 
 export type ManagedHostFixture = {
   host: OrcadConvertHost
@@ -53,30 +61,73 @@ export type ManagedWorkspace = {
   environmentId: string
 }
 
-/** Leaves the managed repository active; each launch is recorded on `fixture` for teardown. */
-export async function launchManagedWorkspace(
-  fixture: ManagedHostFixture,
+export type ManagedProfileOptions = {
+  /** Overrides the host's repository, e.g. a same-path desktop collision. */
+  repoPath?: string
   /** Overrides the host's folder workspace, e.g. to keep /tmp outside every workspace. */
-  options: { folderPath?: string } = {}
+  folderPath?: string
+  /** Runs on the profile-creating launch, before the SSH profile is seeded. */
+  beforeSeed?: (page: Page) => Promise<void>
+  /** Runs as soon as the converting launch starts, before the session is ready. */
+  onLaunch?: (page: Page, seeded: RelayEraProfile) => void | Promise<void>
+}
+
+/** Seeds a relay-era profile and converts it; each launch is recorded on `fixture` for teardown. */
+export async function launchConvertedProfile(
+  fixture: ManagedHostFixture,
+  options: ManagedProfileOptions = {}
 ): Promise<ManagedWorkspace> {
   const { host, session } = fixture
   // The first launch only creates the profile the saved SSH host is written into.
   const first = await session.launch()
   fixture.app = first.app
   await waitForSessionReady(first.page)
+  await options.beforeSeed?.(first.page)
   await session.close(first.app)
   fixture.app = null
   const seeded = seedRelayEraProfile(session.userDataDir, host.input, {
-    repoPath: host.remoteRepoPath,
+    repoPath: options.repoPath ?? host.remoteRepoPath,
     folderPath: options.folderPath ?? host.remoteFolderPath
   })
   const { app, page } = await session.launch()
   fixture.app = app
+  await options.onLaunch?.(page, seeded)
   await waitForSessionReady(page)
   await convertAndRetain(page, session.userDataDir, seeded)
   const environmentId = await managedEnvironmentId(page, seeded.targetId)
-  await activateManagedWorkspace(page, seeded.worktreeId, environmentId)
   return { app, page, seeded, environmentId }
+}
+
+/** Like `launchConvertedProfile`, and leaves the managed repository active. */
+export async function launchManagedWorkspace(
+  fixture: ManagedHostFixture,
+  options: ManagedProfileOptions = {}
+): Promise<ManagedWorkspace> {
+  const workspace = await launchConvertedProfile(fixture, options)
+  await activateManagedWorkspace(
+    workspace.page,
+    workspace.seeded.worktreeId,
+    workspace.environmentId
+  )
+  return workspace
+}
+
+/** Quits the live launch and relaunches the same profile, waiting for startup to settle. */
+export async function relaunchManagedApp(
+  fixture: ManagedHostFixture,
+  onLaunch?: (page: Page) => void | Promise<void>
+): Promise<Page> {
+  if (!fixture.app) {
+    throw new Error('No live launch to close')
+  }
+  await fixture.session.close(fixture.app)
+  fixture.app = null
+  const { app, page } = await fixture.session.launch()
+  fixture.app = app
+  await onLaunch?.(page)
+  await waitForSessionReady(page)
+  await waitForStartupWorktreeRefresh(page)
+  return page
 }
 
 export async function managedEnvironmentId(page: Page, targetId: string): Promise<string> {

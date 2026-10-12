@@ -13,6 +13,7 @@ import {
   listWorktreesMock
 } from './worktrees-test-module-mocks'
 import { handlers, setupWorktreeHandlers, store } from './worktrees-test-harness'
+import { SshHostNotServedError } from '../providers/ssh-host-not-served-error'
 
 vi.mock('electron', async () =>
   (await import('./worktrees-test-module-mocks')).electronModuleMock()
@@ -107,32 +108,6 @@ function makeRepo(fields: Record<string, unknown>) {
     addedAt: 0,
     worktreeBaseRef: 'origin/main',
     ...fields
-  }
-}
-
-function makeProvider(worktreePath: string) {
-  return {
-    exec: vi.fn().mockImplementation(async (args: string[]) => {
-      if (args[0] === 'remote') {
-        return { stdout: 'origin\n', stderr: '' }
-      }
-      if (args[0] === 'show-ref') {
-        // A hit here reads as "branch already exists"; the create loop would then rename.
-        throw Object.assign(new Error('missing exact ref'), { code: 1 })
-      }
-      return { stdout: '', stderr: '' }
-    }),
-    fetchRemoteTrackingRef: vi.fn().mockResolvedValue(undefined),
-    addWorktree: vi.fn().mockResolvedValue(undefined),
-    listWorktrees: vi.fn().mockResolvedValue([
-      {
-        path: worktreePath,
-        head: 'abc123',
-        branch: 'refs/heads/wt',
-        isBare: false,
-        isMainWorktree: false
-      }
-    ])
   }
 }
 
@@ -428,33 +403,15 @@ describe('worktrees:create execution host routing', () => {
     setupWorktreeHandlers()
   })
 
-  it('creates on the SSH host for a row that names it only as executionHostId', async () => {
+  it('refuses a row that names an SSH host only as executionHostId instead of creating locally', async () => {
     // No `connectionId`: the raw read answered "local" and ran `git worktree add` on the client
-    // against `/remote/repo`. The runtime sibling already resolved this row remotely.
+    // against `/remote/repo`. The host is not served here, so the create refuses.
     useRepo(makeRepo({ executionHostId: 'ssh:target-a' }))
-    const provider = makeProvider('/remote/repo-wt')
-    getSshGitProviderMock.mockImplementation((connectionId: string) =>
-      connectionId === 'target-a' ? provider : undefined
-    )
 
-    await handlers['worktrees:create'](null, { repoId: 'repo-1', name: 'wt' })
+    await expect(
+      handlers['worktrees:create'](null, { repoId: 'repo-1', name: 'wt' })
+    ).rejects.toThrow(SshHostNotServedError)
 
-    expect(provider.addWorktree).toHaveBeenCalledTimes(1)
-    expect(addWorktreeMock).not.toHaveBeenCalled()
-  })
-
-  it('keeps two simultaneously registered SSH hosts apart', async () => {
-    useRepo(makeRepo({ executionHostId: 'ssh:target-b' }))
-    const providerA = makeProvider('/remote/repo-wt-a')
-    const providerB = makeProvider('/remote/repo-wt-b')
-    getSshGitProviderMock.mockImplementation((connectionId: string) =>
-      connectionId === 'target-a' ? providerA : connectionId === 'target-b' ? providerB : undefined
-    )
-
-    await handlers['worktrees:create'](null, { repoId: 'repo-1', name: 'wt' })
-
-    expect(providerB.addWorktree).toHaveBeenCalledTimes(1)
-    expect(providerA.addWorktree).not.toHaveBeenCalled()
     expect(addWorktreeMock).not.toHaveBeenCalled()
   })
 
@@ -468,20 +425,14 @@ describe('worktrees:create execution host routing', () => {
     expect(addWorktreeMock).not.toHaveBeenCalled()
   })
 
-  it('refuses a runtime row whose nested SSH target is dialable in this namespace', async () => {
-    // `target-a` names a target inside env-1. A same-named one registered here is another machine,
-    // so creating through it lands the checkout on the wrong host.
+  it('refuses a runtime row that also names a nested SSH target', async () => {
+    // `target-a` names a target inside env-1, never one on this machine.
     useRepo(makeRepo({ executionHostId: 'runtime:env-1', connectionId: 'target-a' }))
-    const provider = makeProvider('/remote/repo-wt')
-    getSshGitProviderMock.mockImplementation((connectionId: string) =>
-      connectionId === 'target-a' ? provider : undefined
-    )
 
     await expect(
       handlers['worktrees:create'](null, { repoId: 'repo-1', name: 'wt' })
     ).rejects.toThrow('not dispatched by this process')
 
-    expect(provider.addWorktree).not.toHaveBeenCalled()
     expect(addWorktreeMock).not.toHaveBeenCalled()
   })
 
@@ -500,14 +451,8 @@ describe('worktrees:create execution host routing', () => {
         isMainWorktree: false
       }
     ])
-    const provider = makeProvider('/remote/repo-wt')
-    getSshGitProviderMock.mockImplementation((connectionId: string) =>
-      connectionId === 'target-a' ? provider : undefined
-    )
-
     await handlers['worktrees:create'](null, { repoId: 'repo-1', name: 'wt' })
 
     expect(addWorktreeMock).toHaveBeenCalledTimes(1)
-    expect(provider.addWorktree).not.toHaveBeenCalled()
   })
 })

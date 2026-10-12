@@ -3158,10 +3158,10 @@
             "42b283ecfc": "ホストが保存されたセッションを確認できなかったため、Orca はこのターミナルを安全に再接続できませんでした。 Orca は保存されたセッションを変更せずに残しました。今すぐ再接続を試みるには、「再試行」をクリックします。それでも再接続できない場合は、新規ターミナルを開きます。",
             "e16012e31e": "このセッションを所有していたターミナルデーモンが終了したため、セッションとそのスクロールバックを回復できませんでした。続行するには、新規ターミナルを開いてください。",
             "sessionUnavailable": "Orca はホスト上のこのペインのターミナルセッションに再接続できませんでした。続行するには、新規ターミナルを開いてください。",
-            "heldByPreviousRelay": "このターミナルは以前のバージョンの Orca のもとでホスト上でまだ実行中ですが、このバージョンからは接続できません。終了するまで実行され続けます。ここで作業を続けるには新しいターミナルを開いてください。",
             "sourceRestoring": "このターミナルを再接続しています — その出力が再確立されています。セッションはまだ実行中です。",
             "ptyAllocationLimit": "システムはこれ以上 pty デバイスを割り当てられません。Orca または他のプログラムで使っていないターミナルをいくつか閉じてから、もう一度お試しください。",
             "terminalProcessLimit": "システムはこれ以上ターミナルプロセスを起動できません。使っていないターミナルを閉じるか、不要なプロセスを終了してから、もう一度お試しください。",
+            "hostTerminalCap": "ホストではすでに Orca が許可する上限までターミナルが実行されています。不要になったターミナルを閉じてから、もう一度お試しください。",
             "ownerHostMismatch": "このターミナルの保存済みセッションは別のホスト接続に属しているため、Orca はここで再接続できません。続行するには、新規ターミナルを開いてください。"
           },
           "TerminalProcessExitOverlay": {
@@ -5051,8 +5051,7 @@
         "AddProjectFromFolderDialog": {
           "7d1f51678c": "プロジェクトを追加",
           "7726a16374": "キャンセル",
-          "046751dbfb": "このフォルダーを別の Orca プロジェクトとして追加します。",
-          "e643b30398": "リモートプロジェクトが追加されました"
+          "046751dbfb": "このフォルダーを別の Orca プロジェクトとして追加します。"
         },
         "AddRepoCreateStep": {
           "0ae45b8238": "my-project",
@@ -5070,8 +5069,7 @@
           "fe1e616c5b": "プロジェクトを作成するには Git が必要です。",
           "c234df77f7": "作成する前に、ホストの親フォルダーを選択または入力してください。",
           "3a13f6e88b": "場所が選択されていません",
-          "6ed14c0281": "ホストフォルダーが選択されていません",
-          "ssh_parent_manual": "SSH の親パスを入力してください。"
+          "6ed14c0281": "ホストフォルダーが選択されていません"
         },
         "AddRepoNestedImportStep": {
           "496f68cf8c": "リポジトリをスキャンしています。クリックして停止します。",
@@ -5096,13 +5094,9 @@
           "e52454b7f6": "フォルダーとして開く"
         },
         "AddRepoRemoteStep": {
-          "5b205b5281": "スキャンの停止",
           "6680289908": "/home/user/project",
           "ef410aa881": "ホストパス",
-          "0416bde073": "設定を追加",
-          "df6fbcf880": "SSH ターゲットが設定されていません。",
           "44637f43bd": "SSH ターゲット",
-          "80557be85a": "接続されている SSH ターゲットを選択し、Git リポジトリへのパスを入力します。",
           "serverDescription": "{{server}} が接続する SSH ホストを選び、そのホスト上の Git リポジトリのパスを入力してください。",
           "serverEmpty": "{{server}} にはまだ SSH ホストがありません。",
           "serverAddHost": "SSH ホストを追加",
@@ -5110,10 +5104,7 @@
           "007651bdf9": "ディレクトリに移動し、「選択」をクリックして選択します。",
           "dd3ff65486": "リモートファイルシステムを参照する",
           "36d427bb66": "リモートプロジェクトを追加",
-          "35831a7312": "追加中…",
-          "lockedDescription": "{{value0}} 上の Git リポジトリへのパスを入力してください。",
-          "lockedDisconnected": "{{value0}} は切断されています。",
-          "93e0221434": "接続"
+          "35831a7312": "追加中…"
         },
         "AddRepoServerStartStep": {
           "ae990c86a0": "オプションの追加に戻る",
@@ -5863,12 +5854,8 @@
                   "serverSshTitle": "このサーバーの SSH ホスト上のプロジェクト",
                   "serverSshDescription": "このサーバーが接続する SSH ホストのプロジェクトフォルダーを開きます",
                   "serverSshUpdate": "SSH ホストにプロジェクトを追加するには、このサーバーを更新してください",
-                  "3d162cc76f": "SSH ホスト上のプロジェクト",
                   "fb4fc5380e": "ローカルプロジェクト、Git リポジトリ、または多数のリポジトリを含むフォルダー",
                   "2281fdc8c7": "フォルダーを参照",
-                  "sshCreateUnavailable": "SSH ホストではまだ利用できません",
-                  "sshBrowseTitle": "SSH ホスト上のプロジェクトを開く",
-                  "sshBrowseDescription": "この SSH ホスト上の既存の Git リポジトリまたはフォルダー",
                   "runtimeBrowseDescription": "このホスト上の既存の Git リポジトリまたはフォルダー"
                 }
               }
@@ -11541,7 +11528,7 @@
           "failed": "更新に失敗しました",
           "serviceManagerHelp": "このサーバーを開始するサービスマネージャーを通じて Orca を更新してください。",
           "unpackedHelp": "開発ビルドはソースチェックアウトから更新する必要があります。",
-          "legacyHelp": "リモート更新を有効にするには、このサーバーを一度手動で更新してください。"
+          "legacyHelp": "このサーバーではリモート更新を利用できません。サーバー上で Orca を更新してください。"
         },
         "BrowserLinkRoutingSetting": {
           "description": "ターミナル、Markdown、エディターの http(s) リンクを Orca の組み込みブラウザで開きます。{{shortcut}} は常にシステムブラウザを使用します。",
@@ -12368,7 +12355,7 @@
           }
         },
         "sshHostServer": {
-          "sourceChanged": "古い Orca で変更されました: 管理対象サーバーに再び移動されるまでリレーを実行します。",
+          "sourceChanged": "古いバージョンの Orca がこのホストのプロジェクトを変更しました。再接続するには、その変更を管理対象サーバーに移動するか、サーバーのバージョンを維持してください。",
           "deploying": "管理対象の Orca サーバーをセットアップ中…",
           "converting": "このホストのプロジェクトを管理対象の Orca サーバーに移動中…",
           "connecting": "管理対象の Orca サーバーに接続中…",
@@ -13631,7 +13618,8 @@
             "resumeInChatTranscriptMissing": "この会話の履歴を読み込めなかったため、チャットで再開できません。",
             "resumeInChatFailed": "新規チャットでこのセッションを再開できませんでした。",
             "resumeInNewCliUnavailable": "このセッションは CLI で開けません。",
-            "resumeInNewCliHostTooOld": "このチャットを新しい CLI で再開するには、チャットを実行しているホストの Orca を更新してください。"
+            "resumeInNewCliHostTooOld": "このチャットを新しい CLI で再開するには、チャットを実行しているホストの Orca を更新してください。",
+            "folderWorkspaceUnavailable": "フォルダーワークスペースは利用できなくなりました。"
           },
           "AiVaultPanelControls": {
             "scanningSessions": "セッションをスキャンしています",
@@ -13733,7 +13721,9 @@
             "copied": "コピーしました",
             "copy": "コピー",
             "noFirstPromptAvailable": "最初のプロンプトはありません",
-            "loadingFirstPrompt": "最初のプロンプトを読み込み中…"
+            "loadingFirstPrompt": "最初のプロンプトを読み込み中…",
+            "folder": "フォルダー",
+            "resumeInFolder": "フォルダーで再開"
           },
           "AiVaultSessionRow": {
             "resumeAgentSession": "{{value0}} セッションを再開",
@@ -13829,7 +13819,12 @@
             "noRecordedWorktree": "このセッションに記録されたワークツリーはありません。",
             "archivedJumpUnavailable": "このセッションはアーカイブされたワークツリーにあります。",
             "noActiveWorktreeMatch": "このセッションに一致するアクティブなワークツリーはありません。",
-            "noActiveWorktreeTarget": "利用可能なアクティブなワークツリーはありません。"
+            "noActiveWorktreeTarget": "利用可能なアクティブなワークツリーはありません。",
+            "activeFolder": "フォルダー",
+            "archivedFolder": "アーカイブされたフォルダー",
+            "archivedFolderJumpUnavailable": "このセッションはアーカイブされたフォルダーにあります。",
+            "currentFolder": "現在のフォルダー",
+            "jumpToFolder": "フォルダーにジャンプ"
           },
           "AiVaultSessionSubagents": {
             "subagentsCount": "サブ Agent ({{value0}})",
@@ -17957,7 +17952,6 @@
         "imagePasteFailed": "画像の貼り付けに失敗しました。",
         "worktreeNotReady": "ワークツリーが準備できていません — しばらくしてから再試行してください。",
         "pasteUnavailable": "貼り付けできません — このチャットは現在入力を受け付けていません。",
-        "uploadingAttachments": "{{value0}}個のファイルをリモートにアップロード中…",
         "model": "モデル",
         "effort": "推論レベル",
         "fastMode": "高速モード",
@@ -18237,7 +18231,8 @@
         "orcaStopQuit": "この応答の途中で、{{machine}} の Orca が終了しました。",
         "orcaStopCrash": "この応答の途中で、{{machine}} の Orca が予期せず停止しました。",
         "orcaStopRemote": "この応答の途中で、{{machine}} の Orca が停止しました。",
-        "orcaStopCanContinue": "この会話で続行できます。"
+        "orcaStopCanContinue": "この会話で続行できます。",
+        "orcaStopUnnamedServer": "リモートサーバー"
       },
       "providerFrame": {
         "byteLength": "{{value0}}バイト"

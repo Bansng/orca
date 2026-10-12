@@ -122,17 +122,6 @@ function omitRemovedSshTargetTabSessions(
   )
 }
 
-function omitRemovedSshTargetRecovery<T extends { authority: { targetId: string } }>(
-  entries: Record<string, T>,
-  targetId: string,
-  targetTabIds: ReadonlySet<string>
-): Record<string, T> | undefined {
-  return filterRecordIfChanged(
-    entries,
-    (tabId, entry) => !targetTabIds.has(tabId) && entry.authority.targetId !== targetId
-  )
-}
-
 function clearSshTargetTabPtyState(
   state: AppState,
   targetId: string,
@@ -233,18 +222,6 @@ export function buildRemovedSshTargetCleanupPatch(
   assign(
     'pendingReconnectPtyIdByTabId',
     omitRemovedSshTargetTabSessions(state.pendingReconnectPtyIdByTabId, targetId, targetTabIds)
-  )
-  assign(
-    'directSshPaneRetryByTabId',
-    omitRemovedSshTargetRecovery(state.directSshPaneRetryByTabId, targetId, targetTabIds)
-  )
-  assign(
-    'directSshLivePtyBindingByTabId',
-    omitRemovedSshTargetRecovery(state.directSshLivePtyBindingByTabId, targetId, targetTabIds)
-  )
-  assign(
-    'directSshPaneRetryHistoryByTabId',
-    omitRemovedSshTargetRecovery(state.directSshPaneRetryHistoryByTabId, targetId, targetTabIds)
   )
   assign(
     'deferredSshReconnectTargets',

@@ -13,16 +13,13 @@ import {
   expectTerminalAnswers,
   launchManagedWorkspace,
   openTerminalTab,
-  ORCAD_TEMPLATE,
+  skipUnlessManagedDockerHost,
   typeInTerminal,
   withManagedHost
 } from './helpers/orcad-managed-workspace'
 import { quotePosixShell } from '../../src/shared/wsl-login-shell-command'
 
-test.skip(
-  !ORCAD_TEMPLATE || process.env.ORCA_E2E_SSH_DOCKER !== '1',
-  'Needs Docker and server template'
-)
+skipUnlessManagedDockerHost()
 test.skip(process.platform === 'win32', 'The Docker SSH host uses POSIX tooling')
 
 test('Quick Open finds a file in a monorepo-sized managed workspace', async (// oxlint-disable-next-line no-empty-pattern -- Owns its app launch through a restart session.
