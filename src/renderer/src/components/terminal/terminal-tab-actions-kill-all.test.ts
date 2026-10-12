@@ -12,11 +12,17 @@ vi.mock('@/store', () => ({
   useAppStore: { getState: getStateMock }
 }))
 
-vi.mock('@/runtime/web-runtime-session', () => ({
+vi.mock('@/runtime/web-runtime-session-tab-lifecycle', () => ({
   activateWebRuntimeSessionTab: vi.fn(),
-  closeWebRuntimeSessionTab: closeWebRuntimeSessionTabMock,
-  createWebRuntimeSessionTerminal: vi.fn(),
-  isWebRuntimeSessionActive: isWebRuntimeSessionActiveMock,
+  closeWebRuntimeSessionTab: closeWebRuntimeSessionTabMock
+}))
+vi.mock('@/runtime/web-runtime-terminal-creation', () => ({
+  createWebRuntimeSessionTerminal: vi.fn()
+}))
+vi.mock('@/runtime/web-runtime-session-environment', () => ({
+  isWebRuntimeSessionActive: isWebRuntimeSessionActiveMock
+}))
+vi.mock('@/runtime/web-terminal-surface-id', () => ({
   toHostSessionTabId: vi.fn((tabId: string) => tabId)
 }))
 

@@ -6,7 +6,7 @@ import {
   TerminalSessionOwnerUnverifiedError
 } from '../../../daemon/daemon-errors'
 import type { Store } from '../../../persistence'
-import type { IPtyProvider } from '../../../providers/types'
+import type { IPtyProvider } from '../../../providers/pty-provider-contract'
 import { spawnForStablePane, type StablePaneOwner } from './stable-owner'
 
 const LEAF = '1b3f2c4d-5e6a-4b7c-8d9e-0f1a2b3c4d5e'

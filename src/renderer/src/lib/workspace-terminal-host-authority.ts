@@ -3,7 +3,7 @@ import { parseExecutionHostId } from '../../../shared/execution-host'
 import { parseWorkspaceKey } from '../../../shared/workspace-scope'
 import type { HostLiveTerminalProbeVerdict } from '@/runtime/host-live-terminal-probe'
 import type { SshConnectionState } from '../../../shared/ssh-types'
-import { isWebRuntimeSessionActive } from '@/runtime/web-runtime-session'
+import { isWebRuntimeSessionActive } from '@/runtime/web-runtime-session-environment'
 import {
   getExecutionHostIdForWorktree,
   getRuntimeEnvironmentIdForWorktree,

@@ -2,6 +2,7 @@ import { globSync, readFileSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { diffEntries, parseEntryBaseline } from './ratchet-baseline.mjs'
 import { collectModuleSpecifiers } from './static-module-specifiers.mjs'
 import { isTestOnlySourcePath } from './test-only-source-path.mjs'
 
@@ -97,21 +98,11 @@ export function assessProcessHostImports(sources, manifest, baseline) {
       }
     }
   }
-  const current = [...direct].sort()
-  const baselineSet = new Set(baseline)
   return {
-    direct: current,
-    added: current.filter((file) => !baselineSet.has(file)),
-    stale: baseline.filter((file) => !direct.has(file)).sort(),
+    direct: [...direct].sort(),
+    ...diffEntries(direct, baseline),
     violations: violations.sort()
   }
-}
-
-export function readProcessHostBaseline(contents) {
-  return contents
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith('#'))
 }
 
 export function collectProcessHostSources(root = ROOT) {
@@ -130,7 +121,7 @@ export function main(root = ROOT) {
   const manifest = JSON.parse(
     readFileSync(path.join(root, PACKAGE_DIRECTORY, 'package.json'), 'utf8')
   )
-  const baseline = readProcessHostBaseline(readFileSync(path.join(root, BASELINE_PATH), 'utf8'))
+  const baseline = parseEntryBaseline(readFileSync(path.join(root, BASELINE_PATH), 'utf8'))
   const sources = collectProcessHostSources(root)
   if (
     ![...sources.keys()].some(

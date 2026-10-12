@@ -19,7 +19,7 @@ import {
 import { buildWindowsPowerShellSpawnAttempts } from './windows-shell-fallback-chain'
 import { resolveWindowsShellLaunchArgs } from './windows-shell-args'
 import { assertSafeAgentStartupCwd } from './pty-default-cwd'
-import type { PtySpawnOptions } from './types'
+import type { PtySpawnOptions } from './pty-provider-contract'
 
 type WslLaunchContext = { distro: string; treatPosixCwdAsWsl: true }
 type LocalPtyLaunchSeed = {

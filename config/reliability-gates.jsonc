@@ -3595,12 +3595,11 @@
       "invariant": "A first-install relay transfer must complete in an attempt-owned fixed staging slot before acquiring the shared version install lock. Reservation, promotion, confirmed cleanup, and stale recovery must reject path replacement, persisted-identity mismatch, POSIX symlinks, and Windows reparse points. A newly acquired install lock atomically records the execution host's boot identity; only a verified identity change or the existing stale-age proof may replace it, while legacy, missing, malformed, and unreadable identity state must retain the conservative stale fallback. Recovery examines only eight fixed slot/claim/delete names and removes at most one stale valid stage per call; eight unclaimable states fail with an explicit manual-recovery message. Split-SFTP hosts must prove the stage identity on the exact transfer session, only payload contents may be promoted under the shared lock, and cancellation must boundedly join SFTP, stream, local file-handle, and transfer settlement.",
       "oracle": "Pause a real ssh2 SFTP relay.js write after one remotely acknowledged chunk, prove the remote file is partial, abort the live transfer, and require no shared .install-lock, leaked local descriptor, or foreign-process termination. Separately inject two unconfirmed cancellations, require an independent deployment to install, launch, answer relay RPC, and read a real repository HEAD. Keep a fresh install lock on the current POSIX or Windows boot and require takeover to fail; replace its bounded identity with a prior-boot value and race concurrent recoverers, requiring exactly one atomic winner, a current successor identity, and no tombstone residue; omit the marker and require the legacy lock to remain fenced. Replace one retained fixed slot with an old-mtime same-owner directory while preserving the original, add a fixed-slot POSIX symlink, and require installed-path recovery to skip both while reclaiming a valid stale slot behind them. Add 15,197 unrelated relay-shaped names and run the real version GC, requiring bounded stdout and no removal. Unit and wire contracts cover exact POSIX and native PowerShell 0/1/7/8/9+ quota behavior, no-follow identity fencing, payload symlink/reparse rejection, one-item repeated draining, zero lock acquisition before upload settlement, joined transfer/channel teardown including never-settling failures, SFTP redirection, package.json namespace ownership, promotion only after the lock, cross-version isolation, and system-SSH behavior.",
       "commands": [
-        "node config/scripts/run-ssh-staged-upload-reliability.mjs --powershell <PowerShell-7.6.4-executable> src/main/ssh/sftp-upload.test.ts src/main/ssh/ssh-file-transfer-abort.test.ts src/main/ssh/ssh-relay-install-namespace.test.ts src/main/ssh/sftp-namespace-resolution.test.ts src/main/ssh/ssh-connection-sftp-wire.test.ts src/main/ssh/ssh-remote-commands.test.ts"
+        "node config/scripts/run-ssh-staged-upload-reliability.mjs --powershell <PowerShell-7.6.4-executable> src/main/ssh/sftp-upload.test.ts src/main/ssh/ssh-file-transfer-abort.test.ts src/main/ssh/sftp-namespace-resolution.test.ts src/main/ssh/ssh-connection-sftp-wire.test.ts src/main/ssh/ssh-remote-commands.test.ts"
       ],
       "testFiles": [
         "src/main/ssh/sftp-upload.test.ts",
         "src/main/ssh/ssh-file-transfer-abort.test.ts",
-        "src/main/ssh/ssh-relay-install-namespace.test.ts",
         "src/main/ssh/sftp-namespace-resolution.test.ts",
         "src/main/ssh/ssh-connection-sftp-wire.test.ts",
         "src/main/ssh/ssh-remote-commands.test.ts"
@@ -3632,7 +3631,7 @@
           "date": "2026-07-31",
           "runner": "local",
           "platform": "macos",
-          "command": "node config/scripts/run-ssh-staged-upload-reliability.mjs --powershell <PowerShell-7.6.4-executable> src/main/ssh/sftp-upload.test.ts src/main/ssh/ssh-file-transfer-abort.test.ts src/main/ssh/ssh-relay-install-namespace.test.ts src/main/ssh/sftp-namespace-resolution.test.ts src/main/ssh/ssh-connection-sftp-wire.test.ts src/main/ssh/ssh-remote-commands.test.ts",
+          "command": "node config/scripts/run-ssh-staged-upload-reliability.mjs --powershell <PowerShell-7.6.4-executable> src/main/ssh/sftp-upload.test.ts src/main/ssh/ssh-file-transfer-abort.test.ts src/main/ssh/sftp-namespace-resolution.test.ts src/main/ssh/ssh-connection-sftp-wire.test.ts src/main/ssh/ssh-remote-commands.test.ts",
           "result": "passed",
           "durationSeconds": 57.9,
           "summary": "Eleven focused files passed 152 tests with 3 platform skips using exact POSIX sh, native ARM macOS PowerShell 7.6.4, real ssh2 split-SFTP wire sessions, fixed-slot identity races, bounded recovery, joined cancellation teardown, and cross-version isolation."
@@ -17829,8 +17828,8 @@
         "node config/scripts/runtime-file-watcher-resource-probe.mjs",
         "node config/scripts/runtime-file-watcher-fault-harness.mjs",
         "ELECTRON_RUN_AS_NODE=1 pnpm exec electron config/scripts/runtime-file-watcher-fault-harness.mjs",
-        "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/ssh-relay-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs",
-        "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/ssh-relay-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs"
+        "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/remote-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs",
+        "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/remote-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs"
       ],
       "testFiles": [
         "src/main/daemon/daemon-pty-adapter.test.ts",
@@ -17876,7 +17875,7 @@
         "src/shared/promise-settlement-waiters.test.ts",
         "config/scripts/runtime-file-watcher-fault-harness.mjs",
         "config/scripts/runtime-file-watcher-resource-probe.mjs",
-        "src/main/ssh/ssh-relay-versioned-install.test.ts",
+        "src/main/ssh/remote-versioned-install.test.ts",
         "config/scripts/package-electron-runtime-contract.test.mjs"
       ],
       "assertionRefs": [
@@ -18198,9 +18197,9 @@
           ]
         },
         {
-          "file": "src/main/ssh/ssh-relay-versioned-install.test.ts",
+          "file": "src/main/ssh/remote-versioned-install.test.ts",
           "assertions": [
-            "remote completeness requires relay.js, relay-watcher.js, and the install sentinel"
+            "remote completeness requires every model artifact and the install sentinel"
           ]
         },
         {
@@ -18275,7 +18274,7 @@
           "date": "2026-07-13",
           "runner": "local",
           "platform": "macos",
-          "command": "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/ssh-relay-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs",
+          "command": "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/remote-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs",
           "result": "passed",
           "durationSeconds": 10.01,
           "summary": "Six relay registry, filesystem/Git handler, bundled subprocess, install, and package contract files passed with 226 tests."
@@ -18329,7 +18328,7 @@
           "date": "2026-07-13",
           "runner": "local",
           "platform": "macos",
-          "command": "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/ssh-relay-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs",
+          "command": "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/remote-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs",
           "result": "passed",
           "durationSeconds": 10.69,
           "summary": "Six relay registry, filesystem/Git handler, bundled subprocess, install, and package contract files passed with 226 tests, including watcher/PTY removal fencing and recursive deletion failure behavior."
@@ -18383,7 +18382,7 @@
           "date": "2026-07-13",
           "runner": "local",
           "platform": "macos",
-          "command": "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/ssh-relay-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs",
+          "command": "pnpm exec vitest run --config config/vitest.config.ts src/main/ssh/remote-versioned-install.test.ts config/scripts/package-electron-runtime-contract.test.mjs",
           "result": "passed",
           "durationSeconds": 9.79,
           "summary": "Six relay registry, filesystem/Git handler, bundled subprocess, install, and package contract files passed with 225 tests, including terminal removal notification and recursive deletion fencing."

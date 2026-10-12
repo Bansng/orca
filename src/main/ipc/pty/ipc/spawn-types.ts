@@ -9,7 +9,7 @@ import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { TerminalStartupCwdMissingDirFallback } from '../../../../shared/terminal-startup-cwd'
 import type { OrcaRuntimeService } from '../../../runtime/orca-runtime'
 import type { Store } from '../../../persistence'
-import type { PtySpawnResult } from '../../../providers/types'
+import type { PtySpawnResult } from '../../../providers/pty-provider-contract'
 import type { CodexAccountSelectionTarget } from '../../../codex-accounts/runtime-selection'
 import type { CodexSessionResumePreparation } from '../../../codex/codex-session-resume-home'
 import type {

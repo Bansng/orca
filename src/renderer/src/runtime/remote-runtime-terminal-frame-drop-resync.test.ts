@@ -13,6 +13,7 @@ import {
   type RemoteRuntimeMultiplexedTerminal
 } from './remote-runtime-terminal-multiplexer'
 import { replaceRuntimeEnvironmentRevisions } from './runtime-environment-revision'
+import { stubRuntimeEnvironmentBridge } from './runtime-environment-bridge-fixture'
 
 // Why: reproduces the silent frame-drop corruption. The server multiplex path
 // drops Output frames when the websocket buffer is over its cap
@@ -194,9 +195,7 @@ describe('remote terminal frame-drop resync', () => {
       }
     })
 
-    vi.stubGlobal('window', {
-      api: { runtimeEnvironments: { subscribe } }
-    })
+    stubRuntimeEnvironmentBridge({ subscribe })
   })
 
   afterEach(() => {

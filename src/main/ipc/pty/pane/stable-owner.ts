@@ -6,7 +6,11 @@ import { UNVERIFIED_PROCESS_EXIT_CODE } from '../../../../shared/terminal-exit-c
 import type { Store } from '../../../persistence'
 import { retireTerminalSurfaceFromPersistence } from '../../../runtime/mobile-session-terminal-persistence-retirement'
 import type { OrcaRuntimeService } from '../../../runtime/orca-runtime'
-import type { IPtyProvider, PtySpawnOptions, PtySpawnResult } from '../../../providers/types'
+import type {
+  IPtyProvider,
+  PtySpawnOptions,
+  PtySpawnResult
+} from '../../../providers/pty-provider-contract'
 import { getPtySshConnectionId } from '../provider/registry'
 import {
   isDaemonEndpointGoneError,

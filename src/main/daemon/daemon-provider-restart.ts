@@ -1,4 +1,7 @@
-import { rebindLocalProviderListeners, unbindLocalProviderListeners } from '../ipc/pty'
+import {
+  rebindLocalProviderListeners,
+  unbindLocalProviderListeners
+} from '../ipc/pty/provider/listener-lifecycle'
 import { DegradedDaemonPtyProvider } from './degraded-daemon-pty-provider'
 import {
   cleanupFailedDaemonAdoption,
@@ -22,6 +25,7 @@ import { getDaemonProvider, getDaemonSpawner, replaceDaemonProvider } from './da
 import { DaemonPtyAdapter } from './daemon-pty-adapter'
 import type { DaemonRespawnReason } from './daemon-pty-runtime-state'
 import { DaemonPtyRouter } from './daemon-pty-router'
+import { isHoldingForNewerProtocolDaemon } from './daemon-newer-protocol-hold'
 import { cleanupDaemonForProtocol } from './daemon-protocol-cleanup'
 import {
   isDaemonRestartInFlight,
@@ -122,10 +126,13 @@ async function runRestartDaemon(): Promise<RestartDaemonResult> {
     await newCurrent.establishLifecycleLease()
     releaseDaemonAdoptionLease(currentSpawner.getHandle())
 
-    // Re-wrap in a router only if legacy adapters exist; they're preserved by reference and still route to their pre-upgrade daemons.
+    // Re-wrap in a router when legacy adapters exist (preserved by reference, still routed to their pre-upgrade daemons) or a newer daemon holds restores.
     newProvider =
-      legacyAdapters.length > 0
-        ? new DaemonPtyRouter({ current: newCurrent, legacy: legacyAdapters })
+      legacyAdapters.length > 0 || isHoldingForNewerProtocolDaemon()
+        ? new DaemonPtyRouter({
+            current: newCurrent,
+            legacy: legacyAdapters
+          })
         : newCurrent
     if (newProvider instanceof DaemonPtyRouter) {
       await newProvider.discoverLegacySessions()

@@ -54,7 +54,7 @@ export function notifyHostOfMirroredEditorClose(
   }
   // Dynamic import: this helper is imported by the editor slice during store creation, so importing
   // web-runtime-session eagerly imports the store back and trips cyclic init in full-suite import order.
-  void import('./web-runtime-session').then(({ closeWebRuntimeSessionTab }) =>
+  void import('./web-runtime-session-tab-lifecycle').then(({ closeWebRuntimeSessionTab }) =>
     Promise.all(
       unifiedTabs.map((tab) =>
         closeWebRuntimeSessionTab({

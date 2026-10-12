@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { RuntimeMobileSessionTabsResult } from '../../../shared/runtime-types'
 import { toRuntimeExecutionHostId, toSshExecutionHostId } from '../../../shared/execution-host'
-import { toWebTerminalSurfaceTabId } from './web-runtime-session'
+import { toWebTerminalSurfaceTabId } from './web-terminal-surface-id'
 import {
   applyLocalStructuredSessionTabSnapshots,
   projectLocalStructuredSessionTabs

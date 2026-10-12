@@ -6,7 +6,7 @@ import type { OpenFile } from '../store/slices/editor'
 
 const closeWebRuntimeSessionTabMock = vi.fn(async (_args: unknown) => 'applied' as const)
 
-vi.mock('./web-runtime-session', () => ({
+vi.mock('./web-runtime-session-tab-lifecycle', () => ({
   closeWebRuntimeSessionTab: (args: unknown) => closeWebRuntimeSessionTabMock(args)
 }))
 

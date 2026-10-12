@@ -258,7 +258,8 @@ describe('parseDaemonPidFile', () => {
       linuxStartTicks: null,
       bootId: null,
       spawnerExecPath: null,
-      cgroupUnit: null
+      cgroupUnit: null,
+      processCeiling: null
     })
   })
 
@@ -278,7 +279,8 @@ describe('parseDaemonPidFile', () => {
       linuxStartTicks: null,
       bootId: null,
       spawnerExecPath: null,
-      cgroupUnit: null
+      cgroupUnit: null,
+      processCeiling: null
     })
   })
 
@@ -309,7 +311,8 @@ describe('parseDaemonPidFile', () => {
       linuxStartTicks: null,
       bootId: null,
       spawnerExecPath: null,
-      cgroupUnit: null
+      cgroupUnit: null,
+      processCeiling: null
     })
   })
 
@@ -326,7 +329,8 @@ describe('parseDaemonPidFile', () => {
       linuxStartTicks: null,
       bootId: null,
       spawnerExecPath: null,
-      cgroupUnit: null
+      cgroupUnit: null,
+      processCeiling: null
     })
     expect(parseDaemonPidFile('  12345\n')).toEqual({
       pid: 12345,
@@ -337,7 +341,8 @@ describe('parseDaemonPidFile', () => {
       linuxStartTicks: null,
       bootId: null,
       spawnerExecPath: null,
-      cgroupUnit: null
+      cgroupUnit: null,
+      processCeiling: null
     })
   })
 

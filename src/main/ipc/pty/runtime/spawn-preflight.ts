@@ -1,7 +1,7 @@
 import { withClaudeProfileTerminalEnv } from '../../../claude-accounts/claude-profile-installed-router'
 import { inheritOmpLaunchEnvironment } from '../host-env/omp-launch-environment'
 import { getAppEnvironment } from '../../../../shared/app-environment'
-import type { PtySpawnResult } from '../../../providers/types'
+import type { PtySpawnResult } from '../../../providers/pty-provider-contract'
 import { LocalPtyProvider } from '../../../providers/local-pty-provider'
 import { isValidTerminalTabId } from '../../../../shared/terminal-tab-id'
 import { isTerminalLeafId } from '../../../../shared/stable-pane-id'

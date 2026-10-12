@@ -1,9 +1,7 @@
 import { useAppStore } from '@/store'
-import {
-  closeWebRuntimeSessionTab,
-  isWebRuntimeSessionActive,
-  toHostSessionTabId
-} from '@/runtime/web-runtime-session'
+import { closeWebRuntimeSessionTab } from '@/runtime/web-runtime-session-tab-lifecycle'
+import { isWebRuntimeSessionActive } from '@/runtime/web-runtime-session-environment'
+import { toHostSessionTabId } from '@/runtime/web-terminal-surface-id'
 import {
   getLatestWebSessionTabsPublicationEpoch,
   resolveHostSessionTabIdForWebSessionTab

@@ -12,6 +12,7 @@ import {
   recordWebSessionCloseIntent
 } from './web-session-close-intent'
 import {
+  clearWebSessionFocusIntent,
   clearWebSessionFocusIntentIfMatches,
   recordWebSessionFocusIntent
 } from './web-session-focus-intent'
@@ -33,7 +34,29 @@ export async function activateWebRuntimeSessionTab(args: {
   /** The local tab visible at the gesture; later navigation away cancels the deferred focus. */
   expectedCurrentLocalTabId?: string | null
 }): Promise<boolean> {
-  return (await callWebRuntimeSessionTabMethod('session.tabs.activate', args)) === 'applied'
+  // COMPAT(legacy-relay-bridge, revisit 2027-01-15): an older relay runs a pane in this tab, and
+  // activating that pane on the managed server would start a second shell there that no tab shows.
+  // A click names no leaf, so the pane on screen does; the server would otherwise pick the first.
+  // Loaded lazily: the module subscribes to main's pane list on import, and terminal panes load it.
+  const { hasLegacyRelayBridgedPane, isLegacyRelayBridgedTab } =
+    await import('../components/terminal-pane/legacy-relay-bridge-panes')
+  const leafId =
+    args.leafId ??
+    (hasLegacyRelayBridgedPane(args.tabId)
+      ? useAppStore.getState().terminalLayoutsByTabId?.[args.tabId]?.activeLeafId
+      : null)
+  if (isLegacyRelayBridgedTab(args.tabId, leafId)) {
+    // This gesture still supersedes an earlier tab's pending focus, as recording its own would.
+    const environmentId = resolveTabEnvironmentId(args.environmentId)
+    if (environmentId) {
+      clearWebSessionFocusIntent(captureWebSessionIntentOwner(environmentId), args.worktreeId)
+    }
+    return true
+  }
+  return (
+    (await callWebRuntimeSessionTabMethod('session.tabs.activate', { ...args, leafId })) ===
+    'applied'
+  )
 }
 
 /**
@@ -55,6 +78,14 @@ export async function closeWebRuntimeSessionTab(args: {
   return callWebRuntimeSessionTabMethod('session.tabs.close', args)
 }
 
+function resolveTabEnvironmentId(environmentId: string | null | undefined): string | null {
+  return (
+    environmentId?.trim() ??
+    useAppStore.getState().settings?.activeRuntimeEnvironmentId?.trim() ??
+    null
+  )
+}
+
 async function callWebRuntimeSessionTabMethod(
   method: 'session.tabs.activate' | 'session.tabs.close',
   args: {
@@ -68,10 +99,7 @@ async function callWebRuntimeSessionTabMethod(
     expectedCurrentLocalTabId?: string | null
   }
 ): Promise<WebRuntimeSessionTabCloseOutcome> {
-  const environmentId =
-    args.environmentId?.trim() ??
-    useAppStore.getState().settings?.activeRuntimeEnvironmentId?.trim() ??
-    null
+  const environmentId = resolveTabEnvironmentId(args.environmentId)
   if (!environmentId || !isWebRuntimeSessionActive(environmentId)) {
     return 'failed'
   }

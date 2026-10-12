@@ -1,5 +1,9 @@
 import type { SpawnIntent } from '../../../../shared/host-spawn-admission'
-import type { IPtyProvider, PtySpawnOptions, PtySpawnResult } from '../../../providers/types'
+import type {
+  IPtyProvider,
+  PtySpawnOptions,
+  PtySpawnResult
+} from '../../../providers/pty-provider-contract'
 import type { CodexPaneHomeRoute } from '../../../codex/codex-pane-account-registry'
 import type { CodexAccountSelectionTarget } from '../../../codex-accounts/runtime-selection'
 import type { ClaudeRuntimeAuthPreparation } from '../../../claude-accounts/runtime-auth-service'

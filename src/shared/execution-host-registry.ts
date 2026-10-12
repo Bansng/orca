@@ -6,6 +6,7 @@ import {
   getSettingsFocusedExecutionHostId,
   getSshTargetIdForExecutionHost,
   isRuntimeOwnedSshTargetId,
+  normalizeHostPart,
   parseExecutionHostId,
   toRuntimeExecutionHostId,
   toSshExecutionHostId,
@@ -54,11 +55,6 @@ type RuntimeEnvironmentSummary = {
 type RuntimeStatusByEnvironmentId = ReadonlyMap<string, RuntimeEnvironmentStatus>
 
 export type ExecutionHostSource = 'configured-only' | 'include-references'
-
-function normalizeHostPart(value: string | null | undefined): string | null {
-  const trimmed = value?.trim()
-  return trimmed ? trimmed : null
-}
 
 function runtimeCompatibility(
   status: RuntimeStatus | null | undefined

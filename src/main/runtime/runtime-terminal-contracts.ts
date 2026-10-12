@@ -1,3 +1,4 @@
+import type { AgentLaunchTabViewerRule } from '../../shared/agent-launch-tab-publication'
 import type { SpawnIntent } from '../../shared/host-spawn-admission'
 import type { ParsedAgentStatusPayload } from '../../shared/agent-status-types'
 import type {
@@ -81,6 +82,8 @@ export type TerminalCreateOptions = {
   activate?: boolean
   presentation?: RuntimeTerminalPresentation
   surfaceOwner?: false
+  /** Main-internal: recheck early publication when the host is ready to reveal its pane. */
+  agentLaunchViewer?: () => AgentLaunchTabViewerRule
   tabId?: string
   leafId?: string
   /** Refuse, rather than attach, when `tabId`/`leafId` name a pane whose PTY is already live. */

@@ -1,4 +1,5 @@
 import type { TerminalCreateOptions } from './runtime-terminal-contracts'
+import { ownerSurfacing } from './orca-runtime-core'
 import type { SpawnIntent } from '../../shared/host-spawn-admission'
 
 export type { TerminalCreateOptions }
@@ -50,5 +51,14 @@ export function callerSpawnScope(
     ...(opts.signal ? { signal: opts.signal } : {}),
     ...(opts.refuseSleptWorktree ? { refuseSleptWorktree: true } : {}),
     ...(opts.spawnIntent ? { spawnIntent: opts.spawnIntent } : {})
+  }
+}
+
+export function terminalRevealViewerOptions(
+  opts: Pick<TerminalCreateOptions, 'surfaceOwner' | 'agentLaunchViewer'>
+) {
+  return {
+    ...ownerSurfacing(opts.surfaceOwner !== false),
+    ...(opts.agentLaunchViewer ? { agentLaunchViewer: opts.agentLaunchViewer() } : {})
   }
 }

@@ -8,9 +8,9 @@
  */
 import { logOrcadActivationOutcome } from './orcad-activation-outcome-log'
 import { join } from 'node:path'
-import type { SshConnection } from './ssh-connection'
+import type { OrcadHostTransport } from './orcad-host-transport'
 import { ORCAD_INSTALL_MODEL } from './remote-install-model'
-import { computeRemoteInstallDir, readLocalFullVersion } from './ssh-relay-versioned-install'
+import { computeRemoteInstallDir, readLocalFullVersion } from './remote-versioned-install'
 import { readOrcadActivationRecord } from './orcad-activation-record-store'
 import type { OrcadActivationRecord } from './orcad-activation-record'
 import type { OrcadActivationVerdict } from './orcad-activation-gate'
@@ -20,10 +20,10 @@ import { installOrcadBundle } from './orcad-remote-install'
 import { getAppEnvironment } from '../../shared/app-environment'
 import type { NodeRuntimeTarget } from '../../shared/node-runtime-pin'
 import { ORCAD_STARTUP_READINESS_TIMEOUT_MS } from '../../shared/orcad-profile-preflight'
-import { materializeOrcadArtifact } from './orcad-artifact-materializer'
+import { materializeOrcadArtifact } from '../orcad/orcad-artifact-materializer'
 import { readOrcadBundleTarget } from './orcad-deployment-target'
 import { resolveOrcadRuntimeTarget } from './orcad-runtime-target'
-import { materializeNodeRuntimeArchive } from './pinned-runtime-materializer'
+import { materializeNodeRuntimeArchive } from '../node-runtime/pinned-runtime-materializer'
 import {
   orcadActivationFenceExists,
   resolveOrcadActivationReadinessTimeout,
@@ -33,7 +33,7 @@ import { activateInstalledOrcad } from './orcad-installed-activation'
 import { orcadActivationFenceRefusal } from './orcad-activation-fence-hold'
 
 export type OrcadDeployOptions = {
-  conn: SshConnection
+  conn: OrcadHostTransport
   host: RemoteHostPlatform
   remoteHome: string
   /** An already assembled bundle; otherwise materialize the packaged template for this host. */

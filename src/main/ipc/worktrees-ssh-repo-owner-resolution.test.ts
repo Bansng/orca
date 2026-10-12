@@ -9,7 +9,6 @@ import {
 import { getSshProviderAuthority } from '../ssh/ssh-provider-authority'
 import {
   listWorktreesMock,
-  getSshGitProviderMock,
   pruneCleanupScanSnapshotsMock,
   pruneSpaceAnalysisSnapshotsMock
 } from './worktrees-test-module-mocks'
@@ -39,18 +38,11 @@ vi.mock('../github/client', async () =>
 vi.mock('../source-control/hosted-review', async () =>
   (await import('./worktrees-test-module-mocks')).hostedReviewModuleMock()
 )
-vi.mock('../providers/ssh-git-dispatch', async () =>
-  (await import('./worktrees-test-module-mocks')).sshGitDispatchModuleMock()
-)
 vi.mock('../providers/ssh-filesystem-dispatch', async () =>
   (await import('./worktrees-test-module-mocks')).sshFilesystemDispatchModuleMock()
 )
 vi.mock('./worktree-symlinks', async () =>
   (await import('./worktrees-test-module-mocks')).worktreeSymlinksModuleMock()
-)
-vi.mock('./ssh', async () => (await import('./worktrees-test-module-mocks')).sshModuleMock())
-vi.mock('../ssh/ssh-target-registry', async () =>
-  (await import('./worktrees-test-module-mocks')).sshTargetRegistryModuleMock()
 )
 vi.mock('../hooks', async () => (await import('./worktrees-test-module-mocks')).hooksModuleMock())
 vi.mock('../setup-runner-script-text', async (importOriginal) =>
@@ -96,7 +88,12 @@ vi.mock('../workspace-cleanup-removal-snapshot-prune', async () =>
 vi.mock('../runtime/worktree-teardown', async () =>
   (await import('./worktrees-test-module-mocks')).worktreeTeardownModuleMock()
 )
-vi.mock('./pty', async () => (await import('./worktrees-test-module-mocks')).ptyModuleMock())
+vi.mock('./pty/provider/registry', async () =>
+  (await import('./worktrees-test-module-mocks')).ptyRegistryModuleMock()
+)
+vi.mock('./pty/provider/state-cleanup', async () =>
+  (await import('./worktrees-test-module-mocks')).ptyStateCleanupModuleMock()
+)
 
 // Why: every removal and listing reply now names the catalog it produced or scanned.
 const anyCatalogVersion = { epoch: expect.any(String), sequence: expect.any(Number) }
@@ -153,7 +150,6 @@ describe('registerWorktreeHandlers', () => {
 
   it('rejects malformed and contradictory repo host provenance', async () => {
     const provider = { listWorktrees: vi.fn().mockResolvedValue([]) }
-    getSshGitProviderMock.mockReturnValue(provider)
     const request = {
       providerRequestId: 'request-1' as ProviderRequestId,
       repoId: 'repo-1',
@@ -227,7 +223,6 @@ describe('registerWorktreeHandlers', () => {
       connectionId: 'target-a'
     }
     store.getRepos.mockReturnValue([sshRepo])
-    getSshGitProviderMock.mockReturnValue(undefined)
     const expectedAuthority = getSshProviderAuthority('target-a')
 
     const result = await handlers['worktrees:listDetected'](ipcEvent, {
@@ -304,7 +299,6 @@ describe('registerWorktreeHandlers', () => {
         ]
       }
     })
-    expect(getSshGitProviderMock).not.toHaveBeenCalled()
     expect(listWorktreesMock).not.toHaveBeenCalled()
   })
 
@@ -346,7 +340,6 @@ describe('registerWorktreeHandlers', () => {
       expect.objectContaining({ id: rootId, path: folderRepo.path, isMainWorktree: true }),
       expect.objectContaining({ id: instanceId, path: folderRepo.path, isMainWorktree: false })
     ])
-    expect(getSshGitProviderMock).not.toHaveBeenCalled()
   })
 
   it('stops listing SSH worktrees once an authoritative scan retires their metadata', async () => {
@@ -585,7 +578,6 @@ describe('registerWorktreeHandlers', () => {
       executionHostId: sshHostId
     })
     expect(store.getAllWorktreeMeta).not.toHaveBeenCalled()
-    expect(getSshGitProviderMock).not.toHaveBeenCalled()
   })
 
   it('fails closed for duplicate exact owners and ambiguous legacy repo IDs', async () => {
@@ -621,7 +613,6 @@ describe('registerWorktreeHandlers', () => {
       source: 'metadata-fallback',
       worktrees: []
     })
-    expect(getSshGitProviderMock).not.toHaveBeenCalled()
     expect(listWorktreesMock).not.toHaveBeenCalled()
   })
 
@@ -689,17 +680,6 @@ describe('registerWorktreeHandlers', () => {
         ? makeWorktreeMeta({ hostId: toSshExecutionHostId('target-b') })
         : undefined
     )
-    getSshGitProviderMock.mockReturnValue({
-      listWorktrees: vi.fn().mockResolvedValue([
-        {
-          path: worktreePath,
-          head: 'head-a',
-          branch: 'refs/heads/feature',
-          isBare: false,
-          isMainWorktree: false
-        }
-      ])
-    })
 
     const result = await handlers['worktrees:listDetected'](ipcEvent, {
       providerRequestId: 'request-1' as ProviderRequestId,
@@ -765,7 +745,6 @@ describe('registerWorktreeHandlers', () => {
     expect(missingAuthorityResult).toMatchObject({ status: 'rejected' })
     expect(zeroOwnerResult).toMatchObject({ status: 'ambiguous-owner' })
     expect(wrongProviderOwnerResult).toMatchObject({ status: 'rejected' })
-    expect(getSshGitProviderMock).not.toHaveBeenCalled()
     expect(listWorktreesMock).not.toHaveBeenCalled()
   })
 })

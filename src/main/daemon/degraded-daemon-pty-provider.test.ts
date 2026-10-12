@@ -3,7 +3,11 @@ import { DegradedDaemonPtyProvider } from './degraded-daemon-pty-provider'
 import { DEGRADED_DAEMON_RECOVERY_RETRY_MS } from './degraded-daemon-fresh-spawn-routing'
 import type { DaemonPtyAdapter } from './daemon-pty-adapter'
 import { settledWriteStub, stubWriteSettlement } from '../providers/settled-pty-write-stub'
-import type { IPtyProvider, PtySpawnOptions, PtySpawnResult } from '../providers/types'
+import type {
+  IPtyProvider,
+  PtySpawnOptions,
+  PtySpawnResult
+} from '../providers/pty-provider-contract'
 import type { PtyProcessInspection } from '../providers/pty-process-inspection'
 import { SessionNotFoundError, TerminalSessionOwnerUnverifiedError } from './daemon-errors'
 

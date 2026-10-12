@@ -1,7 +1,6 @@
 /**
- * What a packaged `orcad` directory must contain, declared once — the same single-source
- * treatment `relay-artifacts.ts` gives the relay, for the same reason: the build, the
- * content hash and the remote install probe must not keep three lists that drift.
+ * What a packaged `orcad` directory must contain, declared once: the build, the content hash
+ * and the remote install probe must not keep three lists that drift.
  *
  * Order is load-bearing: the hash concatenates these files in sequence.
  *

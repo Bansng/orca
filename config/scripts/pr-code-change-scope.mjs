@@ -135,7 +135,7 @@ const SHELL_PREFIXES = [
   'src/main/zsh-',
   'src/main/runtime/structured-session-cli-login-shell',
   'src/main/runtime/structured-session-login-shell-test-harness',
-  'src/main/runtime/structured-session-child-identity-env',
+  'src/main/runtime/structured-session-child-env',
   'src/renderer/src/components/terminal-pane/fish-color-scheme',
   'src/shared/fish-',
   'src/shared/pty-reply-echo-shapes',
@@ -183,6 +183,8 @@ function changesMobileWebApp(changedFiles) {
 
 const CROSS_VERSION_WIRE_PREFIXES = [
   'tests/e2e/cross-version-wire/',
+  // COMPAT(legacy-relay-bridge): the bridge is proven against a real 1.4.224 relay here.
+  'src/main/ssh/legacy-relay-bridge/',
   'config/scripts/stable-release-tags',
   // The R1 daemon protocol crossing gate runs in this job.
   'config/scripts/daemon-protocol-facts',
@@ -255,7 +257,7 @@ const MANAGED_HOOK_PREFIXES = [
   'config/scripts/smoke-process-host-node18',
   'config/scripts/packaged-process-host-fixture',
   'src/packages/process-host/',
-  'config/scripts/build-relay',
+  'config/scripts/build-wsl-guest',
   'src/wsl-guest/',
   'src/shared/agent-hook',
   'src/main/agent-hooks/'
@@ -372,6 +374,7 @@ const WINDOWS_PACKAGE_TESTS = [
   'config/scripts/rebuild-native-deps-windows-process-tree.test.mjs',
   'config/scripts/rebuild-native-deps-node-pty.test.mjs',
   'config/scripts/nsis-process-check.test.mjs',
+  'config/scripts/idle-cpu-process-sampling.test.mjs',
   'config/scripts/ensure-native-runtime-job-ownership.test.mjs',
   'config/scripts/verify-packaged-node-pty-job-ownership.test.mjs',
   'config/scripts/windows-pe-machine.test.mjs',

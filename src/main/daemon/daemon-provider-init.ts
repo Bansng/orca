@@ -1,4 +1,5 @@
-import { getLocalPtyProvider, rebindLocalProviderListeners } from '../ipc/pty'
+import { getLocalPtyProvider } from '../ipc/pty/provider/registry'
+import { rebindLocalProviderListeners } from '../ipc/pty/provider/listener-lifecycle'
 import { isStartupDiagnosticsEnabled, logStartupDiagnostic } from '../startup/startup-diagnostics'
 import { checkDaemonHealth } from './daemon-health'
 import { collectPinnedDaemonVersions, pruneOldDaemonHosts } from './daemon-host-relocation'
@@ -8,6 +9,10 @@ import {
   takeDaemonAdoptionLeaseRelease
 } from './daemon-endpoint-adoption'
 import { createLegacyDaemonAdapters } from './daemon-legacy-adapters'
+import {
+  discoverNewerProtocolHolds,
+  isHoldingForNewerProtocolDaemon
+} from './daemon-newer-protocol-hold'
 import {
   getDaemonHistoryDir as getHistoryDir,
   getDaemonRuntimeDir as getRuntimeDir,
@@ -115,7 +120,12 @@ export async function initDaemonPtyProvider(
     await newAdapter.establishLifecycleLease()
     releaseDaemonAdoptionLease(newSpawner.getHandle())
 
-    legacyAdapters = await createLegacyDaemonAdapters(runtimeDir)
+    // Why beside legacy discovery: older daemons are adopted, newer ones only hold their tabs.
+    const [discoveredLegacyAdapters] = await Promise.all([
+      createLegacyDaemonAdapters(runtimeDir),
+      discoverNewerProtocolHolds(runtimeDir)
+    ])
+    legacyAdapters = discoveredLegacyAdapters
     routedAdapter =
       launchMode === 'degraded-new-pty-fallback'
         ? new DegradedDaemonPtyProvider({
@@ -125,7 +135,7 @@ export async function initDaemonPtyProvider(
             probeCurrentDaemonSpawn: async () =>
               (await checkDaemonHealth(info.socketPath, info.tokenPath)) === 'healthy'
           })
-        : legacyAdapters.length > 0
+        : legacyAdapters.length > 0 || isHoldingForNewerProtocolDaemon()
           ? new DaemonPtyRouter({
               current: newAdapter,
               legacy: legacyAdapters

@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   splitWebRuntimeTerminal: vi.fn()
 }))
 
-vi.mock('@/runtime/web-runtime-session', () => ({
+vi.mock('@/runtime/web-runtime-terminal-actions', () => ({
   splitWebRuntimeTerminal: mocks.splitWebRuntimeTerminal
 }))
 
