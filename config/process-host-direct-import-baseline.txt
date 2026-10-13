@@ -116,9 +116,6 @@ src/main/win32-utils.ts
 src/main/window/clipboard-ipc-handlers.ts
 src/main/windows-process-tree-kill.ts
 src/main/workspace-space-analysis.ts
-src/main/wsl-availability.ts
-src/main/wsl-unc-delete.ts
-src/main/wsl.ts
 src/main/zsh-startup-hook-pty-harness.ts
 src/shared/ephemeral-vm-recipe-process.ts
 src/shared/ephemeral-vm-recipe-runner.ts

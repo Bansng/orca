@@ -28,6 +28,7 @@ on:
       - 'config/scripts/orcad-windows-process-tree.mjs'
       - 'config/scripts/orcad-windows-cli-launcher.mjs'
       - 'config/scripts/build-windows-cli-launcher.mjs'
+      - 'config/scripts/windows-rust-executable-build.mjs'
       - 'native/windows-cli-launcher/**'
       - 'src/main/orcad/orcad-cli-launcher.ts'
       - '.github/actions/prepare-windows-cli-launcher/**'

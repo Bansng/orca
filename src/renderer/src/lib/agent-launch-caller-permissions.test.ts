@@ -51,7 +51,8 @@ vi.mock('@/runtime/local-runtime-capabilities', () => ({
 }))
 // A launch the host delivers waits on its reply; these tests read only what was sent.
 const callRuntimeRpc = vi.hoisted(() => vi.fn(() => new Promise(() => {})))
-vi.mock('@/runtime/runtime-rpc-client', () => ({ callRuntimeRpc, RuntimeRpcCallError: Error }))
+vi.mock('@/runtime/runtime-rpc-client', () => ({ callRuntimeRpc }))
+vi.mock('@/runtime/runtime-rpc-result', () => ({ RuntimeRpcCallError: Error }))
 
 function launchesThroughHost(profile: AgentLaunchCallerProfile): boolean {
   return newTabPromptLaunchesThroughHost({

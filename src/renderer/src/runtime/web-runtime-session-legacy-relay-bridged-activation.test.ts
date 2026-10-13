@@ -9,7 +9,7 @@ import {
   recordWebSessionFocusIntent,
   resetWebSessionFocusIntentForTests
 } from './web-session-focus-intent'
-import { toWebTerminalSurfaceTabId } from './web-terminal-surface-id'
+import { toWebTerminalSurfaceTabId } from '../../../shared/terminal-surface-id'
 import { ENVIRONMENT_ID, WORKTREE_ID } from './web-runtime-session-test-harness'
 
 const mocks = vi.hoisted(() => ({
@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('../store', () => ({ useAppStore: { getState: mocks.getState } }))
-vi.mock('./web-session-tabs-sync', () => ({
+vi.mock('./web-session-tabs-sync/tracking-mappings', () => ({
   resolveHostSessionTabIdForWebSessionTab: mocks.resolveHostSessionTabIdForWebSessionTab
 }))
 

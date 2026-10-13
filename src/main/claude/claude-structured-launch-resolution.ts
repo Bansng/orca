@@ -5,6 +5,7 @@ import type {
   Options as ClaudeAgentSdkOptions,
   PermissionMode
 } from '@anthropic-ai/claude-agent-sdk'
+import type { AgentChatPermissionMode } from '../../shared/agent-chat-permission-mode'
 import { agentSessionProviderHandleRoot } from '../../shared/agent-session-provider-handle'
 import { claudeProviderHandleLeafUuid } from '../../shared/agent-session-provider-handle-encoding'
 import type { ClaudeStructuredAuthPolicy } from '../claude-accounts/claude-structured-auth-policy'
@@ -66,16 +67,20 @@ export const CLAUDE_STRUCTURED_BASE_OPTIONS: ClaudeStructuredSdkOptions = {
   extraArgs: { 'replay-user-messages': null }
 }
 
-/**
- * Agent Permissions as query-start options.
- *
- * The owned CLI flag preserves the user-installed binary contract. The SDK's typed bypass option
- * emits a newer allow flag that older Claude binaries reject before a structured session starts.
- */
+const CLAUDE_PERMISSION_MODES = {
+  // Explicit, so a `defaultMode` in the user's Claude settings never runs other than the button says.
+  ask: 'default',
+  'accept-edits': 'acceptEdits',
+  auto: 'auto'
+} as const satisfies Record<Exclude<AgentChatPermissionMode, 'full-access'>, PermissionMode>
+
+/** Full access is the owned CLI flag: the SDK's typed bypass emits a flag older binaries reject. */
 export function claudeStructuredPermissionOptions(
-  mode: PermissionMode
-): Pick<ClaudeStructuredSdkOptions, 'extraArgs'> {
-  return mode === 'bypassPermissions' ? { extraArgs: { 'dangerously-skip-permissions': null } } : {}
+  mode: AgentChatPermissionMode
+): Pick<ClaudeStructuredSdkOptions, 'permissionMode' | 'extraArgs'> {
+  return mode === 'full-access'
+    ? { extraArgs: { 'dangerously-skip-permissions': null } }
+    : { permissionMode: CLAUDE_PERMISSION_MODES[mode] }
 }
 
 export type ClaudeStructuredLaunch = {
@@ -104,8 +109,6 @@ export type ClaudeStructuredLaunchPartDeps = {
   /** Required, so every caller states which login a failed sign-in names rather than inherit a
    *  guess. Build it with claudeStructuredAuthPolicyForSettings. */
   resolveAuthPolicy: () => Promise<ClaudeStructuredAuthPolicy> | ClaudeStructuredAuthPolicy
-  /** The user's Agent Permissions setting, re-read per acquisition. Absent means prompting. */
-  resolvePermissionMode?: () => Promise<PermissionMode> | PermissionMode
   /** The host's chat attachment store: files a client attached live there, outside the workspace,
    *  and the agent reads them without asking. */
   attachmentDirectory?: string
@@ -197,9 +200,7 @@ export function claudeStructuredLaunchPart(
       ...(deps.attachmentDirectory ? [deps.attachmentDirectory] : []),
       ...(visuals ? [visuals.visuals.folder] : [])
     ]
-    const permission = claudeStructuredPermissionOptions(
-      (await deps.resolvePermissionMode?.()) ?? 'default'
-    )
+    const permission = claudeStructuredPermissionOptions(basis.permissionMode ?? 'ask')
     // A start that failed before its first turn wrote no transcript, and `--resume` of an absent
     // one exits; launch that id fresh instead. With a transcript, `--session-id` would collide.
     const leafUuid = head ? claudeProviderHandleLeafUuid(head) : null

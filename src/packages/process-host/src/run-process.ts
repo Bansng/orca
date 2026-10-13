@@ -3,7 +3,7 @@ import {
   spawnSync as nodeSpawnSync,
   type ChildProcess
 } from 'node:child_process'
-import { resolveSpawn } from './spawn-resolution'
+import { resolveSpawn, type ResolvedSpawn } from './spawn-resolution'
 import { forceTerminateProcessTree, signalProcessTree } from './process-tree-termination'
 
 import { hasSpawnObserver, notifySpawnObserver } from './spawn-observer'
@@ -339,6 +339,19 @@ function terminate(child: ChildProcess, signal?: NodeJS.Signals): void {
  */
 export function runProcessSync(spec: ProcessSpec): ProcessResult {
   const resolved = resolveSpawn(spec, process.platform)
+  // Diagnostics only: spawnSync holds the calling thread until the child exits,
+  // so the whole call is the block, reported even when it throws.
+  const spawnStartedAt = hasSpawnObserver() ? performance.now() : null
+  try {
+    return runResolvedProcessSync(spec, resolved)
+  } finally {
+    if (spawnStartedAt !== null) {
+      notifySpawnObserver(resolved.file, resolved.args, performance.now() - spawnStartedAt)
+    }
+  }
+}
+
+function runResolvedProcessSync(spec: ProcessSpec, resolved: ResolvedSpawn): ProcessResult {
   const result = nodeSpawnSync(resolved.file, [...resolved.args], {
     ...resolved.options,
     input: spec.input,

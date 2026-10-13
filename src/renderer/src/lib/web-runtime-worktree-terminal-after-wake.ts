@@ -2,8 +2,8 @@ import { useAppStore } from '@/store'
 import { tabHasLivePty } from '@/lib/tab-has-live-pty'
 import { createWebRuntimeSessionTerminal } from '@/runtime/web-runtime-terminal-creation'
 import { isWebRuntimeSessionActive } from '@/runtime/web-runtime-session-environment'
-import { isWebTerminalSurfaceTabId } from '@/runtime/web-terminal-surface-id'
-import { getLastKnownHostTerminalTabCount } from '@/runtime/web-session-tabs-sync'
+import { isWebTerminalSurfaceTabId } from '../../../shared/terminal-surface-id'
+import { getLastKnownHostTerminalTabCount } from '@/runtime/web-session-tabs-sync/tracking-lifecycle'
 import {
   beginWebRuntimeWakeTerminalRespawn,
   endWebRuntimeWakeTerminalRespawn

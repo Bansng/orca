@@ -1,7 +1,7 @@
 import type { prepareWebSessionTabsSnapshotBrowser } from './apply-preparation-browser'
 import { buildTerminalUnifiedTab } from './tab-builders'
 import { isAgentSessionTab } from './terminal-surfaces'
-import { toWebTerminalSurfaceTabId } from '../web-terminal-surface-id'
+import { toWebTerminalSurfaceTabId } from '../../../../shared/terminal-surface-id'
 import {
   resolveWebSessionSiblingVisibleTabId,
   resolveWebSessionVisibleTabId

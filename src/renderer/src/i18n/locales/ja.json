@@ -16,6 +16,8 @@
   },
   "settings": {
     "chat": {
+      "permissionsTitle": "新しいチャットの権限",
+      "permissionsDescription": "新しいチャットにのみ適用されます。ターミナルで開くAgentには、設定 → Agent → Agentの権限が適用されます。",
       "description": "チャットの外観と名前の付け方を選びます。",
       "names": {
         "title": "チャット名",
@@ -4077,7 +4079,12 @@
             "checkTooltip": "再起動後に Orca が再開できなかった、または再開を確認できなかったチャット。詳細はクリックしてください。",
             "resumingTooltip": "中断されたチャットを復元し、続行を依頼しています…",
             "resumingProgressLabel": "チャットを再開中 {{value0}}/{{value1}}",
-            "resumingProgressAria": "チャットを再開中。{{value1}} 件中 {{value0}} 件完了。クリックすると詳細を表示します。"
+            "resumingProgressAria": "チャットを再開中。{{value1}} 件中 {{value0}} 件完了。クリックすると詳細を表示します。",
+            "resumedLabelOne": "再開したチャット 1 件",
+            "resumedLabel": "再開したチャット {{value0}} 件",
+            "resumedAriaOne": "チャットを 1 件再開しました。クリックすると表示します。",
+            "resumedAria": "チャットを {{value0}} 件再開しました。クリックすると表示します。",
+            "resumedTooltip": "再起動後に Orca が再開したチャットです。クリックすると表示します。"
           },
           "provider": {
             "extra": {
@@ -17784,6 +17791,7 @@
         "couldNotStart": "{{agent}} を起動できませんでした。",
         "editSavedArguments": "設定 > Agent > 引数で編集してください。",
         "couldNotRestart": "{{agent}} を再起動できませんでした。",
+        "codexCliTooOld": "Codex {{installedVersion}} はチャットには古すぎます。{{minimumVersion}} 以降に更新してください。",
         "notSignedIn": "{{agent}} にサインインしていません。",
         "claudeSystemNotSignedIn": "Claude にサインインしていません。`{{loginCommand}}` を実行するか、Claude アカウント設定でアカウントを選択してください。",
         "claudeManagedNotSignedIn": "この Claude アカウントにサインインしていません。設定の Claude アカウントで再度サインインしてください。",
@@ -17807,8 +17815,8 @@
         "chooseClaudeAccountThenSend": "Claude アカウントの設定で選択または追加してから、メッセージをもう一度送信してください。",
         "providerExitedRow": "この応答の途中で {{agent}} が停止しました。この会話で続けることができます。",
         "providerExitedRejection": "このメッセージが送信される前に {{agent}} が停止しました。",
-        "providerRejected": "プロバイダーはこのメッセージを受け付けませんでした。",
-        "providerRejectedQuoted": "プロバイダーはこのメッセージを受け付けませんでした: {{detail}}。",
+        "providerRejected": "{{agent}} はこのメッセージを受け付けませんでした。",
+        "providerRejectedQuoted": "{{agent}} はこのメッセージを受け付けませんでした: {{detail}}。",
         "attachmentEmpty": "このメッセージの画像が空のため、メッセージは送信されませんでした。",
         "attachmentTooLarge": "このメッセージの画像が大きすぎるため、メッセージは送信されませんでした。",
         "attachmentLargerThan": "このメッセージの画像が {{size}} MB を超えているため、メッセージは送信されませんでした。",
@@ -18017,6 +18025,19 @@
         "attachmentOwnerChanged": "このワークスペースは接続中にホストを変更しました。ファイルを再度ドロップしてください。",
         "attachmentUnreadable": "ドロップされたファイルを読み取れませんでした。",
         "tooManyAttachments": "一度に添付できるファイルは {{value0}} 個以下です。",
+        "permissions": "権限",
+        "permissionAsk": "承認を求める",
+        "permissionAskDescription": "設定で許可されていない編集やコマンドの前に確認します",
+        "permissionAskCodexDescription": "このワークスペース内でファイルを編集しコマンドを実行します。それ以外の操作の前に確認します",
+        "permissionAskSharedDescription": "まだ許可されていない編集やコマンドの前に確認します",
+        "permissionAcceptEdits": "編集を許可",
+        "permissionAcceptEditsDescription": "ファイルの編集とファイル操作コマンドを承認し、それ以外は確認します",
+        "permissionAuto": "代わりに承認",
+        "permissionAutoDescription": "承認リクエストを代わりに審査します",
+        "permissionFullAccess": "フルアクセス",
+        "permissionFullAccessDescription": "編集やコマンドの前に確認しません",
+        "permissionFullAccessCodexDescription": "確認しません。任意のファイルを編集し、ネットワークを使用できます",
+        "permissionFullAccessSharedDescription": "編集やコマンドの前に確認しません",
         "pasteFailed": "貼り付けに失敗しました。",
         "commandAttachmentsUnsupported": "チャットセッションのコマンドを使う前に添付ファイルを削除してください。"
       },
@@ -18137,8 +18158,11 @@
       },
       "transcriptLabel": "会話",
       "toggle": {
-        "showTerminal": "ターミナルを表示",
-        "showChat": "チャットビューを表示"
+        "showTerminal": "ターミナルを表示"
+      },
+      "resumeInNewChat": {
+        "notSavedYet": "{{agent}} はまだこの会話を保存していません。応答してから再度お試しください。",
+        "cannotResume": "この {{agent}} の会話はネイティブチャットで再開できません。"
       },
       "state": {
         "loading": {
@@ -18216,7 +18240,8 @@
         "one": "1 つの変更されたファイル",
         "many": "{{count}} がファイルを変更しました",
         "partial": "部分的な差分",
-        "recorded": "このターンに記録された編集の合計。"
+        "showDiff": "差分を表示",
+        "hideDiff": "差分を非表示"
       },
       "receipt": {
         "unavailable": "選択した回答は利用できません",
@@ -18330,6 +18355,8 @@
         "subtitle": "ファイルは、Agent が読み取ることができるパスとしてメッセージに追加されます。"
       },
       "copyCode": "コードをコピーする",
+      "wrapLines": "行を折り返す",
+      "disableLineWrap": "行の折り返しを無効にする",
       "context": {
         "unavailable": "コンテキストの使用量はまだ不明です。Agent が次に応答すると表示されます。",
         "summary": "コンテキスト: {{used}} / {{window}} トークン ({{percent}}%)、最後の応答から推定。",

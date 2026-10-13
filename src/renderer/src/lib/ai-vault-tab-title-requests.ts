@@ -1,5 +1,5 @@
 import type { AgentProviderSessionMetadata } from '../../../shared/agent-session-resume'
-import type { AgentType } from '../../../shared/agent-status-types'
+import type { AgentStatusEntry, AgentType } from '../../../shared/agent-status-types'
 import type { AiVaultSessionTitle } from '../../../shared/ai-vault-session-title'
 import { isAiVaultTitleAgent } from '../../../shared/ai-vault-session-title'
 import type { ExecutionHostId } from '../../../shared/execution-host'
@@ -67,6 +67,18 @@ function registerCandidate(
   })
 }
 
+function liveCandidate(entry: AgentStatusEntry): Parameters<typeof registerCandidate>[3] {
+  return {
+    agent: entry.agentType,
+    paneKey: entry.paneKey,
+    priority: 30,
+    providerSession: entry.providerSession,
+    refresh: true,
+    tabId: entry.tabId,
+    worktreeId: entry.worktreeId
+  }
+}
+
 export function collectAiVaultTitleRequests(
   state: AppState,
   options: {
@@ -108,16 +120,30 @@ export function collectAiVaultTitleRequests(
     })
   }
   for (const entry of Object.values(state.agentStatusByPaneKey)) {
-    registerCandidate(state, tabsById, candidates, {
-      agent: entry.agentType,
-      paneKey: entry.paneKey,
-      priority: 30,
-      providerSession: entry.providerSession,
-      refresh: true,
-      tabId: entry.tabId,
-      worktreeId: entry.worktreeId
-    })
+    registerCandidate(state, tabsById, candidates, liveCandidate(entry))
   }
 
   return [...candidates.values()].map(({ priority: _priority, ...request }) => request)
+}
+
+/** One pane's running agent, mapped as above, so a pane's action finds that pane's own conversation. */
+export function resolvePaneAiVaultTitleRequest(
+  state: AppState,
+  pane: { worktreeId: string; paneKey: string }
+): AiVaultTitleRequest | null {
+  const live = state.agentStatusByPaneKey[pane.paneKey]
+  if (live?.paneKey !== pane.paneKey) {
+    return null
+  }
+  const tabsById = new Map(
+    (state.tabsByWorktree[pane.worktreeId] ?? []).map((tab) => [tab.id, tab] as const)
+  )
+  const candidates = new Map<string, RequestCandidate>()
+  registerCandidate(state, tabsById, candidates, liveCandidate(live))
+  const [candidate] = candidates.values()
+  if (!candidate) {
+    return null
+  }
+  const { priority: _priority, ...request } = candidate
+  return request
 }

@@ -30,6 +30,7 @@ import {
   sendPreparation,
   structuredAgentSessionSendBlock
 } from './structured-agent-session-send-preparation'
+import { AGENT_CHAT_PERMISSION_MODE_OPTION_ID } from '../../../shared/agent-chat-permission-mode'
 import {
   cancelPlan,
   promptPlan,
@@ -176,10 +177,14 @@ export async function setStructuredAgentSessionOption(
   caller: StructuredAgentSessionCaller,
   params: { envelope: AgentSessionMutationEnvelope; key: string; value: string }
 ): Promise<AgentSessionMutationResult<AgentSessionOptionResult>> {
-  // Outside the queue: a pick made while the provider starts then queues behind what its start persists.
-  await context.deps.adapter.awaitOptionWritable?.(params.envelope.sessionId)
+  // The permission mode is only ever the record's: the next start launches with it.
+  const recordOnly = params.key === AGENT_CHAT_PERMISSION_MODE_OPTION_ID
+  if (!recordOnly) {
+    // Outside the queue: a pick made while the provider starts then queues behind what its start persists.
+    await context.deps.adapter.awaitOptionWritable?.(params.envelope.sessionId)
+  }
   const plan = setOptionPlan(params)
-  const atRest = () => !context.sessions.get(params.envelope.sessionId)?.child
+  const atRest = () => recordOnly || !context.sessions.get(params.envelope.sessionId)?.child
   return mutateStructuredAgentSession(
     context,
     caller,

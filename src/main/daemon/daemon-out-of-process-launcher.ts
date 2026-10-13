@@ -30,6 +30,9 @@ import {
 import { PROTOCOL_VERSION } from './types'
 import { prepareDaemonReplacement } from './daemon-replacement-preflight'
 import { ensureDaemonSocketDir } from './daemon-socket-endpoint-path'
+import { inspectDaemonHostImage } from './daemon-host-image'
+import { noteSeveredDaemon } from './daemon-host-image-state'
+import { readDaemonPidRecord } from './daemon-endpoint-incarnation'
 
 // Why: the adapter decides a runtime resolver replacement, but the launcher completes it — and by
 // then the daemon has usually self-retired (dropping its last authenticated client is enough), so
@@ -45,8 +48,11 @@ export function attributeNextDaemonReplacement(reason: DaemonReplaceReason): voi
   attributedReplaceReason = reason
 }
 
+// Why every adoption path calls this: a daemon whose AppImage files are gone answers RPCs for
+// hours, so whichever branch decided to keep it, fresh terminals must not land on it.
 function createPreservedDaemonHandle(
   runtimeDir: string,
+  pidPath: string,
   mode?: 'degraded-new-pty-fallback'
 ): DaemonProcessHandle {
   const handle: DaemonProcessHandle = {
@@ -54,6 +60,16 @@ function createPreservedDaemonHandle(
     shutdown: async () => {
       await cleanupDaemonForProtocol(runtimeDir, PROTOCOL_VERSION)
     }
+  }
+  const hostImage = inspectDaemonHostImage(readDaemonPidRecord(pidPath))
+  if (hostImage.verdict === 'severed') {
+    console.warn(
+      `[daemon] DEGRADED MODE: keeping daemon PID ${hostImage.pid} whose AppImage files are gone. Existing sessions keep working; fresh terminals run on the local provider WITHOUT daemon persistence until you restart the terminal daemon.`
+    )
+    noteSeveredDaemon(hostImage)
+    handle.mode = 'degraded-new-pty-fallback'
+    handle.quarantine = 'host-image-severed'
+    return handle
   }
   if (mode) {
     handle.mode = mode
@@ -110,7 +126,7 @@ export function createOutOfProcessLauncher(
     ): Promise<DaemonProcessHandle> => {
       const connectedClient = adoptionClient ?? undefined
       adoptionClient = null
-      return holdDaemonAdoptionLease(createPreservedDaemonHandle(runtimeDir, mode), {
+      return holdDaemonAdoptionLease(createPreservedDaemonHandle(runtimeDir, pidPath, mode), {
         socketPath,
         tokenPath,
         pidPath,
@@ -189,7 +205,7 @@ export function createOutOfProcessLauncher(
           '[daemon] Endpoint was taken by another daemon during startup — adopting it instead'
         )
         // Why pidPath: adopting repairs a PID record that names the wrong incarnation.
-        return await holdDaemonAdoptionLease(createPreservedDaemonHandle(runtimeDir), {
+        return await holdDaemonAdoptionLease(createPreservedDaemonHandle(runtimeDir, pidPath), {
           socketPath,
           tokenPath,
           pidPath

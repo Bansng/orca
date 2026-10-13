@@ -10,7 +10,8 @@ const {
   shellMock,
   isMock,
   killAllPtyMock,
-  getMacUpdateRunningInstancesMock
+  getMacUpdateRunningInstancesMock,
+  prepareShipItStagingMock
 } = vi.hoisted(() => {
   const appEventHandlers = new Map<string, ((...args: unknown[]) => void)[]>()
   const eventHandlers = new Map<string, ((...args: unknown[]) => void)[]>()
@@ -86,6 +87,7 @@ const {
     },
     isMock: { dev: false },
     getMacUpdateRunningInstancesMock: vi.fn(async (): Promise<number[]> => []),
+    prepareShipItStagingMock: vi.fn((): Promise<void> | null => null),
     killAllPtyMock: vi.fn()
   }
 })
@@ -120,6 +122,10 @@ vi.mock('./updater-changelog', () => ({
 vi.mock('./updater-nudge', () => ({
   fetchNudge: vi.fn().mockResolvedValue(null),
   shouldApplyNudge: vi.fn().mockReturnValue(false)
+}))
+
+vi.mock('./updater/shipit-leftover-recovery', () => ({
+  prepareThisProcessShipItStaging: prepareShipItStagingMock
 }))
 
 vi.mock('./macos-update-running-instances', () => ({
@@ -168,9 +174,34 @@ describe('updater mac install handoff', () => {
     isMock.dev = false
     killAllPtyMock.mockReset()
     getMacUpdateRunningInstancesMock.mockReset().mockResolvedValue([])
+    prepareShipItStagingMock.mockReset().mockReturnValue(null)
     autoUpdaterMock.downloadUpdate.mockResolvedValue([])
     vi.unstubAllGlobals()
     vi.useRealTimers()
+  })
+
+  it('lets leftover ShipIt state be cleared before Squirrel can stage the download', async () => {
+    vi.useFakeTimers()
+    let finishPreparing: () => void = () => undefined
+    prepareShipItStagingMock.mockReturnValue(
+      new Promise<void>((resolve) => {
+        finishPreparing = resolve
+      })
+    )
+    autoUpdaterMock.checkForUpdates.mockResolvedValue(undefined)
+    const { setupAutoUpdater, downloadUpdate } = await loadUpdaterModule()
+    setupAutoUpdater({ webContents: { send: vi.fn() } } as never)
+    await vi.waitFor(() => expect(autoUpdaterMock.checkForUpdates).toHaveBeenCalledTimes(1))
+    autoUpdaterMock.emit('checking-for-update')
+    autoUpdaterMock.emit('update-available', { version: '1.0.61' })
+    await vi.advanceTimersByTimeAsync(0)
+
+    downloadUpdate()
+    expect(prepareShipItStagingMock).toHaveBeenCalledTimes(1)
+    expect(autoUpdaterMock.downloadUpdate).not.toHaveBeenCalled()
+    finishPreparing()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(autoUpdaterMock.downloadUpdate).toHaveBeenCalledTimes(1)
   })
 
   it.runIf(process.platform === 'darwin')(

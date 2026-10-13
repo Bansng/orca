@@ -16,7 +16,7 @@ import type { MemorySnapshot, StatsSummary } from '../../shared/process-stats-ty
 import { collectMemorySnapshot } from '../memory/collector'
 import type { PersistedUIState } from '../../shared/persisted-ui-state-types'
 import type { FeatureInteractionId } from '../../shared/feature-interactions'
-import type { RuntimeClientSettingsUpdate } from './runtime-client-settings'
+import type { RuntimeClientSettingsUpdate } from './runtime-client-settings-shape'
 import type { AgentLaunchSettingsMutation } from '../../shared/agent-launch-settings'
 import type { TerminalQuickCommand } from '../../shared/terminal-quick-command-types'
 import type { TerminalQuickCommandMutation } from '../../shared/terminal-quick-commands'

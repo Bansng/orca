@@ -4,10 +4,10 @@ import type { TuiAgent } from '../../../../shared/tui-agent'
 import {
   callRuntimeRpc,
   getRuntimeEnvironmentStatus,
-  RuntimeRpcCallError,
   runtimeEnvironmentSupportsCapability
 } from '@/runtime/runtime-rpc-client'
-import type { RuntimeClientTarget } from '@/runtime/runtime-client-target'
+import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
+import type { RuntimeClientTarget } from '../../../../shared/runtime-client-target'
 import { getConnectionIdFromState } from '@/lib/connection-owner-resolution'
 import { captureRuntimeEnvironmentRequestRevision } from '@/runtime/runtime-environment-revision'
 import { PREFLIGHT_WORKSPACE_SCOPED_RUNTIME_CAPABILITY } from '../../../../shared/protocol-version'

@@ -30,6 +30,7 @@ import { initializePtyProcessCeiling } from './pty-process-ceiling-runtime'
 import { isNativePtyException } from './daemon-native-pty-exception'
 import { startDaemonScopeDeathWatch } from './daemon-scope-death-watch'
 import { isWindowsProcessTableAvailable } from '../windows/windows-process-table'
+import { leaseAppImageGenerationForCurrentProcess } from '../cli/appimage-generation-lease'
 
 export type ParsedDaemonArgs = {
   socketPath: string
@@ -132,6 +133,8 @@ async function main(): Promise<void> {
     logFilePath
   } = parseArgs(process.argv.slice(2))
   const startedAtMs = Date.now() - process.uptime() * 1000
+  // Why: a daemon forked from an extracted AppImage copy outlives the process that launched it.
+  void leaseAppImageGenerationForCurrentProcess()
   const readyIdentity = await readCurrentDaemonReadyIdentity(startedAtMs)
   // Fail-open: a broken log path must never block daemon startup.
   const daemonLog = logFilePath ? createDaemonFileLog(logFilePath) : createNoopDaemonFileLog()

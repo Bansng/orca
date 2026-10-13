@@ -5,7 +5,7 @@ import {
   createWebRuntimeAgentSessionTerminalWithLaunchDraft,
   createWebRuntimeSessionTerminal
 } from '@/runtime/web-runtime-terminal-creation'
-import { isWebTerminalSurfaceTabId } from '@/runtime/web-terminal-surface-id'
+import { isWebTerminalSurfaceTabId } from '../../../shared/terminal-surface-id'
 import type { AgentStartupPlan } from '@/lib/tui-agent-startup'
 import type { Tab } from '../../../shared/tab-types'
 import type { TuiAgent } from '../../../shared/tui-agent'

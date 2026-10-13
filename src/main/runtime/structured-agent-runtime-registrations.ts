@@ -1,5 +1,6 @@
 // Each runtime registration owns its adapter, location support and account resolution at start.
 
+import { withSupportedCodexCli } from '../codex/codex-cli-installation-error'
 import { codexStructuredLaunchPart } from '../codex/codex-structured-launch-resolution'
 import { claudeStructuredLaunchPart } from '../claude/claude-structured-launch-resolution'
 import { supportsCodexStructuredLocation } from '../codex/codex-structured-location-support'
@@ -14,6 +15,9 @@ import {
 import { CodexStructuredSessionAdapter } from '../codex/codex-structured-session-adapter'
 import { CODEX_STRUCTURED_AGENT } from '../codex/codex-structured-agent-definition'
 import { CLAUDE_STRUCTURED_AGENT } from '../claude/claude-structured-agent-definition'
+import { CLAUDE_CLI_CONVERSATIONS } from '../claude/claude-cli-conversations'
+import { CODEX_CLI_CONVERSATIONS } from '../codex/codex-cli-conversations'
+import type { StructuredAgentCliConversations } from '../native-chat/structured-agent-cli-conversations'
 import {
   isAgentSessionPreSpawnError,
   type StructuredAgentSessionAdapter,
@@ -105,7 +109,7 @@ export type StructuredAgentModelCatalogContext = Pick<
   'deps' | 'environment'
 >
 
-export type StructuredAgentRuntimeRegistration = {
+export type StructuredAgentRuntimeRegistration = StructuredAgentCliConversations & {
   definition: StructuredAgentDefinition
   createAdapter: (context: StructuredAgentAdapterContext) => StructuredAgentRuntimeAdapter
   /** How this agent's models are listed before any session of it runs. Required: an agent that
@@ -131,16 +135,16 @@ function createCodexAdapter(context: StructuredAgentAdapterContext): StructuredA
   const { deps, followUps, host } = context
   return new CodexStructuredSessionAdapter({
     resolveAccountKind: deps.resolveCodexAccountKind,
-    resolveLaunch: composeStructuredLaunch(
-      CODEX_STRUCTURED_AGENT,
-      structuredAgentLaunchSources(context),
-      codexStructuredLaunchPart({
-        resolveLaunchArgs: () => deps.resolveLaunchArgs('codex'),
-        ...(deps.resolveCodexPermissionPolicy
-          ? { resolvePermissionPolicy: deps.resolveCodexPermissionPolicy }
-          : {}),
-        ...(deps.resolveCodexCommand ? { resolveCommand: deps.resolveCodexCommand } : {})
-      })
+    resolveLaunch: withSupportedCodexCli(
+      composeStructuredLaunch(
+        CODEX_STRUCTURED_AGENT,
+        structuredAgentLaunchSources(context),
+        codexStructuredLaunchPart({
+          resolveLaunchArgs: () => deps.resolveLaunchArgs('codex'),
+          ...(deps.resolveCodexCommand ? { resolveCommand: deps.resolveCodexCommand } : {})
+        })
+      ),
+      deps.readCodexInstallation
     ),
     ...(deps.openCodexConnection ? { openConnection: deps.openCodexConnection } : {}),
     ...(deps.readProcessStartTime ? { readProcessStartTime: deps.readProcessStartTime } : {}),
@@ -174,9 +178,6 @@ function createClaudeAdapter(
         resolveLaunchArgs: () => deps.resolveLaunchArgs('claude'),
         ...(deps.resolveClaudeCommand ? { resolveCommand: deps.resolveClaudeCommand } : {}),
         resolveAuthPolicy: deps.resolveClaudeAuthPolicy,
-        ...(deps.resolveClaudePermissionMode
-          ? { resolvePermissionMode: deps.resolveClaudePermissionMode }
-          : {}),
         attachmentDirectory: agentSessionAttachmentStoreRoot(deps.stateDirectory),
         ...(deps.claudeCliFlags ? { cliFlags: deps.claudeCliFlags } : {})
       })
@@ -220,6 +221,8 @@ function acpRegistration(spec: AcpLaunchSpec): StructuredAgentRuntimeRegistratio
       : {}),
     resolveAccountHome: ({ launchEnv }) => spec.account.resolve({ launchEnv }),
     modelCatalog: (context) => acpModelCatalogDiscovery(spec, context),
+    transcriptImport: null,
+    sessionHistory: spec.sessionHistory,
     createAdapter: (context) => {
       const { deps, followUps } = context
       const readJournal = (sessionId: string) =>
@@ -279,6 +282,7 @@ export const STRUCTURED_AGENT_RUNTIME_REGISTRATIONS: readonly StructuredAgentRun
       definition: CODEX_STRUCTURED_AGENT,
       createAdapter: createCodexAdapter,
       modelCatalog: codexModelCatalogDiscovery,
+      ...CODEX_CLI_CONVERSATIONS,
       supportsLocation: (location) => supportsCodexStructuredLocation(location),
       resolveAccountHome: async (request, services) =>
         agentSessionAccountHome(
@@ -290,6 +294,7 @@ export const STRUCTURED_AGENT_RUNTIME_REGISTRATIONS: readonly StructuredAgentRun
       definition: CLAUDE_STRUCTURED_AGENT,
       createAdapter: createClaudeAdapter,
       modelCatalog: claudeModelCatalogDiscovery,
+      ...CLAUDE_CLI_CONVERSATIONS,
       supportsLocation: supportsClaudeStructuredLocation,
       resolveAccountHome: async ({ launchEnv, location }, services) =>
         agentSessionAccountHome(

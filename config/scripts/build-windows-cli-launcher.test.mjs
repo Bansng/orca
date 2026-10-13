@@ -13,11 +13,11 @@ import { dirname, join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { describe, expect, it } from 'vitest'
 import {
-  shouldReuseCompiledWindowsCliLauncher,
-  windowsCliLauncherFileVersion,
-  windowsCliLauncherRustTarget,
-  windowsCliLauncherFingerprint
-} from './build-windows-cli-launcher.mjs'
+  shouldReuseCompiledWindowsRustExecutable,
+  windowsRustExecutableFileVersion,
+  windowsRustExecutableTarget,
+  windowsRustExecutableFingerprint
+} from './windows-rust-executable-build.mjs'
 import { findDynamicVcRuntimeImports, readPeImportedDllNames } from './windows-pe-imports.mjs'
 
 const itCrossHost = process.platform === 'win32' ? it.skip : it
@@ -57,33 +57,33 @@ describe('Windows CLI launcher', () => {
         }
       )
       const outputPath = join(root, 'orca.exe')
-      const fingerprint = windowsCliLauncherFingerprint(inputs, '1.4.214')
-      expect(shouldReuseCompiledWindowsCliLauncher(outputPath, fingerprint)).toBe(false)
+      const fingerprint = windowsRustExecutableFingerprint(inputs, '1.4.214')
+      expect(shouldReuseCompiledWindowsRustExecutable(outputPath, fingerprint)).toBe(false)
       writeFileSync(outputPath, 'binary')
-      expect(shouldReuseCompiledWindowsCliLauncher(outputPath, fingerprint)).toBe(false)
+      expect(shouldReuseCompiledWindowsRustExecutable(outputPath, fingerprint)).toBe(false)
       writeFileSync(`${outputPath}.sha256`, fingerprint)
       for (const input of inputs) {
         utimesSync(input, new Date(), new Date())
       }
       expect(
-        shouldReuseCompiledWindowsCliLauncher(
+        shouldReuseCompiledWindowsRustExecutable(
           outputPath,
-          windowsCliLauncherFingerprint(inputs, '1.4.214')
+          windowsRustExecutableFingerprint(inputs, '1.4.214')
         )
       ).toBe(true)
       expect(
-        shouldReuseCompiledWindowsCliLauncher(
+        shouldReuseCompiledWindowsRustExecutable(
           outputPath,
-          windowsCliLauncherFingerprint(inputs, '1.4.215')
+          windowsRustExecutableFingerprint(inputs, '1.4.215')
         )
       ).toBe(false)
       for (const input of inputs) {
         const original = readFileSync(input)
         writeFileSync(input, 'changed')
         expect(
-          shouldReuseCompiledWindowsCliLauncher(
+          shouldReuseCompiledWindowsRustExecutable(
             outputPath,
-            windowsCliLauncherFingerprint(inputs, '1.4.214')
+            windowsRustExecutableFingerprint(inputs, '1.4.214')
           )
         ).toBe(false)
         writeFileSync(input, original)
@@ -94,10 +94,10 @@ describe('Windows CLI launcher', () => {
   })
 
   it('reduces a prerelease to the numeric version Windows can record', () => {
-    expect(windowsCliLauncherFileVersion('1.4.214-daily.202609281300')).toBe('1.4.214.0')
-    expect(windowsCliLauncherFileVersion('1.4.214')).toBe('1.4.214.0')
+    expect(windowsRustExecutableFileVersion('1.4.214-daily.202609281300')).toBe('1.4.214.0')
+    expect(windowsRustExecutableFileVersion('1.4.214')).toBe('1.4.214.0')
     for (const version of ['1.4.65535', '1.4', '1.4.214"', undefined]) {
-      expect(() => windowsCliLauncherFileVersion(version)).toThrow('Invalid Windows')
+      expect(() => windowsRustExecutableFileVersion(version)).toThrow('Invalid Windows')
     }
   })
 
@@ -247,10 +247,10 @@ describe('Windows CLI launcher', () => {
   })
 
   it('cross-compiles only the architectures the orcad template ships', () => {
-    expect(windowsCliLauncherRustTarget(undefined)).toBeNull()
-    expect(windowsCliLauncherRustTarget('x64')).toBe('x86_64-pc-windows-msvc')
-    expect(windowsCliLauncherRustTarget('arm64')).toBe('aarch64-pc-windows-msvc')
-    expect(() => windowsCliLauncherRustTarget('ia32')).toThrow('Unsupported')
+    expect(windowsRustExecutableTarget(undefined)).toBeNull()
+    expect(windowsRustExecutableTarget('x64')).toBe('x86_64-pc-windows-msvc')
+    expect(windowsRustExecutableTarget('arm64')).toBe('aarch64-pc-windows-msvc')
+    expect(() => windowsRustExecutableTarget('ia32')).toThrow('Unsupported')
   })
 
   itWindows('runs a server profile CLI on pinned Node with argv and profile intact', () => {

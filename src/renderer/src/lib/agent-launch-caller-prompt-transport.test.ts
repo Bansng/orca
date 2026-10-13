@@ -61,7 +61,8 @@ const callRuntimeRpc = vi.hoisted(() =>
     receipt: { mode: 'terminal', preferred: 'terminal', reason: 'user_default', detail: 'x' }
   }))
 )
-vi.mock('@/runtime/runtime-rpc-client', () => ({ callRuntimeRpc, RuntimeRpcCallError: Error }))
+vi.mock('@/runtime/runtime-rpc-client', () => ({ callRuntimeRpc }))
+vi.mock('@/runtime/runtime-rpc-result', () => ({ RuntimeRpcCallError: Error }))
 
 /** What the window's own launch command carries; a launch started by the host queues none. */
 function commandCarries(text: string): boolean {

@@ -10,7 +10,7 @@ import { getConnectionIdForFile } from '@/lib/connection-context'
 import { editorTabFileAccess } from '@/lib/local-file-access'
 import { useAppStore } from '@/store'
 import type { OpenFile } from '@/store/slices/editor'
-import { readRuntimeFileContent } from './runtime-file-client'
+import { readRuntimeFileContent } from './runtime-file-read-client'
 import { requireRuntimeTargetForFileOwner } from '@/lib/file-owner-runtime-target'
 import {
   hashMarkdownContent,

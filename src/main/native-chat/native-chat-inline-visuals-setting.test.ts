@@ -21,7 +21,6 @@ import {
 import { nativeChatVisualsFolderFor } from './native-chat-visuals-folder'
 
 const SKILL = { pluginDir: '/app/plugin', skillsRoot: '/app/plugin/skills' }
-const MANUAL = { approvalPolicy: 'on-request', sandbox: 'workspace-write' } as const
 const scratch: string[] = []
 afterEach(() => {
   for (const dir of scratch.splice(0)) {
@@ -93,7 +92,6 @@ describe('inline visuals launch preference', () => {
       resolveWorkspacePath: async () => '/repo',
       resolveCommand: () => '/bin/codex',
       resolveLaunchArgs: () => [],
-      resolvePermissionPolicy: () => MANUAL,
       resolveEnvironment: async () => ({
         [NATIVE_CHAT_VISUALS_DIR_ENV]: '/inherited',
         KEEP: 'yes'

@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { projectStructuredItemsToNativeChat } from '../../../../shared/structured-agent-session-projection'
+import type { AgentSessionFailureFact } from '../../../../shared/agent-session-failure'
 import type { AgentJournalStatusItem } from '../../../../shared/agent-session-journal-types'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { MessageRow } from './NativeChatMessageRow'
@@ -418,4 +419,42 @@ describe('notice rows', () => {
     expect(screen.getByText(words)).toHaveClass('text-chat-foreground-faint', 'text-sm')
     expect(screen.queryByText('Words an older host wrote')).toBeNull()
   })
+})
+
+describe('Codex installation in notice rows', () => {
+  it.each([null, '0.135.0'])(
+    'shows the plain host failure through the ordinary notice row: %s',
+    (installedVersion) => {
+      const failure: AgentSessionFailureFact = {
+        kind: installedVersion === null ? 'cliMissing' : 'startFailed',
+        ...(installedVersion === null
+          ? {}
+          : {
+              refusal: {
+                code: 'agent_session_operation_invalid',
+                details: {
+                  reason: 'attachFailed',
+                  codexInstallation: { installedVersion, minimumVersion: '0.136.0' }
+                }
+              }
+            })
+      }
+      const text = installedVersion
+        ? 'Codex 0.135.0 is too old for chats. Update to 0.136.0 or newer.'
+        : "Codex wasn't found on the computer running this chat. Install it, or check its Command in Settings → Agents."
+      renderStatus(
+        {
+          kind: 'status',
+          tone: 'error',
+          ...agentSessionFailureWords(failure, { agentName: 'Codex', surface: 'row' })
+        },
+        null,
+        false,
+        false,
+        'Codex'
+      )
+      expect(screen.getByText(text)).toBeInTheDocument()
+      expect(screen.queryByRole('button')).toBeNull()
+    }
+  )
 })

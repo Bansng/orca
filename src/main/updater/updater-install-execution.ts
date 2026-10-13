@@ -1,5 +1,4 @@
-import { BrowserWindow } from 'electron'
-import { killAllPty } from '../ipc/pty/kill-all'
+import { releaseSessionsForInstaller } from './updater-installer-session-release'
 import { withUpdaterSpan } from '../observability/instrumentation'
 import { runWithLaunchPath } from '../startup/hydrate-shell-path'
 import {
@@ -21,6 +20,7 @@ import { LINUX_PACKAGE_MARKER_UNUSABLE_MESSAGE } from '../linux-package-download
 import { recordUpdaterLifecycle } from '../updater-lifecycle-diagnostics'
 import { requestServeUpdateHandoff, failServeUpdateHandoff } from '../serve-update-handoff'
 import { UpdaterPackageRecovery } from './updater-package-recovery'
+import { prepareThisProcessShipItStaging } from './shipit-leftover-recovery'
 import { MAC_DEFERRED_STAGING_TIMEOUT_MS } from './updater-state'
 
 export abstract class UpdaterInstallExecution extends UpdaterPackageRecovery {
@@ -154,6 +154,8 @@ export abstract class UpdaterInstallExecution extends UpdaterPackageRecovery {
         }
 
         await commitServeSupervisorPark(() => getMacUpdateRunningInstances())
+        // Why here: deferred staging starts inside the native install call below.
+        await (this.isMacStagingDeferredToInstall() ? prepareThisProcessShipItStaging() : null)
         recordUpdaterLifecycle('quit_and_install_invoking_native', {
           version: pendingVersion || null
         })
@@ -205,7 +207,7 @@ export abstract class UpdaterInstallExecution extends UpdaterPackageRecovery {
           return
         }
 
-        const windowCount = this.releaseSessionsForInstaller()
+        const windowCount = releaseSessionsForInstaller()
         span.addEvent('local_pty_kill_all')
         span.addEvent('window_close_listeners_removed', { windowCount })
 
@@ -274,7 +276,7 @@ export abstract class UpdaterInstallExecution extends UpdaterPackageRecovery {
       version: this.getPendingInstallVersion() || null
     })
     try {
-      this.releaseSessionsForInstaller()
+      releaseSessionsForInstaller()
     } catch (error) {
       recordUpdaterLifecycle(
         'post_commit_cleanup_failed',
@@ -292,15 +294,6 @@ export abstract class UpdaterInstallExecution extends UpdaterPackageRecovery {
     if (this.isAwaitingMacStaging()) {
       this.handleQuitAndInstallFailure(error)
     }
-  }
-
-  private releaseSessionsForInstaller(): number {
-    killAllPty()
-    const windows = BrowserWindow.getAllWindows()
-    for (const win of windows) {
-      win.removeAllListeners('close')
-    }
-    return windows.length
   }
 
   protected commitInFlightInstall(): void {

@@ -95,7 +95,7 @@ describe('countFocusSettingReads', () => {
     expect(readers.namesFor('src/renderer/src/b.ts').has('ownerTarget')).toBe(false)
     expect(
       countFocusSettingReads(
-        'const t = runtimeTargetForOwnerHostId(getSettingsFocusedExecutionHostId(s))',
+        'const t = ipcOrRuntimeTargetForHostId(getSettingsFocusedExecutionHostId(s))',
         readers.namesFor('src/renderer/src/a.ts')
       )
     ).toBe(1)

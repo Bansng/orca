@@ -1,6 +1,7 @@
 import {
   CLAUDE_MODEL_LIST_ARGS,
-  CLAUDE_MODEL_LIST_STDIN
+  CLAUDE_MODEL_LIST_STDIN,
+  parseClaudeModelList
 } from '../../shared/claude-model-list-probe'
 import { requireLegacyAgentSessionAccountHome } from '../../shared/agent-session-account-home'
 import { parseClaudeModels } from '../../shared/commit-message-model-parsers'
@@ -57,12 +58,16 @@ export function createClaudeModelCatalogProbe(
     if (listed.length === 0) {
       throw new Error('claude listed no models')
     }
+    // Only the catalog marks the CLI default; the commit-message parse keeps its own default.
+    const runsDefault = new Set(
+      parseClaudeModelList(stdout).flatMap((model) => (model.isDefault ? [model.id] : []))
+    )
     return {
       models: listed.map((model) => ({
         id: model.id,
         label: model.label,
         ...(model.description ? { description: model.description } : {}),
-        isDefault: model.isDefault === true,
+        isDefault: runsDefault.has(model.id),
         // No defaultEffort: the parser's thinking default is the commit-message generator's
         // choice, not the effort Claude runs; the store keeps the one a live child reported.
         efforts: (model.thinkingLevels ?? []).map((level) => ({
@@ -71,6 +76,9 @@ export function createClaudeModelCatalogProbe(
         })),
         ...(model.supportsFastMode !== undefined
           ? { supportsFastMode: model.supportsFastMode }
+          : {}),
+        ...(model.supportsAutoMode !== undefined
+          ? { supportsAutoMode: model.supportsAutoMode }
           : {})
       })),
       origin: 'probe'

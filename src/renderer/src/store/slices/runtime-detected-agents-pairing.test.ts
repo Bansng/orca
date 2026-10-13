@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PublicKnownRuntimeEnvironment } from '../../../../shared/runtime-environments'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import type * as RuntimeRpcClientModule from '@/runtime/runtime-rpc-client'
-import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-client'
+import { RuntimeRpcCallError } from '@/runtime/runtime-rpc-result'
 
 const rpc = vi.hoisted(() => ({ call: vi.fn(), supports: vi.fn(), status: vi.fn() }))
 vi.mock('@/runtime/runtime-rpc-client', async (original) => ({
