@@ -26,11 +26,7 @@ import {
   useDocPreviewDirectoryAccess
 } from './doc-preview-directory-access'
 import { buildDocPreviewDocumentIdentity } from './doc-preview-document-identity'
-import {
-  docPreviewAssetNotice,
-  docPreviewDownloadBlockedNotice,
-  docPreviewFailureDetail
-} from './doc-preview-failure-messages'
+import { docPreviewFailureDetail, docPreviewNotices } from './doc-preview-failure-messages'
 import { DocPreviewToolbar } from './doc-preview-toolbar'
 import { buildDocPreviewShareControl } from './doc-preview-artifact-share'
 import { useDocPreviewWebviewHistory } from './doc-preview-webview-history'
@@ -310,13 +306,7 @@ export function HtmlDocPreview({
     reloadRef.current?.()
   }, [failureReason, handleHardReload, state])
 
-  // Nothing rendered on an unavailable preview, so a notice strip would be a footnote on a blank page.
-  const notices = isUnavailable
-    ? []
-    : [
-        downloadBlocked ? docPreviewDownloadBlockedNotice() : null,
-        docPreviewAssetNotice(assetFailures)
-      ].filter((notice): notice is string => notice !== null)
+  const notices = docPreviewNotices(isUnavailable, downloadBlocked, assetFailures)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-editor-surface">

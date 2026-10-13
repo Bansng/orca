@@ -311,7 +311,10 @@ export async function executeWorktreeCreation(
 
   if (!shouldActivateOnCompletion && useAppStore.getState().pendingWorktreeCreations[creationId]) {
     try {
-      showWorktreeCreationReadyToast(worktree)
+      showWorktreeCreationReadyToast(
+        worktree,
+        preparedRequest.workspaceRunContext?.hostId ?? preparedRequest.executionHostId
+      )
     } catch (error) {
       console.error('worktree create: ready toast failed', worktree.id, error)
     }
