@@ -79,6 +79,28 @@ describe('daemon-init: runRestartDaemon (7-step sequence)', () => {
     expect(order).toEqual(['fanout', 'unbind'])
   })
 
+  it('refuses a targeted restart before ending anything when another daemon owns the endpoint', async () => {
+    const mod = await importFresh()
+    await mod.initDaemonPtyProvider()
+    const originalAdapter = adapterInstances[0]
+    daemonClientMock.mockImplementation(function MockDaemonClient() {
+      return {
+        ensureConnected: vi.fn(async () => {}),
+        ensureConnectedWithin: vi.fn(async () => {}),
+        getDaemonIdentity: vi.fn(() => ({ pid: 9000, startedAtMs: 1, launchNonce: 'other' })),
+        request: vi.fn(async () => ({ sessions: [] })),
+        disconnect: vi.fn()
+      }
+    })
+
+    await expect(mod.restartDaemon({ expectedDaemonPid: 4288 })).rejects.toThrow(
+      'owned by a different daemon'
+    )
+
+    expect(originalAdapter.fanoutSyntheticExits).not.toHaveBeenCalled()
+    expect(unbindLocalProviderListenersMock).not.toHaveBeenCalled()
+  })
+
   it('uses daemon-owned idle retirement after a failed manual-restart adoption', async () => {
     const mod = await importFresh()
     await mod.initDaemonPtyProvider()

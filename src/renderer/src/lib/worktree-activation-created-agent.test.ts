@@ -3,7 +3,7 @@ import { getDefaultSettings } from '../../../shared/constants'
 import { useAppStore } from '@/store'
 import { activateAndRevealWorktree } from './worktree-activation'
 import { ensureWebRuntimeWorktreeTerminalAfterWake } from './web-runtime-worktree-terminal-after-wake'
-import { resetWebSessionTabsSnapshotFreshnessForTests } from '@/runtime/web-session-tabs-sync'
+import { resetWebSessionTabsSnapshotFreshnessForTests } from '@/runtime/web-session-tabs-sync/tracking-lifecycle'
 import { resetWebRuntimeWakeTerminalRespawnForTests } from '@/runtime/web-runtime-wake-terminal-respawn'
 import {
   makeCreatedAgentWorktree as makeWorktree,
@@ -494,7 +494,8 @@ describe('activateAndRevealWorktree', () => {
       }))
     })
 
-    const { shouldApplyWebSessionTabsSnapshot } = await import('@/runtime/web-session-tabs-sync')
+    const { shouldApplyWebSessionTabsSnapshot } =
+      await import('@/runtime/web-session-tabs-sync/tracking-decisions')
     shouldApplyWebSessionTabsSnapshot(
       {
         worktree: worktree.id,

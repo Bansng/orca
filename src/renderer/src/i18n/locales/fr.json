@@ -117,6 +117,8 @@
   },
   "settings": {
     "chat": {
+      "permissionsTitle": "Autorisations pour les nouveaux chats",
+      "permissionsDescription": "S’applique uniquement aux nouveaux chats. Les agents ouverts dans un terminal utilisent Paramètres → Agents → Autorisations des agents.",
       "description": "Choisissez l’apparence et le nom des chats.",
       "names": {
         "title": "Noms des chats",
@@ -4183,7 +4185,12 @@
             "checkTooltip": "Chats qu'Orca n'a pas pu reprendre, ou dont il n'a pas pu confirmer la reprise, après le redémarrage. Cliquez pour plus de détails.",
             "resumingTooltip": "Restauration des conversations interrompues et demande de poursuite…",
             "resumingProgressLabel": "Reprise des discussions {{value0}}/{{value1}}",
-            "resumingProgressAria": "Reprise des discussions, {{value0}} sur {{value1}} terminées. Cliquez pour voir les détails."
+            "resumingProgressAria": "Reprise des discussions, {{value0}} sur {{value1}} terminées. Cliquez pour voir les détails.",
+            "resumedLabelOne": "1 discussion reprise",
+            "resumedLabel": "{{value0}} discussions reprises",
+            "resumedAriaOne": "1 discussion reprise. Cliquez pour la voir.",
+            "resumedAria": "{{value0}} discussions reprises. Cliquez pour les voir.",
+            "resumedTooltip": "Discussions reprises par Orca après le redémarrage. Cliquez pour les voir."
           },
           "provider": {
             "extra": {
@@ -17851,6 +17858,7 @@
         "couldNotStart": "{{agent}} n'a pas pu démarrer.",
         "editSavedArguments": "Modifiez-les dans Paramètres > Agents > Arguments.",
         "couldNotRestart": "{{agent}} n'a pas pu redémarrer.",
+        "codexCliTooOld": "Codex {{installedVersion}} est trop ancien pour les conversations. Mettez-le à jour vers {{minimumVersion}} ou une version ultérieure.",
         "notSignedIn": "{{agent}} n’est pas connecté.",
         "claudeSystemNotSignedIn": "Claude n’est pas connecté. Exécutez `{{loginCommand}}`, ou choisissez un compte dans les paramètres des Comptes Claude.",
         "claudeManagedNotSignedIn": "Ce compte Claude n’est pas connecté. Reconnectez-vous dans les paramètres des Comptes Claude.",
@@ -17874,8 +17882,8 @@
         "chooseClaudeAccountThenSend": "Choisissez-en un ou ajoutez-en un dans les paramètres Comptes Claude, puis renvoyez votre message.",
         "providerExitedRow": "{{agent}} s'est arrêté pendant que cette réponse était en cours. Vous pouvez continuer dans cette conversation.",
         "providerExitedRejection": "{{agent}} s'est arrêté avant l'envoi de ce message.",
-        "providerRejected": "Le fournisseur n'a pas accepté ce message.",
-        "providerRejectedQuoted": "Le fournisseur n'a pas accepté ce message : {{detail}}.",
+        "providerRejected": "{{agent}} n'a pas accepté ce message.",
+        "providerRejectedQuoted": "{{agent}} n'a pas accepté ce message : {{detail}}.",
         "attachmentEmpty": "Une image de ce message est vide, le message n'a donc pas été envoyé.",
         "attachmentTooLarge": "Une image de ce message est trop volumineuse, le message n'a donc pas été envoyé.",
         "attachmentLargerThan": "Une image de ce message dépasse {{size}} Mo, le message n'a donc pas été envoyé.",
@@ -18084,6 +18092,19 @@
         "attachmentOwnerChanged": "Cet espace de travail a changé d'hôte lors de la connexion : supprimez à nouveau les fichiers.",
         "attachmentUnreadable": "Impossible de lire les fichiers supprimés.",
         "tooManyAttachments": "Joignez {{value0}} fichiers maximum à la fois.",
+        "permissions": "Autorisations",
+        "permissionAsk": "Demander l’approbation",
+        "permissionAskDescription": "Demande avant les modifications et commandes que vos réglages n'autorisent pas",
+        "permissionAskCodexDescription": "Modifie des fichiers et exécute des commandes dans cet espace de travail ; demande avant toute autre action",
+        "permissionAskSharedDescription": "Demande avant les modifications ou commandes qui ne sont pas déjà autorisées",
+        "permissionAcceptEdits": "Accepter les modifications",
+        "permissionAcceptEditsDescription": "Approuve les modifications et commandes de fichiers ; demande pour le reste",
+        "permissionAuto": "Approuver pour moi",
+        "permissionAutoDescription": "Examine les demandes d’approbation pour vous",
+        "permissionFullAccess": "Accès complet",
+        "permissionFullAccessDescription": "Ne demande jamais avant les modifications ou les commandes",
+        "permissionFullAccessCodexDescription": "Ne demande jamais ; peut modifier n’importe quel fichier et utiliser le réseau",
+        "permissionFullAccessSharedDescription": "Ne demande jamais avant les modifications ou les commandes",
         "pasteFailed": "Échec du collage.",
         "commandAttachmentsUnsupported": "Retirez les pièces jointes avant d'utiliser une commande de session de chat."
       },
@@ -18204,8 +18225,11 @@
       },
       "transcriptLabel": "Conversation",
       "toggle": {
-        "showTerminal": "Afficher le terminal",
-        "showChat": "Afficher la vue chat"
+        "showTerminal": "Afficher le terminal"
+      },
+      "resumeInNewChat": {
+        "notSavedYet": "{{agent}} n'a pas encore enregistré cette conversation. Réessayez après sa réponse.",
+        "cannotResume": "Cette conversation {{agent}} ne peut pas être reprise dans un chat natif."
       },
       "state": {
         "loading": {
@@ -18283,7 +18307,8 @@
         "one": "1 fichier modifié",
         "many": "{{count}} a modifié les fichiers",
         "partial": "Différence partielle",
-        "recorded": "Totaux des modifications enregistrées à ce tour."
+        "showDiff": "Afficher les différences",
+        "hideDiff": "Masquer les différences"
       },
       "receipt": {
         "unavailable": "Réponse sélectionnée indisponible",
@@ -18397,6 +18422,8 @@
         "subtitle": "Les fichiers sont ajoutés à votre message sous forme de chemins que l'agent peut lire."
       },
       "copyCode": "Copier le code",
+      "wrapLines": "Retour à la ligne",
+      "disableLineWrap": "Désactiver le retour à la ligne",
       "context": {
         "unavailable": "L'utilisation du contexte n'est pas encore connue. Elle sera disponible après la prochaine réponse de l'agent.",
         "summary": "Contexte : {{used}} / {{window}} tokens ({{percent}} %), estimation basée sur la dernière réponse.",

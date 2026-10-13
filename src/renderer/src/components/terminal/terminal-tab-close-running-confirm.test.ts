@@ -34,13 +34,15 @@ vi.mock('@/runtime/web-runtime-terminal-creation', () => ({
 vi.mock('@/runtime/web-runtime-session-environment', () => ({
   isWebRuntimeSessionActive: isWebRuntimeSessionActiveMock
 }))
-vi.mock('@/runtime/web-terminal-surface-id', () => ({
+vi.mock('../../../../shared/terminal-surface-id', () => ({
   isWebTerminalSurfaceTabId: vi.fn(() => false),
   toHostSessionTabId: vi.fn((tabId: string) => tabId)
 }))
 
-vi.mock('@/runtime/web-session-tabs-sync', () => ({
-  getLatestWebSessionTabsPublicationEpoch: vi.fn(() => 'epoch-1'),
+vi.mock('@/runtime/web-session-tabs-sync/tracking-lifecycle', () => ({
+  getLatestWebSessionTabsPublicationEpoch: vi.fn(() => 'epoch-1')
+}))
+vi.mock('@/runtime/web-session-tabs-sync/tracking-mappings', () => ({
   resolveHostSessionTabIdForWebSessionTab: resolveHostSessionTabIdForWebSessionTabMock
 }))
 

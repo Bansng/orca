@@ -1210,6 +1210,20 @@
           "a05bcdaf57": "Agents View",
           "f63ea281e3": "Threaded left-sidebar feed for agent completions and blocking states.",
           "fb82ea1d7a": "Automatically materialize configured files or folders into newly created worktrees.",
+          "nativeChat": {
+            "resumeCopy": "When Orca quits or installs an update, chats that were working are automatically resumed when Orca is reopened.",
+            "resumeTitle": "Resume working chats automatically after a restart",
+            "resumeToggleLabel": "Toggle automatic resume after a restart",
+            "shellEnvCopy": "Codex and Claude chats start with every variable your login shell exports, the same as a terminal. Turn off to choose which ones they get.",
+            "shellEnvNameAdd": "Add",
+            "shellEnvNamePlaceholder": "Variable name",
+            "shellEnvNameRemove": "Remove {{value0}}",
+            "shellEnvNamesAlwaysPassed": "PATH, locale, and SSH_AUTH_SOCK are always passed. Applies the next time a chat starts or resumes.",
+            "shellEnvNamesEmpty": "No variables added yet.",
+            "shellEnvNamesLabel": "Variables to pass from your shell",
+            "shellEnvTitle": "Use your shell environment",
+            "shellEnvToggleLabel": "Toggle using your shell environment"
+          },
           "newWorktreeCardStyle": {
             "copy": "Preview updated worktree-card layout, metadata placement, card-display menu options, and status presentation."
           }
@@ -1706,7 +1720,8 @@
             "fa72e71f05": "agents",
             "fe5688b761": "sidebar",
             "nativeChat": {
-              "description": "Open supported new agents in Chat UI."
+              "description": "Open supported new agents in Chat UI.",
+              "queue": "queue"
             }
           }
         },
@@ -2558,9 +2573,9 @@
             "3eed73394f": "Your keyboard is paused"
           },
           "TerminalErrorToast": {
+            "hostTerminalCap": "The host is already running as many terminals as Orca allows. Close a terminal you no longer need, then try again.",
             "ptyAllocationLimit": "Your system cannot allocate any more pty devices. Close some terminals you are not using, in Orca or another program, then try again.",
-            "terminalProcessLimit": "Your system cannot start another terminal process. Close unused terminals or quit unused processes, then try again.",
-            "hostTerminalCap": "The host is already running as many terminals as Orca allows. Close a terminal you no longer need, then try again."
+            "terminalProcessLimit": "Your system cannot start another terminal process. Close unused terminals or quit unused processes, then try again."
           },
           "TerminalSessionStateSaveFailureDialog": {
             "678c780a2c": "Disk space is unavailable",
@@ -2829,7 +2844,8 @@
       },
       "composer": {
         "effort": "Effort",
-        "imageUnsupported": "Image paste is not supported for this agent."
+        "imageUnsupported": "Image paste is not supported for this agent.",
+        "permissions": "Permissions"
       },
       "failureWords": {
         "accountSwitchInProgress": "A Claude account switch is in progress. Try again after it finishes.",
@@ -2864,6 +2880,7 @@
         "claudeManagedNotSignedIn": "This Claude account isn't signed in. Sign in again in Claude Accounts settings.",
         "claudeSystemNotSignedIn": "Claude isn't signed in. Run `{{loginCommand}}`, or choose an account in Claude Accounts settings.",
         "cliMissing": "{{agent}} wasn't found on the computer running this chat. Install it, or check its Command in Settings → Agents.",
+        "codexCliTooOld": "Codex {{installedVersion}} is too old for chats. Update to {{minimumVersion}} or newer.",
         "codexManagedNotSignedIn": "This Codex account isn't signed in. Sign in again in Codex Accounts settings.",
         "codexSystemNotSignedIn": "Codex isn't signed in. Run `{{loginCommand}}`.",
         "commandAfterAnswer": "Answer the agent's question or approval, then run /{{command}}.",
@@ -2894,8 +2911,8 @@
         "providerExitedRejection": "{{agent}} stopped before this message was sent.",
         "providerExitedRow": "{{agent}} stopped while this response was in progress. You can continue in this conversation.",
         "providerRateLimited": "{{agent}} is rate-limited and retrying.",
-        "providerRejected": "The provider did not accept this message.",
-        "providerRejectedQuoted": "The provider did not accept this message: {{detail}}.",
+        "providerRejected": "{{agent}} didn't accept this message.",
+        "providerRejectedQuoted": "{{agent}} didn't accept this message: {{detail}}.",
         "providerRetryLastError": "Last error: {{detail}}.",
         "providerRetryNumber": "Retry {{attempt}}.",
         "providerRetryNumberOf": "Retry {{attempt}} of {{maxRetries}}.",

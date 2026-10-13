@@ -211,9 +211,9 @@ it('says a launch resumed on its own and links to the setting', async () => {
   await act(async () => button('Change in Settings').click())
   expect(openSettingsPage).toHaveBeenCalledOnce()
   expect(openSettingsTarget).toHaveBeenCalledWith({
-    pane: 'experimental',
+    pane: 'chat',
     repoId: null,
-    sectionId: 'native-chat-resume-on-restart'
+    sectionId: 'chat-resume-on-restart'
   })
   // The dialog gets out of the way of the page it opened.
   expect(dialog()).toBeNull()

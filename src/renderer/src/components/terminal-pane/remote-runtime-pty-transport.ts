@@ -45,21 +45,21 @@ import type {
   PtyTransport,
   PtyTransportRecoveryState
 } from './pty-transport-types'
-import { createPtyOutputProcessor } from './pty-transport'
+import { createPtyOutputProcessor } from './pty-output-processor'
 import { isSshSessionGoneError } from './pty-connection/pty-connect-limits'
-import { RuntimeRpcCallError, unwrapRuntimeRpcResult } from '../../runtime/runtime-rpc-client'
+import { RuntimeRpcCallError, unwrapRuntimeRpcResult } from '../../runtime/runtime-rpc-result'
 import {
   getRemoteRuntimePtyEnvironmentId,
   getRemoteRuntimeTerminalHandle,
   runtimeTerminalErrorMessage,
   toRemoteRuntimePtyId
 } from '../../runtime/runtime-terminal-stream'
-import {
-  getRemoteRuntimeTerminalMultiplexer,
-  REMOTE_TERMINAL_SNAPSHOT_TOO_LARGE,
-  type RemoteRuntimeMultiplexedTerminal,
-  type RemoteRuntimeSnapshotOutcome
-} from '../../runtime/remote-runtime-terminal-multiplexer'
+import { getRemoteRuntimeTerminalMultiplexer } from '../../runtime/remote-runtime-terminal-multiplexer'
+import { REMOTE_TERMINAL_SNAPSHOT_TOO_LARGE } from '../../runtime/remote-runtime-terminal-snapshot-state'
+import type {
+  RemoteRuntimeMultiplexedTerminal,
+  RemoteRuntimeSnapshotOutcome
+} from '../../runtime/remote-runtime-terminal-multiplexer-types'
 import {
   toRuntimeTerminalWorktreeSelector,
   toRuntimeWorktreeSelector
@@ -80,7 +80,10 @@ import {
 } from '@/runtime/agent-session-create-operation'
 import { replaceFitOverridePtyId, setFitOverride } from '@/lib/pane-manager/mobile-fit-overrides'
 import { replaceDriverPtyId, setDriverForPty } from '@/lib/pane-manager/mobile-driver-state'
-import { isWebTerminalSurfaceTabId, toHostSessionTabId } from '@/runtime/web-terminal-surface-id'
+import {
+  isWebTerminalSurfaceTabId,
+  toHostSessionTabId
+} from '../../../../shared/terminal-surface-id'
 import { listRemoteRuntimeSessionTabsAfterCurrentInFlight } from '@/runtime/remote-runtime-session-tabs-inflight'
 import { subscribeAcceptedWebSessionTerminalHandle } from '@/runtime/web-session-terminal-handle-events'
 import { hostSnapshotAffirmsWorktreeContents } from '@/runtime/host-session-snapshot-authority'

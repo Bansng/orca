@@ -1,6 +1,6 @@
 import type { NotificationWorkspaceOwner } from '../../../../shared/notification-source'
 import type { AgentAttentionUnreadReason } from '@/attention/agent-attention-contract'
-import type { PtyTransport } from './pty-transport'
+import type { PtyTransport, PtyTransportRecoveryState } from './pty-transport-types'
 import type { SessionRestoredBannerReason } from './session-restored-banner-pane-state'
 import type { ReplayingPanesRef } from './replay-guard'
 import type { RestoredViewportBlankingPanesRef } from './terminal-restored-viewport'
@@ -16,7 +16,6 @@ import type {
   SleepingAgentLaunchConfig
 } from '../../../../shared/agent-session-resume'
 import type { TerminalKittyKeyboardModeTracker } from '../../../../shared/terminal-kitty-keyboard-mode-tracker'
-import type { PtyTransportRecoveryState } from './pty-transport-types'
 import type { SessionOptionValue } from '../../../../shared/native-chat-session-options'
 import type { PtyPreconnectInputEntry } from './pty-preconnect-input-buffer'
 

@@ -6,8 +6,9 @@ import { getRepoIdFromWorktreeId } from '../../../../shared/worktree/id'
 import { getWorktreeIdFromVisitKey, getWorktreeVisitKey } from '@/lib/worktree-visit-recency'
 import { omitSparsePresetsForRepos } from '../slices/sparse-presets'
 import { repoMatchesHostIdentity } from '../slices/repo-host-identity'
-import { callRuntimeRpc, hasRuntimeRpcErrorCode } from '../../runtime/runtime-rpc-client'
-import { runtimeTargetForOwnerHostId } from '../../runtime/runtime-client-target'
+import { callRuntimeRpc } from '../../runtime/runtime-rpc-client'
+import { hasRuntimeRpcErrorCode } from '../../runtime/runtime-rpc-result'
+import { ipcOrRuntimeTargetForHostId } from '../../runtime/runtime-client-target'
 import { toRuntimeWorktreeSelector } from '../../runtime/runtime-worktree-selector'
 import { translate } from '@/i18n/i18n'
 import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host'
@@ -96,7 +97,7 @@ export function createRepoRemovalActions(
         )
         const vmServerDestroyed = vmDestroy !== false && (await vmDestroy)
         // Why: derive the target from the owner row's host so an SSH host removal never routes repo.rm to the focused runtime.
-        const target = runtimeTargetForOwnerHostId(ownerHostId)
+        const target = ipcOrRuntimeTargetForHostId(ownerHostId)
         if (!target) {
           throw new Error('The project host is unresolved. Refresh and retry.')
         }

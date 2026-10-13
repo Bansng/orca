@@ -39,6 +39,8 @@ export type DaemonPidFile = {
 
 export type DaemonProcessHandle = {
   mode?: 'degraded-new-pty-fallback'
+  /** Fresh terminals stay off this daemon until a new incarnation replaces it. */
+  quarantine?: 'host-image-severed'
   /** Set when the launcher kept a daemon some earlier app launch forked, rather than forking one. */
   adopted?: true
   releaseAdoptionLease?(): void

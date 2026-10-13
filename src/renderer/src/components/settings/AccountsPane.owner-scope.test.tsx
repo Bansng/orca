@@ -6,7 +6,7 @@ import type {
   ClaudeManagedAccountSummary,
   ClaudeRateLimitAccountsState
 } from '../../../../shared/managed-account-types'
-import type { RuntimeClientTarget } from '@/runtime/runtime-client-target'
+import type { RuntimeClientTarget } from '../../../../shared/runtime-client-target'
 import { AccountsPane } from './AccountsPane'
 import type { SettingsHostScope } from './settings-host-scope'
 

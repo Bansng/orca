@@ -14,6 +14,7 @@ export const NODE_RUNTIME_INCLUDE = [
   'src/main/ai-vault/session-scanner-unlimited-dedup.test.ts',
   // Electron main bridges streams with Node's implementation.
   'src/main/host/electron-http-client.test.ts',
+  'src/main/daemon/daemon-init-provider-installation.test.ts',
   'src/renderer/src/components/terminal-pane/pty-input-write-queue.test.ts',
   'src/renderer/src/lib/react-commit-cascade-observer.test.ts',
   'src/renderer/src/lib/react-commit-cascade-telemetry.test.ts',
@@ -43,6 +44,8 @@ export const NODE_RUNTIME_INCLUDE = [
   'src/main/agent-hooks/server-transport-interference.test.ts',
   'src/main/plugins/plugin-worker-supervision.integration.test.ts',
   'src/main/usage/usage-scan-worker-event-loop.test.ts',
+  // Asserts Node's spawn-failure close signal and that a dead worker closes its children's pipes.
+  'src/main/worker-thread-child-process/worker-thread-child-process.test.ts',
   'src/main/computer/macos-native-provider-client.test.ts',
   'src/main/ai-vault-search/session-search-schema.test.ts',
   'src/main/ai-vault-search/session-search-fts5-contract.test.ts',
@@ -69,6 +72,8 @@ export const NODE_RUNTIME_INCLUDE = [
   'src/main/native-chat/agent-session-wire/structured-agent-session-status-feed.test.ts',
   'src/main/native-chat/agent-session-wire/structured-agent-session-status-feed-conversation-name.test.ts',
   'src/main/native-chat/agent-session-wire/structured-agent-session-status-first-input-identity.test.ts',
+  'src/main/native-chat/agent-session-wire/structured-agent-session-outgrown-child.test.ts',
+  'src/main/native-chat/agent-session-wire/structured-agent-session-permission-mode.test.ts',
   'src/main/native-chat/structured-chat-naming-command-first.test.ts',
   'src/main/native-chat/structured-chat-naming-status-hook.test.ts',
   'src/main/runtime/agent-session-conversation-name-store.test.ts',

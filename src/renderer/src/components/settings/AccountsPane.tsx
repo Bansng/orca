@@ -41,7 +41,7 @@ import {
 } from './provider-account-visibility'
 import { GrokAccountsSection } from './GrokAccountsSection'
 import { AntigravityAccountsSection } from './AntigravityAccountsSection'
-import type { RuntimeClientTarget } from '@/runtime/runtime-client-target'
+import type { RuntimeClientTarget } from '../../../../shared/runtime-client-target'
 import { runtimeTargetEnvironmentId } from '@/runtime/runtime-client-target'
 import { CursorAccountsSection } from './CursorAccountsSection'
 import { ZcodePlanAccountsSection } from './ZcodePlanAccountsSection'

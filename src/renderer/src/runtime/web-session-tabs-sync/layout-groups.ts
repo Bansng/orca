@@ -7,7 +7,7 @@ import type {
   MirroredEditorTab,
   TerminalSurface
 } from './state'
-import { toWebTerminalSurfaceTabId } from '../web-terminal-surface-id'
+import { toWebTerminalSurfaceTabId } from '../../../../shared/terminal-surface-id'
 import { clearHostSessionTabIdMappings, setHostSessionTabIdMapping } from './tracking-mappings'
 import { isWebSessionBrowserPlacementGroupReserved } from '../web-session-browser-placement'
 import { resolveWebSessionReorderedOrder } from '../web-session-reorder-intent'

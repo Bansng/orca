@@ -163,7 +163,13 @@ describe('CodexStructuredSessionAdapter.acquire', () => {
     expect(codex.connections[0].launch.cwd).toBe('/work/repo')
     expect(codex.connections[0].calls[0]).toEqual({
       method: 'thread/start',
-      params: { cwd: '/work/repo' }
+      // A chat with no mode asks, stated outright.
+      params: {
+        cwd: '/work/repo',
+        approvalPolicy: 'on-request',
+        sandbox: 'workspace-write',
+        approvalsReviewer: 'user'
+      }
     })
     expect(acquisition.process).toEqual({
       hostId: 'host-1',
@@ -583,7 +589,7 @@ describe('CodexStructuredSessionAdapter.dispatch', () => {
     ).toEqual({
       // Built without Codex's own words, so nothing is quoted and no detail is invented.
       state: 'rejected',
-      reason: 'The provider did not accept this message.',
+      reason: "Codex didn't accept this message.",
       rejection: { kind: 'providerRejected' }
     })
   })

@@ -1,5 +1,5 @@
 import type { AppState } from '@/store'
-import type { RuntimeClientTarget } from '@/runtime/runtime-client-target'
+import type { RuntimeClientTarget } from '../../../shared/runtime-client-target'
 import { parseRemoteRuntimePtyId } from '@/runtime/runtime-terminal-stream'
 import {
   getCodexSelectionLaneKey,

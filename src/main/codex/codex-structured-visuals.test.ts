@@ -18,13 +18,14 @@ import {
   CODEX_VISUALS_SETUP_BUDGET_MS,
   prepareCodexThreadForVisuals
 } from './codex-structured-visuals'
+import { codexStructuredPermissionPolicy } from './codex-structured-permission-policy'
 
 const VISUALS: NativeChatVisualsLaunch = {
   folder: '/state/native-chat-visuals/abc',
   skill: { pluginDir: '/app/native-chat-visuals', skillsRoot: '/app/native-chat-visuals/skills' }
 }
-const MANUAL = { approvalPolicy: 'on-request', sandbox: 'workspace-write' } as const
-const YOLO = { approvalPolicy: 'never', sandbox: 'danger-full-access' } as const
+const MANUAL = codexStructuredPermissionPolicy('ask')
+const YOLO = codexStructuredPermissionPolicy('full-access')
 
 type Call = { method: string; params?: Record<string, unknown>; timeoutMs?: number }
 
@@ -188,7 +189,6 @@ async function acquired(
       resolveCommand: () => 'codex',
       resolveLaunchArgs: () => [],
       resolveRollout: async () => null,
-      resolvePermissionPolicy: () => MANUAL,
       prepareVisuals: async () => launch.visuals ?? null
     })
   })

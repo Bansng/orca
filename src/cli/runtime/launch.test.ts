@@ -124,6 +124,20 @@ describe('serveOrcaApp', () => {
     )
   })
 
+  it('names what to run when this orca is not an Orca app (an SSH host server CLI)', () => {
+    delete process.env.ORCA_APP_EXECUTABLE
+    const previous = process.env.ELECTRON_RUN_AS_NODE
+    delete process.env.ELECTRON_RUN_AS_NODE
+    try {
+      expect(() => serveOrcaApp({ supervise: true })).toThrow(
+        /Install the Orca app on this machine/
+      )
+      expect(spawnMock).not.toHaveBeenCalled()
+    } finally {
+      restoreEnv('ELECTRON_RUN_AS_NODE', previous)
+    }
+  })
+
   it('launches an isolated profile with the keychain mocked, so serve is not blocked on it', async () => {
     const previousUserData = process.env.ORCA_E2E_USER_DATA_DIR
     const previousHome = process.env.ORCA_E2E_HOME_DIR

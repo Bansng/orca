@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getDefaultSettings } from '../../../shared/constants'
 import type { Worktree } from '../../../shared/worktree/types'
 import { resetWebRuntimeWakeTerminalRespawnForTests } from '@/runtime/web-runtime-wake-terminal-respawn'
-import { resetWebSessionTabsSnapshotFreshnessForTests } from '@/runtime/web-session-tabs-sync'
+import { resetWebSessionTabsSnapshotFreshnessForTests } from '@/runtime/web-session-tabs-sync/tracking-lifecycle'
 import { useAppStore } from '@/store'
 import { ensureWebRuntimeWorktreeTerminalAfterWake } from './web-runtime-worktree-terminal-after-wake'
 import { toast } from 'sonner'
@@ -117,6 +117,12 @@ describe('empty remote worktree activation', () => {
       })
     )
     expect(toast.error).not.toHaveBeenCalled()
+    // Why: drain the post-create snapshot refresh so it cannot land on the next test's bridge.
+    await vi.waitFor(() =>
+      expect(callRuntimeEnvironment).toHaveBeenCalledWith(
+        expect.objectContaining({ method: 'session.tabs.list' })
+      )
+    )
   })
 
   it('surfaces a failed host terminal request without retrying ambiguously', async () => {

@@ -60,9 +60,7 @@ function phoneTranscript(state: StructuredAgentSessionState) {
   })
   return {
     items,
-    messages: projectStructuredAgentSessionMessages(items, [], state.submissions, {
-      rejectedInPlace: false
-    })
+    messages: projectStructuredAgentSessionMessages(items, [], state.submissions)
   }
 }
 

@@ -47,10 +47,10 @@ import { clearHostLiveTerminalProbesForTests } from './host-live-terminal-probe'
 import {
   acceptReplayedWebSessionTabsSnapshot,
   _getWebSessionTabsTrackingCountsForTest,
-  resetWebSessionTabsSnapshotFreshnessForTests,
-  useWebSessionTabsSync,
-  WEB_SESSION_TABS_VISIBILITY_RESUME_STAGGER_MS
-} from './web-session-tabs-sync'
+  resetWebSessionTabsSnapshotFreshnessForTests
+} from './web-session-tabs-sync/tracking-lifecycle'
+import { useWebSessionTabsSync } from './web-session-tabs-sync/use-web-session-tabs-sync'
+import { WEB_SESSION_TABS_VISIBILITY_RESUME_STAGGER_MS } from './web-session-tabs-sync/state'
 import { clearRuntimeEnvironmentConnectionGenerationsForTests } from '@/store/slices/runtime-status'
 import {
   WINDOW_VISIBILITY_SUBSCRIPTION_PARK_DELAY_BACKOFF_LIMIT,

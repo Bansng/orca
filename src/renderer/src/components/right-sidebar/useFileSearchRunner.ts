@@ -10,7 +10,7 @@ import {
   createEmptyRuntimeFileSearchResult,
   getRuntimeFileSearchRejectedField
 } from '@/runtime/runtime-file-search-bounds'
-import { searchRuntimeFiles } from '@/runtime/runtime-file-client'
+import { searchRuntimeFiles } from '@/runtime/runtime-file-search-client'
 import { useAppStore } from '@/store'
 import {
   getExecutionHostIdForWorktree,
