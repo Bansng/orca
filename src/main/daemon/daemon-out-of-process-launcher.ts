@@ -18,6 +18,7 @@ import {
 import { getDaemonEntryPath, probeDaemonSocket as probeSocket } from './daemon-launch-paths'
 import { materializeRelocatedDaemonHost, pruneDaemonHostStaging } from './daemon-host-relocation'
 import { appImageDaemonIdentityPath, resolveAppImageDaemonLaunch } from './daemon-appimage-launch'
+import { resolveAppImageGenerationDaemonLaunch } from './daemon-appimage-generation-launch'
 import { launchMacDaemonFromStableBundle } from './macos-daemon-launchd'
 import { DAEMON_RECOVERY_BUDGET_MS, daemonRecoveryProbeTimeoutMs } from './daemon-recovery-budget'
 import { cleanupDaemonForProtocol } from './daemon-protocol-cleanup'
@@ -140,12 +141,19 @@ export function createOutOfProcessLauncher(
         appPath: environment.getAppPath(),
         appVersion: environment.getVersion()
       })
+      const generation = resolveAppImageGenerationDaemonLaunch({
+        entryPath,
+        appVersion: environment.getVersion()
+      })
+      const extractedGeneration = generation && 'launch' in generation ? generation.launch : null
       const preservedHandle = await prepareDaemonReplacement({
         runtimeDir,
         socketPath,
         tokenPath,
-        // Why: must equal the identity the own-mount daemon records, or a survivor never matches.
-        entryPath: appImage ? appImageDaemonIdentityPath(appImage) : entryPath,
+        // Why: must equal the identity the AppImage daemon records, or a survivor never matches.
+        entryPath:
+          extractedGeneration?.identityPath ??
+          (appImage ? appImageDaemonIdentityPath(appImage) : entryPath),
         recoveryDeadlineMs,
         attributedReason,
         releaseAdoptionClient,
@@ -178,6 +186,11 @@ export function createOutOfProcessLauncher(
       pruneDaemonHostStaging()
       // Fork the relocated entry when available; otherwise the install-dir entry.
       const forkEntryPath = relocatedHost ? relocatedHost.entryPath : entryPath
+      if (generation && 'fallback' in generation) {
+        console.warn(
+          `[daemon] AppImage daemon host fallback reason=${generation.fallback}: starting it on Electron, ${appImage ? 'from its own mount' : 'from the current mount'}`
+        )
+      }
       let launched
       try {
         launched = await launchDaemonChild({
@@ -185,6 +198,7 @@ export function createOutOfProcessLauncher(
           forkEntryPath,
           relocatedExecPath: relocatedHost?.execPath,
           appImage: relocatedHost ? undefined : (appImage ?? undefined),
+          extractedGeneration: extractedGeneration ?? undefined,
           userDataPath,
           socketPath,
           tokenPath,
