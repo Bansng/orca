@@ -24,6 +24,7 @@ import type { TranscriptMessageSink } from './session-transcript-consumers'
 import { sidecarUnchanged } from './session-sidecar-stat'
 import {
   enrichSessionFromSidecar,
+  reuseUnchangedSidecarSession,
   sidecarEnrichesWithoutReparse
 } from './session-scanner-sidecar-enrichment'
 import {
@@ -200,13 +201,16 @@ async function parseCachedInLane(
         platform,
         signal
       )
-      entry.session = enriched.session
-      entry.sidecar = enriched.refused ? 'unknown' : file.sidecar
-      storeSessionParseCacheEntry(file.path, entry)
+      const session = reuseUnchangedSidecarSession(entry.session, enriched.session)
+      storeSessionParseCacheEntry(file.path, {
+        ...entry,
+        session,
+        sidecar: enriched.refused ? 'unknown' : file.sidecar
+      })
       if (stats) {
         stats.reused++
       }
-      return entry.session
+      return session
     }
   }
 
@@ -263,12 +267,13 @@ async function reuseCachedSession(
   if (stats) {
     stats.reused++
   }
+  let session = entry.session
   // A zero-turn transcript usually never changes again, but its sibling
   // subagent dir (Claude `<session>/subagents/`, OMP's same-named artifact
   // dir) can gain files after the parent's last write (a still-running
   // subagent finishing). The mtime+size key can't see that, so refresh the
   // cheap directory count on reuse.
-  if (entry.session && entry.session.messageCount === 0) {
+  if (session && session.messageCount === 0) {
     const subagentTranscriptCount =
       candidate.agent === 'claude'
         ? await countSubagentTranscripts(candidate.file.path)
@@ -277,16 +282,16 @@ async function reuseCachedSession(
           : null
     if (
       subagentTranscriptCount !== null &&
-      subagentTranscriptCount !== entry.session.subagentTranscriptCount
+      subagentTranscriptCount !== session.subagentTranscriptCount
     ) {
-      entry.session = { ...entry.session, subagentTranscriptCount }
+      session = { ...session, subagentTranscriptCount }
     }
   }
   // Codex titles come from session_index.jsonl, which mtime+size can't see.
   // Remote counterpart: remote-session-scanner.ts's reusedCodexTitleRefresh.
-  if (entry.session && candidate.agent === 'codex') {
-    entry.session = await refreshCachedCodexTitle(candidate, entry.session)
+  if (session && candidate.agent === 'codex') {
+    session = await refreshCachedCodexTitle(candidate, session)
   }
-  storeSessionParseCacheEntry(candidate.file.path, entry)
-  return entry.session
+  storeSessionParseCacheEntry(candidate.file.path, { ...entry, session })
+  return session
 }

@@ -286,6 +286,16 @@ describe('the instant tab', () => {
     expect(runtime.published).toEqual([])
   })
 
+  it("follows a relaying desktop's stamped chat default over this host's own setting", async () => {
+    const chatOnHere = hostWithWindow({ settings: STRUCTURED_PREFERENCE })
+    await replayLaunch(chatOnHere, { nativeChatDefault: false }, CLI)
+    expect(chatOnHere.published).toHaveLength(1)
+
+    const chatOffHere = hostWithWindow()
+    await replayLaunch(chatOffHere, { nativeChatDefault: true }, CLI)
+    expect(chatOffHere.published).toEqual([])
+  })
+
   it('is not shown early to a phone that would read a listed tab as a started agent', async () => {
     const runtime = hostWithWindow()
 

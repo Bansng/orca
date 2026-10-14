@@ -7,6 +7,7 @@ import type { AppIdentity } from '../../shared/app-identity'
 import type { MarkdownDocument } from '../../shared/filesystem-entry-types'
 import type { FloatingTerminalCwdRequest } from '../../shared/ui-chrome-types'
 import { relaunchApp, runBeforeRelaunchCleanup } from '../app-relaunch'
+import { prepareWindowsAdministratorRestart } from '../windows/windows-administrator-restart'
 import { quitProcess } from '../startup/process-quit-request'
 import type { Store } from '../persistence'
 import { getDevInstanceIdentity } from '../startup/dev-instance-identity'
@@ -27,6 +28,7 @@ import { readMacKeyboardLayoutSnapshot } from './macos-keyboard-layout-snapshot'
 import { registerMacKeyboardLayoutChangeNotifications } from './macos-keyboard-layout-change-notifications'
 import { isProfileStateSaveDelayed } from '../startup/profile-state-save-delay'
 import { readCommandStdout, readKeyboardInputSourceId } from './macos-keyboard-input-source'
+import { getWindowsAdministratorStatus } from '../windows/windows-administrator-status'
 
 type RegisterAppHandlersOptions = {
   onBeforeRelaunch?: () => void | Promise<void>
@@ -109,6 +111,7 @@ export function registerAppHandlers(store: Store, options: RegisterAppHandlersOp
   registerRendererShutdownCheckpointHandler(store)
   registerMacKeyboardLayoutChangeNotifications()
   ipcMain.handle('app:isProfileStateSaveDelayed', isProfileStateSaveDelayed)
+  ipcMain.handle('app:getWindowsAdministratorStatus', getWindowsAdministratorStatus)
 
   ipcMain.handle('app:getFeatureWallAssetBaseUrl', (): string => getFeatureWallAssetBaseUrl())
 
@@ -167,6 +170,15 @@ export function registerAppHandlers(store: Store, options: RegisterAppHandlersOp
     await runBeforeRelaunchCleanup(options.onBeforeRelaunch)
     setTimeout(() => {
       relaunchApp('admin-restart')
+      quitProcess()
+    }, 150)
+  })
+
+  ipcMain.handle('app:restartAsAdministrator', async () => {
+    const relaunchOptions = prepareWindowsAdministratorRestart()
+    await runBeforeRelaunchCleanup(options.onBeforeRelaunch)
+    setTimeout(() => {
+      relaunchApp('windows-administrator', undefined, relaunchOptions)
       quitProcess()
     }, 150)
   })

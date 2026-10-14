@@ -560,6 +560,10 @@ module.exports = {
         from: 'native/windows-cli-launcher/.build/orca.exe',
         to: 'bin/orca.exe'
       },
+      {
+        from: 'native/windows-cli-launcher/.build/orca-administrator-restart.exe',
+        to: 'bin/orca-administrator-restart.exe'
+      },
       // Why resources/bin: SignPath signs every unsigned PE under win-unpacked, and the hook
       // installer copies this signed file into ~/.orca/agent-hooks (#20913).
       {

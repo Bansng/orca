@@ -1,7 +1,7 @@
 // @ts-nocheck -- mechanically split from OrcaRuntimeService; behavior is covered by AST equivalence and characterization tests.
 import { resolveStructuredCodexAccountKind } from './structured-agent-account-home'
 import { collectRuntimeWorktreeAgentSources } from './runtime-worktree-agent-sources'
-import { OrcaRuntimeWithStartTuiIdleVisibleReadProbe } from './orca-runtime-start-tui-idle-visible-read-probe'
+import { OrcaRuntimeWithStartTuiIdleVisibleReadProbe } from './terminal/wait/terminal-wait-visible-probe'
 import { DEFAULT_WORKTREE_PS_LIMIT } from './orca-runtime-postlude'
 import type { RuntimeWorktreePsResult } from '../../shared/runtime-types'
 import { buildRuntimeWorktreePsSummaries } from './runtime-worktree-ps-summaries'
@@ -142,6 +142,15 @@ export class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithStartTuiIdleVis
     return buildWorktreeListingPage(sorted, limit, this.listKnownExecutionHostIds())
   }
 
+  /** The agent's configured env, with the account a desktop that owns this host's accounts chose
+   *  laid over it, as its own launches here carry. */
+  protected structuredAgentLaunchEnv(agent: StructuredAgentId, settings) {
+    return {
+      ...resolveTuiAgentLaunchEnv(agent, settings.agentDefaultEnv),
+      ...this.accounts.hostLaunchEnvFor(agent)
+    }
+  }
+
   listRepos(): Repo[] {
     return this.store?.getRepos() ?? []
   }
@@ -205,8 +214,8 @@ export class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithStartTuiIdleVis
       // in a plain folder lands in the folder rather than failing to resolve.
       resolveWorkspacePath: async (workspaceId) =>
         (await this.resolveRuntimeFileTarget(`id:${workspaceId}`)).worktree.path,
-      resolveClaudeCommand: () =>
-        resolveStructuredAgentCommand('claude', this.requireStore().getSettings()),
+      resolveClaudeCommand: (options) =>
+        resolveStructuredAgentCommand('claude', this.requireStore().getSettings(), options),
       resolveCodexCommand: (options) =>
         resolveStructuredAgentCommand('codex', this.requireStore().getSettings(), options),
       resolveLaunchArgs: (agent) =>
@@ -233,7 +242,7 @@ export class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithStartTuiIdleVis
         ),
       resolveAgentLaunchEnv: (agent) =>
         isTuiAgent(agent)
-          ? resolveTuiAgentLaunchEnv(agent, this.requireStore().getSettings().agentDefaultEnv)
+          ? this.structuredAgentLaunchEnv(agent, this.requireStore().getSettings())
           : {},
       resolveAgentCommandSettings: () => this.requireStore().getSettings(),
       resolveCodexAccountKind: (home) =>

@@ -13,7 +13,7 @@ vi.mock('../startup/hydrate-shell-path', () => hydration)
 
 import { getAppEnvironment } from '../../shared/app-environment'
 import { hydrateShellPathForAgentDetection } from '../ipc/agent-detection-shell-path'
-import { installOrcadHostAdapters } from './orcad-entry'
+import { installOrcadHostAdapters } from './orcad-host-adapters'
 
 describe('orcad PATH hydration on a WSL guest', () => {
   const platform = process.platform

@@ -18,7 +18,10 @@ import {
 } from '../../../../shared/managed-orcad-execution-host'
 import type { RuntimeCompatVerdict } from '../../../../shared/protocol-compat'
 import type { SshConnectionState, SshConnectionStatus } from '../../../../shared/ssh-types'
-import type { PublicKnownRuntimeEnvironment } from '../../../../shared/runtime-environments'
+import {
+  isWslHostRuntimeEnvironment,
+  type PublicKnownRuntimeEnvironment
+} from '../../../../shared/runtime-environments'
 import type { RuntimeEnvironmentStatus } from '../../../../shared/runtime-host-status'
 import type { WslHostStatus } from '../../../../shared/wsl-host-types'
 import { translate } from '@/i18n/i18n'
@@ -88,7 +91,7 @@ export function buildSidebarHostOptions(args: {
   }
   const wslDistroByHostId = new Map<ExecutionHostId, { environmentId: string; distro: string }>()
   for (const environment of args.runtimeEnvironments ?? []) {
-    if (environment.orcadDeployment?.kind === 'wsl') {
+    if (isWslHostRuntimeEnvironment(environment)) {
       wslDistroByHostId.set(toRuntimeExecutionHostId(environment.id), {
         environmentId: environment.id,
         distro: environment.orcadDeployment.distro

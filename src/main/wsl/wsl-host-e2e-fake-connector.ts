@@ -78,6 +78,7 @@ export function createFakeWslHostConnector(
         fullVersion: 'e2e',
         pid: null,
         pairingOffer: config.pairingCode,
+        deferredUpdate: null,
         close: async () => {
           active.delete(key(distro))
         }

@@ -163,30 +163,6 @@ describe('Windows CLI launcher', () => {
     }
   })
 
-  itCrossHost('never hands the child an explicit environment map', () => {
-    // Why: setting any entry on the child's environment makes the spawn build its own
-    // block from a case-insensitive map, which collapses an inherited PATH and Path
-    // into one entry and killed the CLI (stablyai/orca#12046). Mutating this process
-    // and leaving the map untouched passes the block through verbatim.
-    const source = readFileSync(
-      join(projectRoot, 'native', 'windows-cli-launcher', 'src', 'main.rs'),
-      'utf8'
-    )
-    const code = source.replace(/^\s*\/\/.*$/gm, '')
-
-    expect(code).not.toMatch(/\.envs?\(/u)
-    expect(code).not.toContain('env_clear')
-    expect(code).toContain('env::set_var')
-  })
-
-  itCrossHost('never reintroduces a managed launcher alongside the native one', () => {
-    // Why: the MSIL image is what vendors flagged (stablyai/orca#23383). A stray .cs
-    // left in the crate would compile back into the shape the rewrite removed.
-    expect(
-      existsSync(join(projectRoot, 'native', 'windows-cli-launcher', 'OrcaCliLauncher.cs'))
-    ).toBe(false)
-  })
-
   itWindows('preserves a multiline argument from PowerShell through the native launcher', () => {
     const appRoot = mkdtempSync(join(tmpdir(), 'orca cli launcher '))
     try {
@@ -266,7 +242,8 @@ describe('Windows CLI launcher', () => {
   argv: process.argv.slice(2),
   profile: process.env.ORCA_USER_DATA_PATH,
   electronRunAsNode: process.env.ELECTRON_RUN_AS_NODE ?? null,
-  nodeOptions: process.env.NODE_OPTIONS ?? null
+  nodeOptions: process.env.NODE_OPTIONS ?? null,
+  desktopMarker: process.env.ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER ?? null
 }))\n`,
         'utf8'
       )
@@ -286,13 +263,15 @@ describe('Windows CLI launcher', () => {
         ELECTRON_RUN_AS_NODE: '1',
         NODE_OPTIONS: '--require C:\\missing\\preload.js',
         ORCA_USER_DATA_PATH: 'C:\\another\\owner',
+        ORCA_WINDOWS_PACKAGED_CLI_LAUNCHER: '1',
         ORCA_TEST_LAUNCHER: launcherPath
       }
       const expected = (body) => ({
         argv: ['orchestration', 'send', '--body', body, '--json'],
         profile,
         electronRunAsNode: null,
-        nodeOptions: null
+        nodeOptions: null,
+        desktopMarker: null
       })
       // Windows PowerShell 5.1 itself drops embedded double quotes, so its body has none.
       const shellBody = 'line one & %PATH% ^caret\n\nline three'

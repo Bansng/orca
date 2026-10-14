@@ -32,6 +32,21 @@ afterAll(() => {
 })
 
 describe('the mounted module loader', () => {
+  it('follows named reexports reached through the task foundation barrel', () => {
+    const modules = loaderOver({
+      'mobile-tasks-legacy-foundation.tsx': `export * from './mapping'`,
+      'mapping.ts': `export { run as search } from './operation'; export type { Missing } from './missing'`,
+      'operation.ts': `export const run = (query: string) => 'is:pr ' + query`
+    })
+    const foundation = modules.load<{ search: (query: string) => string }>(
+      'mobile/src/mobile-tasks-legacy-foundation.tsx'
+    )
+    expect(foundation.search('is:open')).toBe('is:pr is:open')
+    expect(() => modules.load('mobile/src/mobile-tasks-legacy-foundation.tsx').Missing).toThrow(
+      'Unmapped barrel export: Missing'
+    )
+  })
+
   it('reuses code without sharing exports, module state, mounting dependencies or effects', () => {
     const root = sourceTree({
       'state.ts': `

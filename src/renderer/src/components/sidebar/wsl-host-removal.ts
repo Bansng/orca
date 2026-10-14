@@ -2,7 +2,7 @@ import { toast } from 'sonner'
 import { toRuntimeExecutionHostId } from '../../../../shared/execution-host'
 import { translate } from '@/i18n/i18n'
 import { useAppStore } from '@/store'
-import { workspaceOwnerHostId } from '@/hooks/ipc-events/wsl-host-ipc-bridge'
+import { workspaceOwnerHostId } from '@/lib/workspace-row-owner-host'
 
 /**
  * Ends the host's terminals and Orca's server in its distro, drops the host's records, then

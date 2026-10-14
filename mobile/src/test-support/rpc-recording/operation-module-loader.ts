@@ -106,7 +106,19 @@ export function operationModuleLoader(
               if (
                 new RegExp(`export (?:async )?(?:function|const|class) ${String(key)}\\b`).test(
                   text
-                )
+                ) ||
+                ts
+                  .createSourceFile(target, text, ts.ScriptTarget.Latest, true)
+                  .statements.some(
+                    (entry) =>
+                      ts.isExportDeclaration(entry) &&
+                      !entry.isTypeOnly &&
+                      entry.exportClause &&
+                      ts.isNamedExports(entry.exportClause) &&
+                      entry.exportClause.elements.some(
+                        (binding) => binding.name.text === key && !binding.isTypeOnly
+                      )
+                  )
               ) {
                 return load(target)[String(key)]
               }

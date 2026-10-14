@@ -339,6 +339,29 @@ describe('remote runtime terminal split authority', () => {
     expect(siblingSurfaces.every((tab) => tab.parentLayout?.root?.type === 'split')).toBe(true)
   })
 
+  it("gives a split the host's account env, under the caller's own env", async () => {
+    const harness = createHarness()
+    harness.runtime.setHostAccountLaunchEnv({
+      wslDistro: 'Ubuntu',
+      claude: {},
+      terminal: { CODEX_HOME: '/home/u/.orca/codex/b', ORCA_CLAUDE_PROFILE_POINTER: '~/p' }
+    })
+
+    await harness.runtime.splitTerminal(harness.handle, {
+      direction: 'vertical',
+      env: { ORCA_CLAUDE_PROFILE_POINTER: '~/caller' }
+    })
+
+    expect(harness.spawn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        env: expect.objectContaining({
+          CODEX_HOME: '/home/u/.orca/codex/b',
+          ORCA_CLAUDE_PROFILE_POINTER: '~/caller'
+        })
+      })
+    )
+  })
+
   it('rejects an unowned split source before spawning a PTY', async () => {
     const harness = createHarness(false)
 

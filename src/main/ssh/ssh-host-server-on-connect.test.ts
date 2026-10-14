@@ -63,6 +63,30 @@ describe('which server an SSH host runs on connect', () => {
     expect(withState.progress).toHaveBeenCalledWith(target, 'converting')
   })
 
+  it('checks for an update right after pairing with a server another version runs', async () => {
+    const d = deps({
+      isEmptyHost: () => true,
+      deploy: vi.fn(async () => ({
+        outcome: 'already-current' as const,
+        // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the orchestrator reads only the environment id.
+        environment: { id: 'env-1' } as never,
+        activeVersion: '0.9'
+      })),
+      autoUpdate: vi.fn(async () => ({
+        outcome: 'deferred' as const,
+        code: 'orcad_update_terminals_running',
+        reason: '3 terminals are running'
+      }))
+    })
+    await expect(resolveHostServerOnConnect(target, d)).resolves.toEqual({
+      route: 'managed',
+      environmentId: 'env-1',
+      update: { state: 'deferred', detail: '3 terminals are running' }
+    })
+    expect(d.autoUpdate).toHaveBeenCalledWith('env-1', expect.anything())
+    expect(d.abandonDeploy).not.toHaveBeenCalled()
+  })
+
   it('keeps the relay while relay terminals are live or unproven', async () => {
     for (const verdict of ['live', 'unverifiable'] as const) {
       const d = deps({ relayTerminals: async () => ({ verdict, count: 2 }) })

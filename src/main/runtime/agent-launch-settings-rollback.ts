@@ -6,11 +6,18 @@ export function agentLaunchSettingsRollbackUpdates(
   current: AgentLaunchSettingsSource,
   updates: AgentLaunchSettingsSource
 ): AgentLaunchSettingsSource {
+  // A newer default choice supersedes both fields, including None → Blank with the same agent.
+  const defaultUnchanged =
+    Object.is(current.defaultTuiAgent, applied.defaultTuiAgent) &&
+    (!Object.hasOwn(updates, 'newWorkspaceSetupOnly') ||
+      Object.is(current.newWorkspaceSetupOnly, applied.newWorkspaceSetupOnly))
   // A newer full-field write supersedes this mutation and must survive its rollback.
   return {
-    ...(Object.hasOwn(updates, 'defaultTuiAgent') &&
-    Object.is(current.defaultTuiAgent, applied.defaultTuiAgent)
+    ...(Object.hasOwn(updates, 'defaultTuiAgent') && defaultUnchanged
       ? { defaultTuiAgent: before.defaultTuiAgent ?? null }
+      : {}),
+    ...(Object.hasOwn(updates, 'newWorkspaceSetupOnly') && defaultUnchanged
+      ? { newWorkspaceSetupOnly: before.newWorkspaceSetupOnly === true }
       : {}),
     ...(Object.hasOwn(updates, 'disabledTuiAgents') &&
     Object.is(current.disabledTuiAgents, applied.disabledTuiAgents)

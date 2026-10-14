@@ -23,7 +23,7 @@ vi.mock('@/store', () => ({
     })
   }
 }))
-vi.mock('@/hooks/ipc-events/wsl-host-ipc-bridge', () => ({
+vi.mock('@/lib/workspace-row-owner-host', () => ({
   workspaceOwnerHostId: () => mocks.workspace.ownerHostId
 }))
 

@@ -74,7 +74,7 @@ import type { JournalItemAppender } from './journal-item-appender'
 import type { JournalLifecycleBatchAppender } from './journal-lifecycle-batch-appender'
 import type { JournalStepWriter } from './journal-step-writer'
 import type { JournalStopMarks } from './journal-stop-marks'
-import { JournalContextController } from './journal-context-controller'
+import type { JournalContextController } from './journal-context-controller'
 import type { JournalStopAcceptor } from './journal-stop-acceptance'
 
 export { AgentSessionJournalError } from './journal-write-guards'
@@ -146,11 +146,7 @@ export class AgentSessionJournal {
     this.stopMarks = collaborators.stopMarks
     this.stops = collaborators.stops
     this.restore = collaborators.restore
-    this.context = new JournalContextController({
-      state: () => this.state,
-      writer: this.rowWriter,
-      cards: this.queuedMessages
-    })
+    this.context = collaborators.context
   }
 
   get epoch(): string {
@@ -215,6 +211,10 @@ export class AgentSessionJournal {
   /** One reduced item's body by its journal key, for a writer revising a row it can name. */
   itemBody = (itemId: string): AgentJournalItemBody | null =>
     this.state.items.get(itemId)?.body ?? null
+
+  /** Host-only: the stopped messages each handed-over send carried, by its client message id. */
+  stoppedHistoryCarried = (): ReadonlyMap<string, readonly string[]> =>
+    this.state.stoppedHistoryCarried
 
   /** One reduced item with its attribution, for a writer that needs the turn a row joined. */
   item = (itemId: string): AgentJournalRenderItem | null => this.state.items.get(itemId) ?? null

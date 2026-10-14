@@ -7,6 +7,7 @@ import type { SourceControlAiActionDefaults } from '../../shared/source-control-
 export type RuntimeClientSettings = Pick<
   GlobalSettings,
   | 'defaultTuiAgent'
+  | 'newWorkspaceSetupOnly'
   | 'disabledTuiAgents'
   | 'agentCmdOverrides'
   | 'agentDefaultArgs'

@@ -6,6 +6,7 @@ import {
   resolveEnvironment
 } from '../../shared/runtime-environment-store'
 import {
+  isWslHostRuntimeEnvironment,
   redactRuntimeEnvironment,
   type PublicKnownRuntimeEnvironment
 } from '../../shared/runtime-environments'
@@ -126,7 +127,7 @@ export function registerRuntimeEnvironmentConnectivityHandlers({
       }
       // A closed gate leaves persisted WSL hosts untouched on disk.
       assertWslHostReachable(environment)
-      const wsl = environment.orcadDeployment?.kind === 'wsl' ? getWslHostService() : null
+      const wsl = isWslHostRuntimeEnvironment(environment) ? getWslHostService() : null
       if (wsl) {
         // Also releases the distro's holder and drops the WSL record.
         return wsl
@@ -161,7 +162,7 @@ export function registerRuntimeEnvironmentConnectivityHandlers({
       assertWslHostReachable(environment)
       clearRuntimeEnvironmentManualDisconnect(environment.id)
       clearSshCredentialDeclinedForEnvironment(environment)
-      if (environment.orcadDeployment?.kind === 'wsl') {
+      if (isWslHostRuntimeEnvironment(environment)) {
         // An explicit connect may boot the distro.
         await getWslHostService()?.connect(environment.id)
       }

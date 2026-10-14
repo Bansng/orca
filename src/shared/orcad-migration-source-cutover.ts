@@ -7,6 +7,7 @@ import {
   parseOrcadMigrationManifest,
   type OrcadMigrationManifest
 } from './orcad-migration-manifest'
+import { isOrcadMigrationLocalWslSource } from './orcad-migration-source-kind'
 
 export const ORCAD_MIGRATION_SOURCE_CUTOVER_VERSION = 1
 export const MAX_ORCAD_MIGRATION_SOURCE_CUTOVERS = 4
@@ -64,11 +65,13 @@ export function isRetainedOrcadMigrationSourceCutover(
 export function parseOrcadMigrationSourceCutover(value: unknown): OrcadMigrationSourceCutover {
   const record = CutoverRecordSchema.parse(value)
   const manifest = parseOrcadMigrationManifest(record.manifest)
+  // An SSH journal binds an SSH manifest; a WSL manifest here is a mismatch, never a fallback.
+  const source = isOrcadMigrationLocalWslSource(manifest.source) ? null : manifest.source
   if (
     manifest.migrationId !== record.migrationId ||
     manifest.manifestSha256 !== record.manifestSha256 ||
-    manifest.source.sshTargetId !== record.sshTargetId ||
-    manifest.source.sshTargetGeneration !== record.sshTargetGeneration ||
+    source?.sshTargetId !== record.sshTargetId ||
+    source.sshTargetGeneration !== record.sshTargetGeneration ||
     manifest.destinationEnvironmentId !== record.destinationEnvironmentId
   ) {
     throw new Error('orcad_migration_cutover_binding_mismatch')

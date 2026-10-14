@@ -42,15 +42,14 @@ import { agentSessionMutationAdmitsNow } from './structured-agent-session-mutati
 import { runQueueableStructuredAgentSessionSend } from './structured-agent-session-queued-send'
 import { cancelStructuredAgentSessionPrompt } from './structured-agent-session-prompt-cancel'
 import { mutateWithChatStop } from './structured-agent-session-chat-stop'
-import { performSetOption } from './structured-agent-session-turns-options'
 export type { StructuredAgentSessionMutationContext } from './structured-agent-session-mutation-context'
 import type { StructuredAgentSessionCaller } from './structured-agent-session-host-types'
 import {
   readStructuredAgentSessionOptions,
   IN_PROCESS_OPTIONS_READER,
-  recordStructuredAgentSessionOptionIntent,
   type StructuredAgentSessionOptionsReader
 } from './structured-agent-session-options-read'
+import { writeStructuredAgentSessionOption } from './structured-agent-session-message-options'
 
 export function sendStructuredAgentSessionTurn(
   context: StructuredAgentSessionMutationContext,
@@ -60,6 +59,7 @@ export function sendStructuredAgentSessionTurn(
     body: AgentJournalMessageItem
     retryUnknown?: true
     delivery?: 'queue-if-active'
+    options?: Readonly<Record<string, string>>
     /** Host-local, set only by the client-facing `agentSession.send` RPC (the
      *  renderer's launch prompt included): recorded as the submission's `client`
      *  origin, so a restart or a close keeps it as a card if it never reached the
@@ -210,20 +210,7 @@ export async function setStructuredAgentSessionOption(
       get conversationWrite() {
         return atRest() ? (true as const) : undefined
       },
-      run: async (ctx) => {
-        if (atRest()) {
-          return recordStructuredAgentSessionOptionIntent(context.deps, ctx, params)
-        }
-        // Held where a start is, so a close, a Stop admitted now or quit ends the wait from outside.
-        const wait = context.acquireAborts.begin(params.envelope.sessionId)
-        try {
-          return await performSetOption(ctx, params, wait.signal)
-        } finally {
-          wait.end()
-          // Whatever the write's outcome, the child may hold what it asked for now.
-          context.optionRevisions.advance(params.envelope.sessionId)
-        }
-      }
+      run: (ctx) => writeStructuredAgentSessionOption(context, ctx, params)
     },
     openForProviderWrite(context, params.envelope)
   )

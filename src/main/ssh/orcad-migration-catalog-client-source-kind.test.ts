@@ -56,11 +56,17 @@ function sshManifest(): OrcadMigrationManifest {
   return { ...unsigned, manifestSha256: computeOrcadMigrationManifestSha256(unsigned) }
 }
 
-/** A future kind as the wire carries it; this build's types know only the SSH source. */
+/** A WSL source, or any other `kind` as a newer or confused peer could put on the wire. */
 function manifestOfKind(kind: string): OrcadMigrationManifest {
-  const base = sshManifest()
-  const source = { ...base.source, kind }
-  return { ...base, source }
+  const source: OrcadMigrationManifest['source'] = {
+    kind: 'local-wsl',
+    distro: 'Ubuntu',
+    scopeRepoIds: [],
+    scopeFolderWorkspaceIds: [],
+    generation: 1
+  }
+  Object.assign(source, { kind })
+  return { ...sshManifest(), source }
 }
 
 const pairingCode = encodePairingOffer({

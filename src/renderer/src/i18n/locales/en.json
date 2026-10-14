@@ -203,7 +203,41 @@
       "optionLayoutAlt": "ABC or U.S. — Option sends Alt/Esc sequences",
       "optionLayoutCompose": "layout uses Option to compose characters like @, €, [, ]",
       "optionLayoutUnknown": "unknown layout — Option composes characters (safe default)",
-      "optionShortcutHint": "Choose Both for Option shortcuts, Off for accents and symbols, or Left/Right to use one Option key for each."
+      "optionShortcutHint": "Choose Both for Option shortcuts, Off for accents and symbols, or Left/Right to use one Option key for each.",
+      "windows": {
+        "checkingAdministrator": "Checking…",
+        "unknownAdministrator": "Unable to determine",
+        "administratorStatus": "Administrator",
+        "standardStatus": "Standard user",
+        "keywordAdmin": "admin",
+        "keywordAdministrator": "administrator",
+        "keywordElevated": "elevated",
+        "keywordPermissions": "permissions",
+        "keywordRestart": "restart",
+        "keywordUac": "uac",
+        "returnStandardHelp": "Standard mode guide",
+        "runAdministratorHelp": "Administrator guide",
+        "restartAdministrator": "Restart as administrator",
+        "administratorLabel": "Administrator mode",
+        "administratorScope": "Permissions for the Orca app. Existing terminals may differ.",
+        "confirmAdministratorRestart": "Restart as administrator?",
+        "administratorRestartConsequences": "Save your work first. After approval, terminals and agents on the current local terminal host close. Restored tabs open new administrator shells.",
+        "administratorDialogScope": "This changes permissions for the whole app. SSH and WSL keep their own permissions.",
+        "administratorPromptCancellation": "Canceling Windows’ prompt reopens Orca with its retained terminals. SSH and WSL permissions stay controlled on their hosts.",
+        "closeLocalSessions": "Save your work, close all local terminal sessions, then exit Orca.",
+        "launchStandard": "Open Orca normally from the Windows Start menu.",
+        "launchAdministrator": "In the Windows Start menu, right-click Orca and choose Run as administrator. Approve the Windows prompt using your usual account.",
+        "retainedTerminalPermissions": "If new terminals still use the previous permissions, open Manage Sessions and choose Restart daemon. This closes local terminals and their running commands.",
+        "administratorRestartFailed": "Orca could not restart. Try again or use the manual instructions.",
+        "manualAdministratorHelp": "Manual instructions",
+        "administratorDocumentation": "Read the guide",
+        "cancelAdministratorRestart": "Cancel",
+        "closeAdministratorHelp": "Close",
+        "restartingAdministrator": "Restarting…",
+        "openManageSessions": "Open Manage Sessions",
+        "administratorSearchDescription": "See Orca’s Windows permissions or restart with administrator approval.",
+        "administratorApproval": "Windows will ask for approval. Use your usual account."
+      }
     },
     "appearance": {
       "language": {
@@ -319,7 +353,19 @@
       "codexSharedServerWarning": {
         "title": "Warn when a Codex tab shares a server",
         "description": "Shows a notice on a Codex you started yourself when it shares a server with other tabs, because its agent status may be wrong."
-      }
+      },
+      "environmentName": "Environment variable name",
+      "environmentValue": "Value for {{name}}",
+      "savedEnvironment": "Saved value · enter to replace",
+      "newEnvironment": "Value",
+      "removeEnvironment": "Remove",
+      "loadingHost": "Loading agent settings…",
+      "updateHost": "Update this server to edit its agent launch settings.",
+      "readFailed": "Couldn’t read agent settings. Check the host connection and try again.",
+      "saveFailed": "Couldn’t save agent settings. Check the host connection and try again.",
+      "hostDefaults": "Defaults for new agents on the selected host.",
+      "save": "Save",
+      "clearDefault": "Clear default agent"
     },
     "followSymlinkedDirectoriesKeywords": {
       "symlink": "symlink",
@@ -422,7 +468,12 @@
     "taskUrl": {
       "loadingHint": "Loading {{value0}}…",
       "createHint": "Create worktree from {{value0}}"
-    }
+    },
+    "tasksHeader": "Tasks",
+    "taskCreate": "Create workspace",
+    "taskSearchLoading": "Searching tasks…",
+    "taskSearchFailed": "Some task sources could not be searched",
+    "taskSearchRetry": "Retry"
   },
   "auto": {
     "App": {
@@ -1099,6 +1150,7 @@
               "undecryptableUnknown": "{{value0}} cookies could not be decrypted and were skipped. Close the source browser completely and try the import again.",
               "unrecognizedWarning": "The cookie import finished with a warning this version of Orca does not recognize. Update Orca to see the details, then check this profile before relying on its cookies.",
               "undecryptableUnrecognizedReason": "{{value0}} cookies could not be decrypted and were skipped for a reason this version of Orca does not recognize. Update Orca to see the details, then try the import again.",
+              "partitionSkippedBreakdown": "Cookies with unreadable site partitions: {{value0}}. Related cookies left unimported to protect existing sessions: {{value1}}. Existing cookies for these sites were left unchanged. Check these sites in this profile before signing in again.",
               "partitionSkipped": "{{value0}} cookies were not imported because their site-partition could not be read. Sign in to those sites again in Orca.",
               "locationClientHosted": "Read from this device and stored here for the {{value0}} workspace.",
               "locationRemoteHost": "Read from browsers on {{value0}} and stored there.",
@@ -1174,6 +1226,10 @@
             }
           }
         }
+      },
+      "aiVaultResumeRefusal": {
+        "openInChat": "This {{value0}} conversation is open in a chat. Refresh Session History to open it.",
+        "ownershipUnknown": "Orca could not confirm who owns this {{value0}} conversation. Refresh Session History and try again."
       }
     },
     "hooks": {
@@ -1832,7 +1888,6 @@
         "f0470c7383": "Advanced",
         "ba64270bdb": "Configure agents",
         "ab63f25397": "Open agent settings",
-        "01d1e8f601": "Agent",
         "0c5d6a479c": "[Optional]",
         "b5a0796911": "Connect",
         "dccd26d4e4": "Choose project",
@@ -1904,8 +1959,7 @@
       },
       "NewWorkspaceComposerModal": {
         "createWorktree": "Create worktree",
-        "createWorkspace": "Create workspace",
-        "fa90f739a5": "Choose the project, workspace name, and agent before creating the workspace."
+        "createWorkspace": "Create workspace"
       },
       "PullRequestPage": {
         "2560588245": "Failed to request reviewer",
@@ -2483,6 +2537,12 @@
         "linearFetchMore": "Fetch more",
         "jiraSortAscending": "ascending",
         "jiraSortDescending": "descending",
+        "jiraColumnsPicker": "Columns",
+        "jiraColumnParent": "Parent",
+        "jiraColumnSprint": "Sprint",
+        "jiraColumnStoryPoints": "Points",
+        "jiraColumnOriginalEstimate": "Estimate",
+        "jiraColumnRemainingEstimate": "Remaining",
         "jiraSortBy": "Sort by",
         "jiraToggleSortDirection": "Sort {{value0}}",
         "75a38d7df8": "GitHub data is temporarily unavailable. Its API may be down, rate-limited, or unreachable. Please try again shortly.",
@@ -2499,7 +2559,8 @@
         "linearModeHasWorktreeTooltip": "Linear tickets linked to an Orca workspace",
         "linearEmptyHasWorktree": "No Linear tickets are linked to an Orca workspace yet. Start work from a Linear issue to see it here.",
         "linearOpenAttachedWorkspace": "Open workspace attached to {{value0}}",
-        "linearWorktreesColumn": "Workspaces"
+        "linearWorktreesColumn": "Workspaces",
+        "jiraBoardEmptyColumn": "No issues"
       },
       "Terminal": {
         "73768427cf": "Close",
@@ -2620,8 +2681,8 @@
         "repoGroupBadge": "Repo group",
         "pluginCommandFailed": "Could not run the plugin command.",
         "recentChatsTerminalsHeader": "Recent Chats & Terminals",
-        "27f10cca63": "Search chats, terminals, workspaces, settings, and actions...",
-        "2770f02910": "Search chats, terminals, workspaces, settings, and actions",
+        "27f10cca63": "Search chats, terminals, workspaces, tasks, settings, and actions...",
+        "2770f02910": "Search chats, terminals, workspaces, tasks, settings, and actions",
         "lastActiveTime": "Last active {{value0}} ago"
       },
       "github": {
@@ -3614,7 +3675,8 @@
             "sessionQueued": "Session queued",
             "openSupportedWorkspace": "Open a workspace before resuming a session.",
             "sessionHostMismatchUnsupported": "This session belongs to a different host. Drop it onto a workspace on the same host.",
-            "localSessionSshWorkspaceUnsupported": "This session's history is stored on this machine, so it can't resume in an SSH workspace. Drop it onto a local workspace instead."
+            "localSessionSshWorkspaceUnsupported": "This session's history is stored on this machine, so it can't resume in an SSH workspace. Drop it onto a local workspace instead.",
+            "oldPayload": "This session was dragged from an older Orca window. Resume it from Session History instead."
           },
           "TabGroupDropOverlay": {
             "paneColumnLabel": "New split"
@@ -7042,7 +7104,6 @@
           "remoteDetectionFailed": "Couldn’t detect installed agents. Check the host connection and try again.",
           "retryDetection": "Retry",
           "02e0143be5": "Installed",
-          "110b74b022": "No agent (blank terminal)",
           "92033495ff": "Auto",
           "9b175d0f5e": "Pre-selected agent when opening a new workspace.",
           "385212c7a1": "Default Agent",
@@ -7065,7 +7126,6 @@
           "959b67385b": "Set default",
           "24e032fa34": "Default",
           "5f986a9b92": "Set as default",
-          "d7625cf8b2": "Default agent",
           "cfb3f35775": "Arguments",
           "6f99bf5dd0": "No default arguments",
           "8fbe1f37c1": "Environment",
@@ -7777,7 +7837,11 @@
           "compareAgainstUpstreamDescription": "Choose which base Source Control uses by default for committed-change comparisons. Branch upstream follows the current branch automatically and falls back to the repository default branch when no upstream exists. You can still change the compare base per worktree from that worktree's Git panel. Pull Request and rebase targets don't change.",
           "compareBaseRepositoryDefault": "Repository default",
           "compareBaseBranchUpstream": "Branch upstream",
-          "refreshLocalBaseDescription": "When you create a workspace, Orca refreshes the remote base and safely fast-forwards your matching local branch, such as <mainBranch>main</mainBranch> or <masterBranch>master</masterBranch>. This keeps commands like <diffCommand>git diff main...HEAD</diffCommand> from comparing against stale history. Orca skips the update if that branch has uncommitted changes or local-only commits."
+          "refreshLocalBaseDescription": "When you create a workspace, Orca refreshes the remote base and safely fast-forwards your matching local branch, such as <mainBranch>main</mainBranch> or <masterBranch>master</masterBranch>. This keeps commands like <diffCommand>git diff main...HEAD</diffCommand> from comparing against stale history. Orca skips the update if that branch has uncommitted changes or local-only commits.",
+          "jiraIssueKeyCasingTitle": "Jira Key Casing",
+          "jiraIssueKeyCasingDescription": "Casing of the Jira issue key in the workspace and branch names Orca suggests for new Jira-linked workspaces, such as PROJ-123-fix-login instead of proj-123-fix-login. Existing workspaces and names you type are never changed.",
+          "jiraIssueKeyCasingLowercase": "Lowercase",
+          "jiraIssueKeyCasingPreserve": "Uppercase key"
         },
         "HiddenExperimentalGroup": {
           "7c4e18d2f6": "Arms the bold-glitch capture gestures on this machine: {{samplingShortcut}} starts a sampling burst; {{captureShortcut}} captures pane evidence to disk.",
@@ -10263,7 +10327,13 @@
             "localChanges": "local changes",
             "originMaster": "origin/master",
             "committedChanges": "committed changes",
-            "diffBase": "diff base"
+            "diffBase": "diff base",
+            "jiraIssueKeyCasingTitle": "Jira Key Casing",
+            "jiraIssueKeyCasingDescription": "Casing of the Jira issue key in the workspace and branch names Orca suggests for new Jira-linked workspaces, such as PROJ-123-fix-login instead of proj-123-fix-login. Existing workspaces and names you type are never changed.",
+            "jira": "jira",
+            "issueKey": "issue key",
+            "uppercase": "uppercase",
+            "lowercase": "lowercase"
           }
         },
         "input": {
@@ -12757,6 +12827,7 @@
           "add": "Add WSL distro",
           "connect": "Connect",
           "remove": "Remove",
+          "forceUpdate": "Force update",
           "turnOn": "Turn on in Experimental"
         }
       },
@@ -17991,6 +18062,23 @@
         "resuming": "Resuming automatically after the restart.",
         "resumed": "Resumed automatically after the restart.",
         "changeInSettings": "Change in Settings"
+      },
+      "TaskPageJiraSavedFilters": {
+        "6c381858a1": "Saved filters",
+        "d14121662d": "No saved filters yet.",
+        "af0dd8c528": "Edit {{value0}}",
+        "bae9bd87bf": "You can save up to {{value0}} filters.",
+        "85506127a5": "Save current filter",
+        "7aef259c28": "Edit Jira filter",
+        "4f0e55d2e5": "Save Jira filter",
+        "466c1b12ce": "Give this JQL query a name for quick access.",
+        "e4c2f52972": "Name",
+        "0ab71bb840": "A saved filter with this name already exists.",
+        "42ce360813": "JQL",
+        "7b21c59a26": "Delete filter",
+        "a62f9db53d": "Cancel",
+        "c77189bc0c": "Update filter",
+        "19af906d12": "Save filter"
       }
     },
     "i18n": {
@@ -18371,7 +18459,6 @@
         "fastMode": "Fast mode",
         "speed": "Speed",
         "thinking": "Thinking",
-        "options": "Options",
         "sessionOptions": "Session options",
         "chooseInAgentPicker": "Choose in agent picker…",
         "searchModels": "Search models…",
@@ -18419,7 +18506,12 @@
         "permissionFullAccessCodexDescription": "Never asks; can edit any file and use the network",
         "permissionFullAccessSharedDescription": "Never asks before edits or commands",
         "pasteFailed": "Paste failed.",
-        "commandAttachmentsUnsupported": "Remove attachments before using a chat-session command."
+        "commandAttachmentsUnsupported": "Remove attachments before using a chat-session command.",
+        "optionValueShort": {
+          "minimal": "Min",
+          "medium": "Med",
+          "xhigh": "XHigh"
+        }
       },
       "tool": {
         "exitCode": "exit {{value0}}",
@@ -19183,6 +19275,15 @@
     "agentChildRow": {
       "ended": "Ended"
     },
+    "jiraIssueTitleField": {
+      "generate": "Generate title from description",
+      "stop": "Stop generating title",
+      "canceled": "Generation canceled.",
+      "webUnavailable": "Jira title generation is unavailable in the web client.",
+      "hostUpdateRequired": "Generating Jira titles requires a newer Orca server. Update the Jira connection’s host and try again.",
+      "generating": "Generating title. Click to stop.",
+      "failed": "Failed to generate a summary from the description."
+    },
     "markdown-callout": {
       "note": "Note",
       "tip": "Tip",
@@ -19192,6 +19293,16 @@
     },
     "automations": {
       "runTerminalUnavailable": "Run terminal is unavailable."
+    },
+    "agentCombobox": {
+      "clearSelection": "Clear agent selection"
+    },
+    "newWorkspace": {
+      "agentOptional": "Agent [Optional]",
+      "createDescription": "Choose the project and workspace name. Select an agent if you want to start one."
+    },
+    "JiraIssueWorkspace": {
+      "pendingChange": "Another issue change is in progress."
     }
   },
   "dashboardPopout": {
@@ -19526,7 +19637,8 @@
     }
   },
   "common": {
-    "retry": "Retry"
+    "retry": "Retry",
+    "cancel": "Cancel"
   },
   "terminal": {
     "sessionSaveFailure": {
@@ -19791,7 +19903,6 @@
   "projectField": {
     "updateFailed": "Failed to update project field"
   },
-  "settings.appearance.chat.title": "Chat",
   "mediaPreview": {
     "unavailable": "Unable to play this media file. The file may be unavailable or use an unsupported codec.",
     "openFailed": "Could not open this file in the default app.",
@@ -19872,20 +19983,118 @@
       "updateRuntimeSafely": "Update the remote runtime to safely change workspace links"
     }
   },
-  "settings.agents.environmentName": "Environment variable name",
-  "settings.agents.environmentValue": "Value for {{name}}",
-  "settings.agents.savedEnvironment": "Saved value · enter to replace",
-  "settings.agents.newEnvironment": "Value",
-  "settings.agents.removeEnvironment": "Remove",
-  "settings.agents.loadingHost": "Loading agent settings…",
-  "settings.agents.updateHost": "Update this server to edit its agent launch settings.",
-  "settings.agents.readFailed": "Couldn’t read agent settings. Check the host connection and try again.",
-  "settings.agents.saveFailed": "Couldn’t save agent settings. Check the host connection and try again.",
-  "settings.agents.hostDefaults": "Defaults for new agents on the selected host.",
-  "settings.agents.save": "Save",
   "tabHoverCard": {
     "browser": "Browser",
     "editor": "Editor",
     "terminal": "Terminal"
+  },
+  "updates": {
+    "installBlock": {
+      "instancesLabel": "Instances using Orca",
+      "browserLabel": "Background browser",
+      "serverLabel": "Background server",
+      "windowLabel": "Other Orca window",
+      "instanceLabel": "Other Orca instance",
+      "processId": "PID {{pid}}",
+      "preparingTitle": "Preparing your update",
+      "preparingSummary": "Checking running Orca instances before restarting.",
+      "later": "Later",
+      "retainedDownload": "Orca stays open. No need to download again.",
+      "retryInstallation": "Retry installation",
+      "waitingLabel": "Update waiting",
+      "busyTitle": "Another Orca is updating",
+      "busySummary": "An update is already being installed by another Orca instance.",
+      "busyGuidance": "Wait a moment, then retry. Your downloaded update is ready.",
+      "unresponsiveTitle": "Waiting for background servers",
+      "unresponsiveSummary": "Orca could not finish pausing its background servers for the update.",
+      "unresponsiveGuidance": "Stop it from the terminal or service that started it, then retry. Connected devices will disconnect.",
+      "readyTitle": "Your update is ready",
+      "serverSummary": "A background Orca server is still using this app.",
+      "instanceSummary": "Another Orca instance is still using this app.",
+      "serverGuidance": "Stop the server from the terminal or service that started it, then retry. Connected devices will disconnect.",
+      "mixedGuidance": "Close any other Orca windows and stop the server from the terminal or service that started it. Connected devices will disconnect. Then retry.",
+      "instanceGuidance": "Quit other Orca instances, then retry. Your downloaded update will be kept ready.",
+      "waitingAriaLabel": "Update waiting for other Orca instances. Click to expand.",
+      "preparingLabel": "Preparing update",
+      "preparingAriaLabel": "Preparing update. Click to expand."
+    }
+  },
+  "jira": {
+    "connect": {
+      "scopedTokenGuide": "Scoped tokens need read:jira-work, write:jira-work, and read:jira-user. Leave email empty to use Bearer authentication.",
+      "oldHostGuide": "This remote runtime requires an email and an unscoped API token. Update the remote runtime to use scoped tokens.",
+      "scopedDescription": "Use a Jira Cloud site URL and API token to browse issues. Scoped tokens can omit the email.",
+      "optionalEmail": "Atlassian email (optional for scoped tokens)"
+    },
+    "workspace": {
+      "open": "Open workspace linked to {{key}}",
+      "count": "{{count}} workspaces linked to {{key}}",
+      "startAnother": "Start new workspace",
+      "empty": "Link a Jira issue to a workspace, or choose another view.",
+      "openFailed": "Unable to open the workspace linked to this Jira issue.",
+      "mode": "Has Workspace",
+      "search": "Search linked issues",
+      "single": "1 workspace linked to {{key}}"
+    },
+    "prompt": {
+      "dialogTitle": "Copy prompt from template",
+      "template": "Template",
+      "custom": "Custom template",
+      "templateText": "Template text",
+      "variables": "Use $jira-issue for the issue context and $other-prompt for your additional instructions. Saved on this device.",
+      "other": "Additional instructions (optional)",
+      "preview": "Preview",
+      "implementation": "Start implementation",
+      "bug": "Investigate bug",
+      "testPlan": "Write test plan",
+      "prSummary": "Draft PR summary"
+    },
+    "copy": {
+      "context": "Copy context for {{key}}",
+      "actions": "Copy issue context"
+    },
+    "savedFilters": {
+      "retry": "Retry",
+      "find": "Find a saved filter",
+      "noMatch": "No matching filters.",
+      "loadFailed": "Could not load saved Jira filters.",
+      "saveFailed": "Could not save Jira filters."
+    },
+    "statusFilters": {
+      "loadFailed": "Could not load Jira status filters.",
+      "saveFailed": "Could not save Jira status filters.",
+      "manualQuery": "Status filters apply to preset views. Clear the search to use them.",
+      "label": "Filter Jira issues by status",
+      "clear": "Clear statuses",
+      "jql": "Status filter JQL",
+      "editJql": "Edit as JQL",
+      "catalogHint": "Statuses come from loaded issues. Clear statuses to discover others in this view."
+    },
+    "transitions": {
+      "changeStatus": "Change status: {{status}}",
+      "loadError": "Could not load status changes.",
+      "retry": "Retry",
+      "loading": "Loading status changes…",
+      "completeInJira": "Complete “{{name}}” in Jira",
+      "unsupported": "Jira requires fields Orca cannot collect yet: {{fields}}.",
+      "chooseResolution": "Choose a resolution",
+      "comment": "Comment",
+      "back": "Back",
+      "apply": "Change status",
+      "empty": "No status changes available."
+    },
+    "board": {
+      "currentSprint": "Current sprint",
+      "viewMode": "Jira view",
+      "list": "List",
+      "board": "Board",
+      "moveIssue": "Move {{key}}",
+      "moveTitle": "Move {{key}} to {{column}}",
+      "moveDescription": "Jira controls which status changes are available and which fields they require.",
+      "chooseTransition": "Choose a status change:",
+      "cancel": "Cancel",
+      "noTransition": "No status change to {{column}} is available for {{key}}.",
+      "queryTooLong": "The Jira query is too long with Current sprint selected. Shorten the query or turn off Current sprint."
+    }
   }
 }

@@ -330,13 +330,14 @@ export class AcpStructuredSessionAdapter implements StructuredAgentSessionAdapte
     void this.stop(session.sessionId, false)
   }
 
+  /** Only for a send refused before its prompt was written. */
   private rejected(
     session: AcpStructuredSession,
     kind: 'providerExited'
   ): AgentSessionDispatchOutcome {
     return {
       state: 'rejected',
-      ...agentSessionFailureWords(agentSessionFailureFact(kind), {
+      ...agentSessionFailureWords(agentSessionFailureFact(kind, { neverReachedAgent: true }), {
         surface: 'rejection',
         agentName: acpAgentName(session.spec.agent)
       })

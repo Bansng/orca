@@ -3,6 +3,7 @@
  * reports, and connect only for the user. A stopped distro boots on an explicit add or connect,
  * or while a project or terminal the user has open needs it; never for background work.
  */
+import { errorMessage } from '../../shared/error-message'
 import {
   addWslHostEnvironment,
   removeWslHostEnvironment
@@ -22,11 +23,7 @@ import { OrcadHostUnsupportedError } from '../orcad/orcad-host-unavailable'
 import type { WslHostDistroCandidate } from './wsl-host-distro-list'
 import { wslHostSshManagedRefusal } from './wsl-host-ssh-orcad-conflict'
 import { wslDistroHolderKey } from './wsl-distro-holder-record'
-import {
-  errorMessage,
-  persistWslHostConnection,
-  toWslHostStatus
-} from './wsl-host-connection-record'
+import { persistWslHostConnection, toWslHostStatus } from './wsl-host-connection-record'
 import {
   admitWslHostDistro,
   sameWslDistro,
@@ -43,8 +40,8 @@ export type WslHostConnector = {
   listDistros(): Promise<WslHostDistroCandidate[]>
   /** Runs in the distro, so it boots a stopped one: only after the user chose to. */
   readOrcadPublicKey(distro: string): Promise<string | null>
-  /** User-initiated; may boot the distro. */
-  connect(distro: string): Promise<WslOrcadConnection>
+  /** User-initiated; may boot the distro. `force` takes an update live terminals deferred. */
+  connect(distro: string, options?: { force?: boolean }): Promise<WslOrcadConnection>
   get(distro: string): WslOrcadConnection | null
   disconnect(distro: string): Promise<void>
   /** Ends the host's terminals, orcad and its terminal daemon; never boots a stopped distro. */
@@ -101,7 +98,7 @@ export class WslHostService {
     if (connection && persistWslHostConnection(this.deps.userDataPath(), record, connection)) {
       this.deps.pairingChanged(record.environmentId)
     }
-    this.setStatus(record, status)
+    this.setStatus(record, status, connection)
     if (status.state === 'ready' && connection) {
       this.deps.ready(record.environmentId)
     }
@@ -177,8 +174,8 @@ export class WslHostService {
     }
   }
 
-  /** The user asked for this host: may boot its distro. */
-  async connect(environmentId: string): Promise<void> {
+  /** The user asked for this host: may boot its distro. `force` takes a deferred update now. */
+  async connect(environmentId: string, options: { force?: boolean } = {}): Promise<void> {
     const record = this.recordForEnvironment(environmentId)
     if (!record) {
       throw new Error('This server is not a WSL host.')
@@ -187,7 +184,7 @@ export class WslHostService {
     if (refusal || this.removing.has(environmentId)) {
       throw new Error(refusal?.message ?? WSL_HOST_REMOVING_MESSAGE)
     }
-    await this.wsl.connect(record.distro)
+    await this.wsl.connect(record.distro, options)
   }
 
   /**
@@ -318,14 +315,18 @@ export class WslHostService {
     }
     const record = this.recordForEnvironment(environmentId)
     if (record) {
-      this.setStatus(record, { state: 'ready', census: null })
+      this.setStatus(record, { state: 'ready', census: null }, connection)
     }
     this.deps.ready(environmentId)
     return { ok: true, environmentId }
   }
 
-  private setStatus(record: WslHostDeploymentRecord, status: WslOrcadConnectionStatus): void {
-    const next = toWslHostStatus(record, status)
+  private setStatus(
+    record: WslHostDeploymentRecord,
+    status: WslOrcadConnectionStatus,
+    connection: WslOrcadConnection | null = null
+  ): void {
+    const next = toWslHostStatus(record, status, connection)
     this.statuses.set(record.environmentId, next)
     this.deps.publish(next)
   }

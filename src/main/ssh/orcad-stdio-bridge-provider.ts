@@ -41,10 +41,10 @@ export class OrcadStdioBridgePortForwardProvider implements SshPortForwardProvid
     private readonly dependencies: OrcadStdioBridgeDependencies = ORCAD_STDIO_BRIDGE_DEPENDENCIES
   ) {}
 
-  // Why not system SSH: each bridge socket would be its own `ssh` process (a fresh login, and
-  // perhaps a key prompt, when multiplexing is off), and its refusal can't be probed up front.
+  // System SSH runs each bridge socket as an exec over its ControlMaster, or as its own login
+  // when multiplexing is off; the transport only picks it once forwarding was refused.
   canHandle(conn: SshConnection): boolean {
-    return conn.getClient() !== null
+    return conn.getClient() !== null || conn.usesSystemSshTransport()
   }
 
   start(conn: SshConnection, options: PortForwardStartOptions): Promise<StartedPortForward> {

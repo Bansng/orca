@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { OrcadHostTransport } from '../ssh/orcad-host-transport'
 import type * as ManagedRuntimeContext from '../ssh/orcad-managed-runtime-context'
+import type * as RemoteVersionedInstall from '../ssh/remote-versioned-install'
 import { emptyOrcadActivationRecord } from '../ssh/orcad-activation-record'
 import { getRemoteHostPlatform } from '../ssh/ssh-remote-platform'
 import type { WslDistroHolder } from './wsl-distro-holder'
@@ -15,7 +16,17 @@ const mocks = vi.hoisted(() => ({
   probe: vi.fn(),
   prune: vi.fn(),
   wake: vi.fn(),
-  adopt: vi.fn()
+  adopt: vi.fn(),
+  incumbent: vi.fn(),
+  localVersion: vi.fn(),
+  readRecord: vi.fn()
+}))
+vi.mock('../ssh/orcad-activation-record-store', () => ({
+  readOrcadActivationRecord: mocks.readRecord
+}))
+vi.mock('../ssh/remote-versioned-install', async (importOriginal) => ({
+  ...(await importOriginal<typeof RemoteVersionedInstall>()),
+  readLocalFullVersion: mocks.localVersion
 }))
 vi.mock('./wsl-orcad-instance-adoption', () => ({ adoptUnrecordedWslOrcad: mocks.adopt }))
 
@@ -83,6 +94,7 @@ function launch(kernel = '5.15.167.4-microsoft-standard-WSL2', options = {}) {
     holder: holder(),
     createTransport: transport,
     readRegistryId: async () => '0283592d-be56-40d4-b935-3dc18c3aa007',
+    readIncumbent: mocks.incumbent,
     ...options
   })
 }
@@ -114,6 +126,15 @@ describe('deployAndLaunchWslOrcad', () => {
       return { outcome: 'installed-and-activated', fullVersion: '1.5.0+ab', verdict: {} }
     })
     mocks.probe.mockResolvedValue(READINESS)
+    mocks.localVersion.mockReturnValue('1.5.0+ab')
+    mocks.incumbent.mockResolvedValue({
+      census: {
+        liveSessions: null,
+        startedSinceActivation: null,
+        daemonProtocolVersion: null
+      },
+      readiness: null
+    })
   })
 
   it('holds the distro before it deploys and launches, and reports what C5 dials', async () => {
@@ -255,6 +276,165 @@ describe('deployAndLaunchWslOrcad', () => {
       forceable: true
     })
     expect(mocks.probe).not.toHaveBeenCalled()
+  })
+})
+
+describe('deployAndLaunchWslOrcad across an app update (E1)', () => {
+  const INCUMBENT_READINESS = {
+    ...READINESS,
+    runtimeId: 'r-old',
+    boundEndpoint: 'ws://127.0.0.1:6791'
+  }
+  const LIVE = {
+    liveSessions: 2,
+    startedSinceActivation: 0,
+    daemonProtocolVersion: 3
+  }
+  const activeOld = {
+    ...emptyOrcadActivationRecord(),
+    active: '1.4.0+aa',
+    activeAppVersion: '1.4.0',
+    activatedAt: '2026-10-12T01:00:00.000Z'
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.steps.length = 0
+    mocks.resolveContext.mockImplementation(async (target: WslOrcadHostTarget, connection) => ({
+      activationRecord: activeOld,
+      serverTarget: 'linux-x64-glibc',
+      connection,
+      host,
+      remoteHome: '/home/u',
+      target,
+      userDataDir: '/home/u/.orca'
+    }))
+    mocks.recover.mockResolvedValue({ outcome: 'none' })
+    mocks.adopt.mockResolvedValue({ outcome: 'none' })
+    mocks.probe.mockResolvedValue(READINESS)
+    mocks.localVersion.mockReturnValue('1.5.0+ab')
+    mocks.incumbent.mockResolvedValue({ census: LIVE, readiness: INCUMBENT_READINESS })
+    mocks.readRecord.mockResolvedValue(activeOld)
+  })
+
+  it('plans the update on the census the running orcad reports, not an unknown one', async () => {
+    mocks.deploy.mockResolvedValueOnce({
+      outcome: 'installed-and-activated',
+      fullVersion: '1.5.0+ab',
+      verdict: {}
+    })
+    await expect(launch()).resolves.toMatchObject({
+      outcome: 'ready',
+      fullVersion: '1.5.0+ab'
+    })
+    expect(mocks.incumbent).toHaveBeenCalledTimes(1)
+    expect(mocks.deploy.mock.calls[0][0]).toMatchObject({
+      census: LIVE,
+      censusRecord: activeOld
+    })
+  })
+
+  it('keeps the incumbent serving, with a forceable deferral, while terminals run', async () => {
+    mocks.deploy.mockResolvedValueOnce({
+      outcome: 'installed-not-activated',
+      fullVersion: '1.5.0+ab',
+      code: 'orcad_update_terminals_running',
+      reason: '2 terminals are running'
+    })
+    await expect(launch()).resolves.toEqual({
+      outcome: 'ready',
+      distro: 'Ubuntu-24.04',
+      distroId: '0283592d-be56-40d4-b935-3dc18c3aa007',
+      port: 6791,
+      fullVersion: '1.4.0+aa',
+      pid: 4242,
+      readiness: INCUMBENT_READINESS,
+      holder: 'spawned',
+      deferredUpdate: {
+        candidateVersion: '1.5.0+ab',
+        code: 'orcad_update_terminals_running',
+        reason: '2 terminals are running',
+        forceable: true
+      }
+    })
+    expect(mocks.exec).toHaveBeenLastCalledWith(
+      expect.anything(),
+      "cat '/home/u/.orca-remote/orcad-1.4.0+aa/.orcad-pid' 2>/dev/null || true",
+      expect.anything()
+    )
+    // The installed candidate is what a later Force activates; nothing may collect it.
+    expect(mocks.prune).not.toHaveBeenCalled()
+    expect(mocks.probe).not.toHaveBeenCalled()
+  })
+
+  it('does not serve an incumbent another client replaced during the deploy', async () => {
+    mocks.readRecord.mockResolvedValueOnce({ ...activeOld, active: '1.4.5+bb' })
+    mocks.deploy.mockResolvedValueOnce({
+      outcome: 'installed-not-activated',
+      fullVersion: '1.5.0+ab',
+      code: 'orcad_update_terminals_running',
+      reason: 'terminals are running'
+    })
+    await expect(launch()).resolves.toMatchObject({ outcome: 'deferred', forceable: true })
+  })
+
+  it('forwards force to the update planner', async () => {
+    mocks.deploy.mockResolvedValueOnce({
+      outcome: 'installed-and-activated',
+      fullVersion: '1.5.0+ab',
+      verdict: {}
+    })
+    await launch(undefined, { force: true })
+    expect(mocks.deploy.mock.calls[0][0]).toMatchObject({
+      force: true,
+      census: LIVE
+    })
+  })
+
+  it('reports a deferral when the incumbent could not be proven serving', async () => {
+    mocks.incumbent.mockResolvedValueOnce({
+      census: {
+        liveSessions: null,
+        startedSinceActivation: null,
+        daemonProtocolVersion: null
+      },
+      readiness: null
+    })
+    mocks.deploy.mockResolvedValueOnce({
+      outcome: 'installed-not-activated',
+      fullVersion: '1.5.0+ab',
+      code: 'orcad_update_terminal_census_unavailable',
+      reason: 'no census'
+    })
+    await expect(launch()).resolves.toMatchObject({
+      outcome: 'deferred',
+      forceable: false
+    })
+  })
+
+  it('does not serve the incumbent past a refusal that is not a wait', async () => {
+    mocks.deploy.mockResolvedValueOnce({
+      outcome: 'installed-not-activated',
+      fullVersion: '1.5.0+ab',
+      code: 'orcad_activation_policy_refused',
+      reason: 'newer Orca ran this host'
+    })
+    await expect(launch()).resolves.toMatchObject({
+      outcome: 'deferred',
+      forceable: true
+    })
+  })
+
+  it('never asks the incumbent when it already runs this build', async () => {
+    mocks.localVersion.mockReturnValue('1.4.0+aa')
+    mocks.deploy.mockResolvedValueOnce({
+      outcome: 'already-active',
+      fullVersion: '1.4.0+aa'
+    })
+    mocks.wake.mockResolvedValueOnce({ outcome: 'serving' })
+    await launch()
+    expect(mocks.incumbent).not.toHaveBeenCalled()
+    expect(mocks.deploy.mock.calls[0][0].census.liveSessions).toBeNull()
   })
 })
 

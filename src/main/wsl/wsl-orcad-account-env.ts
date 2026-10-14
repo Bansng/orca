@@ -8,6 +8,7 @@
  * `accountEnv`, and the agent-session creates' `accountEnv` on a host advertising it. A bare
  * `command` keeps the host's Settings-default launch untouched.
  */
+import { errorMessage } from '../../shared/error-message'
 import { posix } from 'node:path'
 import {
   AGENT_LAUNCH_ACCOUNT_ENV_KEYS,
@@ -46,6 +47,10 @@ export function installWslOrcadAccountEnvDependencies(
   installed = dependencies
 }
 
+export function getWslOrcadAccountEnvDependencies(): WslOrcadAccountEnvDependencies | null {
+  return installed
+}
+
 export class WslOrcadAccountEnvError extends Error {
   constructor(message: string) {
     super(message)
@@ -53,7 +58,7 @@ export class WslOrcadAccountEnvError extends Error {
   }
 }
 
-function distroTarget(distro: string): WslAccountTarget {
+export function distroTarget(distro: string): WslAccountTarget {
   return { runtime: 'wsl', wslDistro: distro }
 }
 
@@ -203,7 +208,7 @@ export async function withWslOrcadAccountEnv(
     env = await prepareWslOrcadAccountEnv(distro, plan.agent, dependencies)
   } catch (error) {
     // Why refuse: starting without the prepared home would run another account.
-    return { ok: false, message: error instanceof Error ? error.message : String(error) }
+    return { ok: false, message: errorMessage(error) }
   }
   if (Object.keys(env).length === 0) {
     return { ok: true, params }

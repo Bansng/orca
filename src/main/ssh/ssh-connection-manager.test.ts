@@ -31,6 +31,10 @@ vi.mock('./ssh-connection', () => ({
     }
 
     setCallbacks(): void {}
+
+    getReusableCredentials(): null {
+      return null
+    }
   }
 }))
 

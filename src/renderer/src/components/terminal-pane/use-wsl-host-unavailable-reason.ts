@@ -1,6 +1,6 @@
 import { parseExecutionHostId } from '../../../../shared/execution-host'
 import { isWslHostRuntimeEnvironment } from '../../../../shared/runtime-environments'
-import { workspaceOwnerHostId } from '@/hooks/ipc-events/wsl-host-ipc-bridge'
+import { workspaceOwnerHostId } from '@/lib/workspace-row-owner-host'
 import { useAppStore } from '@/store'
 import type { AppState } from '@/store/types'
 
@@ -11,7 +11,8 @@ export function selectWslHostUnavailableReason(
   state: AppState,
   worktreeId: string | null | undefined
 ): WslHostUnavailableReason | null {
-  if (!worktreeId) {
+  // Why first: every terminal and explorer subscribes, and most profiles have no WSL host.
+  if (!worktreeId || !state.runtimeEnvironments.some(isWslHostRuntimeEnvironment)) {
     return null
   }
   const host = parseExecutionHostId(workspaceOwnerHostId(state, worktreeId))

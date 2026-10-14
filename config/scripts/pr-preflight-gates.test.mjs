@@ -241,7 +241,6 @@ it('pins every foreground and background step to its selected phase', () => {
     ['Enforce runtime Electron-import ratchet', staticPhase],
     ['Enforce focus-read ratchet', staticPhase],
     ['Enforce layout-writer ratchets', staticPhase],
-    ['Check compatibility-folder imports', staticPhase],
     ['Check Node runtime pin', staticPhase],
     ['Boot orcad and round-trip a terminal', staticPhase],
     ['Verify the generated RPC params catalog', staticPhase],
@@ -328,4 +327,13 @@ it('registers successful no-op background work when a phase is unselected or alr
       'if [ "$PREFLIGHT_PHASE_SELECTED" != true ] || [ "$PREFLIGHT_PRIOR_SUCCESS" != true ]; then exit 0; fi'
     )
   }
+})
+
+it('shares import analysis without dropping either boundary gate', () => {
+  const imports = steps.find((step) => step.id === 'process-host-imports')
+  expect(imports.run).toContain('bun config/scripts/check-import-boundaries.mjs')
+  expect(steps.some((step) => step.name === 'Check compatibility-folder imports')).toBe(false)
+  expect(steps.find((step) => step.name === 'Verify localization coverage').run).toBe(
+    'bun config/scripts/audit-localization-coverage.mjs --check'
+  )
 })

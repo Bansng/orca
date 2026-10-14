@@ -69,7 +69,7 @@ export function createWslHostConnector(options: {
   return {
     listDistros: () => listWslHostDistros(),
     readOrcadPublicKey: (distro) => readWslDistroOrcadPublicKey(transportFor(distro)),
-    connect: (distro) => liveness.connect(distro),
+    connect: (distro, connectOptions) => liveness.connect(distro, connectOptions),
     get: (distro) => manager.get(distro),
     disconnect: (distro) => liveness.stop(distro),
     stopServer: async (distro, environmentId) => {

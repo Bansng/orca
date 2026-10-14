@@ -165,6 +165,9 @@ export type JournalSubmissionRow = JournalRowBase & {
   /** Who it is from: its `AgentSessionMessageSource`'s kind only (`AgentJournalSubmission`).
    *  Absent on rows from before it was recorded. Older readers keep the key and ignore it. */
   source?: { kind: string }
+  /** The model and effort the person's composer sent it with, applied when it is handed over.
+   *  Older readers keep the key and ignore it. */
+  options?: Readonly<Record<string, string>>
 }
 
 export type JournalSubmissionOrigin = 'client' | 'host'
@@ -178,6 +181,9 @@ export type JournalDispatchRow = JournalRowBase & {
   reason: string | null
   /** On `pending`: the turn the message was handed into, which becomes its row's scope. */
   turnScope?: AgentJournalTurnScope
+  /** On `pending`: the stopped messages this send carries to the agent as history, by client
+   *  message id in the order they were sent. Host-only; older readers keep the key and ignore it. */
+  carries?: string[]
   /** On `rejected`: why, typed. Older readers keep the key and ignore it; a malformed one is
    *  dropped when read, never the row. */
   rejection?: AgentSessionFailureFact

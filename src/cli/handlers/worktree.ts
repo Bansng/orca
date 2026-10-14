@@ -2,6 +2,7 @@ import type {
   RuntimeWorktreeListResult,
   RuntimeWorktreePsResult,
   RuntimeWorktreeRecord,
+  RuntimeWorktreeSetResult,
   RuntimeWorktreeCreateResult,
   RuntimeWorktreeRemoveResult
 } from '../../shared/runtime-types'
@@ -31,7 +32,7 @@ import { projectWorktreePsTerminalVerdict } from '../worktree-ps-terminal-verdic
 import {
   assertWorkspaceTargetFlagsCompatible,
   hasWorkspaceProjectTarget,
-  resolveProjectCreateRepoSelector
+  getCreateRepoSelector
 } from '../worktree-project-target'
 import {
   assertWorktreeParentFlagsCompatible,
@@ -43,7 +44,11 @@ import { getOptionalWorktreeUnreadFlag } from './worktree-unread-flag'
 import { getReviewTargetLinkFlags } from './worktree-review-link-flags'
 import { withSetupDecisionRecovery } from './worktree-setup-decision-recovery'
 import { assertGitLabLinkFlagProjectsMatch } from './worktree-gitlab-link-context'
-import { assertReferenceWritesSupported, getCreateReferences } from '../reference-input'
+import {
+  assertReferenceWritesSupported,
+  getCreateReferenceInputs,
+  resolveReferenceInputs
+} from '../reference-input'
 
 function getPresentStringFlag(
   flags: Map<string, string | boolean>,
@@ -91,41 +96,6 @@ function getOptionalSetupDecision(
   return setup
 }
 
-function getRepoSelectorFromWorktreeSelector(selector: string | undefined): string | undefined {
-  if (!selector?.startsWith('id:')) {
-    return undefined
-  }
-  const worktreeId = selector.slice('id:'.length)
-  const separatorIndex = worktreeId.indexOf('::')
-  if (separatorIndex <= 0) {
-    return undefined
-  }
-  return `id:${worktreeId.slice(0, separatorIndex)}`
-}
-
-async function getCreateRepoSelector(
-  flags: Map<string, string | boolean>,
-  cwdParentWorktree: string | undefined,
-  client: Parameters<CommandHandler>[0]['client']
-): Promise<string> {
-  const projectRepoSelector = await resolveProjectCreateRepoSelector(flags, client)
-  if (projectRepoSelector) {
-    return projectRepoSelector
-  }
-  const explicitRepo = getPresentStringFlag(flags, 'repo')
-  if (explicitRepo) {
-    return explicitRepo
-  }
-  const inferredRepo = getRepoSelectorFromWorktreeSelector(cwdParentWorktree)
-  if (inferredRepo) {
-    return inferredRepo
-  }
-  throw new RuntimeClientError(
-    'invalid_argument',
-    'Missing repo selector. Pass --repo or run from inside an Orca-managed worktree.'
-  )
-}
-
 export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
   'worktree ps': async ({ flags, client, json }) => {
     const result = await client.call<WithAnnotatedHostScope<RuntimeWorktreePsResult>>(
@@ -161,8 +131,9 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
     })
     printResult(result, json, formatWorktreeShow)
   },
-  'worktree create': async ({ flags, client, cwd, json, rawArgs }) => {
-    const linkedItems = getCreateReferences(flags)
+  'worktree create': async (context) => {
+    const { flags, client, cwd, json, rawArgs } = context
+    const referenceInputs = getCreateReferenceInputs(flags)
     assertWorktreeParentFlagsCompatible(flags)
     assertWorkspaceTargetFlagsCompatible(flags)
     const reviewLinks = getReviewTargetLinkFlags(flags)
@@ -205,6 +176,9 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
     const name = getRequiredStringFlag(flags, 'name')
     const repo = await getCreateRepoSelector(flags, cwdParentWorktree, client)
     await assertGitLabLinkFlagProjectsMatch(flags, client, { repo })
+    const linkedItems = referenceInputs
+      ? await resolveReferenceInputs(context, referenceInputs)
+      : undefined
     if (linkedItems) {
       await assertReferenceWritesSupported(client)
     }
@@ -256,7 +230,7 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
     })
     const worktree = await getRequiredWorktreeSelector(flags, 'worktree', cwd, client)
     await assertGitLabLinkFlagProjectsMatch(flags, client, { worktree })
-    const result = await client.call<{ worktree: RuntimeWorktreeRecord }>('worktree.set', {
+    const result = await client.call<RuntimeWorktreeSetResult>('worktree.set', {
       worktree,
       displayName: getOptionalStringFlag(flags, 'display-name'),
       ...reviewLinks,
@@ -267,6 +241,11 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
       parentWorktree: await getOptionalWorktreeSelector(flags, 'parent-worktree', cwd, client),
       noParent: flags.get('no-parent') === true
     })
+    if (!json) {
+      for (const warning of result.result.warnings ?? []) {
+        console.error(`warning: ${warning.message}`)
+      }
+    }
     printResult(result, json, formatWorktreeShow)
   },
   'worktree rm': async ({ flags, client, cwd, json }) => {

@@ -37,6 +37,17 @@ describe('findOrphanedOrcaSshForward', () => {
     expect(findOrphanedOrcaSshForward(rows, EXPECTED, 'linux')?.pid).toBe(900)
   })
 
+  it('matches across the LogLevel=INFO this version adds, in either direction', () => {
+    const withLogLevel = ['-o', 'BatchMode=no', '-o', 'LogLevel=INFO', ...EXPECTED.slice(2)]
+    expect(
+      findOrphanedOrcaSshForward([row(900, 1, ORCA_FORWARD)], withLogLevel, 'darwin')?.pid
+    ).toBe(900)
+    const newOrphan = `/usr/bin/ssh ${withLogLevel.join(' ')}`
+    expect(findOrphanedOrcaSshForward([row(900, 1, newOrphan)], withLogLevel, 'darwin')?.pid).toBe(
+      900
+    )
+  })
+
   it("never picks a forward whose Orca is still running (another instance's tunnel)", () => {
     const rows = [
       row(400, 1, '/Applications/Orca.app/Contents/MacOS/Orca'),

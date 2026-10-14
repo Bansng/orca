@@ -30,13 +30,20 @@ export type AiVaultResumeInChatEligibility =
  *
  * Codex is handed the rollout file and a cwd, so it can resume into any workspace. Claude, Grok and
  * OMP store conversations under a folder derived from the launch cwd, so resuming from a workspace
- * other than the one the conversation was recorded in looks in a folder the conversation is not in.
+ * other than the one the conversation was recorded in looks in a folder the conversation is not in,
+ * and OpenCode refuses a conversation that does not belong to the launch cwd.
  * That is a resume that silently yields nothing, which is worse than a disabled affordance.
  */
 export function aiVaultSessionResumeInChatWorkspaceMatters(
   agent: AiVaultSession['agent']
 ): boolean {
-  return agent === 'claude' || agent === 'grok' || agent === 'omp'
+  return (
+    agent === 'claude' ||
+    agent === 'grok' ||
+    agent === 'omp' ||
+    agent === 'opencode' ||
+    agent === 'opencode2'
+  )
 }
 
 /**

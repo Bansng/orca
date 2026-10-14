@@ -1,10 +1,16 @@
 import type {
+  JiraIssueSummaryGenerationRequest,
+  JiraIssueSummaryGenerationCancellation,
+  JiraIssueSummaryGenerationResult
+} from '../../shared/jira-issue-summary-generation'
+import type {
   JiraComment,
   JiraConnectionStatus,
   JiraCreateField,
   JiraCreateIssueArgs,
   JiraIssue,
   JiraIssueFilter,
+  JiraIssueListFilters,
   JiraIssueType,
   JiraIssueUpdate,
   JiraPriority,
@@ -41,6 +47,7 @@ export type JiraApi = {
     filter?: JiraIssueFilter
     limit?: number
     siteId?: JiraSiteSelection
+    filters?: JiraIssueListFilters
   }) => Promise<JiraIssue[]>
   getIssue: (args: { key: string; siteId?: string }) => Promise<JiraIssue | null>
   lookupIssueSummary: (args: {
@@ -52,6 +59,10 @@ export type JiraApi = {
   createIssue: (
     args: JiraCreateIssueArgs
   ) => Promise<{ ok: true; id: string; key: string; url: string } | { ok: false; error: string }>
+  generateIssueSummary: (
+    args: JiraIssueSummaryGenerationRequest
+  ) => Promise<JiraIssueSummaryGenerationResult>
+  cancelGenerateIssueSummary: (args: JiraIssueSummaryGenerationCancellation) => Promise<void>
   updateIssue: (args: {
     key: string
     updates: JiraIssueUpdate
@@ -82,7 +93,11 @@ export type JiraApi = {
     siteId?: string
   }) => Promise<JiraUser[]>
   searchUsers: (args?: { query?: string; siteId?: string }) => Promise<JiraUser[]>
-  listTransitions: (args: { key: string; siteId?: string }) => Promise<JiraTransition[]>
+  listTransitions: (args: {
+    key: string
+    siteId?: string
+    strict?: boolean
+  }) => Promise<JiraTransition[]>
   getProjectStatusOrder: (args: {
     projectKey: string
     siteId?: string

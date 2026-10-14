@@ -1,5 +1,5 @@
-import { net, session } from 'electron'
 import { ensureElectronProxyFromEnvironment } from '../network/proxy-settings'
+import { getMainHttpClient } from '../network/http-client'
 import { abortSignalWithTimeout } from '../lib/abort-signal-with-timeout'
 import {
   parseOpenCodeGoUsageApiPayload,
@@ -73,13 +73,12 @@ export async function fetchOpenCodeGoUsageWithApiKey(
   signal?: AbortSignal
 ): Promise<OpenCodeGoUsageApiOutcome> {
   await ensureElectronProxyFromEnvironment({
-    proxySession: session.defaultSession,
     probeUrl: OPENCODE_GO_USAGE_API_URL
   }).catch(() => {})
 
   let response: Response
   try {
-    response = await net.fetch(OPENCODE_GO_USAGE_API_URL, {
+    response = await getMainHttpClient().fetch(OPENCODE_GO_USAGE_API_URL, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${apiKey}`,

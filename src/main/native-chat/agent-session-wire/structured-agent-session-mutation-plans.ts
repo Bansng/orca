@@ -26,8 +26,9 @@ import type { AgentSessionConversationCommandResult } from '../../../shared/agen
 import { DISPATCH_DOUBT_SUBMISSION_MISSING } from '../agent-session-journal/journal-dispatch-doubt-reasons'
 import type { StructuredAgentSessionBackgroundStopInput } from './structured-agent-session-background-stop'
 import {
-  agentSessionMessagePayload,
-  agentSessionSendBodyFingerprint
+  agentSessionSendBodyFingerprint,
+  agentSessionSendFields,
+  type StructuredAgentSessionSendMutation
 } from '../../../shared/structured-agent-session-send-mutation'
 import {
   STRUCTURED_AGENT_SESSION_COMPACT_COMMAND,
@@ -134,16 +135,15 @@ function sendSource(params: {
   return params.body.from ? AGENT_MESSAGE_SOURCE : undefined
 }
 
-export function sendPlan(params: {
-  envelope: AgentSessionMutationEnvelope
-  body: AgentJournalMessageItem
-  retryUnknown?: true
-  delivery?: 'queue-if-active'
-  userSend?: true
-  /** A person's message the host sends for them; `userSend` is always one. */
-  personsMessage?: true
-  beforeRun?: () => void
-}): MutationPlan<AgentSessionSendResult> {
+export function sendPlan(
+  params: StructuredAgentSessionSendMutation & {
+    retryUnknown?: true
+    userSend?: true
+    /** A person's message the host sends for them; `userSend` is always one. */
+    personsMessage?: true
+    beforeRun?: () => void
+  }
+): MutationPlan<AgentSessionSendResult> {
   // The operation id IS the client message id: one send, one durable row, one
   // key the client reconciles its optimistic bubble against.
   const clientMessageId = params.envelope.clientOperationId
@@ -152,12 +152,9 @@ export function sendPlan(params: {
     operationIdScope: 'global',
     conversationWrite: true,
     commandReceipt: submissionOrDraftReceipt(clientMessageId),
-    // `delivery` joins the OPERATION fingerprint only; the submission row keeps
+    // Control fields join the OPERATION fingerprint only; the submission row keeps
     // the body-only fingerprint the reducer's echo-aliasing recomputes.
-    fields: {
-      body: agentSessionMessagePayload(params.body),
-      ...(params.delivery ? { delivery: params.delivery } : {})
-    },
+    fields: agentSessionSendFields(params),
     recoverUnknownFromDurableState: true,
     // `retryUnknown` is a compatibility-only client signal. A recorded send
     // always replays and never reaches the provider twice.
@@ -169,6 +166,7 @@ export function sendPlan(params: {
         origin: params.userSend ? 'client' : 'host',
         ...(source ? { source } : {}),
         clientMessageId,
+        ...(params.options ? { options: params.options } : {}),
         // Body-only, so the reducer's echo aliasing never sees control fields or the sender.
         payloadFingerprint: agentSessionSendBodyFingerprint(params.envelope.sessionId, params.body),
         body: params.body

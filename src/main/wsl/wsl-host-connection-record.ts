@@ -25,16 +25,15 @@ export function persistWslHostConnection(
 
 export function toWslHostStatus(
   record: WslHostDeploymentRecord,
-  status: WslOrcadConnectionStatus
+  status: WslOrcadConnectionStatus,
+  connection: WslOrcadConnection | null = null
 ): WslHostStatus {
   return {
     environmentId: record.environmentId,
     distro: record.distro,
     state: status.state,
-    detail: status.state === 'failed' || status.state === 'unverifiable' ? status.reason : null
+    detail: status.state === 'failed' || status.state === 'unverifiable' ? status.reason : null,
+    // Only a ready host is serving the incumbent the deferral describes.
+    deferredUpdate: status.state === 'ready' ? (connection?.deferredUpdate ?? null) : null
   }
-}
-
-export function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
 }

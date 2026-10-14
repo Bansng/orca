@@ -1,5 +1,8 @@
 import { resolveEnvironment } from '../../shared/runtime-environment-store'
-import { getOrcadSshDeployment } from '../../shared/runtime-environments'
+import {
+  getOrcadSshDeployment,
+  isWslHostRuntimeEnvironment
+} from '../../shared/runtime-environments'
 import type {
   SshManagedServerStatus,
   SshManagedServerUpdateNote,
@@ -31,7 +34,7 @@ export async function resolveManagedRuntimeEnvironment(
   const environment = resolveEnvironment(userDataPath, selector)
   // Every call, subscription and status probe passes here, so a gated-off WSL host is never reached.
   assertWslHostReachable(environment)
-  if (environment.orcadDeployment?.kind === 'wsl') {
+  if (isWslHostRuntimeEnvironment(environment)) {
     // Reached over the wsl.exe bridge; connects only when an open project or terminal needs it.
     await getWslHostService()?.ensureForRuntimeCall(environment.id)
     return resolveEnvironment(userDataPath, environment.id)

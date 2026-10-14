@@ -34,6 +34,7 @@ import type {
   AgentDashboardMode,
   BranchPrefixStrategy,
   FloatingTerminalTriggerLocation,
+  JiraIssueKeyCasing,
   LeftSidebarAppearanceMode,
   OpenInApplication,
   SourceControlGroupOrder,
@@ -70,6 +71,9 @@ export type GlobalSettings = NativeChatGlobalSettings & {
   autoRenameBranchFromWorkDefaultedOn?: boolean
   branchPrefix: BranchPrefixStrategy
   branchPrefixCustom: string
+  /** Jira key casing for newly generated Jira-linked workspace and branch names.
+   *  Existing workspaces and user-typed names are never rewritten. */
+  jiraIssueKeyCasing?: JiraIssueKeyCasing
   theme: 'system' | 'dark' | 'light'
   /** Controls the left sidebar surface without changing terminal brightness. */
   leftSidebarAppearanceMode: LeftSidebarAppearanceMode
@@ -343,6 +347,8 @@ export type GlobalSettings = NativeChatGlobalSettings & {
    *  - 'blank': blank terminal (no agent launched)
    *  - TuiAgent: a specific agent id */
   defaultTuiAgent: TuiAgent | 'blank' | null
+  /** @deprecated Retained for older peers; setup-only is now a per-create choice. */
+  newWorkspaceSetupOnly?: boolean
   /** Agents hidden from picker/auto-launch; detection stays a raw PATH snapshot. */
   disabledTuiAgents: TuiAgent[]
   /** Master switch for the experimental plugin system. Off by default: no

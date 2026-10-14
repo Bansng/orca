@@ -11,6 +11,10 @@ import { readTerminalTail } from './terminal-tail-read'
 import { structuredWorkerTerminalRefusal } from './structured-worker-terminal-refusal'
 import { randomUUID } from 'node:crypto'
 
+export type LiveTerminalPty = ReturnType<
+  OrcaRuntimeWithBuildPtyTerminalSummary['getLivePtyForHandle']
+>
+
 export class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntimeWithGetPtyRecordForPaneKey {
   protected ptySurfaceTopology(): PtySurfaceTopology {
     return {

@@ -10,6 +10,7 @@ import { getGitHubLinkedWorkItemIdentity } from './source-selection-decisions'
 import type { GitHubWorkItem } from '../../../../shared/github/work-item-types'
 import type { TaskSourceContext } from '../../../../shared/task-source-context'
 import type { ExecutionHostId } from '../../../../shared/execution-host'
+import type { JiraIssueKeyCasing } from '../../../../shared/ui-chrome-types'
 import type { LinkedWorkItemSummary } from '@/lib/new-workspace'
 import type { SmartGitHubPrStartPointSelection } from './source-selection-decisions'
 
@@ -20,6 +21,7 @@ export type ComposerDecisions = {
     draftLinkedWorkItem?: LinkedWorkItemSummary | null
     initialName: string
     initialLinkedWorkItem?: LinkedWorkItemSummary | null
+    jiraIssueKeyCasing?: JiraIssueKeyCasing
   }) => string
   getInitialGitHubPrStartPointSelection: (input: {
     item: GitHubWorkItem | null | undefined
@@ -101,27 +103,38 @@ export function resolveSmartGitHubCreateNames({
   return { workspaceName: smartWorkspaceName, displayName: smartDisplayName }
 }
 
-function getLinkedWorkItemSeedName(item: LinkedWorkItemSummary | null | undefined): string {
+function getLinkedWorkItemSeedName(
+  item: LinkedWorkItemSummary | null | undefined,
+  jiraIssueKeyCasing: JiraIssueKeyCasing | undefined
+): string {
   if (!item) {
     return ''
   }
-  return getLinkedWorkItemWorkspaceName(item)?.seedName ?? getLinkedWorkItemSuggestedName(item)
+  return (
+    getLinkedWorkItemWorkspaceName(item, { jiraIssueKeyCasing })?.seedName ??
+    getLinkedWorkItemSuggestedName(item)
+  )
 }
 
 export function getInitialAutoManagedWorkspaceName({
   draftName,
   draftLinkedWorkItem,
   initialName,
-  initialLinkedWorkItem
+  initialLinkedWorkItem,
+  jiraIssueKeyCasing
 }: {
   draftName?: string | null
   draftLinkedWorkItem?: LinkedWorkItemSummary | null
   initialName: string
   initialLinkedWorkItem?: LinkedWorkItemSummary | null
+  jiraIssueKeyCasing?: JiraIssueKeyCasing
 }): string {
   // Why: a prefilled name counts as user input unless it exactly matches the linked-item seed Orca generated.
   const candidateName = draftName ?? initialName
-  const seedName = getLinkedWorkItemSeedName(draftLinkedWorkItem ?? initialLinkedWorkItem)
+  const seedName = getLinkedWorkItemSeedName(
+    draftLinkedWorkItem ?? initialLinkedWorkItem,
+    jiraIssueKeyCasing
+  )
   return candidateName && seedName && candidateName === seedName ? candidateName : ''
 }
 

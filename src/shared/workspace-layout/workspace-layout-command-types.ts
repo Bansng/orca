@@ -91,6 +91,8 @@ export type LayoutCommand =
   | (On & { type: 'openBrowserTab'; profileId?: string | null; groupId?: string })
   | (On & {
       type: 'openAgentSessionTab'
+      /** The chat's own tab id, which status and attention address; minted when absent. */
+      tabId?: string
       sessionId: string
       agent: AgentType
       groupId?: string

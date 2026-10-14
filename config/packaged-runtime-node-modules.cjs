@@ -27,6 +27,7 @@ const PACKAGED_RUNTIME_PACKAGE_ROOTS = [
   'posthog-node',
   'proper-lockfile',
   'qrcode',
+  'smol-toml',
   'ssh2',
   'tweetnacl',
   'ws',

@@ -27,6 +27,17 @@ export type WslHostStatus = {
   state: WslHostConnectionState
   /** Why it failed or is unverifiable, in the main process's words. */
   detail: string | null
+  /** An app update the running server waits to take (e.g. live terminals); Update/Force retry it. */
+  deferredUpdate?: WslHostDeferredUpdate | null
+}
+
+export type WslHostDeferredUpdate = {
+  candidateVersion: string
+  /** The update planner's deferral code, as Managed servers reports it. */
+  code: string
+  reason: string
+  /** False when forcing cannot make the update safe (e.g. it would strand terminals). */
+  forceable: boolean
 }
 
 /** What this build can do for WSL hosts; the UI reads it once at startup. */

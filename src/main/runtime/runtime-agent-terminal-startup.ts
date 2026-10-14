@@ -139,6 +139,29 @@ export async function resolveAgentTerminalCreateOptions(
   return runtime ? { ...qoderLaunch, launchRuntime: runtime } : qoderLaunch
 }
 
+/**
+ * The desktop-selected account env over the launch's plan, as a desktop launch's `accountEnv`
+ * rides over it; what the caller itself passed (`env`, `accountEnv`) still wins.
+ */
+export function withHostAccountLaunchEnv(
+  requested: Pick<TerminalCreateOptions, 'env' | 'accountEnv'>,
+  launch: TerminalCreateOptions,
+  accountEnv: Readonly<Record<string, string>>
+): TerminalCreateOptions {
+  if (Object.keys(accountEnv).length === 0) {
+    return launch
+  }
+  return {
+    ...launch,
+    env: {
+      ...launch.env,
+      ...accountEnv,
+      ...requested.env,
+      ...requested.accountEnv
+    }
+  }
+}
+
 async function buildRuntimeAgentTerminalStartupOptions(
   workspace: TerminalWorkspaceLaunchScope,
   opts: TerminalCreateOptions,

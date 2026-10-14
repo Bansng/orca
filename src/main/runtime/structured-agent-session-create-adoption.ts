@@ -1,3 +1,4 @@
+import type { AgentSessionAccountHome } from '../../shared/agent-session-account-home'
 import type { AgentSessionExecutionLocation } from '../../shared/agent-session-record'
 import type { StructuredAgentId } from '../../shared/agent-session-provider-handle'
 import { agentSessionExecutionLocationsEqual } from '../../shared/agent-session-record'
@@ -64,7 +65,7 @@ export async function resolveStructuredAgentSessionAdoptionForCreate(input: {
   transcriptImport: StructuredAgentTranscriptImport
   providerSessionId: string
   selfSessionId: string
-  selectedAccountHomePath: string
+  selectedAccountHome: AgentSessionAccountHome
   launchEnv: NodeJS.ProcessEnv
   workspaceCwd: string
 }) {

@@ -93,6 +93,16 @@ const closedOf = (socket: Socket): Promise<void> =>
   new Promise((resolve) => (socket.destroyed ? resolve() : socket.once('close', () => resolve())))
 
 describe('the managed tunnel over the stdio bridge', () => {
+  it('runs over system SSH exec too, which needs no forwarding and no `ssh -L`', () => {
+    const provider = new OrcadStdioBridgePortForwardProvider()
+    const systemSsh = { getClient: () => null, usesSystemSshTransport: () => true }
+    const down = { getClient: () => null, usesSystemSshTransport: () => false }
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: canHandle reads only these two.
+    expect(provider.canHandle(systemSsh as unknown as SshConnection)).toBe(true)
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: canHandle reads only these two.
+    expect(provider.canHandle(down as unknown as SshConnection)).toBe(false)
+  })
+
   it('serves the same local port a forward would, one bridge per connection', async () => {
     const openChannel = vi.fn(async () => localBridge())
     const forward = await startProvider({ openChannel })

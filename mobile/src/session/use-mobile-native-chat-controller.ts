@@ -302,8 +302,10 @@ export function useMobileNativeChatController(args: {
     nativeChatTurnJournal: activeChatStructured ? structuredNativeChat.turnJournal : null,
     // Only the structured lane names a refusal's cause; the bridge lane's starved ones drop none.
     nativeChatCommandRefusalCauses: structuredNativeChat.commandRefusalCauses,
+    // A host that stops what the chat has in flight takes Stop before the agent opens a turn.
     nativeChatCanStop: activeChatStructured
-      ? structuredNativeChat.turnId !== null
+      ? structuredNativeChat.turnId !== null ||
+        (agentSessionHostSupport?.conversationStop === true && structuredNativeChat.isWorking)
       : nativeChatAgentWorking,
     nativeChatStreamingText,
     nativeChatStreamLive,

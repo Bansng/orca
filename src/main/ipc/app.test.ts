@@ -13,7 +13,8 @@ const {
   showOpenDialogMock,
   trustFloatingWorkspaceDirectoryMock,
   registerRendererShutdownCheckpointHandlerMock,
-  registerMacKeyboardLayoutChangeNotificationsMock
+  registerMacKeyboardLayoutChangeNotificationsMock,
+  prepareWindowsAdministratorRestartMock
 } = vi.hoisted(() => ({
   handlers: new Map<string, (_event: unknown, args?: unknown) => unknown>(),
   appExitMock: vi.fn(),
@@ -25,7 +26,8 @@ const {
   showOpenDialogMock: vi.fn(),
   trustFloatingWorkspaceDirectoryMock: vi.fn(),
   registerRendererShutdownCheckpointHandlerMock: vi.fn(),
-  registerMacKeyboardLayoutChangeNotificationsMock: vi.fn()
+  registerMacKeyboardLayoutChangeNotificationsMock: vi.fn(),
+  prepareWindowsAdministratorRestartMock: vi.fn()
 }))
 
 vi.mock('node:child_process', () => ({
@@ -103,6 +105,10 @@ vi.mock('../app-relaunch', async (importOriginal) => ({
   relaunchApp: relaunchAppMock
 }))
 
+vi.mock('../windows/windows-administrator-restart', () => ({
+  prepareWindowsAdministratorRestart: prepareWindowsAdministratorRestartMock
+}))
+
 vi.mock('./floating-workspace-directory', () => ({
   ensureDefaultFloatingWorkspacePath: vi.fn(),
   trustFloatingWorkspaceDirectory: trustFloatingWorkspaceDirectoryMock,
@@ -154,6 +160,7 @@ describe('registerAppHandlers', () => {
     destroySystemTrayMock.mockReset()
     relaunchAppMock.mockReset()
     relaunchAppMock.mockImplementation(() => appRelaunchMock())
+    prepareWindowsAdministratorRestartMock.mockReset()
     showOpenDialogMock.mockReset()
     trustFloatingWorkspaceDirectoryMock.mockReset()
     registerRendererShutdownCheckpointHandlerMock.mockReset()
@@ -178,6 +185,43 @@ describe('registerAppHandlers', () => {
 
     expect(registerRendererShutdownCheckpointHandlerMock).toHaveBeenCalledWith(store)
     expect(registerMacKeyboardLayoutChangeNotificationsMock).toHaveBeenCalledOnce()
+  })
+
+  it('checkpoints before scheduling the native administrator restart and quits normally', async () => {
+    const plan = { execPath: 'C:\\Orca\\resources\\bin\\orca.exe', args: ['restart'] }
+    prepareWindowsAdministratorRestartMock.mockReturnValue(plan)
+    let finishCleanup!: () => void
+    const onBeforeRelaunch = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishCleanup = resolve
+        })
+    )
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this handler never reads the store.
+    registerAppHandlers({} as never, { onBeforeRelaunch })
+    const pending = Promise.resolve(handlers.get('app:restartAsAdministrator')?.(null))
+    await vi.advanceTimersByTimeAsync(150)
+    expect(relaunchAppMock).not.toHaveBeenCalled()
+    finishCleanup()
+    await pending
+    await vi.advanceTimersByTimeAsync(150)
+    expect(relaunchAppMock).toHaveBeenCalledWith('windows-administrator', undefined, plan)
+    expect(appQuitMock).toHaveBeenCalledOnce()
+    expect(appExitMock).not.toHaveBeenCalled()
+  })
+
+  it('keeps the desktop open if the native restart is unavailable', async () => {
+    prepareWindowsAdministratorRestartMock.mockImplementation(() => {
+      throw new Error('Unavailable')
+    })
+    const onBeforeRelaunch = vi.fn()
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this handler never reads the store.
+    registerAppHandlers({} as never, { onBeforeRelaunch })
+    await expect(handlers.get('app:restartAsAdministrator')?.(null)).rejects.toThrow('Unavailable')
+    await vi.advanceTimersByTimeAsync(150)
+    expect(onBeforeRelaunch).not.toHaveBeenCalled()
+    expect(relaunchAppMock).not.toHaveBeenCalled()
+    expect(appQuitMock).not.toHaveBeenCalled()
   })
 
   it('marks relaunch as expected shutdown before exiting', async () => {
