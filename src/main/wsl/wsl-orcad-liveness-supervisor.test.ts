@@ -58,6 +58,7 @@ function harness(options: { visible?: boolean } = {}) {
         fullVersion: '1',
         pid: pid++,
         pairingOffer: 'offer',
+        deferredUpdate: null,
         close: async () => {}
       }
       if (opts?.status) {
@@ -227,6 +228,27 @@ describe('WslOrcadLivenessSupervisor', () => {
     ])
     expect(h.statuses[0]).toMatchObject({ terminals: 'unverifiable' })
     expect(h.collectCensus).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps watching the incumbent when an update connect fails', async () => {
+    const h = harness()
+    await h.supervisor.connect('Ubuntu')
+    h.state.ensureFails = 1
+    await expect(h.supervisor.connect('Ubuntu', { force: true })).rejects.toThrow('relaunch failed')
+    expect(h.ensure).toHaveBeenLastCalledWith('Ubuntu', { force: true })
+    expect(h.watches).toHaveLength(2)
+    expect(h.lastWatch().closed).toBe(false)
+  })
+
+  it('reports ready itself when a user connect supersedes a recovery', async () => {
+    const h = harness()
+    await h.supervisor.connect('Ubuntu')
+    h.state.identity = { distroInstance: 'boot:1', orcad: null }
+    h.lastWatch().exit(0)
+    await h.settle()
+    expect(h.statuses.at(-1)).toMatchObject({ state: 'reconnecting' })
+    await h.supervisor.connect('Ubuntu')
+    expect(h.statuses.at(-1)).toEqual({ state: 'ready', census: null })
   })
 
   it('leaves an orcad nobody uses stopped instead of undoing its idle exit', async () => {

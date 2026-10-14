@@ -17,6 +17,9 @@ function createModel(): TaskPageLinearCollectionEffectsModel {
     selectedJiraSiteId: 'site-1',
     taskSource: 'jira',
     jiraTaskSourceContext: null,
+    jiraHasWorkspace: false,
+    linkedJiraIssueRefs: [],
+    linkedJiraIssueRefsSignature: '[]',
     jiraTaskSourceScopeKey: 'fixture',
     jiraSearchPersistReadyRef: { current: true },
     taskResumeApplied: true,
@@ -33,7 +36,14 @@ function createModel(): TaskPageLinearCollectionEffectsModel {
     appliedJiraSearch: '',
     setAppliedJiraSearch: vi.fn(),
     activeJiraPreset: 'assigned',
+    jiraCurrentSprint: false,
     jiraRefreshNonce: 0,
+    jiraActiveSavedFilterId: null,
+    jiraSavedFilters: [],
+    jiraSavedFiltersLoading: false,
+    selectedJiraStatuses: [],
+    jiraQuickFiltersLoading: false,
+    setJiraStatusCatalog: vi.fn(),
     setJiraProjectStatusOrder: vi.fn(),
     displayedJiraIssues: []
   }
@@ -49,6 +59,120 @@ describe('useTaskPageJiraListEffects refresh wiring', () => {
     vi.clearAllMocks()
     listJiraIssues.mockResolvedValue([])
     searchJiraIssues.mockResolvedValue([])
+  })
+  it('keeps sprint presets on the host list path and composes text queries after classification', async () => {
+    const model = createModel()
+    model.activeJiraPreset = 'all'
+    model.jiraCurrentSprint = true
+    model.selectedJiraStatuses = ['Blocked']
+    const { rerender } = renderHook(() => useTaskPageJiraListEffects(model))
+    await waitFor(() =>
+      expect(listJiraIssues).toHaveBeenCalledWith('all', 50, {
+        sourceContext: null,
+        force: false,
+        filters: { statuses: ['Blocked'], currentSprint: true }
+      })
+    )
+    expect(searchJiraIssues).not.toHaveBeenCalled()
+    await act(async () => {
+      model.appliedJiraSearch = 'fix login'
+      rerender()
+      await Promise.resolve()
+    })
+    await waitFor(() =>
+      expect(searchJiraIssues).toHaveBeenCalledWith(
+        '(text ~ "fix login*") AND sprint in openSprints()',
+        50,
+        { sourceContext: null, force: false }
+      )
+    )
+  })
+
+  it('adds sprint filtering to exact saved JQL without retrying invalid syntax as text', async () => {
+    const model = createModel()
+    model.appliedJiraSearch = 'saved-query ORDER BY updated DESC'
+    model.jiraActiveSavedFilterId = 'saved'
+    model.jiraSavedFilters = [{ id: 'saved', name: 'Saved', jql: model.appliedJiraSearch }]
+    model.jiraCurrentSprint = true
+    searchJiraIssues.mockRejectedValue(new Error('Error 400: Invalid saved query'))
+    renderHook(() => useTaskPageJiraListEffects(model))
+    await waitFor(() =>
+      expect(model.setJiraError).toHaveBeenCalledWith(
+        expect.objectContaining({ details: 'Invalid saved query' })
+      )
+    )
+    expect(searchJiraIssues).toHaveBeenCalledExactlyOnceWith(
+      '(saved-query) AND sprint in openSprints() ORDER BY updated DESC',
+      50,
+      { sourceContext: null, force: false }
+    )
+    expect(listJiraIssues).not.toHaveBeenCalled()
+  })
+
+  it('reports a saved query that exceeds the request limit after sprint composition', async () => {
+    const model = createModel()
+    model.appliedJiraSearch = `key in (${Array.from({ length: 1030 }, (_, index) => `APP-${index + 1}`).join(',')})`
+    model.jiraActiveSavedFilterId = 'large'
+    model.jiraSavedFilters = [{ id: 'large', name: 'Large', jql: model.appliedJiraSearch }]
+    model.jiraCurrentSprint = true
+    renderHook(() => useTaskPageJiraListEffects(model))
+    await waitFor(() =>
+      expect(model.setJiraError).toHaveBeenCalledWith(
+        expect.objectContaining({ title: expect.stringContaining('too long') })
+      )
+    )
+    expect(searchJiraIssues).not.toHaveBeenCalled()
+    expect(listJiraIssues).not.toHaveBeenCalled()
+  })
+
+  it('loads linked keys directly and does not reread them for local search text', async () => {
+    const model = createModel()
+    model.jiraHasWorkspace = true
+    model.linkedJiraIssueRefs = [{ key: 'APP-1', siteId: 'site-1' }]
+    model.linkedJiraIssueRefsSignature = JSON.stringify(model.linkedJiraIssueRefs)
+    const { rerender } = renderHook(() => useTaskPageJiraListEffects(model))
+    await waitFor(() => expect(searchJiraIssues).toHaveBeenCalledTimes(1))
+    expect(listJiraIssues).not.toHaveBeenCalled()
+    expect(searchJiraIssues).toHaveBeenCalledWith('key = APP-1', 1, {
+      sourceContext: null,
+      siteId: 'site-1',
+      force: false
+    })
+    model.appliedJiraSearch = 'login'
+    rerender()
+    await waitFor(() => expect(model.setJiraLoading).toHaveBeenLastCalledWith(false))
+    expect(searchJiraIssues).toHaveBeenCalledTimes(1)
+    model.jiraRefreshNonce = 1
+    rerender()
+    await waitFor(() => expect(searchJiraIssues).toHaveBeenCalledTimes(2))
+    expect(searchJiraIssues).toHaveBeenLastCalledWith('key = APP-1', 1, {
+      sourceContext: null,
+      siteId: 'site-1',
+      force: true
+    })
+  })
+
+  it('ignores a linked read that completes after the source changes', async () => {
+    const model = createModel()
+    model.jiraHasWorkspace = true
+    model.linkedJiraIssueRefs = [{ key: 'APP-1', siteId: 'site-1' }]
+    model.linkedJiraIssueRefsSignature = JSON.stringify(model.linkedJiraIssueRefs)
+    let complete: (value: []) => void = () => {}
+    searchJiraIssues.mockImplementationOnce(
+      () =>
+        new Promise<[]>((resolve) => {
+          complete = resolve
+        })
+    )
+    const { rerender } = renderHook(() => useTaskPageJiraListEffects(model))
+    await waitFor(() => expect(searchJiraIssues).toHaveBeenCalledTimes(1))
+    model.taskSource = 'linear'
+    rerender()
+    await act(async () => {
+      complete([])
+      await Promise.resolve()
+    })
+    expect(model.setJiraIssues).not.toHaveBeenCalled()
   })
 
   it('passes force only for a refresh nonce change', async () => {
@@ -82,6 +206,40 @@ describe('useTaskPageJiraListEffects refresh wiring', () => {
       sourceContext: null,
       force: false
     })
+  })
+
+  it('uses the preset list path for status filters and restores it after clearing', async () => {
+    const model = createModel()
+    model.selectedJiraStatuses = ['In Progress', 'Blocked']
+    const { rerender } = renderHook(() => useTaskPageJiraListEffects(model))
+    await waitFor(() => expect(listJiraIssues).toHaveBeenCalledTimes(1))
+    expect(listJiraIssues).toHaveBeenLastCalledWith('assigned', 50, {
+      sourceContext: null,
+      force: false,
+      filters: { statuses: ['In Progress', 'Blocked'] }
+    })
+    expect(searchJiraIssues).not.toHaveBeenCalled()
+    await act(async () => {
+      model.selectedJiraStatuses = []
+      rerender()
+    })
+    expect(listJiraIssues).toHaveBeenLastCalledWith('assigned', 50, {
+      sourceContext: null,
+      force: false
+    })
+  })
+
+  it('keeps manual JQL independent of a persisted status selection', async () => {
+    const model = createModel()
+    model.selectedJiraStatuses = ['Blocked']
+    model.appliedJiraSearch = 'project = APP ORDER BY created ASC'
+    renderHook(() => useTaskPageJiraListEffects(model))
+    await waitFor(() => expect(searchJiraIssues).toHaveBeenCalledTimes(1))
+    expect(searchJiraIssues).toHaveBeenCalledWith('project = APP ORDER BY created ASC', 50, {
+      sourceContext: null,
+      force: false
+    })
+    expect(listJiraIssues).not.toHaveBeenCalled()
   })
 
   it('passes force through the text-search wrapper on refresh', async () => {

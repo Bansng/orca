@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { net } from 'electron'
+import { getMainHttpClient } from '../network/http-client'
 import type { ProviderRateLimits, UsageRateLimitSource } from '../../shared/rate-limit-types'
 import { abortSignalWithTimeout } from '../lib/abort-signal-with-timeout'
 import {
@@ -80,7 +80,7 @@ async function fetchDashboardJson(
   // previous account's figures when the fresh result names an account, and a
   // switch whose first refresh 401s or 5xxs is exactly when it must.
   const provenance = accountFingerprint(session)
-  const res = await net.fetch(url, {
+  const res = await getMainHttpClient().fetch(url, {
     // Keep dashboard redirects visible without forwarding session credentials.
     redirect: 'manual',
     // The selected account's Cookie must not be replaced by Electron's session jar.

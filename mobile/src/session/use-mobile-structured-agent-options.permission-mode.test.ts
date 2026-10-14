@@ -59,7 +59,8 @@ async function mountOptions(props: ProbeProps) {
       enabled: true,
       fence: probe.fence,
       mutate,
-      optionStamp: probe.optionStamp
+      optionStamp: probe.optionStamp,
+      takesSendOptions: true
     })
     return null
   }

@@ -37,6 +37,7 @@ import {
   SYSTEM_SSH_FORWARD_POST_KILL_TIMEOUT_MS,
   SYSTEM_SSH_FORWARD_STARTUP_GRACE_MS,
   SYSTEM_SSH_FORWARD_STOP_TIMEOUT_MS,
+  buildSystemSshPortForwardArgs,
   spawnSystemSshPortForward,
   startSystemSshPortForwardProcess,
   waitForSystemSshForwardStartup,
@@ -159,6 +160,16 @@ describe('system SSH forward process', () => {
       expect.any(Array),
       expect.objectContaining({ stdio: ['ignore', 'ignore', 'pipe'] })
     )
+  })
+
+  it('spawns exactly the argv the orphan matcher is given, LogLevel=INFO included', () => {
+    spawnMock.mockReturnValue(createFakeProcess())
+    const options = { logChannelFailures: true }
+    spawnSystemSshPortForward(createTarget(), 5173, '127.0.0.1', 3000, options)
+
+    const built = buildSystemSshPortForwardArgs(createTarget(), 5173, '127.0.0.1', 3000, options)
+    expect(spawnMock.mock.calls[0][1]).toEqual(built)
+    expect(built).toContain('LogLevel=INFO')
   })
 
   it('suppresses Orca mux flags for port forwards without disabling ssh_config muxing', () => {

@@ -4,13 +4,11 @@
  * distro; a relaunch that moved orcad's port moves the bridge with it. In memory only: the
  * deployment record (C7) persists what `onChange` reports.
  */
-import { parsePairingCode } from '../../shared/pairing'
-import { pairedRuntimeConnectionFromOffer } from '../../shared/paired-runtime-connection'
+import { errorMessage } from '../../shared/error-message'
 import type { ServeReadiness } from '../server/serve-readiness'
 import type { OrcadHostTransport } from '../ssh/orcad-host-transport'
 import {
   OrcadManagedIdentityError,
-  verifyOrcadPairingIdentity,
   type OrcadTunnelIdentity
 } from '../ssh/orcad-managed-tunnel-identity'
 import { tunneledOrcadPairingCode } from '../ssh/orcad-tunneled-pairing'
@@ -21,11 +19,13 @@ import { wslDistroHolderKey } from './wsl-distro-holder-record'
 import {
   defaultWslOrcadEnvironmentId,
   deployAndLaunchWslOrcad,
+  type WslOrcadDeferredUpdate,
   type WslOrcadDeployOptions,
   type WslOrcadLaunch
 } from './wsl-orcad-deploy'
 import type { WslOrcadHostTarget } from './wsl-orcad-host-target'
 import { createWslOrcadHostTransport } from './wsl-orcad-host-transport'
+import { verifyWslOrcadIdentity } from './wsl-orcad-pairing-identity'
 import { trackWslOrcadHostEnvironment } from './wsl-orcad-host-environments'
 import {
   listenWslOrcadStdioBridge,
@@ -44,6 +44,8 @@ export type WslOrcadConnection = {
   pid: number | null
   /** orcad's pairing code, with its endpoint rewritten to `ws://127.0.0.1:<localPort>`. */
   pairingOffer: string
+  /** An app update the incumbent `fullVersion` is waiting to take (live terminals). */
+  deferredUpdate: WslOrcadDeferredUpdate | null
   close(): Promise<void>
 }
 
@@ -118,7 +120,19 @@ export class WslOrcadConnectionManager {
     const key = wslDistroHolderKey(name)
     const pending = this.inFlight.get(key)
     if (pending) {
+      if (!options.force) {
+        return pending
+      }
+      // Force needs its own deploy; joining a plain connect would silently drop it.
+      const generation = this.generation(key)
       return pending
+        .catch(() => {})
+        .then(() => {
+          if (this.generation(key) !== generation) {
+            throw new WslOrcadConnectionSupersededError(name)
+          }
+          return this.ensure(distro, options)
+        })
     }
     const status = options.status ?? { pending: CONNECTING, ready: READY }
     // A refresh of a live connection stays quiet; liveness recovery always reports.
@@ -130,7 +144,7 @@ export class WslOrcadConnectionManager {
       if (!options.status && !(error instanceof WslOrcadConnectionSupersededError)) {
         this.dependencies.onChange?.(name, this.get(name), {
           state: 'failed',
-          reason: error instanceof Error ? error.message : String(error),
+          reason: errorMessage(error),
           terminals: 'unverifiable'
         })
       }
@@ -261,6 +275,7 @@ export class WslOrcadConnectionManager {
           fullVersion: launch.fullVersion,
           pid: launch.pid,
           pairingOffer,
+          deferredUpdate: launch.deferredUpdate ?? null,
           close: () => this.closeEntry(key, entry)
         }
       }
@@ -282,13 +297,15 @@ export class WslOrcadConnectionManager {
     announce: WslOrcadConnectionStatus | null
   ): WslOrcadConnection {
     const pairingOffer = tunneledOrcadPairingCode(launch.readiness, entry.connection.localPort)
+    const deferredUpdate = launch.deferredUpdate ?? null
     const changed =
       pairingOffer !== entry.connection.pairingOffer ||
       launch.fullVersion !== entry.connection.fullVersion ||
-      launch.pid !== entry.connection.pid
+      launch.pid !== entry.connection.pid ||
+      JSON.stringify(deferredUpdate) !== JSON.stringify(entry.connection.deferredUpdate)
     if (changed) {
       const { fullVersion, pid } = launch
-      entry.connection = { ...entry.connection, pairingOffer, fullVersion, pid }
+      entry.connection = { ...entry.connection, pairingOffer, fullVersion, pid, deferredUpdate }
       this.active.set(key, entry)
     }
     trackWslOrcadHostEnvironment(entry.connection, entry.connection)
@@ -323,18 +340,6 @@ export class WslOrcadConnectionManager {
       await this.close(key)
     }
   }
-}
-
-async function verifyWslOrcadIdentity(
-  pairingOffer: string,
-  readiness: ServeReadiness
-): Promise<OrcadTunnelIdentity> {
-  const offer = parsePairingCode(pairingOffer)
-  return offer
-    ? verifyOrcadPairingIdentity(pairedRuntimeConnectionFromOffer(offer), {
-        runtimeId: readiness.runtimeId || null
-      })
-    : { verdict: 'foreign', detail: 'The Orca server in WSL published an invalid pairing offer.' }
 }
 
 function defaultTransport(target: WslOrcadHostTarget): OrcadHostTransport {

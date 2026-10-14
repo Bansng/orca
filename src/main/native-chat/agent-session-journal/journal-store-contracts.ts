@@ -40,7 +40,12 @@ export type ResolveDispatchInput = {
   (
     | { state: 'accepted'; providerIdentity: AgentJournalItemIdentity | null }
     /** The turn the message is handed into — the live root turn, or `thread` when none runs. */
-    | { state: 'pending'; turnScope: AgentJournalTurnScope }
+    | {
+        state: 'pending'
+        turnScope: AgentJournalTurnScope
+        /** The stopped messages this send carries as history (`JournalDispatchRow.carries`). */
+        carries?: readonly string[]
+      }
     /** `reason` is what released clients print, `rejection` what newer ones read: both from
      *  `agentSessionFailureWords`, never written by hand. */
     | ({
@@ -106,6 +111,8 @@ export type JournalSubmissionInput = {
   origin?: 'client' | 'host'
   /** Who it is from (`JournalSubmissionRow.source`); the row keeps the kind only. */
   source?: Pick<AgentSessionMessageSource, 'kind'>
+  /** The model and effort it runs on (`JournalSubmissionRow.options`). */
+  options?: Readonly<Record<string, string>>
 }
 
 /** A submission append that converts a queued draft, in one transaction. */

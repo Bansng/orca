@@ -60,9 +60,12 @@ function executableName(command: string): string {
   return splitExecutable(command).name
 }
 
-// Why: versions before STA-10471 spawned the same argv with ExitOnForwardFailure=yes.
+// Why: versions before STA-10471 spawned the same argv with ExitOnForwardFailure=yes, and
+// versions before #24863's fix without LogLevel=INFO.
 function normalizeForwardArgv(text: string): string {
-  return text.replaceAll(/ExitOnForwardFailure=(?:yes|no)/g, 'ExitOnForwardFailure=*')
+  return text
+    .replace(' -o LogLevel=INFO', '')
+    .replaceAll(/ExitOnForwardFailure=(?:yes|no)/g, 'ExitOnForwardFailure=*')
 }
 
 /** The whole argv after the executable must be Orca's; any extra option is someone else's ssh. */

@@ -6,7 +6,10 @@ import {
 } from './paired-runtime-connection'
 import { classifyRemotePairingHostname } from './remote-pairing-address'
 import { RuntimeEnvironmentReconciliationRecordSchema } from './runtime-environment-reconciliation-record'
-import { OrcadWslDeploymentLinkSchema } from './wsl-host-deployment-link'
+import {
+  OrcadWslDeploymentLinkSchema,
+  type OrcadWslDeploymentLink
+} from './wsl-host-deployment-link'
 
 export const RuntimeAccessEndpointSchema = z.object({
   id: z.string().min(1),
@@ -233,9 +236,9 @@ export function isUserManagedRuntimeEnvironment(
 }
 
 /** A WSL distro added as a host; keyed by its deployment record's kind, never by its name. */
-export function isWslHostRuntimeEnvironment(
-  environment: Pick<PublicKnownRuntimeEnvironment, 'orcadDeployment'>
-): boolean {
+export function isWslHostRuntimeEnvironment<
+  T extends { orcadDeployment?: OrcadDeploymentLink | null }
+>(environment: T): environment is T & { orcadDeployment: OrcadWslDeploymentLink } {
   return environment.orcadDeployment?.kind === 'wsl'
 }
 

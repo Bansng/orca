@@ -2,6 +2,8 @@ import { createElement } from 'react'
 import { act, create } from 'react-test-renderer'
 import { describe, expect, it, vi } from 'vitest'
 
+// The desktop's server-list feed loads react-native; its timer never runs without a subscriber.
+vi.mock('react-native', () => ({}))
 vi.mock('../cache/worktree-cache', () => ({
   getCachedWorktrees: () => null,
   setCachedWorktrees: () => {}
@@ -67,7 +69,7 @@ async function displayedRows(args: {
     state.clientRef.current = client
     setWorktrees = state.setWorktrees
     seen.refresh = useHostRepoMetadata({ client, connState: 'connected', hostId: 'host-1', state })
-    seen.rows = useHostDisplayWorktrees('connected', state)
+    seen.rows = useHostDisplayWorktrees('connected', state, 'host-1')
     return null
   }
   await act(async () => {

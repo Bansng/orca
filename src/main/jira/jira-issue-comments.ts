@@ -1,3 +1,4 @@
+import { requireStrictJiraSite } from './jira-read-failure'
 import type { JiraComment } from '../../shared/jira-types'
 import { acquire, release } from './request-queue'
 import { apiBasePath, jiraRequest, type JiraClientForSite } from './authenticated-request'
@@ -95,9 +96,12 @@ async function collectCommentMediaRequest(
 
 export async function getIssueComments(
   key: string,
-  siteId?: string | null
+  siteId?: string | null,
+  strict = false
 ): Promise<JiraComment[]> {
-  const entry = getClients(siteId)[0]
+  const entries = getClients(siteId)
+  requireStrictJiraSite(entries, siteId, strict)
+  const entry = entries[0]
   if (!entry) {
     return []
   }
@@ -124,6 +128,9 @@ export async function getIssueComments(
       throw error
     }
     console.warn('[jira] getIssueComments failed:', error)
+    if (strict) {
+      throw error
+    }
     return []
   } finally {
     if (held) {

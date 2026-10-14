@@ -24,6 +24,8 @@ export type AccountsPaneProps = {
   wslDistros?: string[]
   wslCapabilitiesLoading?: boolean
   accountOwnerPlatform?: NodeJS.Platform | null
+  /** Set when the chosen host is a WSL host: this desktop owns that distro's accounts. */
+  wslHostDistro?: string | null
 }
 
 export type LocalAccountRuntime = {

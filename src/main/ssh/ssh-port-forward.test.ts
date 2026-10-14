@@ -166,7 +166,7 @@ describe('SshPortForwardManager', () => {
       3000,
       '127.0.0.1',
       8080,
-      {}
+      { logChannelFailures: true }
     )
     expect(forward.waitForStartup).toHaveBeenCalled()
     expect(entry).toMatchObject({
@@ -214,6 +214,7 @@ describe('SshPortForwardManager', () => {
       '127.0.0.1',
       8080,
       {
+        logChannelFailures: true,
         resolvedConfig: expect.objectContaining({
           hostname: 'resolved.example.com',
           proxyUseFdpass: true

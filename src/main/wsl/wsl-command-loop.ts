@@ -202,7 +202,7 @@ export function startWslCommandLoop(child: PipedChildProcess, marker: string): W
         settled: false
       }
       pending = entry
-      Object.assign(channel, {
+      const commandChannel: RemoteCommandChannel = Object.assign(channel, {
         stdin: new Writable({ write: refuseStdin }),
         stderr,
         close: () => {
@@ -213,8 +213,7 @@ export function startWslCommandLoop(child: PipedChildProcess, marker: string): W
         }
       })
       child.stdin.write(`${Buffer.from(command, 'utf8').toString('base64')}\n`)
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: `stdin`, `stderr` and `close` were assigned above and `exit`/`close` are emitted by `settle`.
-      return channel as unknown as RemoteCommandChannel
+      return commandChannel
     },
     end() {
       if (alive) {

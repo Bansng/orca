@@ -6,6 +6,7 @@
  * left, the decommission addressed the very orcad the bridge was serving, and the daemon retired.
  */
 import { z } from 'zod'
+import { errorMessage } from '../../shared/error-message'
 import type { OrcadDecommissionResult } from '../../shared/orcad-decommission'
 import { ORCAD_MANAGED_REMOTE_PORT } from '../../shared/orcad-managed-runtime'
 import type { OrcadTerminalCensus } from '../../shared/orcad-terminal-census'
@@ -156,8 +157,4 @@ export function decommissionWslHostOrcad(
     }
     return decommissionRemoteOrcad({ ...slot, record: context.activationRecord, census })
   }
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
 }

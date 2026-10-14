@@ -23,6 +23,7 @@ import {
 } from '../sidebar/wsl-host-row-status'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
+import { managedServerOutcomeLabel } from './managed-server-copy'
 
 /** Settings → Orca servers: the WSL distros added as hosts (Windows, experimental). */
 export function WslHostsSection({
@@ -50,14 +51,15 @@ export function WslHostsSection({
     return null
   }
 
-  const connect = async (environmentId: string): Promise<void> => {
+  const connect = async (environmentId: string, force = false): Promise<void> => {
     const api = window.api.runtimeEnvironments?.wslHosts
     if (!api || connectingId) {
       return
     }
     setConnectingId(environmentId)
     try {
-      await api.connect({ environmentId })
+      // A connect retries a deferred update; force takes it over the running terminals.
+      await api.connect({ environmentId, force })
       onChanged()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error))
@@ -110,6 +112,7 @@ export function WslHostsSection({
           {hosts.map((environment) => {
             const status = statuses[environment.id]
             const ready = status?.state === 'ready'
+            const deferred = unavailableLabel ? null : status?.deferredUpdate
             return (
               <div key={environment.id} className="flex items-center gap-2 px-4 py-3">
                 <div className="min-w-0 flex-1">
@@ -118,7 +121,44 @@ export function WslHostsSection({
                     {unavailableLabel ?? getWslHostRowDetail(status)}
                     {!unavailableLabel && status?.detail ? ` — ${status.detail}` : ''}
                   </p>
+                  {deferred ? (
+                    <p className="text-xs text-muted-foreground">
+                      {translate(
+                        'auto.components.settings.managedServers.row.deferredVersion',
+                        'Update to {{version}} deferred.',
+                        { version: deferred.candidateVersion }
+                      )}{' '}
+                      {managedServerOutcomeLabel({
+                        outcome: 'deferred',
+                        code: deferred.code
+                      })}
+                    </p>
+                  ) : null}
                 </div>
+                {deferred ? (
+                  <>
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="outline"
+                      disabled={connectingId !== null}
+                      onClick={() => void connect(environment.id)}
+                    >
+                      {translate('auto.components.settings.managedServers.row.update', 'Update')}
+                    </Button>
+                    {deferred.forceable ? (
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant="outline"
+                        disabled={connectingId !== null}
+                        onClick={() => void connect(environment.id, true)}
+                      >
+                        {translate('auto.components.settings.wslHosts.forceUpdate', 'Force update')}
+                      </Button>
+                    ) : null}
+                  </>
+                ) : null}
                 {ready && !unavailableLabel ? null : (
                   <Button
                     type="button"

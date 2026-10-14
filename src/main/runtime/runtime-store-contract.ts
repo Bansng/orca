@@ -81,6 +81,7 @@ export type RuntimeStore = {
   getMobileClientTabSelections?: Store['getMobileClientTabSelections']
   setMobileClientTabSelections?: Store['setMobileClientTabSelections']
   getSettings(): {
+    nestedWorkerMaxDepth?: GlobalSettings['nestedWorkerMaxDepth']
     workspaceDir: string
     nestWorkspaces: boolean
     // Read by worktree placement: decides whether this project's worktrees
@@ -91,6 +92,8 @@ export type RuntimeStore = {
     branchPrefix: string
     branchPrefixCustom: string
     defaultTuiAgent?: GlobalSettings['defaultTuiAgent']
+    newWorkspaceSetupOnly?: GlobalSettings['newWorkspaceSetupOnly']
+    setupScriptLaunchMode?: GlobalSettings['setupScriptLaunchMode']
     disabledTuiAgents?: GlobalSettings['disabledTuiAgents']
     agentCmdOverrides?: GlobalSettings['agentCmdOverrides']
     agentDefaultArgs?: GlobalSettings['agentDefaultArgs']

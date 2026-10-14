@@ -57,6 +57,11 @@ export type OrcadDeployOptions = {
    * incumbent found under the fence makes the census unverifiable rather than wrongly zero.
    */
   censusRecord?: OrcadActivationRecord
+  /**
+   * Counts again under the fence just before the incumbent stops, so a terminal opened during
+   * the upload still defers the update. Called only while the incumbent is the one counted.
+   */
+  recountCensus?: () => Promise<OrcadTerminalCensus>
   force?: boolean
   /** The Orca app version activating, recorded so an older client never downgrades the host. */
   appVersion?: string

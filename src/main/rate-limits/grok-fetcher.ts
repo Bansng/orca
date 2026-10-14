@@ -1,4 +1,4 @@
-import { net } from 'electron'
+import { getMainHttpClient } from '../network/http-client'
 import type {
   ProviderRateLimits,
   RateLimitWindow,
@@ -244,7 +244,7 @@ async function fetchBillingData(
   session: GrokAuthSession,
   signal?: AbortSignal
 ): Promise<GrokBillingFetchOutcome> {
-  const res = await net.fetch(url, {
+  const res = await getMainHttpClient().fetch(url, {
     headers: grokRequestHeaders(session),
     signal: abortSignalWithTimeout(signal, API_TIMEOUT_MS)
   })

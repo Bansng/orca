@@ -6,6 +6,11 @@
  * sets `kind` and must never carry `sshTargetId`: an older destination strips unknown fields, so a
  * non-SSH source without it fails that destination's parse instead of importing as an SSH host.
  */
+import type {
+  OrcadMigrationLocalWslManifestSource,
+  OrcadMigrationManifestSource,
+  OrcadMigrationSshManifestSource
+} from './orcad-migration-manifest'
 import { ORCAD_MIGRATION_LOCAL_WSL_SOURCE_RUNTIME_CAPABILITY } from './orcad-runtime-capabilities'
 
 export const ORCAD_MIGRATION_SSH_RELAY_SOURCE_KIND = 'ssh-relay' as const
@@ -51,4 +56,20 @@ export function requiredOrcadMigrationSourceCapability(
   return kind === ORCAD_MIGRATION_SSH_RELAY_SOURCE_KIND
     ? null
     : ORCAD_MIGRATION_SOURCE_KIND_CAPABILITIES[kind]
+}
+
+export function isOrcadMigrationLocalWslSource(
+  source: OrcadMigrationManifestSource
+): source is OrcadMigrationLocalWslManifestSource {
+  return 'kind' in source && source.kind === 'local-wsl'
+}
+
+/** For the SSH conversion's own steps: a WSL manifest reaching them is a bug, never a fallback. */
+export function requireOrcadMigrationSshSource(
+  source: OrcadMigrationManifestSource
+): OrcadMigrationSshManifestSource {
+  if (isOrcadMigrationLocalWslSource(source)) {
+    throw new Error('orcad_migration_source_not_ssh')
+  }
+  return source
 }

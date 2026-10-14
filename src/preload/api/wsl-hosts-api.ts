@@ -18,7 +18,8 @@ export type WslHostsPreloadApi = {
   listDistros: () => Promise<WslHostDistro[]>
   add: (args: { distro: string; startIfStopped?: boolean }) => Promise<WslHostAddResult>
   remove: (args: { environmentId: string }) => Promise<WslHostServerStop>
-  connect: (args: { environmentId: string }) => Promise<void>
+  /** `force` takes an update that live terminals deferred. */
+  connect: (args: { environmentId: string; force?: boolean }) => Promise<void>
   getStatuses: () => Promise<WslHostStatus[]>
   onStatusChanged: (callback: (status: WslHostStatus) => void) => () => void
   /** The WSL hosts an open project or terminal needs; only these may boot a stopped distro. */

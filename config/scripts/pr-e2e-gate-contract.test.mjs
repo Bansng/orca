@@ -27,7 +27,7 @@ describe('restart-survival E2E routing', () => {
   // Every file below carries behavior the restart spec is the only test that exercises end to end.
   it.each([
     'src/main/runtime/orca-runtime.ts',
-    'src/main/runtime/orca-runtime-browser.ts',
+    'src/main/runtime/browser/browser-commands.ts',
     'src/main/runtime/client-hosted-page-reconciliation-window.ts',
     'src/main/runtime/runtime-browser-client-page-adoption.ts',
     'src/main/runtime/runtime-browser-client-page-recovery.ts',
@@ -44,6 +44,9 @@ describe('restart-survival E2E routing', () => {
     'src/shared/browser-client-host-protocol.ts'
   ])('routes %s', (path) => {
     expect(restartSurvivalRoute.matches(path)).toBe(true)
+    if (path === 'src/main/runtime/browser/browser-commands.ts') {
+      expect(existsSync(join(projectDir, path))).toBe(true)
+    }
   })
 
   // The pattern is deliberately not "anything under src": routing every PR at a two-Electron spec
@@ -53,7 +56,12 @@ describe('restart-survival E2E routing', () => {
     'src/renderer/src/components/tab-bar/BrowserTab.tsx',
     'src/main/terminal/pty-manager.ts',
     // The status/types entries name whole files, not a suffix any longer name may end with.
-    'src/shared/computer-use-runtime-types.ts'
+    'src/shared/computer-use-runtime-types.ts',
+    'src/main/runtime/browser/browser-commands.test.ts',
+    'src/main/runtime/browser/browser-commands.test-fixture.ts',
+    'src/main/runtime/browser/browser-commands.fixture.ts',
+    'src/main/runtime/browser/browser-commands-extra.ts',
+    'src/main/runtime/browser/browser-navigation.ts'
   ])('does not route %s', (path) => {
     expect(restartSurvivalRoute.matches(path)).toBe(false)
   })

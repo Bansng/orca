@@ -120,6 +120,30 @@ describe('useComposerState host-context boundaries', () => {
     ).toBe('fix-workspace-name')
   })
 
+  it('auto-owns Jira prefilled names generated with the uppercase key policy', () => {
+    const initialLinkedWorkItem = {
+      type: 'issue' as const,
+      provider: 'jira' as const,
+      number: 0,
+      title: 'PROJ-7 Fix flaky import',
+      url: 'https://example.atlassian.net/browse/PROJ-7',
+      jiraIdentifier: 'PROJ-7'
+    }
+    expect(
+      getInitialAutoManagedWorkspaceName({
+        initialName: 'PROJ-7-fix-flaky-import',
+        initialLinkedWorkItem,
+        jiraIssueKeyCasing: 'preserve'
+      })
+    ).toBe('PROJ-7-fix-flaky-import')
+    expect(
+      getInitialAutoManagedWorkspaceName({
+        initialName: 'PROJ-7-fix-flaky-import',
+        initialLinkedWorkItem
+      })
+    ).toBe('')
+  })
+
   it('seeds initial workspace run target from the task source context', () => {
     expect(
       resolveInitialWorkspaceRunSeed({

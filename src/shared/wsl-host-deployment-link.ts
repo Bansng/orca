@@ -27,3 +27,5 @@ export const OrcadWslDeploymentLinkSchema = z.object({
   /** orcad's listen port inside the distro, which each bridge connection dials. */
   remotePort: PortSchema
 })
+
+export type OrcadWslDeploymentLink = z.infer<typeof OrcadWslDeploymentLinkSchema>

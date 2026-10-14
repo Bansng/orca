@@ -1,26 +1,9 @@
 import type { WslHostStatus } from '../../../../shared/wsl-host-types'
-import {
-  getRepoExecutionHostId,
-  parseExecutionHostId,
-  type ExecutionHostId
-} from '../../../../shared/execution-host'
-import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
-import { getRepoIdFromWorktreeId } from '../../../../shared/worktree/id'
-import { getFolderWorkspaceHostId } from '../../store/folder-workspaces/folder-workspace-catalog'
+import { isWslHostRuntimeEnvironment } from '../../../../shared/runtime-environments'
+import { parseExecutionHostId } from '../../../../shared/execution-host'
+import { workspaceOwnerHostId } from '../../lib/workspace-row-owner-host'
 import type { AppState } from '../../store/types'
 import { useAppStore } from '../../store'
-
-/** The host that owns a workspace's own row; null while that row is unknown. */
-export function workspaceOwnerHostId(state: AppState, workspaceId: string): ExecutionHostId | null {
-  const scope = parseWorkspaceKey(workspaceId)
-  if (scope?.type === 'folder') {
-    const workspace = state.folderWorkspaces.find(({ id }) => id === scope.folderWorkspaceId)
-    return workspace ? getFolderWorkspaceHostId(workspace, state.projectGroups) : null
-  }
-  const worktreeId = scope?.type === 'worktree' ? scope.worktreeId : workspaceId
-  const repo = state.repos.find(({ id }) => id === getRepoIdFromWorktreeId(worktreeId))
-  return repo ? getRepoExecutionHostId(repo) : null
-}
 
 /**
  * The WSL hosts an open project or terminal needs: the active workspace's host and the host of
@@ -29,7 +12,7 @@ export function workspaceOwnerHostId(state: AppState, workspaceId: string): Exec
 export function selectWslHostsWithVisibleWork(state: AppState): string[] {
   const wslEnvironmentIds = new Set(
     state.runtimeEnvironments
-      .filter((environment) => environment.orcadDeployment?.kind === 'wsl')
+      .filter(isWslHostRuntimeEnvironment)
       .map((environment) => environment.id)
   )
   if (wslEnvironmentIds.size === 0) {

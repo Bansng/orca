@@ -78,7 +78,11 @@ export function AgentLaunchSettingsCatalog({
     cmdOverride: isDetected ? settings.agentCmdOverrides[agent.id] : undefined,
     argsOverride: resolveTuiAgentLaunchArgs(agent.id, settings.agentDefaultArgs),
     envOverride: local ? resolveTuiAgentLaunchEnv(agent.id, local.settings.agentDefaultEnv) : {},
-    onSetDefault: () => save({ type: 'default', agent: agent.id }),
+    onSetDefault: () =>
+      save({
+        type: 'default',
+        agent: settings.defaultTuiAgent === agent.id ? 'blank' : agent.id
+      }),
     onSetEnabled: (enabled) => save({ type: 'availability', agent: agent.id, enabled }),
     onSaveOverride: (value) => mutate({ type: 'command', agent: agent.id, value }),
     onSaveArgs: (value) => mutate({ type: 'arguments', agent: agent.id, value }),

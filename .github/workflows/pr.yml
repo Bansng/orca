@@ -74,6 +74,9 @@ jobs:
             /README.md
             /docs/readme/
             /.github/scripts/check-root-directory-entries.mjs
+            /.github/scripts/check-required-pr-context.mjs
+            /.github/workflows/
+            /config/.bun-version
             /config/scripts/check-readme-local-links.mjs
             /config/scripts/pr-code-change-scope.mjs
             /config/scripts/pr-layout-oracle-route.mjs
@@ -93,6 +96,14 @@ jobs:
       # The full Git index retains link targets outside the sparse working tree.
       - name: Check README local links
         run: node config/scripts/check-readme-local-links.mjs
+
+      - name: Set up Bun for required workflow validation
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: config/.bun-version
+
+      - name: Check required PR context ownership
+        run: bun .github/scripts/check-required-pr-context.mjs
 
       # Readiness changes eligibility for advisory tests, not the already-tested source.
       - name: Find identical successful required checks
@@ -217,7 +228,7 @@ jobs:
           PREFLIGHT_PRIOR_SUCCESS: ${{ job.status == 'success' }}
         run: |
           if [ "$PREFLIGHT_PHASE_SELECTED" != true ] || [ "$PREFLIGHT_PRIOR_SUCCESS" != true ]; then exit 0; fi
-          bun --bun run check:process-host-imports
+          bun config/scripts/check-import-boundaries.mjs
 
       - name: Check main-process sync launches
         if: '!cancelled()'
@@ -357,10 +368,6 @@ jobs:
         if: needs.code_paths.outputs.static_analysis == 'true'
         run: bun config/scripts/check-layout-writer-ratchets.mjs
 
-      - name: Check compatibility-folder imports
-        if: needs.code_paths.outputs.static_analysis == 'true'
-        run: bun config/scripts/check-compat-boundary-imports.mjs
-
       - name: Check Node runtime pin
         if: needs.code_paths.outputs.static_analysis == 'true'
         run: pnpm run check:node-runtime-pin
@@ -434,7 +441,7 @@ jobs:
 
       - name: Verify localization coverage
         if: needs.code_paths.outputs.static_analysis == 'true'
-        run: pnpm run verify:localization-coverage
+        run: bun config/scripts/audit-localization-coverage.mjs --check
 
       - wait: [localization-catalogs, localization-extraction]
 
@@ -907,7 +914,7 @@ jobs:
       - name: Install WebKit for the drawer check
         id: webkit
         background: true
-        run: pnpm exec playwright install --with-deps webkit
+        run: pnpm exec playwright-core install --with-deps webkit
 
       # The entry lives in mobile/ so one React resolves; without this every RN import is nothing.
       - uses: ./.github/actions/install-mobile-dependencies
@@ -1304,6 +1311,9 @@ jobs:
       - name: Build the Windows agent hook
         run: node config/scripts/build-windows-agent-hook.mjs
 
+      - name: Build the Windows CLI launcher
+        run: node config/scripts/build-windows-cli-launcher.mjs
+
       - name: Test Windows-specific boundaries
         run: >-
           pnpm exec vitest run --config config/vitest.config.ts
@@ -1353,6 +1363,8 @@ jobs:
           src/main/windows/windows-host-job.win32.test.ts
           src/main/windows/windows-process-tree-command-line-patch.test.ts
           src/main/windows/windows-process-table-native-addon.win32.test.ts
+          src/main/windows/windows-administrator-status.win32.test.ts
+          src/main/windows/windows-administrator-restart.win32.test.ts
           src/main/daemon/daemon-pid-identity-native.win32.test.ts
           src/main/persistence/profile-state/profile-state-access-windows-native.win32.test.ts
           src/main/windows-live-tree-kill.win32.test.ts
@@ -1478,6 +1490,7 @@ jobs:
       ref: ${{ github.event.pull_request.head.sha }}
 
   verify:
+    name: PR checks passed
     if: ${{ !cancelled() }}
     needs:
       - code_paths

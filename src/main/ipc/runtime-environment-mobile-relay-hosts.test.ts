@@ -12,7 +12,8 @@ vi.mock('electron', () => ({ app: { getPath: () => '/user-data' } }))
 vi.mock('../../shared/runtime-environment-store', () => ({
   listEnvironments: () => mocks.environments
 }))
-vi.mock('../../shared/runtime-environments', () => ({
+vi.mock('../../shared/runtime-environments', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   getPreferredPairingOffer: (environment: { endpoint: string }) => ({
     endpoint: environment.endpoint
   })

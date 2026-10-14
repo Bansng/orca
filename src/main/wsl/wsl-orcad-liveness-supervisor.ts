@@ -13,7 +13,9 @@ import type { WslOrcadConnectionStatus } from './wsl-orcad-connection-status'
 import { wslDistroHolderKey } from './wsl-distro-holder-record'
 import { recoverWslOrcad, type WslOrcadRecoveryReason } from './wsl-orcad-liveness-recovery'
 import {
+  attachSupervisedWatch,
   confirmsRunning,
+  disarmSupervised,
   defaultSchedule,
   ensureHolderQuietly,
   EXIT_SETTLE_MS,
@@ -34,7 +36,6 @@ import {
   type WslLivenessVerdict
 } from './wsl-orcad-liveness-verdict'
 import { WslOrcadReconnectBackoff, wslOrcadVerifyRetryDelayMs } from './wsl-orcad-reconnect-backoff'
-import type { WslOrcadWatch } from './wsl-orcad-watch'
 
 export class WslOrcadLivenessSupervisor {
   private readonly supervised = new Map<string, Supervised>()
@@ -59,15 +60,30 @@ export class WslOrcadLivenessSupervisor {
   }
 
   /** User-initiated, so it may boot the distro. Resolves once the watch is armed. */
-  async connect(distro: string): Promise<WslOrcadConnection> {
+  async connect(distro: string, options: { force?: boolean } = {}): Promise<WslOrcadConnection> {
     const entry = this.entryFor(distro)
+    // A recovery this connect supersedes would have reported ready itself; now nothing will.
+    const supersedesRecovery = entry.busy
     // Supersedes a recovery or deferred re-check: this connect relaunches and re-arms itself.
     const generation = (entry.generation += 1)
-    this.disarm(entry)
-    const connection = await this.deps.manager.ensure(entry.distro)
+    disarmSupervised(entry)
+    let connection: WslOrcadConnection
+    try {
+      connection = await this.deps.manager.ensure(entry.distro, options)
+    } catch (error) {
+      // e.g. a rejected update: the incumbent still serves and must stay watched.
+      const incumbent = this.deps.manager.get(entry.distro)
+      if (incumbent && entry.generation === generation) {
+        await this.arm(entry, incumbent)
+      }
+      throw error
+    }
     if (entry.generation === generation) {
       entry.backoff.reset()
       await this.arm(entry, connection)
+      if (supersedesRecovery && entry.generation === generation) {
+        this.publish(entry, { state: 'ready', census: null })
+      }
     }
     return connection
   }
@@ -84,7 +100,7 @@ export class WslOrcadLivenessSupervisor {
     const entry = this.supervised.get(key)
     if (entry) {
       entry.generation += 1
-      this.disarm(entry)
+      disarmSupervised(entry)
       this.supervised.delete(key)
     }
     await this.deps.manager.close(distro)
@@ -116,15 +132,6 @@ export class WslOrcadLivenessSupervisor {
     this.deps.manager.publish(entry.distro, status)
   }
 
-  private disarm(entry: Supervised): void {
-    entry.timer?.cancel()
-    entry.timer = null
-    entry.wakeWait?.()
-    entry.wakeWait = null
-    entry.watch?.close()
-    entry.watch = null
-  }
-
   /** Records who this orcad is and holds the watch; that identity anchors every later verdict. */
   private async arm(entry: Supervised, connection: WslOrcadConnection): Promise<void> {
     const generation = entry.generation
@@ -140,33 +147,23 @@ export class WslOrcadLivenessSupervisor {
     entry.verifyStreak = 0
     entry.backoff.noteReady(this.now())
     if (!entry.watch && (await this.attachWatch(entry, connection)) !== 'ready') {
-      this.scheduleVerify(entry)
+      if (entry.generation === generation) {
+        this.scheduleVerify(entry)
+      }
       return
     }
-    this.scheduleHeartbeat(entry)
+    // A later connect owns the timer now; this arm must not replace it.
+    if (entry.generation === generation) {
+      this.scheduleHeartbeat(entry)
+    }
   }
 
-  private async attachWatch(
-    entry: Supervised,
-    connection: WslOrcadConnection
-  ): Promise<WslOrcadWatch['signal']> {
-    const generation = entry.generation
-    const watch = await this.deps.openWatch(connection)
-    if (watch.signal !== 'ready') {
-      return watch.signal
-    }
-    if (entry.generation !== generation || entry.watch) {
-      watch.close()
-      return 'ready'
-    }
-    entry.watch = watch
-    watch.onExit((code) => {
-      if (entry.watch === watch) {
-        entry.watch = null
-        this.trigger(entry, { source: 'bridge', code })
-      }
-    })
-    return 'ready'
+  private attachWatch(entry: Supervised, connection: WslOrcadConnection) {
+    return attachSupervisedWatch(
+      entry,
+      () => this.deps.openWatch(connection),
+      (code) => this.trigger(entry, { source: 'bridge', code })
+    )
   }
 
   private scheduleHeartbeat(entry: Supervised): void {
@@ -282,10 +279,10 @@ export class WslOrcadLivenessSupervisor {
       case 'distro-stopped':
         return this.onDistroStopped(entry)
       case 'distro-restarted':
-        this.disarm(entry)
+        disarmSupervised(entry)
         return this.recover(entry, 'distro-restarted')
       case 'orcad-exited':
-        this.disarm(entry)
+        disarmSupervised(entry)
         if (!this.deps.hasUserVisibleWork(entry.distro)) {
           // A managed orcad idle-exits; relaunching it for nobody would undo that every time.
           this.publish(entry, { state: 'idle', terminals: 'unverifiable' })
@@ -296,7 +293,7 @@ export class WslOrcadLivenessSupervisor {
   }
 
   private async onDistroStopped(entry: Supervised): Promise<void> {
-    this.disarm(entry)
+    disarmSupervised(entry)
     const recovering = this.deps.hasUserVisibleWork(entry.distro)
     // The holder and the watch both exit on a stop; report it once.
     if (recovering || entry.state !== 'distro-stopped') {

@@ -23,6 +23,35 @@ export type SidecarEnrichment = {
   refused: boolean
 }
 
+// Re-enrichment changes only these fields; retain other cached metadata and no-op identity.
+export function reuseUnchangedSidecarSession(
+  previous: AiVaultSession | null,
+  next: AiVaultSession | null
+): AiVaultSession | null {
+  if (!previous || !next) {
+    return next
+  }
+  if (
+    previous.title === next.title &&
+    previous.cwd === next.cwd &&
+    previous.createdAt === next.createdAt &&
+    previous.updatedAt === next.updatedAt &&
+    previous.resumeCommand === next.resumeCommand &&
+    previous.model === next.model
+  ) {
+    return previous
+  }
+  return {
+    ...previous,
+    title: next.title,
+    cwd: next.cwd,
+    createdAt: next.createdAt,
+    updatedAt: next.updatedAt,
+    resumeCommand: next.resumeCommand,
+    model: next.model
+  }
+}
+
 /** True when the sibling only adds metadata, so a change to it needs no re-parse. */
 export function sidecarEnrichesWithoutReparse(candidate: SessionFileCandidate): boolean {
   return candidate.agent === 'cursor' || candidate.agent === 'devin'

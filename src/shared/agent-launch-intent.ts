@@ -100,6 +100,8 @@ export type AgentLaunchIntent = {
   sessionId?: string
   /** Account routing env for a terminal agent (`agent.launch`'s `accountEnv`). Not a route input. */
   accountEnv?: Readonly<Record<string, string>>
+  /** `agent.launch`'s `nativeChatDefault`: the caller's chat default in place of the host's own. */
+  nativeChatDefault?: boolean
 }
 
 /**

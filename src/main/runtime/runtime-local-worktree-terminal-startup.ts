@@ -224,6 +224,7 @@ function provisionArgs(
     ...(args.defaultTabs ? { defaultTabs: args.defaultTabs } : {}),
     primaryTerminalHandle,
     hasStartupTerminal,
+    ...(args.request.setupOnly !== undefined ? { setupOnly: args.request.setupOnly } : {}),
     setupCommandPlatform: setupPlatform(args.setup, 'posix'),
     observeSetupCompletion: args.request.observeSetupCompletion,
     ...(wrappedSetupCommand ? { wrappedSetupCommand } : {})

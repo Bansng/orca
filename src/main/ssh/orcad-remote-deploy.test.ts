@@ -629,6 +629,42 @@ describe('deployOrcad', () => {
     expect(script.log.indexOf(`stop:${OLD_VERSION}`)).toBeLessThan(script.log.indexOf('snapshot'))
   })
 
+  it('defers on a recount just before the stop when a terminal opened during the upload', async () => {
+    const script: HostScript = {
+      activationRecord: ACTIVE_OLD,
+      readiness: { [NEW_VERSION]: readyLine({}) },
+      log: []
+    }
+    scriptHost(script)
+    const recountCensus = vi.fn(async () => ({
+      liveSessions: 1,
+      startedSinceActivation: 1,
+      daemonProtocolVersion: 3
+    }))
+    expect(
+      await deployOrcad(options({ censusRecord: JSON.parse(ACTIVE_OLD), recountCensus }))
+    ).toMatchObject({ outcome: 'installed-not-activated', code: 'orcad_update_terminals_running' })
+    expect(recountCensus).toHaveBeenCalledTimes(1)
+    expect(script.log).toEqual(['preflight'])
+  })
+
+  it('never recounts an incumbent other than the one it counted', async () => {
+    const script: HostScript = {
+      activationRecord: ACTIVE_OLD,
+      readiness: { [NEW_VERSION]: readyLine({}) },
+      log: []
+    }
+    scriptHost(script)
+    const counted = JSON.parse(ACTIVE_OLD)
+    const peer = withActivatedVersion(counted, '0.1.5+dd01', null, new Date(5), '1.4.0')
+    vi.mocked(uploadRelayDirectory).mockImplementationOnce(async () => {
+      script.activationRecord = JSON.stringify(peer)
+    })
+    const recountCensus = vi.fn()
+    await deployOrcad(options({ censusRecord: counted, admitRecord: () => null, recountCensus }))
+    expect(recountCensus).not.toHaveBeenCalled()
+  })
+
   it('installs but does not activate when terminals are running', async () => {
     const script: HostScript = {
       activationRecord: ACTIVE_OLD,

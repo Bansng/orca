@@ -160,3 +160,38 @@ export async function ensureHolderQuietly(
     console.warn(`[wsl] holder re-ensure for ${distro} failed:`, error)
   }
 }
+
+/** Cancels the entry's timer and wake wait and closes its watch. */
+export function disarmSupervised(entry: Supervised): void {
+  entry.timer?.cancel()
+  entry.timer = null
+  entry.wakeWait?.()
+  entry.wakeWait = null
+  entry.watch?.close()
+  entry.watch = null
+}
+
+/** Holds a new watch unless a later connect superseded this one or already holds one. */
+export async function attachSupervisedWatch(
+  entry: Supervised,
+  openWatch: () => Promise<WslOrcadWatch>,
+  onExit: (code: number | null) => void
+): Promise<WslOrcadWatch['signal']> {
+  const generation = entry.generation
+  const watch = await openWatch()
+  if (watch.signal !== 'ready') {
+    return watch.signal
+  }
+  if (entry.generation !== generation || entry.watch) {
+    watch.close()
+    return 'ready'
+  }
+  entry.watch = watch
+  watch.onExit((code) => {
+    if (entry.watch === watch) {
+      entry.watch = null
+      onExit(code)
+    }
+  })
+  return 'ready'
+}

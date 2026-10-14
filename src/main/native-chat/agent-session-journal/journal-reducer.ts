@@ -71,6 +71,8 @@ export type JournalReducerState = {
   latestAcceptedTurnSequence: number
   /** The latest person's Stop event and Resume, what the queue's pause is derived from. */
   queuePauseMarks: JournalQueuePauseMarks
+  /** Host-only: each handed-over send's stopped-message history, from its latest `pending` row. */
+  stoppedHistoryCarried: Map<string, readonly string[]>
 }
 
 export function createJournalReducerState(sessionId: string, epoch: string): JournalReducerState {
@@ -92,7 +94,8 @@ export function createJournalReducerState(sessionId: string, epoch: string): Jou
     appliedSettlementIds: new Set(),
     derivedTurnScope: new JournalDerivedTurnScope(),
     latestAcceptedTurnSequence: 0,
-    queuePauseMarks: createJournalQueuePauseMarks()
+    queuePauseMarks: createJournalQueuePauseMarks(),
+    stoppedHistoryCarried: new Map()
   }
 }
 

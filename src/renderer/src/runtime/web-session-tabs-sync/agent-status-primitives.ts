@@ -191,7 +191,8 @@ export function buildRetractedMirroredTabSweepPatch(
     retentionSuppressedPaneKeys: state.retentionSuppressedPaneKeys ?? {},
     sortEpoch: agentStatusPatch?.sortEpoch ?? state.sortEpoch,
     // Keep the sweep state consistent with the accepted host inventory.
-    tabsByWorktree: nextTabsByWorktree
+    tabsByWorktree: nextTabsByWorktree,
+    unifiedTabsByWorktree: state.unifiedTabsByWorktree
   }
   // Why: a retraction can be a reconnect re-key, not pane death (ssh-execution-boundary); keeping
   // cutoffs means a republished pane cannot replay activity the user cleared on this client.

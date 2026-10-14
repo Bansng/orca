@@ -42,8 +42,9 @@ function expectInvariants(report: SimulationReport): void {
 }
 
 describe('step 5 deterministic simulation', () => {
+  // Invariant 9 (dead-man) never trips here; its own tests below cover it.
   it.each(SEEDS)(
-    'holds invariants 1-3 and 5-8 across mixed versions, lagging polls, restarts and database stalls (seed %i)',
+    'holds invariants 1-8 across mixed versions, lagging polls, restarts and database stalls (seed %i)',
     async (seed) => {
       const report = await runReservePlacementSimulation({
         seed,
@@ -174,6 +175,48 @@ describe('step 5 deterministic simulation', () => {
     120_000
   )
 
+  // A desktop seated at the same epoch on two cells (a seat half-open within a poll lag, then
+  // placed again by a director that had not seen it): only the row breaks the tie. Short
+  // sessions and all five directors restarting each minute put boot reconciles on those seats.
+  const levelSeats = (seed: number, faults: SimulationConfig['faults']): SimulationConfig => ({
+    seed,
+    durationMs: 16 * 60_000,
+    directors: 5,
+    cells: Array.from({ length: 12 }, (_, index) => ({
+      cellId: `us${String(index).padStart(2, '0')}`,
+      region: 'us-central1' as const,
+      hardCap: 600,
+      ceiling: 480,
+      intakePerSec: 20,
+      mode: 'reserve' as const,
+      preseated: 100
+    })),
+    hosts: 3_000,
+    hostRegion: () => 'us-central1',
+    arrivalPerSec: 20,
+    meanSessionMs: 20_000,
+    reconnectDelayMs: [500, 2_000],
+    duplicateAssignShare: 0.05,
+    halfOpenShare: 0.5,
+    pollLagMs: (director) => [0, 200, 1_000, 2_000, 3_000][director]!,
+    rttMs: rtt,
+    directorRestarts: Array.from({ length: 75 }, (_, index) => ({
+      at: 60_000 + Math.floor(index / 5) * 60_000,
+      director: index % 5
+    })),
+    faults
+  })
+
+  it.each(SEEDS)(
+    'holds invariants 1-8 when directors contest level divergences (seed %i)',
+    async (seed) => {
+      const report = await runReservePlacementSimulation(levelSeats(seed, {}))
+      expect(report.contestedDivergences).toBeGreaterThan(0)
+      expectInvariants(report)
+    },
+    120_000
+  )
+
   // Each fault breaks one rule; the matching invariant must fire, or its check measures nothing.
   const mixed = (faults: SimulationConfig['faults']): SimulationConfig => ({
     seed: 11,
@@ -251,6 +294,7 @@ describe('step 5 deterministic simulation', () => {
     [1, nearFull({ bookPastCap: true })],
     [2, drain({ intakeBurst: 200, directorShare: 0.05 })],
     [3, drainedWithoutSupersede()],
+    [4, levelSeats(11, { localTieBreak: true })],
     [5, mixed({ unguardedLedger: true })],
     // A director restart mid-queue loses its booked joins' rows until its boot reconcile.
     [5, restartedMidQueue()],

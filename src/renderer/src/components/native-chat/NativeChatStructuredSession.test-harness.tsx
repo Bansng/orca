@@ -134,6 +134,7 @@ export function createStructuredSessionMocks() {
       structuredTransport?: Record<string, unknown> & {
         queueResume?: QueueResumeMock
         onError?: NativeChatStructuredComposerTransport['onError']
+        optionPickerRequest?: NativeChatStructuredComposerTransport['optionPickerRequest']
       }
       isWorking?: boolean
       isStopping?: boolean

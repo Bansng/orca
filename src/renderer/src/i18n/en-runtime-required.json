@@ -53,6 +53,7 @@
       },
       "JiraIssueWorkspace": {
         "2a829a2f00": "priority",
+        "54649eaeab": "+ Assignee",
         "693be070d0": "transition",
         "9ebee71962": "labels",
         "b8e2079d96": "assignee",
@@ -1210,20 +1211,6 @@
           "a05bcdaf57": "Agents View",
           "f63ea281e3": "Threaded left-sidebar feed for agent completions and blocking states.",
           "fb82ea1d7a": "Automatically materialize configured files or folders into newly created worktrees.",
-          "nativeChat": {
-            "resumeCopy": "When Orca quits or installs an update, chats that were working are automatically resumed when Orca is reopened.",
-            "resumeTitle": "Resume working chats automatically after a restart",
-            "resumeToggleLabel": "Toggle automatic resume after a restart",
-            "shellEnvCopy": "Codex and Claude chats start with every variable your login shell exports, the same as a terminal. Turn off to choose which ones they get.",
-            "shellEnvNameAdd": "Add",
-            "shellEnvNamePlaceholder": "Variable name",
-            "shellEnvNameRemove": "Remove {{value0}}",
-            "shellEnvNamesAlwaysPassed": "PATH, locale, and SSH_AUTH_SOCK are always passed. Applies the next time a chat starts or resumes.",
-            "shellEnvNamesEmpty": "No variables added yet.",
-            "shellEnvNamesLabel": "Variables to pass from your shell",
-            "shellEnvTitle": "Use your shell environment",
-            "shellEnvToggleLabel": "Toggle using your shell environment"
-          },
           "newWorktreeCardStyle": {
             "copy": "Preview updated worktree-card layout, metadata placement, card-display menu options, and status presentation."
           }
@@ -1410,8 +1397,11 @@
         "ProjectWindowsRuntimeSetting": {
           "activeTaskPlural": "{{count}} active tasks",
           "activeTaskSingular": "{{count}} active task",
+          "distroMissing": "{{value0}} is not installed in WSL. Choose an installed distro or switch this project to Windows.",
+          "distroRequired": "Choose a WSL distro or switch this project to Windows.",
           "liveTerminalPlural": "{{count}} live terminals",
-          "liveTerminalSingular": "{{count}} live terminal"
+          "liveTerminalSingular": "{{count}} live terminal",
+          "wslUnavailable": "WSL is not available. Switch this project to Windows or repair WSL."
         },
         "QuickCommandsPane": {
           "44923dd982": "destructive",
@@ -2858,8 +2848,7 @@
       },
       "composer": {
         "effort": "Effort",
-        "imageUnsupported": "Image paste is not supported for this agent.",
-        "permissions": "Permissions"
+        "imageUnsupported": "Image paste is not supported for this agent."
       },
       "failureWords": {
         "accountSwitchInProgress": "A Claude account switch is in progress. Try again after it finishes.",
@@ -2883,9 +2872,9 @@
         "attachmentTotalTooLarge": "The images on this message are too large together, so the message was not sent.",
         "attachmentUnreadable": "An attachment on this message couldn't be read, so the message was not sent.",
         "attachmentUnsupportedType": "{{agent}} accepts only PNG, JPEG, GIF, and WebP images, so this message was not sent.",
-        "cancelUnconfirmed": "Cancellation was not confirmed.",
         "backgroundTaskNotStopped": "The background task wasn't stopped.",
         "backgroundTasksNotStopped": "The background tasks weren't stopped.",
+        "cancelUnconfirmed": "Cancellation was not confirmed.",
         "cancelled": "This message was withdrawn before the agent started it.",
         "chatClosed": "The chat closed before this message was sent.",
         "chooseClaudeAccount": "Choose or add one in Claude Accounts settings.",
@@ -3166,6 +3155,11 @@
       "omittedFiles": "Files omitted by sparse checkout are not searched.",
       "viewOnly": "Sparse checkout · View changes do not change checked-out files.",
       "viewing": "Viewing: {{path}}"
+    }
+  },
+  "jira": {
+    "workspace": {
+      "open": "Open workspace linked to {{key}}"
     }
   },
   "menu": {

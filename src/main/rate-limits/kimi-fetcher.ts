@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { join, win32 as pathWin32 } from 'node:path'
-import { net } from 'electron'
+import { getMainHttpClient } from '../network/http-client'
 import type {
   ProviderRateLimits,
   RateLimitWindow,
@@ -336,7 +336,7 @@ export async function fetchKimiRateLimits(options?: {
   }
 
   try {
-    const res = await net.fetch(`${KIMI_BASE_URL.replace(/\/$/, '')}/usages`, {
+    const res = await getMainHttpClient().fetch(`${KIMI_BASE_URL.replace(/\/$/, '')}/usages`, {
       // Why: identical to the CLI's fetchManagedUsage — bearer token + Accept.
       // No extra User-Agent: the usages endpoint authenticates by token only.
       headers: { Authorization: `Bearer ${creds.access_token}`, Accept: 'application/json' },

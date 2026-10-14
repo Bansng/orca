@@ -1,4 +1,5 @@
 import type { EventEmitter } from 'node:events'
+import { runKeyedSerializedOperation } from '../cli/keyed-promise-queue'
 import { spawnProcess } from '@orca/process-host'
 import { queryWindowsProcess } from '../daemon/daemon-process-inspection'
 import type { WindowsProcessEvidence } from '../daemon/daemon-incarnation-evidence-types'
@@ -125,21 +126,12 @@ export function createWslDistroHolder(dependencies: WslDistroHolderDependencies)
     dependencies.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)))
   const bootTimeoutMs = dependencies.bootTimeoutMs ?? DEFAULT_BOOT_TIMEOUT_MS
 
-  const tails = new Map<string, Promise<unknown>>()
+  const tails = new Map<string, Promise<void>>()
   const inFlightEnsures = new Map<string, Promise<WslDistroHolderEnsureResult>>()
 
   // Ensure, release and adoption of one distro never interleave; other distros run freely.
   function serialize<T>(distro: string, task: () => Promise<T>): Promise<T> {
-    const key = wslDistroHolderKey(distro)
-    const run = (tails.get(key) ?? Promise.resolve()).then(task, task)
-    const tail = run.catch(() => {})
-    tails.set(key, tail)
-    void tail.then(() => {
-      if (tails.get(key) === tail) {
-        tails.delete(key)
-      }
-    })
-    return run
+    return runKeyedSerializedOperation(tails, wslDistroHolderKey(distro), task)
   }
 
   async function recordedHolderState(

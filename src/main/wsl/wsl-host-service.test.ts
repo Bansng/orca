@@ -30,6 +30,7 @@ function connection(distro: string, port = 42000, token = 'token-1'): WslOrcadCo
     fullVersion: '1.0.0+abc',
     pid: 10,
     pairingOffer: pairing(port, token),
+    deferredUpdate: null,
     close: async () => {}
   }
 }
@@ -215,6 +216,45 @@ describe('WslHostService', () => {
       recovering: false
     })
     expect(published.at(-1)).toMatchObject({ state: 'distro-stopped', detail: null })
+  })
+
+  it('shows a deferred update while the incumbent serves, and forwards Force to the connect', async () => {
+    const connector = makeConnector([UBUNTU])
+    const service = makeService(connector)
+    await service.add({ distro: 'Ubuntu' })
+    const deferredUpdate = {
+      candidateVersion: '2.0.0+ff',
+      code: 'orcad_update_terminals_running',
+      reason: '1 terminal is running on this host.',
+      forceable: true
+    }
+    service.handleConnectionChange(
+      'Ubuntu',
+      { ...connection('Ubuntu'), deferredUpdate },
+      { state: 'ready', census: null }
+    )
+    expect(published.at(-1)).toMatchObject({ state: 'ready', deferredUpdate })
+    // A reconnecting host is not serving the incumbent the deferral describes.
+    service.handleConnectionChange(
+      'Ubuntu',
+      { ...connection('Ubuntu'), deferredUpdate },
+      {
+        state: 'reconnecting',
+        reason: 'orcad-exited',
+        attempt: 1,
+        retryInMs: null,
+        terminals: 'unverifiable'
+      }
+    )
+    expect(published.at(-1)).toMatchObject({
+      state: 'reconnecting',
+      deferredUpdate: null
+    })
+
+    await service.connect('wsl:ubuntu', { force: true })
+    expect(connector.connect).toHaveBeenLastCalledWith('Ubuntu', {
+      force: true
+    })
   })
 
   it('connects for a runtime call only while an open project or terminal needs the host', async () => {

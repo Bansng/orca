@@ -44,7 +44,12 @@ describe('the permission mode picker', () => {
       'codex',
       structuredAgentSessionSeedCatalog('codex')
     )
-    const view = structuredAgentSessionOptionView(state, { permissionMode: 'full-access' }, {})
+    const view = structuredAgentSessionOptionView(
+      state,
+      { permissionMode: 'full-access' },
+      {},
+      true
+    )
     expect(structuredAgentSessionOptionSnapshot(view).map((descriptor) => descriptor.id)).toEqual([
       'model',
       'permissionMode'
@@ -107,7 +112,7 @@ describe('the permission mode picker', () => {
         { newLaunch: true }
       )
       const descriptor = permission(
-        structuredAgentSessionOptionView(state, { permissionMode: 'ask' }, {})
+        structuredAgentSessionOptionView(state, { permissionMode: 'ask' }, {}, true)
       )
       return descriptor?.kind.type === 'select' && descriptor.kind.choices.map((c) => c.value)
     }
@@ -128,11 +133,13 @@ describe('the permission mode picker', () => {
   it("shows a held pick over the host's value, and the host's over the seed", () => {
     const state = live('codex', { permissionMode: 'auto' })
     const seed = { permissionMode: 'ask' }
-    expect(permission(structuredAgentSessionOptionView(state, seed, {}))).toMatchObject({
+    expect(permission(structuredAgentSessionOptionView(state, seed, {}, true))).toMatchObject({
       kind: { currentValue: 'auto' }
     })
     expect(
-      permission(structuredAgentSessionOptionView(state, seed, { permissionMode: 'full-access' }))
+      permission(
+        structuredAgentSessionOptionView(state, seed, { permissionMode: 'full-access' }, true)
+      )
     ).toMatchObject({ kind: { currentValue: 'full-access' } })
   })
 

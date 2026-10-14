@@ -46,7 +46,7 @@ vi.mock('@/runtime/local-runtime-capabilities', async (importOriginal) => ({
 vi.mock('@/runtime/host-structured-agents', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   readHostStructuredAgents: () =>
-    ['claude', 'codex', 'grok', 'omp'].map((agent) => ({ agent, capabilities: {} }))
+    ['claude', 'codex', 'grok', 'omp', 'opencode'].map((agent) => ({ agent, capabilities: {} }))
 }))
 vi.mock('@/lib/renderer-app-platform', () => ({ getRendererAppPlatform: () => mocks.platform }))
 
@@ -287,7 +287,7 @@ describe('resolveTabSessionHistorySubject', () => {
     ).toEqual(cliSubject)
   })
 
-  it.each(['grok', 'omp'] as const)(
+  it.each(['grok', 'omp', 'opencode', 'opencode2'] as const)(
     'finds a %s terminal tab, whose conversation a chat can take over',
     (agentType) => {
       const state = makeState({
@@ -305,7 +305,7 @@ describe('resolveTabSessionHistorySubject', () => {
     }
   )
 
-  it.each(['opencode', 'pi'] as const)(
+  it.each(['pi'] as const)(
     'skips a %s terminal tab, whose conversation no chat can take over',
     (agentType) => {
       const state = makeState({
@@ -404,24 +404,27 @@ describe('one pane of a terminal tab', () => {
     expect(paneGate(state, geminiPane)).toBe(false)
   })
 
-  it.each(['grok', 'omp'] as const)("finds a %s pane's own conversation", (agentType) => {
-    const paneKey = 'term-1:leaf-1'
-    const state = makeState({
-      [paneKey]: makeAgentStatusEntry({
-        agentType,
-        paneKey,
-        tabId: 'term-1',
-        worktreeId: WORKTREE_ID,
-        providerSession: { key: 'session_id', id: `${agentType}-session-1` }
+  it.each(['grok', 'omp', 'opencode', 'opencode2'] as const)(
+    "finds a %s pane's own conversation",
+    (agentType) => {
+      const paneKey = 'term-1:leaf-1'
+      const state = makeState({
+        [paneKey]: makeAgentStatusEntry({
+          agentType,
+          paneKey,
+          tabId: 'term-1',
+          worktreeId: WORKTREE_ID,
+          providerSession: { key: 'session_id', id: `${agentType}-session-1` }
+        })
       })
-    })
-    expect(paneSubject(state, paneKey)).toEqual({
-      ...cliSubject,
-      agent: agentType,
-      providerSessionId: `${agentType}-session-1`
-    })
-    expect(paneGate(state, paneKey)).toBe(true)
-  })
+      expect(paneSubject(state, paneKey)).toEqual({
+        ...cliSubject,
+        agent: agentType,
+        providerSessionId: `${agentType}-session-1`
+      })
+      expect(paneGate(state, paneKey)).toBe(true)
+    }
+  )
 
   it("finds the pane's own conversation", () => {
     const state = splitTab('leaf-1')
@@ -485,6 +488,21 @@ describe('findTabSessionHistoryRow', () => {
     })
     expect(findTabSessionHistoryRow([ownedRow], cliSubject)?.id).toBe('owned-row')
     expect(findTabSessionHistoryRow([row({ agent: 'codex' })], cliSubject)).toBeNull()
+    // An OpenCode 2.x pane reports `opencode`; Session History lists its conversation as `opencode2`.
+    const openCodeSubject = {
+      ...cliSubject,
+      agent: 'opencode' as const,
+      providerSessionId: 'ses_1'
+    }
+    expect(
+      findTabSessionHistoryRow(
+        [row({ id: 'oc2-row', agent: 'opencode2', sessionId: 'ses_1' })],
+        openCodeSubject
+      )?.id
+    ).toBe('oc2-row')
+    expect(
+      findTabSessionHistoryRow([row({ agent: 'grok', sessionId: 'ses_1' })], openCodeSubject)
+    ).toBeNull()
     expect(
       findTabSessionHistoryRow(
         [

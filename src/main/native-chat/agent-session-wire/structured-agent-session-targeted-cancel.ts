@@ -35,8 +35,10 @@ export async function runTargetedCancel(
   const { clientOperationId, prompt } = params
   if (params.scope) {
     // Resolved once, here: a retry is answered from the receipt and never reaches a newer task.
-    const targets = agentChildWorkStopTargets(params.childWork?.(), params.taskId)
-    if (targets.length === 0 && !(params.unlisted?.present() && atRest(ctx))) {
+    const children = params.childWork?.()
+    const targets = agentChildWorkStopTargets(children, params.taskId)
+    const unreadable = params.childWork !== undefined && children === undefined
+    if (targets.length === 0 && !unreadable && !(params.unlisted?.present() && atRest(ctx))) {
       return { ok: true, value: { ...named, cancelled: false } }
     }
     const accepted = await acceptStopTarget(ctx)
@@ -47,6 +49,7 @@ export async function runTargetedCancel(
       operationId: clientOperationId,
       work: {
         targets,
+        ...(unreadable ? { unreadable: true as const } : {}),
         ...(params.acknowledgeStops ? { acknowledgeStops: params.acknowledgeStops } : {}),
         ...(params.unlisted ? { unlisted: params.unlisted } : {})
       },

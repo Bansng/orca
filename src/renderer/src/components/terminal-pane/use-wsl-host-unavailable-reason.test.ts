@@ -53,4 +53,25 @@ describe('selectWslHostUnavailableReason', () => {
       selectWslHostUnavailableReason(stateWith({ enabled: false }), 'repo1::/repo1')
     ).toBeNull()
   })
+
+  it('is quiet when no WSL host exists, even for a workspace on another runtime', () => {
+    const store = createTestStore()
+    seedStore(store, {
+      ...runtimeOwnedRepoState('paired', 'remote-repo', '/srv/app'),
+      runtimeEnvironments: [
+        {
+          id: 'paired',
+          name: 'Paired server',
+          createdAt: 0,
+          updatedAt: 0,
+          lastUsedAt: null,
+          runtimeId: null,
+          preferredEndpointId: 'ws',
+          endpoints: []
+        }
+      ]
+    })
+    store.setState({ settings: { ...getDefaultSettings('/home/me'), experimentalWslHosts: false } })
+    expect(selectWslHostUnavailableReason(store.getState(), 'remote-repo::/srv/app')).toBeNull()
+  })
 })

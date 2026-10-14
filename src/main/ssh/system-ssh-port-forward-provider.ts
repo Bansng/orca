@@ -1,13 +1,21 @@
 import type { SshConnection } from './ssh-connection'
+import type { SystemSshBuildArgsOptions } from './system-ssh-args'
 import {
   startSystemSshPortForwardProcess,
   systemSshForwardError
 } from './system-ssh-forward-process'
 import type {
+  ForwardChannelOpenFailure,
   PortForwardStartOptions,
   SshPortForwardProvider,
   StartedPortForward
 } from './ssh-port-forward-provider'
+
+/** The build options a system-SSH forward spawns with; orphan recovery matches that argv. */
+export function systemSshForwardBuildArgsOptions(conn: SshConnection): SystemSshBuildArgsOptions {
+  // The managed tunnel reads the channel answer from stderr (lastChannelOpenFailure).
+  return { ...conn.getSystemSshBuildArgsOptions(), logChannelFailures: true }
+}
 
 export class SystemSshPortForwardProvider implements SshPortForwardProvider {
   canHandle(conn: SshConnection): boolean {
@@ -21,7 +29,7 @@ export class SystemSshPortForwardProvider implements SshPortForwardProvider {
       options.localPort,
       options.remoteHost,
       options.remotePort,
-      conn.getSystemSshBuildArgsOptions()
+      systemSshForwardBuildArgsOptions(conn)
     )
 
     await forward.waitForStartup()
@@ -58,6 +66,7 @@ export class SystemSshPortForwardProvider implements SshPortForwardProvider {
 
     return {
       entry,
+      lastChannelOpenFailure: () => lastChannelOpenFailure(stderr),
       close: async () => {
         try {
           await forward.close()
@@ -71,4 +80,16 @@ export class SystemSshPortForwardProvider implements SshPortForwardProvider {
       }
     }
   }
+}
+
+// OpenSSH logs each refused direct-tcpip open as `channel N: open failed: <reason>: <message>`.
+const CHANNEL_OPEN_FAILED = /open failed: (administratively prohibited|connect failed)/g
+
+export function lastChannelOpenFailure(stderr: string): ForwardChannelOpenFailure | null {
+  const reason = [...stderr.matchAll(CHANNEL_OPEN_FAILED)].at(-1)?.[1]
+  return reason === undefined
+    ? null
+    : reason === 'connect failed'
+      ? 'connect-failed'
+      : 'administratively-prohibited'
 }

@@ -20,6 +20,7 @@ import { sendMobileStructuredAgentSessionMessage } from './mobile-structured-age
 import type { MobileStructuredSends } from './use-mobile-structured-sends'
 import { structuredSessionOperationId } from './structured-session-operation-id'
 import { timeoutForDeadline } from './mobile-structured-agent-session-rpc'
+import { structuredAgentSessionSendSelection } from '../../../src/shared/structured-agent-session-option-view'
 import {
   pendingStructuredApproval,
   pendingStructuredQuestion
@@ -57,6 +58,8 @@ export function useMobileStructuredSendWithOutcome(args: {
     'snapshot' | 'setOption' | 'invokeAction' | 'conversationCommands'
   >
   onSendError: MobileNativeChatSendErrorReporter
+  /** Each send carries the model and effort the picker shows; an older host takes neither. */
+  carriesOptions?: boolean
 }): (
   text: string,
   images?: string[],
@@ -74,6 +77,7 @@ export function useMobileStructuredSendWithOutcome(args: {
     hold,
     onSendError,
     queueCapable,
+    carriesOptions,
     sessionId,
     stateRef,
     stopping
@@ -138,6 +142,11 @@ export function useMobileStructuredSendWithOutcome(args: {
         queuedAt: Date.now(),
         ...(stopping ? { sentWhileStopping: true as const } : {})
       }
+      // A pick on its way holds the send, so the picker shows what the chat holds.
+      const options =
+        carriesOptions && agent
+          ? structuredAgentSessionSendSelection(agent, controller.snapshot)
+          : undefined
       const outcome = await sendMobileStructuredAgentSessionMessage({
         client,
         sessionId,
@@ -147,6 +156,7 @@ export function useMobileStructuredSendWithOutcome(args: {
         ...(mobileStructuredSendQueues(queueCapable, stateRef.current.items)
           ? { delivery: 'queue-if-active' as const }
           : {}),
+        ...(options ? { options } : {}),
         deadline,
         clientMessageId: send.clientMessageId,
         onError: onSendError
@@ -169,6 +179,7 @@ export function useMobileStructuredSendWithOutcome(args: {
       hold,
       onSendError,
       queueCapable,
+      carriesOptions,
       sessionId,
       stateRef,
       stopping

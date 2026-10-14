@@ -1,4 +1,4 @@
-import { net } from 'electron'
+import { getMainHttpClient } from '../network/http-client'
 import type { ProviderRateLimits, UsageRateLimitFailureKind } from '../../shared/rate-limit-types'
 import {
   loadProjectId,
@@ -60,7 +60,7 @@ async function fetchQuota(accessToken: string, projectId: string): Promise<Provi
     controller.abort()
   }, API_TIMEOUT_MS)
   try {
-    const res = await net.fetch(RETRIEVE_QUOTA_URL, {
+    const res = await getMainHttpClient().fetch(RETRIEVE_QUOTA_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
       body: JSON.stringify({ project: projectId }),

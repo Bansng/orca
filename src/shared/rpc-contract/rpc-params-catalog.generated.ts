@@ -20,6 +20,7 @@ import {
 import { BrowserClientPageMetadataParams } from '../browser-client-page-metadata-protocol'
 import { DelegatedMobileDeviceSyncParamsSchema } from '../delegated-mobile-device-contract'
 import { RegisterDeviceKeyParamsSchema } from '../device-key-registration-contract'
+import { HostAccountLaunchEnvParams } from '../host-account-launch-env'
 import {
   PairingGetEndpointsParamsSchema,
   PairingProvisionRelayParamsSchema
@@ -315,8 +316,10 @@ import {
 } from './hosted-review-params'
 import {
   AssignableUsers,
+  CancelGenerateIssueSummary,
   Connect,
   CreateIssue as CreateIssueOfJiraParams,
+  GenerateIssueSummary,
   IssueComment as IssueCommentOfJiraParams,
   IssueKey,
   IssueUpdate,
@@ -329,6 +332,8 @@ import {
   SiteSelection,
   UserSearch
 } from './jira-params'
+import { JiraQuickFilterStateParam } from './jira-quick-filter-params'
+import { JiraSavedFilterMutationParam } from './jira-saved-filter-params'
 import {
   AgentIssueContext,
   AgentSearchIssues,
@@ -624,6 +629,7 @@ export const RPC_PARAMS_BY_METHOD = {
   'accounts.selectCodex': SelectAccountParams,
   'accounts.selectCodexForTarget': SelectCodexAccountForTargetParams,
   'accounts.selectData': SelectDataAccountParams,
+  'accounts.setHostLaunchEnv': HostAccountLaunchEnvParams,
   'accounts.subscribe': null,
   'accounts.unsubscribe': AccountsUnsubscribeParams,
   'agent.launch': AgentLaunch,
@@ -978,9 +984,11 @@ export const RPC_PARAMS_BY_METHOD = {
   'hostedReview.forBranch': HostedReviewForBranch,
   'hostedReview.getCreationEligibility': HostedReviewCreationEligibility,
   'jira.addIssueComment': IssueCommentOfJiraParams,
+  'jira.cancelGenerateIssueSummary': CancelGenerateIssueSummary,
   'jira.connect': Connect,
   'jira.createIssue': CreateIssueOfJiraParams,
   'jira.disconnect': SiteSelection,
+  'jira.generateIssueSummary': GenerateIssueSummary,
   'jira.getIssue': IssueKey,
   'jira.getIssueStream': IssueKey,
   'jira.getProjectStatusOrder': ProjectStatusOrder,
@@ -1272,8 +1280,12 @@ export const RPC_PARAMS_BY_METHOD = {
   'terminalDaemon.restartSevered': TerminalDaemonRestartSeveredParams,
   'terminalDaemon.severedStatus': null,
   'ui.get': null,
+  'ui.getJiraQuickFilters': null,
+  'ui.getJiraSavedFilters': null,
+  'ui.mutateJiraSavedFilters': JiraSavedFilterMutationParam,
   'ui.recordFeatureInteraction': FeatureInteractionIdParam,
   'ui.set': UiUpdate,
+  'ui.setJiraQuickFilters': JiraQuickFilterStateParam,
   'updater.check': UpdaterCheckParams,
   'updater.download': null,
   'updater.getStatus': null,

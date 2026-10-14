@@ -9,6 +9,7 @@
  * not ours to see (C4's activation admission still guards it), and a data dir moved off
  * `~/.orca` is not checked.
  */
+import { errorMessage } from '../../shared/error-message'
 import { listEnvironments } from '../../shared/runtime-environment-store'
 import { E2EE_KEYPAIR_FILENAME } from '../../shared/runtime-e2ee-keypair-file'
 import type { WslHostAddResult } from '../../shared/wsl-host-types'
@@ -69,7 +70,7 @@ export async function wslHostSshManagedRefusal(
     return {
       ok: false,
       kind: 'failed',
-      message: error instanceof Error ? error.message : String(error)
+      message: errorMessage(error)
     }
   }
 }

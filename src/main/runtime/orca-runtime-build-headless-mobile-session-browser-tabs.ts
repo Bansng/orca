@@ -28,7 +28,7 @@ import { captureAcknowledgedTerminalTabRetirement } from './workspace-session-te
 import { closeLeafOrTab } from '../persistence/terminal-topology/terminal-topology-commit'
 import { markAgentLaunchesClosedByUser } from '../agent-launch/agent-launch-pane-attachment'
 
-export class OrcaRuntimeWithBuildHeadlessMobileSessionBrowserTabs extends OrcaRuntimeWithPersistTerminalSurfaceRetirements {
+export abstract class OrcaRuntimeWithBuildHeadlessMobileSessionBrowserTabs extends OrcaRuntimeWithPersistTerminalSurfaceRetirements {
   // Why: headless serve backs browser panes with offscreen WebContents that live
   // only in the BrowserManager, never in a renderer graph. Without surfacing them
   // as session tabs, a session.tabs snapshot (e.g. on terminal open) prunes the

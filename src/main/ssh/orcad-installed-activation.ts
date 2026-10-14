@@ -71,16 +71,19 @@ const UNVERIFIABLE_CENSUS: OrcadTerminalCensus = {
   daemonProtocolVersion: null
 }
 
+function countedLockedRecord(options: OrcadDeployOptions, record: OrcadActivationRecord): boolean {
+  const counted = options.censusRecord
+  return (
+    !counted || (counted.active === record.active && counted.activatedAt === record.activatedAt)
+  )
+}
+
 /** A census counted against another incumbent says nothing about this one's terminals. */
 function censusForLockedRecord(
   options: OrcadDeployOptions,
   record: OrcadActivationRecord
 ): OrcadTerminalCensus {
-  const counted = options.censusRecord
-  return !counted ||
-    (counted.active === record.active && counted.activatedAt === record.activatedAt)
-    ? options.census
-    : UNVERIFIABLE_CENSUS
+  return countedLockedRecord(options, record) ? options.census : UNVERIFIABLE_CENSUS
 }
 
 export async function activateInstalledOrcad(
@@ -157,6 +160,20 @@ export async function activateInstalledOrcad(
     )
     if (admission.decision === 'defer') {
       return notActivated(admission.code, admission.reason)
+    }
+  }
+
+  // Last check before anything stops: the census above may predate a long upload.
+  if (incumbent && options.recountCensus && countedLockedRecord(options, record)) {
+    const recount = planOrcadUpdate({
+      record,
+      candidateVersion: fullVersion,
+      census: await options.recountCensus(),
+      candidateDaemonProtocol: CURRENT_ORCAD_DAEMON_PROTOCOL,
+      ...(options.force !== undefined ? { force: options.force } : {})
+    })
+    if (recount.action === 'defer') {
+      return notActivated(recount.code, recount.reason)
     }
   }
 

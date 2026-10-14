@@ -65,7 +65,7 @@ function readiness(port: number, deviceToken = 'device-token'): ServeReadiness {
   }
 }
 
-function ready(port: number, deviceToken?: string): WslOrcadLaunch {
+function ready(port: number, deviceToken?: string): Extract<WslOrcadLaunch, { outcome: 'ready' }> {
   return {
     outcome: 'ready',
     distro: 'Ubuntu',
@@ -206,6 +206,55 @@ describe('WslOrcadConnectionManager', () => {
     await staleClosed
     expect(await roundTrip(after, 'new')).toBe('new')
     expect(children.commands.at(-1)).toContain(` ${second.port}; fi; done;`)
+  })
+
+  it('serves the incumbent with its deferred update, then reports the update landing', async () => {
+    const { manager, launches, onChange, deployAndLaunch } = setup()
+    const deferredUpdate = {
+      candidateVersion: '2.0.0',
+      code: 'orcad_update_terminals_running',
+      reason: 'Terminals are running.',
+      forceable: true
+    }
+    launches.push({ ...ready(first.port), deferredUpdate })
+    const incumbent = await manager.ensure('Ubuntu')
+    expect(incumbent.deferredUpdate).toEqual(deferredUpdate)
+    launches.push({ ...ready(first.port), fullVersion: '2.0.0' })
+    const updated = await manager.ensure('Ubuntu', { force: true })
+    expect(deployAndLaunch).toHaveBeenLastCalledWith(
+      'Ubuntu',
+      expect.objectContaining({ force: true })
+    )
+    expect(updated).toMatchObject({
+      fullVersion: '2.0.0',
+      deferredUpdate: null
+    })
+    expect(onChange).toHaveBeenLastCalledWith('Ubuntu', updated, {
+      state: 'ready',
+      census: null
+    })
+  })
+
+  it('runs a forced connect after a plain one in flight instead of joining it', async () => {
+    const { manager, deployAndLaunch } = setup()
+    const plain = manager.ensure('Ubuntu')
+    const forced = manager.ensure('Ubuntu', { force: true })
+    await Promise.all([plain, forced])
+    expect(deployAndLaunch).toHaveBeenCalledTimes(2)
+    expect(deployAndLaunch).toHaveBeenLastCalledWith(
+      'Ubuntu',
+      expect.objectContaining({ force: true })
+    )
+  })
+
+  it('drops a queued forced connect that a close overtook', async () => {
+    const { manager, deployAndLaunch } = setup()
+    const plain = manager.ensure('Ubuntu')
+    const forced = manager.ensure('Ubuntu', { force: true })
+    await manager.close('Ubuntu')
+    await plain.catch(() => {})
+    await expect(forced).rejects.toBeInstanceOf(WslOrcadConnectionSupersededError)
+    expect(deployAndLaunch).toHaveBeenCalledTimes(1)
   })
 
   it('throws the deferral and starts no bridge', async () => {

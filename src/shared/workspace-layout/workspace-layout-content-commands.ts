@@ -109,6 +109,7 @@ export function openAgentSessionTab(
     return applied(model)
   }
   const tab = contentTab(context, {
+    ...(command.tabId ? { id: command.tabId } : {}),
     kind: 'agent-session',
     entityId: command.sessionId,
     agentSessionAgent: command.agent

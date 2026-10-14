@@ -398,7 +398,7 @@ describe('adopting a conversation recorded outside Orca', () => {
       runtime.resolveStructuredAgentSessionCreateIntent({
         envelope: { sessionId: 'session-1', clientOperationId: 'operation-1' },
         worktree: 'id:workspace-1',
-        agent: 'opencode',
+        agent: 'pi',
         resumeFrom: { providerSessionId: 'provider-1' }
       })
     ).rejects.toMatchObject({

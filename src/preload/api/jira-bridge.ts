@@ -1,5 +1,9 @@
+import type {
+  JiraIssueSummaryGenerationRequest,
+  JiraIssueSummaryGenerationCancellation
+} from '../../shared/jira-issue-summary-generation'
 import { ipcRenderer } from 'electron'
-import type { JiraProjectStatusOrder } from '../../shared/jira-types'
+import type { JiraIssueListFilters, JiraProjectStatusOrder } from '../../shared/jira-types'
 import type { PreloadApi } from '../api-types'
 
 export const jiraApi = {
@@ -28,6 +32,7 @@ export const jiraApi = {
 
   listIssues: (args?: {
     filter?: 'assigned' | 'reported' | 'all' | 'done'
+    filters?: JiraIssueListFilters
     limit?: number
     siteId?: string
   }) => ipcRenderer.invoke('jira:listIssues', args),
@@ -49,6 +54,11 @@ export const jiraApi = {
     userFieldKeys?: string[]
   }): Promise<{ ok: true; id: string; key: string; url: string } | { ok: false; error: string }> =>
     ipcRenderer.invoke('jira:createIssue', args),
+
+  generateIssueSummary: (args: JiraIssueSummaryGenerationRequest) =>
+    ipcRenderer.invoke('jira:generateIssueSummary', args),
+  cancelGenerateIssueSummary: (args: JiraIssueSummaryGenerationCancellation): Promise<void> =>
+    ipcRenderer.invoke('jira:cancelGenerateIssueSummary', args),
 
   updateIssue: (args: {
     key: string
@@ -87,7 +97,7 @@ export const jiraApi = {
   searchUsers: (args?: { query?: string; siteId?: string }) =>
     ipcRenderer.invoke('jira:searchUsers', args),
 
-  listTransitions: (args: { key: string; siteId?: string }) =>
+  listTransitions: (args: { key: string; siteId?: string; strict?: boolean }) =>
     ipcRenderer.invoke('jira:listTransitions', args),
   getProjectStatusOrder: (args: {
     projectKey: string

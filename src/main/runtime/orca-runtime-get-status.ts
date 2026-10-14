@@ -6,6 +6,8 @@ import {
   runtimeBrowserUnavailableCause
 } from './runtime-browser-commands-factory'
 import { isBrowserIdentityModeStoreInitialized } from '../browser/browser-identity-mode-store'
+import { servesLocalWslMigrationSource } from '../orcad/orcad-migration-wsl-destination'
+import { ORCAD_MIGRATION_LOCAL_WSL_SOURCE_RUNTIME_CAPABILITY } from '../../shared/orcad-runtime-capabilities'
 import type { RuntimeCapability } from '../../shared/protocol-version'
 import {
   BROWSER_CERTIFICATE_TRUST_RUNTIME_CAPABILITY,
@@ -67,7 +69,7 @@ function supportsDurableTerminalPromptDelivery(): boolean {
   }
 }
 
-export class OrcaRuntimeWithGetStatus extends OrcaRuntimeWithGetRuntimeId {
+export abstract class OrcaRuntimeWithGetStatus extends OrcaRuntimeWithGetRuntimeId {
   private asRuntimeStatusHost(): RuntimeStatusHost {
     return this as unknown as RuntimeStatusHost
   }
@@ -116,6 +118,10 @@ export class OrcaRuntimeWithGetStatus extends OrcaRuntimeWithGetRuntimeId {
     // so advertising it would point clients at a method that can only throw.
     if (isBrowserIdentityModeStoreInitialized()) {
       capabilities.push(BROWSER_IDENTITY_RUNTIME_CAPABILITY)
+    }
+    // Why not static: only the orcad inside a distro can receive that distro's projects.
+    if (servesLocalWslMigrationSource()) {
+      capabilities.push(ORCAD_MIGRATION_LOCAL_WSL_SOURCE_RUNTIME_CAPABILITY)
     }
     // Why: certificate proceed is owned by the browser-hosting process for both
     // desktop webviews and offscreen pages. Advertise whenever either backend
@@ -280,7 +286,7 @@ export class OrcaRuntimeWithGetStatus extends OrcaRuntimeWithGetRuntimeId {
     return { tabId, worktreeId: pty.worktreeId }
   }
 
-  protected notifyWorktreesChanged(
+  notifyWorktreesChanged(
     repoId: string,
     options?: { invalidateGitScans?: boolean; sortOrderOnly?: boolean }
   ): void {

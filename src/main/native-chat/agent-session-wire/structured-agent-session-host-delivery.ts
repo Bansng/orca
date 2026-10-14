@@ -24,6 +24,8 @@ import { structuredAgentSessionFailureWordsContext } from './structured-agent-se
 import { recoverStructuredRewind } from './structured-rewind-recovery'
 import { retireOutgrownStructuredAgentSessionChild } from './structured-agent-session-outgrown-child'
 import { structuredAgentSessionLaunchPermission } from './structured-agent-session-launch-permission'
+import { applyStructuredAgentSessionMessageOptions } from './structured-agent-session-message-options'
+import type { StructuredAgentSessionMutationContext } from './structured-agent-session-mutation-context'
 
 export type StructuredAgentSessionConversationDelivery = {
   loop: StructuredAgentSessionDeliveryLoop
@@ -60,6 +62,8 @@ export function createStructuredAgentSessionConversationDelivery(input: {
   ) => Promise<StructuredAgentSessionResumeOutcome>
   /** Stops a child the chat outgrew, so the start after it reads a new login or permission mode. */
   stopOutgrownAgent: (sessionId: string) => Promise<void>
+  /** Read lazily: the host's mutation context is still assembling when this is built. */
+  mutationContext: () => StructuredAgentSessionMutationContext
   clientDelivery: Pick<
     StructuredAgentSessionClientDelivery,
     'publishRestored' | 'readChildWork' | 'readStopping' | 'publishStatus'
@@ -96,6 +100,8 @@ export function createStructuredAgentSessionConversationDelivery(input: {
       })
       return input.ensureProviderChild(sessionId, startedFor)
     },
+    applyMessageOptions: (sessionId, options) =>
+      applyStructuredAgentSessionMessageOptions(input.mutationContext(), sessionId, options),
     conversationFence: (sessionId) =>
       structuredAgentSessionConversationFence(deps.store, sessionId),
     holdClosed: async (sessionId, which) => {

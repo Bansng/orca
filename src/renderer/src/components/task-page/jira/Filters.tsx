@@ -1,3 +1,5 @@
+import { TaskPageJiraStatusFilters } from '../../TaskPageJiraStatusFilters'
+import { TaskPageJiraSavedFilters } from '../../TaskPageJiraSavedFilters'
 import type { TaskPageComposerActionsModel } from '../../use-task-page-composer-actions'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
@@ -14,8 +16,22 @@ export function TaskPageJiraFilters({
   model: TaskPageComposerActionsModel
 }): React.JSX.Element | null {
   const {
+    jiraSavedFilters,
+    jiraActiveSavedFilterId,
+    jiraSavedFiltersReady,
+    jiraSavedFiltersLoading,
+    jiraSavedFiltersPending,
+    jiraSavedFiltersError,
+    retryJiraSavedFilters,
+    applyJiraSavedFilter,
+    createJiraSavedFilter,
+    updateJiraSavedFilter,
+    deleteJiraSavedFilter,
+    clearJiraSavedFilterSelection,
     setTaskResumeState,
     jiraPresets,
+    jiraHasWorkspace,
+    setJiraHasWorkspace,
     jiraLoading,
     jiraSearchInput,
     setJiraSearchInput,
@@ -38,12 +54,15 @@ export function TaskPageJiraFilters({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           {jiraPresets.map((preset) => {
-            const active = !jiraSearchInput && activeJiraPreset === preset.id
+            const active = !jiraHasWorkspace && !jiraSearchInput && activeJiraPreset === preset.id
             return (
               <button
                 key={preset.id}
+                disabled={jiraSavedFiltersPending}
                 type="button"
                 onClick={() => {
+                  setJiraHasWorkspace(false)
+                  void clearJiraSavedFilterSelection().catch(() => {})
                   setJiraSearchInput('')
                   setAppliedJiraSearch('')
                   setActiveJiraPreset(preset.id)
@@ -64,8 +83,38 @@ export function TaskPageJiraFilters({
               </button>
             )
           })}
+          <Button
+            variant={jiraHasWorkspace ? 'secondary' : 'ghost'}
+            size="sm"
+            aria-pressed={jiraHasWorkspace}
+            onClick={() => {
+              setJiraHasWorkspace(true)
+              setJiraSearchInput('')
+              setAppliedJiraSearch('')
+              setTaskResumeState({ jiraQuery: '' })
+            }}
+          >
+            {translate('jira.workspace.mode', 'Has Workspace')}
+          </Button>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <TaskPageJiraSavedFilters
+            filters={jiraSavedFilters}
+            activeFilterId={jiraActiveSavedFilterId}
+            currentJql={jiraSearchInput}
+            disabled={!jiraSavedFiltersReady || jiraSavedFiltersPending}
+            loading={jiraSavedFiltersLoading}
+            error={jiraSavedFiltersError}
+            onRetry={retryJiraSavedFilters}
+            onApply={async (filter) => {
+              if (await applyJiraSavedFilter(filter)) {
+                setJiraHasWorkspace(false)
+              }
+            }}
+            onCreate={createJiraSavedFilter}
+            onUpdate={updateJiraSavedFilter}
+            onDelete={deleteJiraSavedFilter}
+          />
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -124,12 +173,22 @@ export function TaskPageJiraFilters({
           </Tooltip>
         </div>
       </div>
+      {jiraSavedFiltersError ? (
+        <p role="alert" className="mt-2 text-xs text-destructive">
+          {jiraSavedFiltersError}
+        </p>
+      ) : null}
+      <TaskPageJiraStatusFilters model={model} />
       <div className="mt-3 flex items-center gap-3">
         <div className="relative min-w-[320px] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={jiraSearchInput}
-            onChange={(e) => setJiraSearchInput(e.target.value)}
+            disabled={jiraSavedFiltersPending}
+            onChange={(e) => {
+              void clearJiraSavedFilterSelection().catch(() => {})
+              setJiraSearchInput(e.target.value)
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 if (
@@ -150,13 +209,19 @@ export function TaskPageJiraFilters({
                 setTaskResumeState({
                   jiraQuery: trimmed
                 })
-                setJiraRefreshNonce((n) => n + 1)
+                if (!jiraHasWorkspace) {
+                  setJiraRefreshNonce((n) => n + 1)
+                }
               }
             }}
-            placeholder={translate(
-              'auto.components.TaskPage.99c2755218',
-              'Search issues or enter JQL, e.g. project = ABC'
-            )}
+            placeholder={
+              jiraHasWorkspace
+                ? translate('jira.workspace.search', 'Search linked issues')
+                : translate(
+                    'auto.components.TaskPage.99c2755218',
+                    'Search issues or enter JQL, e.g. project = ABC'
+                  )
+            }
             className="h-8 rounded-md border-border/50 bg-background pl-8 pr-8 text-xs"
           />
           {jiraSearchInput ? (
@@ -164,12 +229,15 @@ export function TaskPageJiraFilters({
               type="button"
               aria-label={translate('auto.components.TaskPage.b797bdd7c3', 'Clear search')}
               onClick={() => {
+                void clearJiraSavedFilterSelection().catch(() => {})
                 setJiraSearchInput('')
                 setAppliedJiraSearch('')
                 setTaskResumeState({
                   jiraQuery: ''
                 })
-                setJiraRefreshNonce((n) => n + 1)
+                if (!jiraHasWorkspace) {
+                  setJiraRefreshNonce((n) => n + 1)
+                }
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
             >
