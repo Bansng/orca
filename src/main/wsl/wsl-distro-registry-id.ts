@@ -7,27 +7,45 @@ import { windowsSystem32Binary } from '@orca/process-host/windows-system-binary'
 
 const LXSS_KEY = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Lxss'
 const REG_QUERY_TIMEOUT_MS = 5_000
-const GUID_SUBKEY = /\\(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\})\s*$/i
-const DISTRIBUTION_NAME_VALUE = /^\s+DistributionName\s+REG_\w+\s+(.+?)\s*$/
+const GUID_SUBKEY = /\\\{([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\}\s*$/i
+const VALUE_LINE = /^\s+(\S+)\s+REG_\w+\s+(.*?)\s*$/
 
-export type WslDistroRegistration = { id: string; distro: string }
+export type WslDistroRegistration = {
+  /** Canonical form: lowercase and unbraced, as the deployment record's `distroId` stores it. */
+  id: string
+  distro: string
+  /** WSL 1 or 2 from the key's `Version`; null when the registry did not say. */
+  version: 1 | 2 | null
+}
 
-/** Parses `reg query <Lxss> /s /v DistributionName`; matched by shape, since the footer is localized. */
+/** Parses `reg query <Lxss> /s`; matched by shape, since the footer is localized. */
 export function parseWslDistroRegistrations(output: string): WslDistroRegistration[] {
   const registrations: WslDistroRegistration[] = []
-  let currentId: string | null = null
-  for (const line of output.split(/\r?\n/)) {
-    const key = GUID_SUBKEY.exec(line)
-    if (key?.[1] && /^HKEY_/i.test(line)) {
-      currentId = key[1].toLowerCase()
-      continue
-    }
-    const name = DISTRIBUTION_NAME_VALUE.exec(line)
-    if (name?.[1] && currentId) {
-      registrations.push({ id: currentId, distro: name[1] })
-      currentId = null
+  let current: { id: string; distro: string | null; version: 1 | 2 | null } | null = null
+  const flush = (): void => {
+    if (current?.distro) {
+      registrations.push({ id: current.id, distro: current.distro, version: current.version })
     }
   }
+  for (const line of output.split(/\r?\n/)) {
+    if (/^HKEY_/i.test(line)) {
+      flush()
+      const key = GUID_SUBKEY.exec(line)
+      current = key?.[1] ? { id: key[1].toLowerCase(), distro: null, version: null } : null
+      continue
+    }
+    const value = VALUE_LINE.exec(line)
+    if (!current || !value) {
+      continue
+    }
+    if (value[1] === 'DistributionName') {
+      current.distro = value[2]
+    } else if (value[1] === 'Version') {
+      const version = Number.parseInt(value[2], 16)
+      current.version = version === 1 || version === 2 ? version : null
+    }
+  }
+  flush()
   return registrations
 }
 
@@ -41,27 +59,31 @@ const defaultRegQuery: RegQuery = (args) =>
     timeoutMs: REG_QUERY_TIMEOUT_MS
   })
 
-/** The distro's registration GUID (lowercase, braced), or null when it is not registered or unreadable. */
-export async function readWslDistroRegistryId(
-  distro: string,
+/** Every registered distro, or null when the registry cannot be read. */
+export async function readWslDistroRegistrations(
   query: RegQuery = defaultRegQuery
-): Promise<string | null> {
+): Promise<WslDistroRegistration[] | null> {
   if (process.platform !== 'win32' && query === defaultRegQuery) {
     return null
   }
   let result: { code: number | null; stdout: string }
   try {
-    result = await query(['query', LXSS_KEY, '/s', '/v', 'DistributionName'])
+    result = await query(['query', LXSS_KEY, '/s'])
   } catch {
     return null
   }
-  if (result.code !== 0) {
-    return null
-  }
+  return result.code === 0 ? parseWslDistroRegistrations(result.stdout) : null
+}
+
+/** The distro's registration GUID (lowercase, unbraced), or null when it is not registered or unreadable. */
+export async function readWslDistroRegistryId(
+  distro: string,
+  query: RegQuery = defaultRegQuery
+): Promise<string | null> {
   // WSL treats distro names case-insensitively.
   const wanted = distro.trim().toLowerCase()
-  const matches = parseWslDistroRegistrations(result.stdout).filter(
+  const matches = (await readWslDistroRegistrations(query))?.filter(
     (registration) => registration.distro.toLowerCase() === wanted
   )
-  return matches.length === 1 ? matches[0].id : null
+  return matches?.length === 1 ? matches[0].id : null
 }

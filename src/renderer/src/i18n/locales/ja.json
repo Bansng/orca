@@ -2377,8 +2377,8 @@
         "34c8fbb46e": "SSH リモート",
         "63c2be1914": "SSH が切断されました",
         "95be6587d3": "ワークツリー「{{value0}}」を作成する",
-        "worktreesHeader": "ワークツリー",
-        "recentWorktreesHeader": "最近のワークツリー",
+        "worktreesHeader": "ワークスペース",
+        "recentWorktreesHeader": "最近のワークスペース",
         "settingsBadge": "設定",
         "actionBadge": "操作",
         "paletteHostBadge": "ホスト: {{value0}}",
@@ -2387,8 +2387,8 @@
         "projectBadge": "プロジェクト",
         "repoGroupBadge": "リポジトリグループ",
         "pluginCommandFailed": "プラグインのコマンドを実行できませんでした。",
-        "27f10cca63": "チャット、ターミナル、ワークツリー、設定、操作を検索します…",
-        "2770f02910": "チャット、ターミナル、ワークツリー、設定、操作を検索します",
+        "27f10cca63": "チャット、ターミナル、ワークスペース、設定、操作を検索します…",
+        "2770f02910": "チャット、ターミナル、ワークスペース、設定、操作を検索します",
         "recentChatsTerminalsHeader": "最近のチャットとターミナル",
         "lastActiveTime": "最後にアクティブになったのは{{value0}}前です"
       },
@@ -15382,8 +15382,16 @@
           "7b458e0b7f": "Markdown テンプレートを選択します。",
           "1829437fce": "新規 Markdown"
         },
+        "DiagramViewerModal": {
+          "title": "図",
+          "zoomOut": "ズームアウト",
+          "zoomIn": "ズームイン",
+          "fit": "画面に合わせる",
+          "close": "閉じる"
+        },
         "MermaidBlock": {
-          "dcc132e691": "図のエラー:"
+          "dcc132e691": "図のエラー:",
+          "expand": "図を拡大"
         },
         "MonacoEditor": {
           "68cb83f4a7": "選択したテキストにメモを追加する",
@@ -17820,8 +17828,12 @@
         "compactionFailedQuoted": "圧縮に失敗しました: {{detail}}。",
         "compactionUnconfirmed": "圧縮の完了は確認されていません。",
         "cancelUnconfirmed": "キャンセルは確認されませんでした。",
+        "backgroundTaskNotStopped": "バックグラウンドタスクは停止されませんでした。",
+        "backgroundTasksNotStopped": "バックグラウンドタスクは停止されませんでした。",
         "stopRefused": "{{agent}} は停止しませんでした。",
         "stopRefusedQuoted": "{{agent}} は停止しませんでした: {{detail}}。",
+        "couldNotStop": "{{agent}} を停止できませんでした。",
+        "couldNotStopTheAgent": "Agent を停止できませんでした。",
         "noTurnToStop": "{{agent}} には停止できる実行中のターンがありませんでした。",
         "answerUnconfirmed": "回答は記録されましたが、Agent は確認しませんでした。",
         "argumentsMissingValue": "保存された引数の {{option}} に値が必要です。",
@@ -17863,6 +17875,7 @@
         "outcomeUnknown": "Orca は何が起きたかを確認できませんでした。チャットを確認してください。",
         "sendOutcomeLost": "Orca はメッセージが Agent に届いたことを確認できませんでした。チャットを確認し、必要であればもう一度送信してください。",
         "questionChanged": "この質問はすでに回答済みか、変更されています。",
+        "cancelNotSaved": "この質問または承認をキャンセルできませんでした。",
         "historyUnreadable": "Orca はこのチャットの保存済み履歴を読み取れませんでした。",
         "historyUnusable": "このチャットを読み込めません。",
         "historyUnavailable": "Orca は現在このチャットの履歴を開けませんでした。",
@@ -19340,6 +19353,10 @@
     "removePath": "Remove {{name}}"
   },
   "accounts": {
+    "wslAccountNotApplied": {
+      "title": "{{distro}} ではアカウントの選択が適用されていません",
+      "description": "WSL 内の Orca が更新されるまで、そこの Agent はディストリビューションの既定の Claude と Codex アカウントを使用します。"
+    },
     "managedData": {
       "description": "Orca ホストのターミナルでこのコマンドを実行してアカウントを追加します。選択はそのホストでの新規 Agent 起動に適用されます。直接 SSH 接続とWindows上の WSL は独自の認証情報を使用します。",
       "copied": "コピーしました",

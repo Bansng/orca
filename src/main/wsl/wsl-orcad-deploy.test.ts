@@ -82,7 +82,7 @@ function launch(kernel = '5.15.167.4-microsoft-standard-WSL2', options = {}) {
   return deployAndLaunchWslOrcad('Ubuntu-24.04', {
     holder: holder(),
     createTransport: transport,
-    readRegistryId: async () => '{0283592d-be56-40d4-b935-3dc18c3aa007}',
+    readRegistryId: async () => '0283592d-be56-40d4-b935-3dc18c3aa007',
     ...options
   })
 }
@@ -120,7 +120,7 @@ describe('deployAndLaunchWslOrcad', () => {
     await expect(launch()).resolves.toEqual({
       outcome: 'ready',
       distro: 'Ubuntu-24.04',
-      distroId: '{0283592d-be56-40d4-b935-3dc18c3aa007}',
+      distroId: '0283592d-be56-40d4-b935-3dc18c3aa007',
       port: 6790,
       fullVersion: '1.5.0+ab',
       pid: 4242,
@@ -154,7 +154,8 @@ describe('deployAndLaunchWslOrcad', () => {
       census: { liveSessions: 0, startedSinceActivation: 0, daemonProtocolVersion: null },
       appVersion: '1.5.0',
       localOrcadDir: '/local/orcad',
-      target: 'linux-x64-glibc'
+      target: 'linux-x64-glibc',
+      recordedNodeRuntimeProbe: true
     })
     const newer = { ...emptyOrcadActivationRecord(), active: '2.0.0+cd', activeAppVersion: '2.0.0' }
     expect(options.admitRecord(newer, '1.5.0+ab')).toBe(

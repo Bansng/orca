@@ -88,3 +88,16 @@ export function readGuestWindowsDriveMounts(): readonly string[] {
 export function _resetGuestWindowsDriveMountsForTests(): void {
   cachedGuestMounts = null
 }
+
+/** `pathEnv` (default: this process's PATH) without Windows drive dirs on a WSL guest; as given
+ *  elsewhere. For launch-time CLI resolution, which must pick the Linux CLI as detection did. */
+export function guestNativePathEnv(
+  pathEnv: string | null | undefined,
+  mounts: readonly string[] = readGuestWindowsDriveMounts()
+): string | null | undefined {
+  if (mounts.length === 0) {
+    return pathEnv
+  }
+  const value = pathEnv ?? process.env.PATH ?? null
+  return value === null ? null : withoutWindowsDriveMountDirs(value, mounts)
+}

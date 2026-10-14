@@ -2380,8 +2380,8 @@
         "34c8fbb46e": "SSH 원격",
         "63c2be1914": "SSH 연결이 끊어졌습니다.",
         "95be6587d3": "워크트리 \"{{value0}}\" 만들기",
-        "worktreesHeader": "워크트리",
-        "recentWorktreesHeader": "최근 워크트리",
+        "worktreesHeader": "작업 공간",
+        "recentWorktreesHeader": "최근 작업 공간",
         "settingsBadge": "설정",
         "actionBadge": "작업",
         "paletteHostBadge": "호스트: {{value0}}",
@@ -2390,8 +2390,8 @@
         "projectBadge": "프로젝트",
         "repoGroupBadge": "리포지토리 그룹",
         "pluginCommandFailed": "플러그인 명령을 실행할 수 없습니다.",
-        "27f10cca63": "채팅, 터미널, 워크트리, 설정 및 작업 검색...",
-        "2770f02910": "채팅, 터미널, 워크트리, 설정 및 작업 검색",
+        "27f10cca63": "채팅, 터미널, 작업 공간, 설정 및 작업 검색...",
+        "2770f02910": "채팅, 터미널, 작업 공간, 설정 및 작업 검색",
         "recentChatsTerminalsHeader": "최근 채팅 및 터미널",
         "lastActiveTime": "마지막 활동: {{value0}} 전"
       },
@@ -15412,8 +15412,16 @@
           "7b458e0b7f": "Markdown 템플릿을 선택하세요.",
           "1829437fce": "새로운 Markdown"
         },
+        "DiagramViewerModal": {
+          "title": "다이어그램",
+          "zoomOut": "축소",
+          "zoomIn": "확대",
+          "fit": "화면에 맞추기",
+          "close": "닫기"
+        },
         "MermaidBlock": {
-          "dcc132e691": "다이어그램 오류:"
+          "dcc132e691": "다이어그램 오류:",
+          "expand": "다이어그램 확대"
         },
         "MonacoEditor": {
           "68cb83f4a7": "선택한 텍스트에 메모 추가",
@@ -17850,8 +17858,12 @@
         "compactionFailedQuoted": "압축에 실패했습니다: {{detail}}.",
         "compactionUnconfirmed": "압축 완료가 확인되지 않았습니다.",
         "cancelUnconfirmed": "취소가 확인되지 않았습니다.",
+        "backgroundTaskNotStopped": "백그라운드 작업이 중지되지 않았습니다.",
+        "backgroundTasksNotStopped": "백그라운드 작업이 중지되지 않았습니다.",
         "stopRefused": "{{agent}}이(가) 중지되지 않았습니다.",
         "stopRefusedQuoted": "{{agent}}이(가) 중지되지 않았습니다: {{detail}}.",
+        "couldNotStop": "{{agent}}을(를) 중지하지 못했습니다.",
+        "couldNotStopTheAgent": "에이전트를 중지하지 못했습니다.",
         "noTurnToStop": "{{agent}}에 중지할 실행 중인 턴이 없었습니다.",
         "answerUnconfirmed": "응답이 기록되었지만 에이전트가 확인하지 않았습니다.",
         "argumentsMissingValue": "저장된 인수의 {{option}}에 값이 필요합니다.",
@@ -17893,6 +17905,7 @@
         "outcomeUnknown": "Orca가 무슨 일이 있었는지 확인하지 못했습니다. 채팅을 확인하세요.",
         "sendOutcomeLost": "Orca가 메시지가 에이전트에 전달되었는지 확인하지 못했습니다. 채팅을 확인하고 필요하면 다시 보내세요.",
         "questionChanged": "이 질문은 이미 답변되었거나 변경되었습니다.",
+        "cancelNotSaved": "이 질문 또는 승인을 취소하지 못했습니다.",
         "historyUnreadable": "Orca가 이 채팅의 저장된 기록을 읽지 못했습니다.",
         "historyUnusable": "이 채팅을 불러올 수 없습니다.",
         "historyUnavailable": "Orca가 지금 이 채팅의 기록을 열지 못했습니다.",
@@ -19370,6 +19383,10 @@
     "removePath": "Remove {{name}}"
   },
   "accounts": {
+    "wslAccountNotApplied": {
+      "title": "{{distro}}에서 계정 선택이 적용되지 않았습니다",
+      "description": "WSL의 Orca가 업데이트될 때까지 해당 에이전트는 배포판의 기본 Claude 및 Codex 계정을 사용합니다."
+    },
     "managedData": {
       "description": "Orca 호스트의 터미널에서 이 명령을 실행하여 계정을 추가하세요. 선택은 해당 호스트에서 새로 시작하는 에이전트에 적용됩니다. 직접 SSH 연결과 Windows에서 호스팅하는 WSL은 자체 자격 증명을 사용합니다.",
       "copied": "복사됨",

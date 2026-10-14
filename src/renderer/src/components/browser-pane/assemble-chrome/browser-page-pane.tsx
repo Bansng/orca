@@ -179,8 +179,7 @@ export function BrowserPagePane({
     trackingScroller: pageViewport?.scroller ?? null,
     webviewRef,
     setBrowserOverlayViewport,
-    browserAnnotationsLength: annotationSend.browserAnnotations.length,
-    setBrowserAnnotationTrayOpen: annotationSend.setBrowserAnnotationTrayOpen
+    browserAnnotationsLength: annotationSend.browserAnnotations.length
   })
   const nav = useBrowserPageNavigationDownloads({
     browserTabId: browserTab.id,

@@ -357,7 +357,8 @@ function runResolvedProcessSync(spec: ProcessSpec, resolved: ResolvedSpawn): Pro
     input: spec.input,
     timeout: spec.timeoutMs === null ? undefined : (spec.timeoutMs ?? DEFAULT_PROCESS_TIMEOUT_MS),
     maxBuffer: spec.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES,
-    encoding: 'buffer'
+    // Keep raw output without applying the nonexistent 'buffer' encoding to string stdin.
+    encoding: null
   })
   const timedOut = result.error
     ? 'code' in result.error && result.error.code === 'ETIMEDOUT'
