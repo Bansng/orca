@@ -19,6 +19,7 @@ import { getDaemonEntryPath, probeDaemonSocket as probeSocket } from './daemon-l
 import { materializeRelocatedDaemonHost, pruneDaemonHostStaging } from './daemon-host-relocation'
 import { appImageDaemonIdentityPath, resolveAppImageDaemonLaunch } from './daemon-appimage-launch'
 import { resolveAppImageGenerationDaemonLaunch } from './daemon-appimage-generation-launch'
+import { waitForAppImageCopyPreExtraction } from '../cli/appimage-copy-pre-extraction'
 import { launchMacDaemonFromStableBundle } from './macos-daemon-launchd'
 import { DAEMON_RECOVERY_BUDGET_MS, daemonRecoveryProbeTimeoutMs } from './daemon-recovery-budget'
 import { cleanupDaemonForProtocol } from './daemon-protocol-cleanup'
@@ -141,10 +142,9 @@ export function createOutOfProcessLauncher(
         appPath: environment.getAppPath(),
         appVersion: environment.getVersion()
       })
-      const generation = resolveAppImageGenerationDaemonLaunch({
-        entryPath,
-        appVersion: environment.getVersion()
-      })
+      const resolveGeneration = (): ReturnType<typeof resolveAppImageGenerationDaemonLaunch> =>
+        resolveAppImageGenerationDaemonLaunch({ entryPath, appVersion: environment.getVersion() })
+      let generation = resolveGeneration()
       const extractedGeneration = generation && 'launch' in generation ? generation.launch : null
       const preservedHandle = await prepareDaemonReplacement({
         runtimeDir,
@@ -164,6 +164,17 @@ export function createOutOfProcessLauncher(
         return preservedHandle
       }
 
+      // Why only once launching: the first start of a release unpacks its copy in the background,
+      // and a short wait lets this new daemon run from it instead of a mount it would outlive.
+      if (
+        generation &&
+        'fallback' in generation &&
+        generation.fallback === 'no-extracted-copy' &&
+        (await waitForAppImageCopyPreExtraction())
+      ) {
+        generation = resolveGeneration()
+      }
+      const launchGeneration = generation && 'launch' in generation ? generation.launch : null
       const userDataPath = environment.getPath('userData')
       const macHandle = await launchMacDaemonFromStableBundle(
         {
@@ -198,7 +209,7 @@ export function createOutOfProcessLauncher(
           forkEntryPath,
           relocatedExecPath: relocatedHost?.execPath,
           appImage: relocatedHost ? undefined : (appImage ?? undefined),
-          extractedGeneration: extractedGeneration ?? undefined,
+          extractedGeneration: launchGeneration ?? undefined,
           userDataPath,
           socketPath,
           tokenPath,

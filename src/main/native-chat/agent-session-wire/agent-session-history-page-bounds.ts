@@ -7,6 +7,7 @@ import type {
   AgentJournalSubmission
 } from '../../../shared/agent-session-journal-types'
 import { REMOTE_RUNTIME_MAX_OUTBOUND_JSON_BYTES } from '../../../shared/remote-runtime-memory-limits'
+import { MOBILE_BRIDGE_MAX_FRAME_BYTES } from '../../../shared/mobile-bridge-frame-bytes'
 import { agentSessionHostStatusBody } from '../../../shared/agent-session-host-status-rows'
 import { subagentFoldKey, subagentItemBlock } from '../../../shared/native-chat-subagent-items'
 
@@ -16,6 +17,14 @@ const HISTORY_PAGE_ENVELOPE_RESERVE_BYTES = 64 * 1024
 
 export const HISTORY_PAGE_CONTENT_BUDGET_BYTES =
   AGENT_SESSION_HISTORY_MAX_PAGE_BYTES - HISTORY_PAGE_ENVELOPE_RESERVE_BYTES
+
+/** Everything a bounded frame carries beside its rows: the bridge envelope, ids and cursors, the
+ *  subagent roster, the latest turn and the activity line, each held to its own bound. */
+const FRAME_METADATA_CEILING_BYTES = 64 * 1024
+
+/** The rows' share of a phone's bridge frame, which its app ends a stream over. */
+export const BOUNDED_FRAME_CONTENT_BUDGET_BYTES =
+  MOBILE_BRIDGE_MAX_FRAME_BYTES - FRAME_METADATA_CEILING_BYTES
 
 export function historyEntryBytes(
   item: AgentJournalRenderItem,
@@ -56,16 +65,31 @@ export function oversizedHistoryItem(item: AgentJournalRenderItem): AgentJournal
   }
 }
 
+/** How a reader receives each item, and the bytes its page may hold of them. A page is measured
+ *  in that form, so it carries what it will actually send. */
+export type HistoryReader = {
+  form: (item: AgentJournalRenderItem) => AgentJournalRenderItem
+  budgetBytes: number
+}
+
+export const STORED_HISTORY_READER: HistoryReader = {
+  form: (item) => item,
+  budgetBytes: HISTORY_PAGE_CONTENT_BUDGET_BYTES
+}
+
+/** Rows are put in `form` only as the page takes them. */
 export function boundHistoryItemsByBytes(
   items: AgentJournalRenderItem[],
   keep: 'newest' | 'oldest',
   submissionBytes: ReadonlyMap<string, number>,
-  maxBytes: number
+  maxBytes: number,
+  form: HistoryReader['form'] = STORED_HISTORY_READER.form
 ): { items: AgentJournalRenderItem[]; dropped: number } {
   const ordered = groupItemsBySequence(items, keep)
   const kept: AgentJournalRenderItem[][] = []
   let total = 0
-  for (const group of ordered) {
+  for (const stored of ordered) {
+    const group = stored.map(form)
     const bytes = group.reduce((sum, item) => sum + historyEntryBytes(item, submissionBytes), 0)
     if (kept.length === 0 && bytes > maxBytes) {
       kept.push(group.map((item) => oversizedHistoryItem(item)))

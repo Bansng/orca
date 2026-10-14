@@ -19,7 +19,7 @@ import {
 } from '../../../../shared/execution-host'
 import { buildExecutionHostRegistry } from '../../../../shared/execution-host-registry'
 import { pickerExecutionHosts } from '../../../../shared/managed-orcad-execution-host'
-import { isUserManagedRuntimeEnvironment } from '../../../../shared/runtime-environments'
+import { isListedRemoteServer } from '../../../../shared/runtime-environments'
 import { RuntimeHostStatusRow } from './RuntimeHostStatusRow'
 import { connectedHostCountLabel, connectingHostsLabel } from './ssh-status-segment-copy'
 import { SshTargetStatusRow } from './SshTargetStatusRow'
@@ -55,7 +55,7 @@ export function SshStatusSegment({
   const recordFeatureInteraction = useAppStore((s) => s.recordFeatureInteraction)
 
   const hostLabelOverrides = useMemo(() => getHostDisplayLabelOverrides(settings), [settings])
-  const userManagedEnvironments = runtimeEnvironments.filter(isUserManagedRuntimeEnvironment)
+  const userManagedEnvironments = runtimeEnvironments.filter(isListedRemoteServer)
   // Why the registry: a managed server and its SSH host are one machine, shown on its active route.
   const visibleHostLabels = new Map(
     pickerExecutionHosts(

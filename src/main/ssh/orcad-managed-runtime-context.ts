@@ -1,7 +1,8 @@
 import { resolveEnvironment } from '../../shared/runtime-environment-store'
-import type {
-  KnownRuntimeEnvironment,
-  OrcadDeploymentLink
+import {
+  getOrcadSshDeployment,
+  type KnownRuntimeEnvironment,
+  type OrcadSshDeploymentLink
 } from '../../shared/runtime-environments'
 import { getManagedOrcadFenceEnvironmentId } from '../../shared/managed-orcad-ssh-owner'
 import type { ServeReadiness } from '../server/serve-readiness'
@@ -43,9 +44,9 @@ export function requireManagedOrcadTargetStore() {
 export function requireManagedOrcadEnvironment(
   userDataPath: string,
   selector: string
-): { environment: KnownRuntimeEnvironment; deployment: OrcadDeploymentLink } {
+): { environment: KnownRuntimeEnvironment; deployment: OrcadSshDeploymentLink } {
   const environment = resolveEnvironment(userDataPath, selector)
-  const deployment = environment.orcadDeployment
+  const deployment = getOrcadSshDeployment(environment)
   if (!deployment || environment.connectionDependency !== 'ssh-tunnel') {
     throw new Error('This server is not managed through an orcad SSH deployment.')
   }
@@ -54,7 +55,7 @@ export function requireManagedOrcadEnvironment(
 
 export async function resolveLinkedOrcadContext(
   environment: KnownRuntimeEnvironment,
-  deployment: OrcadDeploymentLink,
+  deployment: OrcadSshDeploymentLink,
   signal?: AbortSignal
 ): Promise<OrcadRemoteContext> {
   const { connectionManager, targetStore } = requireManagedOrcadInfrastructure()

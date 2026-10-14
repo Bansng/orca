@@ -10,6 +10,7 @@ import {
   WSL_DISTRO_HOLDER_MARKER
 } from './wsl-distro-holder-command'
 import {
+  WSL_HOLDER_UNVERIFIABLE_REPLACE_AFTER_MS,
   createWslDistroHolder,
   type WslDistroHolderChild,
   type WslDistroHolderDependencies
@@ -244,7 +245,9 @@ describe('createWslDistroHolder', () => {
     let clock = 0
     const holder = makeHolder({
       listRunningDistros: async () => [],
-      now: () => (clock += 1_000),
+      monotonicNow: () => (clock += 1_000),
+      // A wall clock stuck in the past must not stretch the deadline.
+      now: () => 0,
       bootTimeoutMs: 3_000
     })
     await expect(holder.ensureHeld('Alpine')).rejects.toThrow(/did not start/)
@@ -303,5 +306,48 @@ describe('createWslDistroHolder', () => {
     await ensure
     expect(await release).toBe('exited')
     expect(host.killed).toEqual([4000])
+  })
+
+  it('spawns another holder only after staying unverifiable past the bound while running', async () => {
+    await writeRecord(record())
+    host.running.add('alpine')
+    let clock = 0
+    const query = host.query
+    const holder = makeHolder({
+      monotonicNow: () => clock,
+      // The recorded holder's row stays unreadable; a new holder's own lookup works.
+      queryProcess: async (pid) => (pid === 77 ? { status: 'unavailable' } : query(pid))
+    })
+    expect((await holder.ensureHeld('Alpine')).outcome).toBe('unverifiable')
+    clock = WSL_HOLDER_UNVERIFIABLE_REPLACE_AFTER_MS - 1
+    expect((await holder.ensureHeld('Alpine')).outcome).toBe('unverifiable')
+    expect(host.spawned).toEqual([])
+    clock = WSL_HOLDER_UNVERIFIABLE_REPLACE_AFTER_MS
+    const result = await holder.ensureHeld('Alpine')
+    expect(result).toMatchObject({ outcome: 'spawned', record: { pid: 4000 } })
+    expect(host.spawned).toEqual(['Alpine'])
+    expect(host.killed).toEqual([])
+  })
+
+  it('never doubles an unverifiable holder while the distro is not confirmed running', async () => {
+    await writeRecord(record())
+    let clock = 0
+    const holder = makeHolder({
+      monotonicNow: () => clock,
+      queryProcess: async () => ({ status: 'unavailable' }),
+      listRunningDistros: async () => []
+    })
+    expect((await holder.ensureHeld('Alpine')).outcome).toBe('unverifiable')
+    clock = WSL_HOLDER_UNVERIFIABLE_REPLACE_AFTER_MS * 10
+    expect((await holder.ensureHeld('Alpine')).outcome).toBe('unverifiable')
+    expect(host.spawned).toEqual([])
+  })
+
+  it('reports a spawned holder exit so liveness can re-check', async () => {
+    const onHolderExit = vi.fn()
+    const holder = makeHolder({ onHolderExit })
+    await holder.ensureHeld('Alpine')
+    host.children[0].emit('exit', 1, null)
+    expect(onHolderExit).toHaveBeenCalledWith('Alpine', { code: 1, signal: null })
   })
 })

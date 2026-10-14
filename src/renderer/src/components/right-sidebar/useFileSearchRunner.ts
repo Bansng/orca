@@ -150,7 +150,7 @@ export function useFileSearchRunner({
               connectionId
             },
             {
-              query: query.trim(),
+              query,
               rootPath: worktreePath,
               caseSensitive: activeSearchState?.caseSensitive ?? false,
               wholeWord: activeSearchState?.wholeWord ?? false,

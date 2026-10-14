@@ -1,6 +1,7 @@
 import { createQoderSessionResumeState } from './session-scanner-qoder-parser'
 import type { AiVaultSession } from '../../shared/ai-vault-types'
 import { inSessionParseFileLane } from './session-parse-file-lane'
+import { noteAiVaultScanProgress } from './ai-vault-scan-progress'
 import { createAntigravitySessionResumeState } from './session-scanner-antigravity-parser'
 import { createCodexSessionResumeState } from './session-scanner-codex-parser'
 import { createDroidSessionResumeState } from './session-scanner-droid-parser'
@@ -128,9 +129,11 @@ export async function parseAgentSessionFileCached(
 ): Promise<AiVaultSession | null> {
   // The whole lookup-read-store sequence runs in the lane: a concurrent parse of
   // the same path shares this entry's resume point and its message channel.
-  return inSessionParseFileLane(candidate.file.path, () =>
+  const session = await inSessionParseFileLane(candidate.file.path, () =>
     parseCachedInLane(candidate, platform, stats, requireRead, signal)
   )
+  noteAiVaultScanProgress(signal)
+  return session
 }
 
 /**
@@ -191,7 +194,12 @@ async function parseCachedInLane(
     // Only the sibling moved. For an agent whose sibling just adds metadata,
     // re-merge it onto the stored fold result; the transcript is not re-read.
     if (sidecarEnrichesWithoutReparse(candidate) && entry.foldSession !== undefined) {
-      const enriched = await enrichSessionFromSidecar(candidate, entry.foldSession, platform)
+      const enriched = await enrichSessionFromSidecar(
+        candidate,
+        entry.foldSession,
+        platform,
+        signal
+      )
       entry.session = enriched.session
       entry.sidecar = enriched.refused ? 'unknown' : file.sidecar
       storeSessionParseCacheEntry(file.path, entry)
@@ -209,9 +217,10 @@ async function parseCachedInLane(
       platform,
       resume: entry?.platform === platform ? entry.resume : null,
       stateFactory,
-      stats
+      stats,
+      signal
     })
-    const enriched = await enrichSessionFromSidecar(candidate, read.session, platform)
+    const enriched = await enrichSessionFromSidecar(candidate, read.session, platform, signal)
     storeSessionParseCacheEntry(file.path, {
       mtimeMs: file.mtimeMs,
       sizeBytes: file.sizeBytes ?? null,
@@ -231,7 +240,7 @@ async function parseCachedInLane(
   // Whole-file agents merge the sibling here just like the resumable branch
   // does post-read; the raw fold stays in foldSession so a sibling-only change
   // re-merges without re-reading the transcript.
-  const enriched = await enrichSessionFromSidecar(candidate, session, platform)
+  const enriched = await enrichSessionFromSidecar(candidate, session, platform, signal)
   storeSessionParseCacheEntry(file.path, {
     mtimeMs: file.mtimeMs,
     sizeBytes: file.sizeBytes ?? null,

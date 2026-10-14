@@ -2,11 +2,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createOutOfProcessLauncher } from './daemon-out-of-process-launcher'
 import type * as AppImageLaunch from './daemon-appimage-launch'
 
-const { prepare, resolveLaunch, resolveGeneration, launchChild } = vi.hoisted(() => ({
+const { prepare, resolveLaunch, resolveGeneration, launchChild, waitForCopy } = vi.hoisted(() => ({
   prepare: vi.fn(),
   resolveLaunch: vi.fn(),
   resolveGeneration: vi.fn((): unknown => null),
-  launchChild: vi.fn()
+  launchChild: vi.fn(),
+  waitForCopy: vi.fn(async () => false)
+}))
+vi.mock('../cli/appimage-copy-pre-extraction', () => ({
+  waitForAppImageCopyPreExtraction: waitForCopy
 }))
 vi.mock('./daemon-launched-child', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
@@ -53,6 +57,7 @@ const GENERATION = {
 afterEach(() => {
   vi.clearAllMocks()
   resolveGeneration.mockReturnValue(null)
+  waitForCopy.mockResolvedValue(false)
 })
 
 async function expectedIdentity(): Promise<unknown> {
@@ -112,6 +117,23 @@ describe('daemon launch host on an AppImage', () => {
     } finally {
       warn.mockRestore()
     }
+  })
+
+  it('runs on the copy this launch is still unpacking when it lands within the wait', async () => {
+    resolveLaunch.mockReturnValue(null)
+    resolveGeneration
+      .mockReturnValueOnce({ fallback: 'no-extracted-copy' })
+      .mockReturnValue({ launch: GENERATION })
+    waitForCopy.mockResolvedValue(true)
+    expect(await launchedWith()).toMatchObject({ extractedGeneration: GENERATION })
+    expect(waitForCopy).toHaveBeenCalledTimes(1)
+  })
+
+  it('waits for no copy when the existing daemon is kept', async () => {
+    resolveLaunch.mockReturnValue(null)
+    resolveGeneration.mockReturnValue({ fallback: 'no-extracted-copy' })
+    await expectedIdentity()
+    expect(waitForCopy).not.toHaveBeenCalled()
   })
 
   it('says nothing when the existing daemon is kept', async () => {

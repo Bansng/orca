@@ -2609,8 +2609,8 @@
         "34c8fbb46e": "SSH remote",
         "63c2be1914": "SSH disconnected",
         "95be6587d3": "Create worktree \"{{value0}}\"",
-        "worktreesHeader": "Worktrees",
-        "recentWorktreesHeader": "Recent Worktrees",
+        "worktreesHeader": "Workspaces",
+        "recentWorktreesHeader": "Recent Workspaces",
         "settingsBadge": "Settings",
         "actionBadge": "Action",
         "paletteHostBadge": "Host: {{value0}}",
@@ -2620,8 +2620,8 @@
         "repoGroupBadge": "Repo group",
         "pluginCommandFailed": "Could not run the plugin command.",
         "recentChatsTerminalsHeader": "Recent Chats & Terminals",
-        "27f10cca63": "Search chats, terminals, worktrees, settings, and actions...",
-        "2770f02910": "Search chats, terminals, worktrees, settings, and actions",
+        "27f10cca63": "Search chats, terminals, workspaces, settings, and actions...",
+        "2770f02910": "Search chats, terminals, workspaces, settings, and actions",
         "lastActiveTime": "Last active {{value0}} ago"
       },
       "github": {
@@ -3584,6 +3584,9 @@
             "title": "Sleeping — click to resume",
             "resume": "Resume",
             "resumeAutomaticRestores": "Resume automatic restores"
+          },
+          "WslHostUnavailableBanner": {
+            "turnOn": "Turn on"
           }
         }
       },
@@ -5369,7 +5372,11 @@
           "addRemoteHostTooltip": "Choose SSH for a machine you can log into, or remote server for an Orca server.",
           "addSshHostDetail": "Use an existing machine over SSH.",
           "addRemoteServerDetail": "Pair with Orca running on another computer.",
-          "addRemoteHostDetail": "SSH host or Orca server"
+          "addRemoteHostDetail": "SSH host or Orca server",
+          "addWslHost": "Add WSL distro",
+          "addWslHostDetail": "Run an Orca server inside a WSL 2 distro. Experimental.",
+          "addRemoteHostDetailWithWsl": "SSH host, Orca server, or WSL distro",
+          "turnOnWslHosts": "Turn on"
         },
         "AddRepoNestedImportStep": {
           "496f68cf8c": "Scanning repositories. Click to stop.",
@@ -6079,7 +6086,8 @@
           "0bed8727db": "It may have been moved or deleted. Refresh workspaces or remove it from Orca.",
           "3921d3d9a5": "Workspace folder was not found.",
           "f387af445b": "Workspace path is not a valid local path.",
-          "3ec372b664": "file-manager"
+          "3ec372b664": "file-manager",
+          "wsl": "WSL"
         },
         "WorktreeTitleInlineRename": {
           "2f42ae024f": "Unread:",
@@ -6204,7 +6212,9 @@
               "740e8d0d46": "Use Add Project for host paths",
               "e344666fb8": "Server runtime active",
               "d0f8943f8b": "Preparing the project add flow",
-              "18d3cf40e9": "Checking folder"
+              "18d3cf40e9": "Checking folder",
+              "wslFolder": "Drop a WSL folder to add project",
+              "wslFolderDescription": "Folders under \\\\wsl.localhost"
             }
           }
         },
@@ -6242,7 +6252,9 @@
           "451a4638db": "Drop a folder to add it as a project.",
           "5ccb56c7be": "Use Add Project to enter a host path.",
           "849ef13dc0": "Local folder drops are unavailable for server runtimes.",
-          "c0315153d1": "Drop one folder at a time."
+          "c0315153d1": "Drop one folder at a time.",
+          "windowsDriveOnWslHost": "Folders on a Windows drive stay on this computer, not in {{value0}}.",
+          "windowsDriveOnWslHostDescription": "Git in WSL is slow on Windows drives. Switch the host to this computer to add it, or drop a folder from \\\\wsl.localhost\\{{value0}}."
         },
         "workspace": {
           "status": {
@@ -6322,7 +6334,8 @@
           "alsoForgetLocal": "Also remove these {{value0}} from Orca",
           "advanced": "Advanced",
           "alsoDeleteRemoteHint": "Permanently deletes the remote Git worktrees and their branches. Cannot be undone.",
-          "alsoForgetLocalHint": "Clears them from Orca only. Remote files, worktrees, and branches are left untouched."
+          "alsoForgetLocalHint": "Clears them from Orca only. Remote files, worktrees, and branches are left untouched.",
+          "wslHostEndsTerminals": "Removes {{value0}} from Orca, ends its open terminals and stops Orca’s server in that distro. Files in the distro are untouched."
         },
         "HostRenameDialog": {
           "1a2b3c4d5e": "Rename host",
@@ -6446,7 +6459,8 @@
           "3b7e4a1c96": "Hide external worktrees"
         },
         "useAddRepoHostSelection": {
-          "connectionFailed": "SSH connection failed."
+          "connectionFailed": "SSH connection failed.",
+          "wslConnectionFailed": "Couldn’t start the WSL host."
         },
         "AddRemoteHostDialog": {
           "sshHostRequired": "Host or SSH config alias is required.",
@@ -6678,6 +6692,49 @@
           "title": "Sort changed to Manual",
           "description": "Manual keeps workspaces where you drop them.",
           "restore": "Back to {{label}}"
+        },
+        "AddWslHostDialogBody": {
+          "added": "{{value0}} added."
+        },
+        "AddWslHostFormPanel": {
+          "wsl1": "WSL 1 · not supported",
+          "added": "Already a host",
+          "running": "Running",
+          "stopped": "Stopped",
+          "title": "Add WSL distro",
+          "description": "Orca runs its server inside the distro, so git, files and terminals run natively in Linux. Use it for new projects; projects you opened through \\\\wsl.localhost keep working as they are.",
+          "distro": "Distro",
+          "loading": "Looking for WSL distros…",
+          "placeholder": "Choose a distro",
+          "none": "No WSL distros found. Install one with: wsl --install",
+          "stoppedHint": "{{value0}} is stopped. Adding it starts it.",
+          "addingHint": "Installing and starting the Orca server in the distro. The first time can take a minute.",
+          "adding": "Setting up…",
+          "startAndAdd": "Start and add",
+          "add": "Add host",
+          "refresh": "Refresh"
+        },
+        "wslHostRowStatus": {
+          "connecting": "Starting",
+          "reconnecting": "Reconnecting",
+          "distroStopped": "Distro stopped",
+          "unverifiable": "Can’t verify",
+          "idle": "Idle",
+          "failed": "Failed to start",
+          "kind": "WSL distro",
+          "turnedOff": "WSL hosts are turned off in Settings → Experimental",
+          "turnedOffShort": "Turned off in Settings → Experimental",
+          "serverFilesMissing": "This build of Orca can’t run WSL hosts (server files missing).",
+          "serverFilesMissingShort": "This build can’t run WSL hosts"
+        },
+        "wslHostRemoval": {
+          "partial": "The host was removed, but something in the distro is still running: {{value0}}"
+        },
+        "addRepoWslHostFolderPicker": {
+          "otherDistro": "That folder is in {{value0}}, not {{value1}}.",
+          "outsideDistro": "Pick a folder inside {{value0}}.",
+          "underDistro": "This host can only add folders under \\\\wsl.localhost\\{{value0}}.",
+          "windowsDrive": "Folders on a Windows drive stay on this computer. Choose this computer as the host to add one."
         }
       },
       "shared": {
@@ -12684,6 +12741,23 @@
           "unavailable": "{{value0}} (unavailable)",
           "description": "Accounts, detected agents and terminal options below are for this host.",
           "unavailableNotice": "This server is no longer saved, so nothing can be shown for it. Choose another host at the top of Settings."
+        },
+        "wslHostsExperimental": {
+          "toggleLabel": "Toggle WSL distros as hosts",
+          "title": "WSL distros as hosts",
+          "description": "Add a WSL 2 distro as a host. Orca runs its server inside the distro, so git, files and terminals in new projects there run natively in Linux.",
+          "keywordWsl": "wsl",
+          "keywordLinux": "linux",
+          "keywordDistro": "distro"
+        },
+        "wslHosts": {
+          "title": "WSL hosts",
+          "experimental": "Experimental",
+          "description": "Orca runs a server inside each distro. A stopped distro starts only when you open one of its projects or connect it here.",
+          "add": "Add WSL distro",
+          "connect": "Connect",
+          "remove": "Remove",
+          "turnOn": "Turn on in Experimental"
         }
       },
       "right": {
@@ -15683,8 +15757,16 @@
           "7b458e0b7f": "Choose a Markdown template.",
           "1829437fce": "New Markdown"
         },
+        "DiagramViewerModal": {
+          "title": "Diagram",
+          "zoomOut": "Zoom out",
+          "zoomIn": "Zoom in",
+          "fit": "Fit to screen",
+          "close": "Close"
+        },
         "MermaidBlock": {
-          "dcc132e691": "Diagram error:"
+          "dcc132e691": "Diagram error:",
+          "expand": "Expand diagram"
         },
         "MonacoEditor": {
           "68cb83f4a7": "Add note on selected text",
@@ -16529,7 +16611,9 @@
                     "09a7c1df70": "Edit annotation {{value0}}",
                     "c16f932cb3": "Save",
                     "024467ceac": "Cancel",
-                    "449d2c2629": "Annotation intent"
+                    "449d2c2629": "Annotation intent",
+                    "38d320108c": "Collapse annotations",
+                    "9f209891a7": "Expand annotations"
                   }
                 }
               }
@@ -18085,8 +18169,12 @@
         "compactionFailedQuoted": "Compaction failed: {{detail}}.",
         "compactionUnconfirmed": "Compaction completion is unconfirmed.",
         "cancelUnconfirmed": "Cancellation was not confirmed.",
+        "backgroundTaskNotStopped": "The background task wasn't stopped.",
+        "backgroundTasksNotStopped": "The background tasks weren't stopped.",
         "stopRefused": "{{agent}} didn't stop.",
         "stopRefusedQuoted": "{{agent}} didn't stop: {{detail}}.",
+        "couldNotStop": "Couldn't stop {{agent}}.",
+        "couldNotStopTheAgent": "Couldn't stop the agent.",
         "noTurnToStop": "{{agent}} had no turn running to stop.",
         "answerUnconfirmed": "Your answer was recorded but the agent did not confirm it.",
         "hostFault": "Orca ran into a problem, so this didn't go through.",
@@ -18129,6 +18217,7 @@
         "outcomeUnknown": "Orca couldn't confirm what happened. Check the chat.",
         "sendOutcomeLost": "Orca couldn't confirm your message reached the agent. Check the chat, then send it again if needed.",
         "questionChanged": "This question was already answered or has changed.",
+        "cancelNotSaved": "Couldn't cancel this question or approval.",
         "historyUnreadable": "Orca couldn't read this chat's saved history.",
         "historyUnusable": "Unable to load this chat.",
         "historyUnavailable": "Orca couldn't open this chat's history right now.",
@@ -19592,6 +19681,10 @@
     "removePath": "Remove {{name}}"
   },
   "accounts": {
+    "wslAccountNotApplied": {
+      "title": "Account selection not applied in {{distro}}",
+      "description": "Agents there use the distro's default Claude and Codex accounts until Orca in WSL is updated."
+    },
     "antigravity": {
       "scope": "Manage the native agy account on {{host}}.",
       "signIn": "Start agy on this host and complete its browser sign-in, then save the current account. To add a different account, use /logout in agy and sign in again.",
