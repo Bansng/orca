@@ -267,6 +267,8 @@ const MANAGED_HOOK_PREFIXES = [
 
 const NATIVE_RUNTIME_PREFIXES = [
   'config/scripts/ensure-native-runtime',
+  'config/scripts/initialize-windows-native-toolchain',
+  'config/scripts/capture-windows-native-environment',
   'config/scripts/rebuild-native-deps',
   'config/scripts/node-pty-job-ownership',
   'config/scripts/windows-pe-machine',
@@ -288,6 +290,8 @@ const NATIVE_CACHE_FILES = new Set([
   '.npmrc',
   '.pnpmfile.cjs',
   'config/scripts/ensure-native-runtime.mjs',
+  'config/scripts/initialize-windows-native-toolchain.mjs',
+  'config/scripts/capture-windows-native-environment.cmd',
   'config/scripts/rebuild-native-deps.mjs',
   'config/scripts/node-pty-job-ownership.cjs',
   'config/scripts/windows-pe-machine.cjs',
@@ -561,6 +565,10 @@ function isProductBundlePath(file, extraPrefixes) {
 // These shared fixtures are consumed only by unit tests.
 export function isUnitTestSupportSource(file) {
   return (
+    file === 'src/renderer/src/store/slices/editor-slice-test-harness.ts' ||
+    file === 'src/renderer/src/store/slices/browser-slice-test-harness.ts' ||
+    file === 'src/renderer/src/runtime/web-runtime-session-test-harness.ts' ||
+    file === 'src/renderer/src/runtime/sync-runtime-graph-test-harness.ts' ||
     file === 'src/renderer/src/runtime/web-session-tabs-sync-test-harness.ts' ||
     file === 'src/renderer/src/components/native-chat/NativeChatStructuredSession.test-harness.tsx'
   )

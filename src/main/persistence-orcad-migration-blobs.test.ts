@@ -19,10 +19,11 @@ vi.mock('electron', () => ({
 
 vi.mock('./telemetry/client', () => ({ track: vi.fn() }))
 
-const bytes = Buffer.from('history line one\nhistory line two\n')
+// A kind with no installer yet, so the channel's own behaviour is all that runs.
+const bytes = Buffer.from('session record one\nsession record two\n')
 const blob: OrcadMigrationBlobDescriptor = {
-  blobKind: 'shell-history',
-  key: `${'d'.repeat(16)}-zsh`,
+  blobKind: 'agent-session-records',
+  key: 'session-kept',
   sha256: createHash('sha256').update(bytes).digest('hex'),
   byteLength: bytes.length
 }
@@ -64,7 +65,7 @@ describe('orcad migration blobs through the store', () => {
       blobUploads: [{ ...blob, receivedBytes: 8 }]
     })
     expect(() => restarted.commitStagedOrcadMigrationCatalog(input)).toThrow(
-      `orcad_migration_blob_incomplete:shell-history:${blob.key}`
+      `orcad_migration_blob_incomplete:agent-session-records:${blob.key}`
     )
     expect(restarted.getOrcadMigrationCatalogState(input).state).toBe('staged')
 
@@ -91,7 +92,7 @@ describe('orcad migration blobs through the store', () => {
       })
     ).toThrow('orcad_migration_blob_set_mismatch:agent-session-records:session-lost')
     expect(() => store.commitStagedOrcadMigrationCatalog(input, { expectedBlobs: [] })).toThrow(
-      `orcad_migration_blob_set_mismatch:shell-history:${blob.key}`
+      `orcad_migration_blob_set_mismatch:agent-session-records:${blob.key}`
     )
     expect(store.getOrcadMigrationCatalogState(input).state).toBe('staged')
     expect(store.commitStagedOrcadMigrationCatalog(input, { expectedBlobs: [blob] }).state).toBe(

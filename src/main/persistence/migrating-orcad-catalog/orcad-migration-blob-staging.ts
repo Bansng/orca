@@ -67,6 +67,15 @@ export function getOrcadMigrationReceivedBlobPath(
   return RECEIVED_BLOB_DESTINATIONS[descriptor.blobKind](root, manifest, descriptor)
 }
 
+/** Names in a committed migration's received directory for `blobKind`; the caller checks the key. */
+export function listOrcadMigrationReceivedBlobNames(
+  root: string,
+  manifest: OrcadMigrationRequestIdentity,
+  blobKind: OrcadMigrationBlobKind
+): string[] {
+  return readDirectory(join(receivedBlobsDirectory(root, manifest), blobKind))
+}
+
 export type OrcadMigrationBlobChunkStaging = {
   /** The manifest the importer holds staged for this migration, if any. */
   stagedManifest: OrcadMigrationManifest | null

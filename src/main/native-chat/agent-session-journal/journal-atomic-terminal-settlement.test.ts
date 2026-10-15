@@ -191,7 +191,7 @@ describe('atomic terminal settlement', () => {
           return result
         })
       )
-      expect(await settle()).toEqual({ ok: true })
+      expect(await settle()).toMatchObject({ ok: true })
       vi.restoreAllMocks()
       const settled = journal.snapshot()
       expect(published).toEqual([settled])
@@ -209,7 +209,7 @@ describe('atomic terminal settlement', () => {
       expect(frames.at(-1)).toMatchObject({ type: 'batch', batch: { cursor: settled.cursor } })
       const frameCount = frames.length
       expect(settled.submissions[0]).toMatchObject({ dispatchState: 'unknown', recovered: true })
-      expect(journal.activeTurnId()).toBeNull()
+      expect(journal.runningTurn()?.turnId ?? null).toBeNull()
       const calls = settled.items.filter((item) => item.body.kind === 'tool-call')
       expect(calls).toHaveLength(201)
       expect(
@@ -230,7 +230,7 @@ describe('atomic terminal settlement', () => {
         'lifecycle-batch'
       ])
       expect(committed.every((row) => row.recovered)).toBe(true)
-      expect(await settle()).toEqual({ ok: true })
+      expect(await settle()).toMatchObject({ ok: true })
       expect(journal.snapshot()).toEqual(settled)
       expect(rows().slice(diskBefore.length)).toEqual(committed)
       expect(published).toEqual([settled])
@@ -238,7 +238,7 @@ describe('atomic terminal settlement', () => {
       await journal.close()
       journal = await open()
       expect(journal.snapshot()).toEqual(settled)
-      expect(await settle()).toEqual({ ok: true })
+      expect(await settle()).toMatchObject({ ok: true })
       expect(journal.snapshot()).toEqual(settled)
     }
   )

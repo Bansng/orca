@@ -25,6 +25,7 @@ const EXPECTED_MATRIX = {
   '.github/workflows/release-mac-build.yml#build-mac': { actions: 'read', contents: 'write' },
   [`${RELEASE_WORKFLOW}#build`]: { actions: 'read', contents: 'write' },
   [`${RELEASE_WORKFLOW}#build-mac`]: { actions: 'write', contents: 'read' },
+  [`${RELEASE_WORKFLOW}#verify-mac-build`]: { actions: 'read', contents: 'read' },
   [`${RELEASE_WORKFLOW}#create-release`]: { contents: 'write' },
   [`${RELEASE_WORKFLOW}#cut`]: { contents: 'write' },
   [`${RELEASE_WORKFLOW}#docs-production-dispatch`]: { actions: 'write' },

@@ -7,12 +7,15 @@ import { isStructuredAgentSessionMainAgentWorking } from '../../../src/shared/st
 import { isFinalAgentSessionReadRefusal } from '../../../src/shared/structured-agent-session-read-refusal'
 import {
   isStructuredAgentSessionThinking,
-  runningStructuredAgentSessionTurnId
+  runningStructuredAgentSessionTurnId,
+  structuredAgentSessionHostSaysWorking
 } from '../../../src/shared/structured-agent-session-live-turn'
 import { selectStructuredAgentTurnActivity } from '../../../src/shared/native-chat-turn-activity'
 import {
-  pendingStructuredApproval,
-  pendingStructuredQuestion,
+  actionableStructuredApproval,
+  actionableStructuredQuestion
+} from './mobile-structured-actionable-prompt'
+import {
   projectStructuredPermission,
   projectStructuredQuestion
 } from './mobile-structured-agent-prompts'
@@ -91,7 +94,8 @@ export function useMobileStructuredAgentSession(args: {
     sessionId,
     enabled,
     stateRef,
-    onSendError
+    onSendError,
+    ...(agent ? { agentName: tuiAgentDisplayName(agent) ?? agent } : {})
   })
 
   const optionStamp = useMobileStructuredSessionOptionStamp({
@@ -159,7 +163,10 @@ export function useMobileStructuredAgentSession(args: {
   const activityText =
     selectStructuredAgentTurnActivity(state.items, turnId, state.activity)?.text ?? null
   const thinking = isStructuredAgentSessionThinking(state)
-  const isWorking = isStructuredAgentSessionMainAgentWorking(turnId, state.submissions, state.fence)
+  // The host's answer counts only the agent running now; an older host gives none.
+  const isWorking = structuredAgentSessionHostSaysWorking(state.working, () =>
+    isStructuredAgentSessionMainAgentWorking(turnId, state.submissions, state.fence)
+  )
   const backgroundTasks = useMobileStructuredBackgroundTasks({
     sessionKey,
     state,
@@ -214,14 +221,11 @@ export function useMobileStructuredAgentSession(args: {
     [thinking, activityText, stopping, stopRequestInFlight, queueCapable, state.items]
   )
   const status = state.status === 'idle' ? 'idle' : state.status
-  const approvalPrompt = useMemo(
-    () => state.items.find(pendingStructuredApproval) ?? null,
-    [state.items]
-  )
-  const questionPrompt = useMemo(
-    () => state.items.find(pendingStructuredQuestion) ?? null,
-    [state.items]
-  )
+  // The host's answer where it gives one: a prompt an agent that ended raised takes no answer.
+  const [approvalPrompt, questionPrompt] = useMemo(() => {
+    const prompts = { items: state.items, actionablePromptIds: state.actionablePromptIds }
+    return [actionableStructuredApproval(prompts), actionableStructuredQuestion(prompts)] as const
+  }, [state.items, state.actionablePromptIds])
   // What a refused command's line on the phone stands on.
   const commandRefusalCauses = useMemo(
     () => ({
@@ -237,7 +241,7 @@ export function useMobileStructuredAgentSession(args: {
     queuedMessages,
     queuePause,
     submissions: state.submissions,
-    agentWorking: isStructuredAgentSessionMainAgentWorking(turnId, state.submissions, state.fence),
+    agentWorking: isWorking,
     mutate,
     appendComposerText,
     onSendError,
@@ -299,7 +303,7 @@ export function useMobileStructuredAgentSession(args: {
       void stopPress.track(() => requestCancel())
     },
     cancelPrompt: (prompt?: { itemId: string; expectedRevision: number }) =>
-      requestCancel(prompt ?? pendingStructuredPromptIdentity(stateRef.current.items)),
+      requestCancel(prompt ?? pendingStructuredPromptIdentity(stateRef.current)),
     permission: projectStructuredPermission(approvalPrompt),
     question: projectStructuredQuestion(questionPrompt, groupedDraft),
     respondPermission,

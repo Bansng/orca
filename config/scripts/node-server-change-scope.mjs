@@ -41,6 +41,8 @@ const ALWAYS_FILES = new Set([
   'config/scripts/workspace-source-exports.mjs',
   'config/scripts/workspace-source-exports.test.mjs',
   'config/scripts/headless-detector-compiler-cache.mjs',
+  'config/scripts/initialize-windows-native-toolchain.mjs',
+  'config/scripts/capture-windows-native-environment.cmd',
   'config/scripts/node-server-qualification.mjs',
   // The source graph sees process-host source, not the build that emits the dist servers load.
   'src/packages/process-host/.gitignore',

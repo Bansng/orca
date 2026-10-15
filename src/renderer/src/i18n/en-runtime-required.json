@@ -1805,6 +1805,8 @@
           }
         },
         "sshHostServer": {
+          "linkedProjects_one": "This host’s Orca server already had {{paths}}, so this desktop now uses the server’s copy. This desktop’s tabs and {{count}} automation there were not moved, and worktrees it created there show as external worktrees.",
+          "linkedProjects_other": "This host’s Orca server already had {{paths}}, so this desktop now uses the server’s copy. This desktop’s tabs and {{count}} automations there were not moved, and worktrees it created there show as external worktrees.",
           "olderTerminals_one": "{{count}} terminal started by an older version of Orca is still running on this host, and it doesn’t stop on its own. Close it in that version of Orca or end it on the host, then reconnect.",
           "olderTerminals_other": "{{count}} terminals started by an older version of Orca are still running on this host, and they don’t stop on their own. Close them in that version of Orca or end them on the host, then reconnect."
         },
@@ -2910,6 +2912,7 @@
         "notSignedIn": "{{agent}} is not signed in.",
         "previousExitUnverifiable": "Couldn't stop {{agent}} from before.",
         "providerExitedRejection": "{{agent}} stopped before this message was sent.",
+        "providerExitedAnswer": "{{agent}} has stopped, so your answer was not sent. Send a message to continue.",
         "providerExitedRow": "{{agent}} stopped while this response was in progress. You can continue in this conversation.",
         "providerRateLimited": "{{agent}} is rate-limited and retrying.",
         "providerRejected": "{{agent}} didn't accept this message.",
@@ -2936,8 +2939,11 @@
         "writeFailed": "Orca couldn't hand this message to the agent, so it was not sent."
       },
       "notices": {
+        "compaction": "Context compacted",
+        "contextCleared": "Context cleared",
         "historyItemTooLarge": "This part of the chat was too large to show.",
-        "historyRepaired": "Part of this chat's history couldn't be loaded."
+        "historyRepaired": "Part of this chat's history couldn't be loaded.",
+        "plan": "Plan"
       },
       "question": {
         "other": "Other…"

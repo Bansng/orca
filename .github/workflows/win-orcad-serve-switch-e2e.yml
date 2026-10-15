@@ -12,8 +12,11 @@ on:
     paths:
       - 'src/main/daemon/**'
       - '!src/main/daemon/**/*.test.ts'
+      # D7 packages production entries; the unit jobs own these test roots.
       - 'src/main/orcad/**'
+      - '!src/main/orcad/**/*.test.ts'
       - 'src/cli/runtime/**'
+      - '!src/cli/runtime/**/*.test.ts'
       - 'src/shared/orcad-local-serve-selection.ts'
       - 'tests/tools/win-update-e2e/**'
       - '.github/workflows/win-orcad-serve-switch-e2e.yml'
