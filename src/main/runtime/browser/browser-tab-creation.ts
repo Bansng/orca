@@ -33,6 +33,7 @@ export class RuntimeBrowserTabCreation {
       | 'getAuthoritativeWindow'
       | 'markHeadlessBrowserSessionTabActive'
       | 'notifyHeadlessBrowserSessionTabsChanged'
+      | 'serveBrowserTabs'
     >,
     private readonly targets: Pick<
       RuntimeBrowserCommandTargets,
@@ -145,6 +146,16 @@ export class RuntimeBrowserTabCreation {
         profileId: params.profileId,
         ...(params.page ? { browserPageId: params.page } : {})
       })
+      if (worktreeId) {
+        this.host.serveBrowserTabs?.opened({
+          worktreeId,
+          pageId: created.browserPageId,
+          url,
+          title: '',
+          ...(params.profileId ? { profileId: params.profileId } : {}),
+          ...(params.targetGroupId ? { groupId: params.targetGroupId } : {})
+        })
+      }
       publishCreatedBrowserSessionTab(this.host, {
         placementKind: 'offscreen',
         browserPageId: created.browserPageId,

@@ -43,6 +43,7 @@ export const PAIRED_DESKTOP_METHODS = [
   'accounts.subscribe',
   'accounts.unsubscribe',
   // Jira credentials and issue mutations remain desktop-only.
+  'jira.attachmentImage',
   'jira.getIssue',
   'jira.issueComments',
   'jira.listIssues',

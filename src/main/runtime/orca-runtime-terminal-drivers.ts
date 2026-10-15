@@ -20,6 +20,8 @@ import type { StatsCollector } from '../stats/collector'
 import { RuntimeRemoteFetchController } from './runtime-remote-fetch-controller'
 import { RuntimeWorktreeBaseReconciliation } from './runtime-worktree-base-reconciliation'
 import { RuntimeWorktreeRemovalInFlight } from './runtime-worktree-removal-in-flight'
+import { ServeBrowserTabs } from './serve-browser-tabs'
+import type { ServeBrowserPageState } from './serve-browser-tab-layout'
 
 export abstract class OrcaRuntimeWithTerminalDrivers extends OrcaRuntimeWithFitOverrideListeners {
   abstract getDriver(ptyId: string): DriverState
@@ -54,6 +56,25 @@ export abstract class OrcaRuntimeWithTerminalDrivers extends OrcaRuntimeWithFitO
       this.mobileTookFloor(ptyId, clientId, previousFloor, isCurrent)
   })
 
+  protected readonly serveBrowserTabs = new ServeBrowserTabs({
+    backend: () => (this.getAvailableAuthoritativeWindow() ? null : this.offscreenBrowserBackend),
+    livePageIds: (worktreeId) =>
+      new Set(
+        (this.agentBrowserBridge?.tabList?.(worktreeId).tabs ?? []).map((tab) => tab.browserPageId)
+      ),
+    savedWorktreeIds: () =>
+      (this.store?.getWorkspaceSessionHostIds?.() ?? []).flatMap((hostId) =>
+        Object.keys(this.store?.getWorkspaceSession?.(hostId)?.browserTabsByWorktree ?? {})
+      ),
+    session: (worktreeId) => this.getWorkspaceSessionForWorktree(worktreeId),
+    hostId: (worktreeId) => this.getWorkspaceSessionHostIdForWorktree(worktreeId),
+    save: (worktreeId, session) => this.setWorkspaceSessionForWorktree(worktreeId, session)
+  })
+
+  serveBrowserPageNavigated(page: ServeBrowserPageState): void {
+    this.serveBrowserTabs.navigated(page)
+  }
+
   protected readonly edgeCommands = new RuntimeEdgeCommandController({
     jiraHost: {
       getSettings: () => this.requireStore().getSettings(),
@@ -74,7 +95,8 @@ export abstract class OrcaRuntimeWithTerminalDrivers extends OrcaRuntimeWithFitO
       notifyHeadlessBrowserSessionTabsChanged: (worktreeId) =>
         this.notifyMobileSessionTabsChanged(worktreeId),
       retireRuntimeOwnedBrowserSessionTab: (worktreeId, browserPageId) =>
-        this.retireRuntimeOwnedBrowserSessionTab(worktreeId, browserPageId)
+        this.retireRuntimeOwnedBrowserSessionTab(worktreeId, browserPageId),
+      serveBrowserTabs: this.serveBrowserTabs
     },
     screencast: {
       registerSubscriptionCleanup: (subscriptionId, cleanup, connectionId) =>

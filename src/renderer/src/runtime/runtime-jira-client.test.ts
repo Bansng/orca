@@ -16,6 +16,8 @@ import {
   jiraSearchUsers,
   jiraListIssues
 } from './runtime-jira-client'
+import { JIRA_IMAGE_CAPABILITY } from '../../../shared/jira-attachment-image'
+import { clearJiraImageCache } from './runtime-jira-image-cache'
 import { clearRuntimeCompatibilityCacheForTests } from './runtime-rpc-client'
 import { createCompatibleRuntimeStatusResponse } from './runtime-compatibility-test-fixture'
 import {
@@ -75,6 +77,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  clearJiraImageCache()
   vi.unstubAllGlobals()
 })
 describe('current sprint runtime compatibility', () => {
@@ -451,7 +454,15 @@ describe('runtime Jira client search bounds', () => {
     )
   })
 
-  it('streams image-bearing issue and comment payloads from remote runtimes', async () => {
+  it('streams image-bearing issue and comment payloads from older remote runtimes', async () => {
+    const status = createCompatibleRuntimeStatusResponse()
+    if (!status.ok) {
+      throw new Error('Expected successful status')
+    }
+    status.result.capabilities = status.result.capabilities?.filter(
+      (capability) => capability !== JIRA_IMAGE_CAPABILITY
+    )
+    runtimeCall.mockResolvedValue(status)
     runtimeSubscribe.mockImplementation(
       async (args: RuntimeSubscribeArgs, callbacks: RuntimeSubscribeCallbacks) => {
         const payload =
@@ -501,7 +512,7 @@ describe('runtime Jira client search bounds', () => {
       },
       expect.anything()
     )
-    expect(runtimeCall).not.toHaveBeenCalled()
+    expect(runtimeCall).toHaveBeenCalledWith(expect.objectContaining({ method: 'status.get' }))
   })
 })
 

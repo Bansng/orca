@@ -21,8 +21,14 @@ import { ClientHostedBrowserRowPublisher } from './client-hosted-browser-row-pub
 import { getRuntimeBrowserPageRegistry } from './runtime-browser-page-registry'
 import { getBrowserHostLeaseRegistry } from './browser-host-lease-registry-instance'
 import type { RuntimeLeafRecord } from './runtime-terminal-state-records'
+import { LOCAL_EXECUTION_HOST_ID } from '../../shared/execution-host'
+import {
+  isChatScratchWorktreeId,
+  resolveChatScratchSelectorFolder
+} from './files/chat-scratch-file-root'
 
 import type { RuntimeStore } from './runtime-store-contract'
+import { isWslMoveWorktreeBlocked } from '../persistence/moving-wsl-projects/wsl-move-background-backoff'
 import type { ResolvedWorktree } from './runtime-worktree-path-identity'
 import type { Repo } from '../../shared/repo-types'
 
@@ -37,7 +43,17 @@ export abstract class OrcaRuntimeWithFileCommands extends OrcaRuntimeWithPreserv
     getRuntimeId: () => this.runtimeId,
     requireStore: () => this.requireStore(),
     resolveWorktreeSelector: (selector) => this.resolveWorktreeSelector(selector),
-    resolveRuntimeFileTarget: (selector) => this.resolveRuntimeFileTarget(selector),
+    resolveRuntimeFileTarget: async (selector) => {
+      // Why here, not in the general resolver: that one also places new chats, and a scratch folder
+      // must never become a chat's workspace.
+      const scratchFolder = await resolveChatScratchSelectorFolder(selector)
+      return scratchFolder
+        ? {
+            worktree: { ...this.floatingWorkspaceToResolvedWorktree(scratchFolder), id: selector },
+            executionHostId: LOCAL_EXECUTION_HOST_ID
+          }
+        : this.resolveRuntimeFileTarget(selector)
+    },
     resolveKnownWorkspaceFileTarget: (absolutePath, executionHostId) =>
       this.resolveKnownWorkspaceFileTarget(absolutePath, executionHostId),
     resolveTerminalCwd: (terminalHandle) => this.resolveTerminalCwd(terminalHandle),
@@ -55,6 +71,10 @@ export abstract class OrcaRuntimeWithFileCommands extends OrcaRuntimeWithPreserv
       }),
     resolveRuntimeGitTarget: (selector) => this.resolveRuntimeGitTarget(selector),
     openFile: (worktreeId, filePath, relativePath, runtimeEnvironmentId, navigation, position) => {
+      // The UI cannot open a tab in a workspace that has no row.
+      if (isChatScratchWorktreeId(worktreeId)) {
+        throw new Error('chat_scratch_not_openable')
+      }
       if (!this.notifier?.openFile) {
         throw new Error('renderer_unavailable')
       }
@@ -68,6 +88,9 @@ export abstract class OrcaRuntimeWithFileCommands extends OrcaRuntimeWithPreserv
       )
     },
     openDiff: (worktreeId, filePath, relativePath, staged, runtimeEnvironmentId, navigation) => {
+      if (isChatScratchWorktreeId(worktreeId)) {
+        throw new Error('chat_scratch_not_openable')
+      }
       if (!this.notifier?.openDiff) {
         throw new Error('renderer_unavailable')
       }
@@ -127,6 +150,10 @@ export abstract class OrcaRuntimeWithFileCommands extends OrcaRuntimeWithPreserv
     persistMaterializedPushTarget: (worktreeId, pushTarget) => {
       const store = this.store
       if (!store?.setWorktreeMeta) {
+        return
+      }
+      // Bookkeeping incidental to the push: a project a WSL move is taking skips it, not the push.
+      if (isWslMoveWorktreeBlocked(worktreeId, store.getWorktreeMeta?.(worktreeId)?.hostId)) {
         return
       }
       store.setWorktreeMeta(worktreeId, { pushTarget })
@@ -224,7 +251,8 @@ export abstract class OrcaRuntimeWithFileCommands extends OrcaRuntimeWithPreserv
 
   protected readonly repositoryIssueCommand = new RuntimeRepositoryIssueCommand({
     resolveRepo: (selector) => this.resolveRepoSelector(selector),
-    getLocalGitArgs: (repo) => this.getLocalGitExecutionOptionArgs(repo)
+    getLocalGitArgs: (repo) => this.getLocalGitExecutionOptionArgs(repo),
+    getStore: () => this.store
   })
 
   protected readonly clientHostedBrowserRows = new ClientHostedBrowserRowPublisher({

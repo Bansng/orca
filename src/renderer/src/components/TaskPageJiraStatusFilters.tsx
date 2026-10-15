@@ -3,7 +3,11 @@ import { Input } from '@/components/ui/input'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { translate } from '@/i18n/i18n'
 import { buildJiraPresetJql } from '../../../shared/jira-preset-jql'
-import { includeSelectedJiraStatuses } from './task-page-jira-status-catalog'
+import {
+  getJiraStatusCatalogScopeKey,
+  includeSelectedJiraStatuses
+} from './task-page-jira-status-catalog'
+import { restrictJiraQueryToProject } from '../../../shared/jira-project-reference'
 import type { TaskPageComposerActionsModel } from './use-task-page-composer-actions'
 
 export function TaskPageJiraStatusFilters({
@@ -34,15 +38,23 @@ export function TaskPageJiraStatusFilters({
   if (jiraHasWorkspace) {
     return null
   }
-  const scopeKey = `${jiraTaskSourceScopeKey}::${selectedJiraSiteId}::${activeJiraPreset}`
+  const scopeKey = getJiraStatusCatalogScopeKey(
+    jiraTaskSourceScopeKey,
+    selectedJiraSiteId,
+    activeJiraPreset,
+    model.jiraProjectFilter
+  )
   const statuses = includeSelectedJiraStatuses(
     jiraStatusCatalog?.scopeKey === scopeKey ? jiraStatusCatalog.items : [],
     selectedJiraStatuses
   )
-  const preview = buildJiraPresetJql(activeJiraPreset, {
+  const presetJql = buildJiraPresetJql(activeJiraPreset, {
     statuses: selectedJiraStatuses,
     currentSprint: jiraCurrentSprint
   })
+  const preview = model.jiraProjectFilter
+    ? restrictJiraQueryToProject(presetJql, model.jiraProjectFilter)
+    : presetJql
   const disabled =
     !jiraQuickFiltersReady ||
     jiraQuickFiltersLoading ||

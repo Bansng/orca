@@ -49,6 +49,12 @@ import { nativeChatShellEnvironmentPolicy } from '../../shared/native-chat-shell
 import { claudeStructuredAuthPolicyForSettings } from '../claude-accounts/claude-structured-auth-policy'
 import { resolveStructuredAgentCommand } from '../native-chat/structured-agent-command-resolution'
 import { structuredAgentConfiguredArgs } from '../native-chat/structured-agent-configured-args'
+import {
+  runtimeHiddenHostIds,
+  runtimeHiddenRepoIds,
+  runtimeVisibleRepos,
+  withoutHiddenHosts
+} from './runtime-visible-catalog'
 import { claudeCliFlagSupport } from '../claude/claude-cli-flag-support'
 import {
   createNativeChatVisualsWorkspaceVerdicts,
@@ -70,13 +76,16 @@ export class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithStartTuiIdleVis
       sourceDefaultsSupported,
       visibilitySettings
     )
-    const resolvedWorktrees = resolvedWorktreeSnapshot.worktrees.filter((worktree) =>
-      this.isRuntimeWorktreeVisible(
-        worktree,
-        visibilitySourceMatchersByRepoId.get(worktree.repoId),
-        sourceDefaultsSupported,
-        visibilitySettings
-      )
+    const hiddenRepoIds = runtimeHiddenRepoIds(this.store)
+    const resolvedWorktrees = resolvedWorktreeSnapshot.worktrees.filter(
+      (worktree) =>
+        !hiddenRepoIds.has(worktree.repoId) &&
+        this.isRuntimeWorktreeVisible(
+          worktree,
+          visibilitySourceMatchersByRepoId.get(worktree.repoId),
+          sourceDefaultsSupported,
+          visibilitySettings
+        )
     )
     // Why: worktree.ps backs the mobile sidebar, so it must use the same
     // host-owned imported-worktree visibility gate as worktree.list/desktop.
@@ -139,7 +148,11 @@ export class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithStartTuiIdleVis
     const sorted = [...summaries.values()].sort(compareWorktreePs)
     // Why: the same cap starvation as worktree.list — a host whose rows all sort last gets no
     // page at all, which is indistinguishable from it having no workspaces (#18104).
-    return buildWorktreeListingPage(sorted, limit, this.listKnownExecutionHostIds())
+    return buildWorktreeListingPage(
+      sorted,
+      limit,
+      withoutHiddenHosts(this.listKnownExecutionHostIds(), runtimeHiddenHostIds(this.store))
+    )
   }
 
   /** The agent's configured env, with the account a desktop that owns this host's accounts chose
@@ -153,6 +166,11 @@ export class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithStartTuiIdleVis
 
   listRepos(): Repo[] {
     return this.store?.getRepos() ?? []
+  }
+
+  /** What a client may list: the desktop's visible rows, never a retained source. */
+  listVisibleRepos(): Repo[] {
+    return runtimeVisibleRepos(this.store)
   }
 
   enrichMissingRepoGitRemoteIdentities(): void {

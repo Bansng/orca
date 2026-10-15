@@ -32,6 +32,7 @@ import { shouldQuitWhenAllWindowsClosed } from './window-all-closed-quit-policy'
 import { mainProcessState as state } from './main-process-state'
 import { isDevParentShutdownRequested } from './configure-process'
 import { getCanonicalUserDataPath } from '../persistence'
+import { flushUnsavedCloudSessions } from '../orca-profiles/profile-cloud-session-owner'
 
 // Why: will-quit fires twice — first pass preventDefaults and runs teardown; second pass exits.
 let daemonDisconnectDone = false
@@ -77,6 +78,7 @@ function installBeforeQuitHandler(): void {
       })
     }
     state.isQuitting = true
+    flushUnsavedCloudSessions()
     state.desktopRelayService?.fenceAndCloseNow()
     state.runtimeRpc?.setMobileRelayPairingProvider(null)
     state.unsubscribeAgentAwakeStatusChanges?.()

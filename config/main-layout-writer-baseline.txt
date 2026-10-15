@@ -62,6 +62,7 @@
 1 src/main/runtime/orca-runtime-persist-terminal-surface-retirements.ts
 1 src/main/runtime/orca-runtime-pty-foreground-process-reads.ts
 3 src/main/runtime/orca-runtime-stop-terminals-for-worktree.ts
+1 src/main/runtime/orca-runtime-terminal-drivers.ts
 4 src/main/runtime/runtime-legacy-worker-terminal-recovery-persistence.ts
 2 src/main/runtime/runtime-pane-admission.ts
 7 src/main/runtime/runtime-terminal-orphan-session-adoption.ts

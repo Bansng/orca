@@ -6,6 +6,7 @@ import type { Section, Worktree } from '../worktree/workspace-list-types'
 const { rowRenders } = vi.hoisted(() => ({ rowRenders: vi.fn() }))
 
 vi.mock('react-native', () => ({
+  Platform: { OS: 'ios' },
   Pressable: 'Pressable',
   RefreshControl: 'RefreshControl',
   // Renders every row through the list's own renderItem, as a mounted SectionList would.

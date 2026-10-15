@@ -76,8 +76,8 @@ export function openBrowserTab(
 ): Applied {
   const key = command.workspace
   // The tab-bar id and the browser tab record share one id, as the window mints them.
-  const browserTabId = context.mintId()
-  const pageId = context.mintId()
+  const browserTabId = command.pageId ?? context.mintId()
+  const pageId = command.pageId ?? context.mintId()
   const tab = contentTab(context, {
     kind: 'browser',
     id: browserTabId,

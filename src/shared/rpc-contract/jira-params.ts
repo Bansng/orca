@@ -48,7 +48,13 @@ export const ListIssues = z
 export const IssueKey = z.object({
   key: requiredString('Issue key is required'),
   siteId: OptionalString,
-  strict: z.boolean().optional()
+  strict: z.boolean().optional(),
+  mediaFormat: z.literal('reference').optional()
+})
+
+export const AttachmentImage = z.object({
+  reference: z.string().uuid(),
+  transferId: z.string().uuid()
 })
 
 export const CreateIssue = z.object({

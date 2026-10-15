@@ -6,6 +6,7 @@ import { isJiraGatewayBaseUrl } from './gateway-base-url'
 import { JiraApiError, toJiraApiError } from './jira-api-error'
 
 export { JiraApiError } from './jira-api-error'
+import { readFetchResponseBytesWithinLimit } from '../../shared/fetch-response-body'
 
 // Why: Atlassian's XSRF filter rejects POST/PUT REST calls that carry a browser
 // User-Agent, failing them with "XSRF check failed" even under API-token auth.
@@ -177,7 +178,8 @@ function resolveBinaryRequestUrl(site: JiraSite, pathOrUrl: string): URL {
 
 export async function jiraRequestBinary(
   client: JiraClientForSite,
-  pathOrUrl: string
+  pathOrUrl: string,
+  options: { maxBytes?: number; signal?: AbortSignal } = {}
 ): Promise<{ data: ArrayBuffer; contentType: string }> {
   const requestUrl = resolveBinaryRequestUrl(client.site, pathOrUrl)
   const headers = new Headers()
@@ -188,14 +190,19 @@ export async function jiraRequestBinary(
   headers.set('Authorization', client.authorization)
   const response = await jiraFetch(requestUrl.toString(), {
     headers,
+    signal: options.signal,
     ...(isJiraGatewayBaseUrl(apiBaseUrl(client.site)) ? { redirect: 'error' as const } : {})
   })
   if (!response.ok) {
     throw await toJiraApiError(response, requestUrl.toString())
   }
   const contentType = response.headers.get('content-type') || 'application/octet-stream'
+  const bytes = await readFetchResponseBytesWithinLimit(
+    response,
+    options.maxBytes ?? 2 * 1024 * 1024
+  )
   return {
-    data: await response.arrayBuffer(),
+    data: Uint8Array.from(bytes).buffer,
     contentType
   }
 }

@@ -3,6 +3,12 @@ import { SQLITE_DATABASE_RUNTIME_INCLUDE } from './vitest-sqlite-database-runtim
 // Real SQLite fixtures keep Node publication and close semantics.
 export const SQLITE_RUNTIME_INCLUDE = [
   ...SQLITE_DATABASE_RUNTIME_INCLUDE,
+  'src/main/ipc/repos/project-host-setup-wsl-move-fence.test.ts',
+  'src/main/ipc/repos/repo-ipc-wsl-move-fence.test.ts',
+  'src/main/runtime/runtime-managed-worktree-metadata-wsl-move.test.ts',
+  'src/main/persistence/moving-wsl-projects/wsl-move-session-freeze.test.ts',
+  'src/main/wsl-move-scan-pruning.test.ts',
+  'src/main/repo-backfill-wsl-move.test.ts',
   'src/main/acp/acp-structured-host-live-listing.test.ts',
   'src/main/acp/acp-structured-host-configured-default.test.ts',
   'src/main/pi/rpc-configured-default.test.ts',
@@ -15,6 +21,7 @@ export const SQLITE_RUNTIME_INCLUDE = [
   'src/main/acp/acp-structured-prompt-failure.test.ts',
   'src/main/acp/acp-timeline-turn-failures.test.ts',
   'src/main/acp/acp-structured-session-adapter.test.ts',
+  'src/main/acp/acp-conversation-copy.test.ts',
   'src/main/pi/rpc-turn-races.test.ts',
   'src/main/acp/acp-structured-child-session-end.test.ts',
   'src/main/acp/acp-structured-child-stop.test.ts',
@@ -28,6 +35,7 @@ export const SQLITE_RUNTIME_INCLUDE = [
   'src/main/automations/automation-skip-coalescing.test.ts',
   'src/main/automations/automation-update-host-retarget.test.ts',
   'src/main/automations/automation-workspace-host-attribution.test.ts',
+  'src/main/automations/automation-wsl-move-refusal.test.ts',
   'src/main/automations/automation-zero-grace-tick-latency.test.ts',
   'src/main/automations/refused-manual-run.test.ts',
   'src/main/automations/retained-run-reconciliation.test.ts',

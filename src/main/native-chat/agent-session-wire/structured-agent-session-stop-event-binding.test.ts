@@ -508,7 +508,8 @@ describe('a rewind that restates a turnless Stop', () => {
     await journal().replaceEpochItems('handle_forked', 1, [
       {
         identity: stoppedTurn,
-        body: { ...ended, completedAt: Date.now() + 1, outcome: 'cancellation' }
+        body: { ...ended, completedAt: Date.now() + 1, outcome: 'cancellation' },
+        ownerFence: 1
       }
     ])
     const mail = rig.send('mail after the rewind')

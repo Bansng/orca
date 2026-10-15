@@ -252,7 +252,6 @@
         "AutomationsPage": {
           "2695883141": "delete",
           "0329f9bef1": "Close · Esc",
-          "0ae52dd760": "hermes",
           "3e42a5cc1b": "SSH connection failed.",
           "53f06f0ad5": "Retry source",
           "587a4b205c": "Next",
@@ -264,7 +263,6 @@
           "82eb6cb933": "source",
           "8705757e27": "job",
           "8d1afa8269": "Add automation",
-          "97ff587ee3": "Connect this source to check for Hermes automations in the remote profile.",
           "9f2855677c": "SSH connected.",
           "a21f6c33ad": "Automation source refreshed.",
           "aaa007846f": "source unavailable",
@@ -288,11 +286,7 @@
           "tableProject": "Project"
         },
         "ExternalAutomationManagers": {
-          "330b3c32e8": "available",
-          "bf5f67b590": "hermes"
-        },
-        "HermesCronOutputView": {
-          "88d48157fc": "default"
+          "330b3c32e8": "available"
         },
         "createDestination": {
           "stale": "{host} changed while this form was open. Choose it again before saving.",

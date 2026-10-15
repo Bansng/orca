@@ -24,6 +24,7 @@ import {
   structuredAgentSessionTargetForTab,
   structuredAgentSessionTargetForHost
 } from '@/runtime/structured-agent-session-owner'
+import { removeTabsAttention } from '../../workspace-attention/subject-attention-transitions'
 
 /** Builds a bulk cleanup patch and clears auxiliary warning records without requiring individual terminal teardown. */
 export function buildWorktreePurgeState(
@@ -182,9 +183,7 @@ export function buildWorktreePurgeState(
     manuallyUnreadTurnsByPaneKey: omitByPaneKeyTabPrefix(s.manuallyUnreadTurnsByPaneKey),
     paneForegroundAgentByPaneKey: omitByPaneKeyTabPrefix(s.paneForegroundAgentByPaneKey),
     sleepingAgentSessionsByPaneKey: omitByPaneKeyTabPrefix(s.sleepingAgentSessionsByPaneKey),
-    unreadTerminalTabs: omitByTabId(s.unreadTerminalTabs),
-    unreadTerminalPanes: omitByPaneKeyTabPrefix(s.unreadTerminalPanes),
-    unreadAgentCompletionPanes: omitByPaneKeyTabPrefix(s.unreadAgentCompletionPanes),
+    ...removeTabsAttention(s, doomed.doomedTabIds),
     lastTerminalInputAtByPaneKey: omitByPaneKeyTabPrefix(s.lastTerminalInputAtByPaneKey),
     // Delete state
     deleteStateByWorktreeId: removeDeleteStatesForWorktreeIds(

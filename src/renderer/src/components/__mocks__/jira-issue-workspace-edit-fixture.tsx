@@ -98,8 +98,22 @@ export function jiraIssue(title: string, overrides: Partial<JiraIssue> = {}): Ji
 
 export const otherIssue = jiraIssue('Other issue', { id: '10002', key: 'ENG-2' })
 
-export let selectIssue = (_issue: JiraIssue | null): void => undefined
-export let selectSource = (_source: TaskSourceContext): void => undefined
+let selectIssueImplementation: ((issue: JiraIssue | null) => void) | null = null
+let selectSourceImplementation: ((source: TaskSourceContext) => void) | null = null
+
+export function selectIssue(issue: JiraIssue | null): void {
+  if (!selectIssueImplementation) {
+    throw new Error('Render StoreBackedWorkspace before selecting an issue')
+  }
+  selectIssueImplementation(issue)
+}
+
+export function selectSource(source: TaskSourceContext): void {
+  if (!selectSourceImplementation) {
+    throw new Error('Render StoreBackedWorkspace before selecting a source')
+  }
+  selectSourceImplementation(source)
+}
 export const initialSource: TaskSourceContext = {
   kind: 'task-source',
   provider: 'jira',
@@ -124,8 +138,12 @@ export function StoreBackedWorkspace({ initial }: { initial: JiraIssue }): React
     )
   )
   useLayoutEffect(() => {
-    selectIssue = setIssue
-    selectSource = setSource
+    selectIssueImplementation = setIssue
+    selectSourceImplementation = setSource
+    return () => {
+      selectIssueImplementation = null
+      selectSourceImplementation = null
+    }
   }, [])
   return (
     <TooltipProvider>
