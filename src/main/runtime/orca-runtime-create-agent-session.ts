@@ -14,7 +14,6 @@ import { createHash } from 'node:crypto'
 import { isTuiAgentEnabled } from '../../shared/tui-agent-selection'
 import { resolveAgentStartupPlanInputs } from '../../shared/agent-startup-plan-inputs'
 import { agentLaunchQuotingShell } from '../../shared/agent-launch-runtime'
-import { openCodeModelCheckPlatform } from './agent-launch-scope-runtime'
 import { buildExecutionHostAgentStartupPlan } from '../opencode/opencode-model-startup-plan'
 import type { RuntimeTerminalCreate } from '../../shared/runtime-types'
 import type {
@@ -147,11 +146,6 @@ export class OrcaRuntimeWithCreateAgentSession extends OrcaRuntimeWithGetAgentSe
       })
       const startup = await buildExecutionHostAgentStartupPlan({
         inputs: startupArgs,
-        modelCheckPlatform: openCodeModelCheckPlatform(
-          this.store!,
-          workspace,
-          launchRuntime.platform
-        ),
         cwd: startupCwd ?? workspace.path,
         prompt: request.prompt ?? '',
         promptDelivery: request.promptDelivery,

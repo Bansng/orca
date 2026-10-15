@@ -16793,13 +16793,9 @@
         },
         "AutomationEditorDialogHeader": {
           "31f9253920": "Use template",
-          "7e35393632": "Hermes",
-          "6f309eef8d": "Orca",
           "58f56b73d9": "Automation name",
           "1d9826933e": "Weekday repo audit",
           "4133d33862": "Create automation",
-          "0a75e5e2fa": "Create Hermes automation",
-          "03142e7721": "Edit Hermes automation",
           "17086b48ee": "Edit automation",
           "4c8e1a72b9": "A recurring agent task"
         },
@@ -16873,7 +16869,6 @@
           "295698292f": "Rerun",
           "0e110a3469": "Runs",
           "bb1b2cd31e": "Overview",
-          "97ff587ee3": "Connect this source to check for Hermes automations in the remote profile.",
           "aaa007846f": "source unavailable",
           "25060635c6": "Add new",
           "d207ab4c25": "Start from a template",
@@ -16915,9 +16910,6 @@
           "moved": "Automation moved to {host}.",
           "moveOriginalKept": "Created on {host}, but the original could not be deleted. Remove it on the old host.",
           "moveOriginalUnverified": "Created on {host}, but the original deletion could not be verified. Check the old host before retrying.",
-          "77b81bc4ac": "Hermes automation created.",
-          "08efc3ae12": "Hermes automation updated.",
-          "e431bb85d4": "Choose a workspace on the same host as this Hermes automation.",
           "32534e7c9c": "Choose an available workspace before saving.",
           "2360ffc956": "Choose an enabled agent before saving.",
           "6e91dab317": "Enter a valid advanced schedule before saving.",
@@ -16928,7 +16920,6 @@
           "8705757e27": "job",
           "376631ef2b": "Resume",
           "b457436d6a": "Pause",
-          "0ae52dd760": "hermes",
           "e059042585": "Read-only",
           "aecdc3681f": "Manageable",
           "8500baacb4": "external source",
@@ -16986,17 +16977,11 @@
           "a42bf2b27e": "Delete external automation",
           "1c3bfd38fe": "Resume external automation",
           "0def1693bb": "Pause external automation",
-          "1df491fd00": "Edit external automation",
           "cc77ba88ff": "Run external automation",
           "5820648765": "Last",
-          "844f1acb72": "found",
           "20fd7a3a15": "next",
           "c6695e6fbd": "External automations",
           "5524365227": "OpenClaw",
-          "766abf833c": "Hermes",
-          "bf5f67b590": "hermes",
-          "e66091daf4": "runs",
-          "8e9165af08": "run",
           "2b0adbce21": "Paused",
           "b3feba84c7": "Active",
           "92405f1431": "Unavailable",
@@ -17005,25 +16990,6 @@
           "330b3c32e8": "available",
           "e2532150ed": "automations",
           "701515f010": "automation"
-        },
-        "ExternalAutomationRunTable": {
-          "0ba9c0a95c": "Next run page",
-          "52d468a0b8": "Previous run page",
-          "7475c0ce96": "of",
-          "be551397ca": "Status",
-          "a813df9808": "Preview",
-          "d4b34feb66": "Run time",
-          "2d4388a908": "Runs",
-          "9c080765ff": "No Hermes runs found yet.",
-          "8ea934cacf": "Loading runs...",
-          "d5527d8fe7": "runs",
-          "872d032d05": "run"
-        },
-        "HermesCronOutputView": {
-          "e27c716b43": "Prompt",
-          "4557213074": "Response",
-          "05affc68e3": "Error",
-          "88d48157fc": "default"
         },
         "WorkspaceCombobox": {
           "ee5b280eba": "No workspaces found.",
@@ -17918,6 +17884,7 @@
           "fbb5018602": "This file is empty.",
           "6112db5a1c": "This artifact is too large to share.",
           "e2ed5acd8c": "Orca couldn't read this file. Open it from a workspace and try again.",
+          "visualUnreadable": "Couldn't read this visual to share it.",
           "6d475e9b25": "Only local HTML and Markdown files can be shared as artifacts.",
           "29a406be09": "Artifacts must contain text."
         },
@@ -19303,6 +19270,23 @@
     },
     "JiraIssueWorkspace": {
       "pendingChange": "Another issue change is in progress."
+    },
+    "jiraProjectPicker": {
+      "search": "Search Jira projects",
+      "empty": "No projects found.",
+      "label": "Jira project",
+      "all": "All Jira projects"
+    },
+    "RepositoryJiraProjectSection": {
+      "saveFailed": "Could not save the default Jira project.",
+      "runtimeUpdate": "Update this runtime to save a default Jira project.",
+      "title": "Default Jira project",
+      "description": "Default the Jira issue picker and Tasks list to this project. You can change it for each worktree.",
+      "none": "No default project",
+      "connect": "Connect Jira in Integrations to choose a project.",
+      "keywordJira": "jira",
+      "keywordDefaultProject": "default project",
+      "keywordIssuePicker": "issue picker"
     }
   },
   "dashboardPopout": {
@@ -20094,7 +20078,7 @@
       "chooseTransition": "Choose a status change:",
       "cancel": "Cancel",
       "noTransition": "No status change to {{column}} is available for {{key}}.",
-      "queryTooLong": "The Jira query is too long with Current sprint selected. Shorten the query or turn off Current sprint."
+      "queryTooLong": "The Jira query is too long. Shorten the query or clear filters."
     }
   }
 }

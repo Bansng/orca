@@ -6,7 +6,7 @@ import {
   resolveFileExplorerPaths
 } from './file-target'
 import type { RuntimeFileCommandHost } from './file-command-host'
-import { resolveAuthorizedPath } from '../../ipc/filesystem-auth'
+import { resolveRuntimeAuthorizedPath } from './chat-scratch-file-root'
 import { constants, copyFile, mkdir, rm } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
@@ -155,8 +155,8 @@ export class RuntimeFileMutations {
     requireLocalRuntimeFileRoute(tempTarget)
     // Why: commit through the resolved (not symlink-preserving) temp and final paths.
     const store = this.host.requireStore()
-    const tempPath = await resolveAuthorizedPath(tempTarget.path, store)
-    const finalPath = await resolveAuthorizedPath(finalTarget.path, store)
+    const tempPath = await resolveRuntimeAuthorizedPath(tempTarget.path, store)
+    const finalPath = await resolveRuntimeAuthorizedPath(finalTarget.path, store)
     await mkdir(dirname(finalPath), { recursive: true })
     await copyFile(tempPath, finalPath, constants.COPYFILE_EXCL)
     await rm(tempPath, { force: true })

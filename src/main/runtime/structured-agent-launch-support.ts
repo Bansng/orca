@@ -52,7 +52,10 @@ export async function structuredAgentSupportsLaunch(
     // was last read counts and a found one never waits.
     launch = await resolveAgainAfterRefreshOnMissingProgram(
       async () =>
-        check.resolveLaunch(await resolveHostStructuredAgentLaunchEnvironment(agent, settings), settings),
+        check.resolveLaunch(
+          await resolveHostStructuredAgentLaunchEnvironment(agent, settings),
+          settings
+        ),
       refreshHostAgentBaseEnvironmentAfterMiss,
       { env: ({ env }) => env, cwd }
     )

@@ -7,6 +7,11 @@ import type {
   OrcadMigrationSnapshotChunkRequest,
   OrcadMigrationSnapshotChunkResult
 } from '../../shared/orcad-migration-scrollback'
+import type {
+  OrcadMigrationBlobChunkRequest,
+  OrcadMigrationBlobChunkResult,
+  OrcadMigrationBlobDescriptor
+} from '../../shared/orcad-migration-blob-transfer'
 import {
   abortStagedOrcadMigrationCatalogDurably,
   commitStagedOrcadMigrationCatalogDurably,
@@ -20,6 +25,7 @@ type MigrationStoreKey =
   | 'stageOrcadMigrationCatalog'
   | 'commitStagedOrcadMigrationCatalog'
   | 'stageOrcadMigrationSnapshotChunk'
+  | 'stageOrcadMigrationBlobChunk'
   | 'abortStagedOrcadMigrationCatalog'
   | 'getOrcadMigrationCatalogState'
   | 'flushPendingOrThrowAsync'
@@ -39,7 +45,7 @@ export class OrcaRuntimeWithMigrationCatalog extends OrcaRuntimeWithResolveWaite
 
   async commitStagedOrcadMigrationCatalog(
     manifest: OrcadMigrationManifest,
-    options: { signal?: AbortSignal } = {}
+    options: { signal?: AbortSignal; expectedBlobs?: readonly OrcadMigrationBlobDescriptor[] } = {}
   ): Promise<OrcadMigrationCatalogState> {
     return commitStagedOrcadMigrationCatalogDurably({
       store: this.requireMigrationStore(
@@ -48,6 +54,7 @@ export class OrcaRuntimeWithMigrationCatalog extends OrcaRuntimeWithResolveWaite
       ),
       manifest,
       signal: options.signal,
+      expectedBlobs: options.expectedBlobs,
       onDurableCommit: () => {
         this.invalidateResolvedWorktreeCache()
         this.notifyReposChanged()
@@ -61,6 +68,15 @@ export class OrcaRuntimeWithMigrationCatalog extends OrcaRuntimeWithResolveWaite
     // SAFETY: The virtual Store may differ from the checked Store; preserve its native failure.
     return this.requireMigrationStore('stageOrcadMigrationSnapshotChunk')
       .stageOrcadMigrationSnapshotChunk!(request)
+  }
+
+  stageOrcadMigrationBlobChunk(
+    request: OrcadMigrationBlobChunkRequest
+  ): OrcadMigrationBlobChunkResult {
+    // SAFETY: The virtual Store may differ from the checked Store; preserve its native failure.
+    return this.requireMigrationStore('stageOrcadMigrationBlobChunk').stageOrcadMigrationBlobChunk!(
+      request
+    )
   }
 
   async abortStagedOrcadMigrationCatalog(

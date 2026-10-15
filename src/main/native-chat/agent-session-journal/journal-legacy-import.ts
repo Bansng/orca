@@ -1,8 +1,8 @@
 // Hydrating a journal from a bridge-era transcript.
 //
-// This reuses the existing per-agent transcript decoders verbatim — a second
-// parser would drift from the one the live view already uses. The decoders
-// return a render model with no identity, so the import wraps them: the wrapper
+// Ordinary messages reuse the existing per-agent transcript decoders; Pi also
+// projects its saved branch and summaries. The decoders return a render model
+// with no identity, so the import wraps them: the wrapper
 // reads an identity anchor off the SAME raw line, then delegates the content.
 //
 // Import always opens a fresh epoch. The imported timeline is a best-effort
@@ -31,6 +31,7 @@ import { decodeTranscriptStream } from '../transcript-stream-lines'
 import { readOpenCodeNativeChatTranscriptFull } from '../transcript-opencode'
 import { boundSubagentEntryId } from '../subagent-entry-id-bounds'
 import { createLegacyIdentityTracker } from './journal-legacy-identity'
+import { createPiTranscriptCollector } from './journal-pi-active-branch'
 import type { JournalReplacementItem } from './journal-epoch-replacement'
 import {
   boundInlineText,
@@ -89,7 +90,9 @@ export async function prepareLegacyTranscriptImport(input: {
 }): Promise<{ ok: true; items: JournalReplacementItem[] } | { ok: false; error: string }> {
   const options = input.options ?? {}
   const limits = options.limits ?? DEFAULT_JOURNAL_PAYLOAD_LIMITS
-  const transcriptAgent = resolveNativeChatTranscriptAgent(input.agent)
+  // OMP is a Pi fork that kept Pi's session format, so OMP's decoder reads Pi's sessions too.
+  const transcriptAgent =
+    input.agent === 'pi' ? 'omp' : resolveNativeChatTranscriptAgent(input.agent)
   if (!transcriptAgent) {
     return { ok: false, error: `Unsupported agent for journal import: ${input.agent}` }
   }
@@ -175,7 +178,9 @@ function replacementItems(
     replacement.push({
       identity,
       body: legacyItemBody(message, limits),
-      observedAt: message.timestamp ?? undefined
+      observedAt: message.timestamp ?? undefined,
+      // Imported history is no generation's work: never current, whatever it says still runs.
+      ownerFence: 0
     })
   }
   return replacement
@@ -204,6 +209,7 @@ async function decodeWithIdentities(input: {
   })
   const decode = TRANSCRIPT_DECODERS[input.transcriptAgent]
   const identities: AgentJournalItemIdentity[] = []
+  const pi = input.agent === 'pi' ? createPiTranscriptCollector() : null
   let lineIndex = 0
 
   // Count raw bytes while reading: the source can grow after the stat check.
@@ -215,6 +221,10 @@ async function decodeWithIdentities(input: {
     (line, fallbackId) => {
       const trackedIdentity = tracker.identify(line, lineIndex)
       lineIndex += 1
+      if (pi) {
+        pi.record(line, fallbackId, trackedIdentity)
+        return null
+      }
       const message = decode(line, fallbackId)
       if (message) {
         identities.push(
@@ -233,6 +243,9 @@ async function decodeWithIdentities(input: {
     true,
     MAX_LEGACY_IMPORT_SOURCE_BYTES
   )
+  if (pi) {
+    return pi.project()
+  }
   return { messages, identities }
 }
 

@@ -48,6 +48,10 @@ import type {
   SessionTabCloseRequest,
   SessionTabCloseResponse
 } from '../../shared/session-tab-close'
+import type {
+  WorktreeSleepRequest,
+  WorktreeSleepResponse
+} from '../../shared/worktree-sleep-request'
 
 export type CloseActiveTabPayload = { sourceId: string }
 
@@ -262,6 +266,8 @@ export type UiCommandEventApi = {
   onTerminalTabCloseRequest: (callback: (request: TerminalTabCloseRequest) => void) => () => void
   respondTerminalTabClose: (response: TerminalTabCloseResponse) => void
   onSleepWorktree: (callback: (data: { worktreeId: string }) => void) => () => void
+  onWorktreeSleepRequest: (callback: (request: WorktreeSleepRequest) => void) => () => void
+  respondWorktreeSleep: (response: WorktreeSleepResponse) => void
   onResumeSleepingAgents: (callback: (data: { worktreeId: string }) => void) => () => void
   onTerminalZoom: (callback: (direction: 'in' | 'out' | 'reset') => void) => () => void
   onSystemResumed: (callback: () => void) => () => void

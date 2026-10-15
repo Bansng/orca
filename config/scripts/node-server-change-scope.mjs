@@ -18,6 +18,7 @@ const BUILD_SCRIPTS = [
   'config/scripts/build-windows-security-addon.mjs',
   'config/scripts/run-node-server-tests.mjs',
   'config/vitest.config.ts',
+  'config/scripts/vitest-dom-setup.ts',
   'config/scripts/happy-dom-offscreen-canvas.ts',
   'config/scripts/happy-dom-mutation-observer-retention.ts',
   'config/scripts/vitest-host-ports-setup.ts',

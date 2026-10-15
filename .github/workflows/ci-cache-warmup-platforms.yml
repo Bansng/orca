@@ -34,6 +34,12 @@ on:
       - 'config/scripts/space-sharing-copy.mjs'
       - 'config/patches/**'
       - 'native/windows-registry/**'
+      - 'native/windows-cli-launcher/**'
+      - 'native/windows-agent-hook/**'
+      - 'config/scripts/build-windows-cli-launcher.mjs'
+      - 'config/scripts/build-windows-agent-hook.mjs'
+      - 'config/scripts/windows-rust-executable-build.mjs'
+      - 'resources/build/icon.ico'
   pull_request:
     paths:
       - '.github/workflows/ci-cache-warmup.yml'

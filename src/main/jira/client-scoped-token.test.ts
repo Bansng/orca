@@ -98,16 +98,19 @@ describe('scoped Jira Cloud tokens over HTTP', () => {
       dataUrl: 'data:image/png;base64,AQ==',
       byteSize: 1
     })
+    const epoch = cache.attachmentImagesEpoch(client.site.id)
     authorized = false
     await expect(
       jira.connect({ ...CREDENTIAL, apiToken: 'rejected-token' })
     ).resolves.toMatchObject({ ok: false })
     expect(cache.getCachedAttachmentDataUrl(client.site.id, 'image')).not.toBeNull()
+    expect(cache.attachmentImagesEpoch(client.site.id)).toBe(epoch)
     authorized = true
     await expect(
       jira.connect({ ...CREDENTIAL, apiToken: 'replacement-token' })
     ).resolves.toMatchObject({ ok: true })
     expect(cache.getCachedAttachmentDataUrl(client.site.id, 'image')).toBeNull()
+    expect(cache.attachmentImagesEpoch(client.site.id)).toBeGreaterThan(epoch)
     expect(jira.getClients()[0]?.authorization).toBe(
       `Basic ${Buffer.from('ada@example.com:replacement-token').toString('base64')}`
     )

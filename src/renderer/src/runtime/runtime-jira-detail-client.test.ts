@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { JIRA_IMAGE_CAPABILITY } from '../../../shared/jira-attachment-image'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   jiraAddIssueCommentForTarget,
@@ -54,8 +55,16 @@ describe('captured Jira detail owners', () => {
     await jiraListPrioritiesForTarget(owner, 'site-1')
     await jiraListAssignableUsersForTarget(owner, 'ENG-1', 'Ada', 'site-1')
 
-    expect(localMethods.getIssue).toHaveBeenCalledWith({ key: 'ENG-1', siteId: 'site-1' })
-    expect(localMethods.issueComments).toHaveBeenCalledWith({ key: 'ENG-1', siteId: 'site-1' })
+    expect(localMethods.getIssue).toHaveBeenCalledWith({
+      key: 'ENG-1',
+      siteId: 'site-1',
+      mediaFormat: 'reference'
+    })
+    expect(localMethods.issueComments).toHaveBeenCalledWith({
+      key: 'ENG-1',
+      siteId: 'site-1',
+      mediaFormat: 'reference'
+    })
     expect(localMethods.updateIssue).toHaveBeenCalledWith({
       key: 'ENG-1',
       siteId: 'site-1',
@@ -128,9 +137,16 @@ describe('captured Jira detail owners', () => {
         error: { code: 'method_not_found', message: 'Old host' }
       })
     )
+    const status = createCompatibleRuntimeStatusResponse()
+    if (!status.ok) {
+      throw new Error('Expected successful status')
+    }
+    status.result.capabilities = status.result.capabilities?.filter(
+      (capability) => capability !== JIRA_IMAGE_CAPABILITY
+    )
     runtimeCall.mockImplementation(async (args: { method: string }) =>
       args.method === 'status.get'
-        ? createCompatibleRuntimeStatusResponse()
+        ? status
         : {
             id: 'rpc-1',
             ok: true,

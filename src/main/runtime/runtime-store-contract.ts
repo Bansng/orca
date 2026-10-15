@@ -4,6 +4,7 @@ import type { VoiceSettings } from '../../shared/speech-types'
 
 export type RuntimeStore = {
   getRepos: Store['getRepos']
+  getSshTargets?: Store['getSshTargets']
   getRepo: Store['getRepo']
   addRepo: Store['addRepo']
   updateRepo: Store['updateRepo']
@@ -57,8 +58,12 @@ export type RuntimeStore = {
   stageOrcadMigrationCatalog?: Store['stageOrcadMigrationCatalog']
   commitStagedOrcadMigrationCatalog?: Store['commitStagedOrcadMigrationCatalog']
   stageOrcadMigrationSnapshotChunk?: Store['stageOrcadMigrationSnapshotChunk']
+  stageOrcadMigrationBlobChunk?: Store['stageOrcadMigrationBlobChunk']
   abortStagedOrcadMigrationCatalog?: Store['abortStagedOrcadMigrationCatalog']
   getOrcadMigrationCatalogState?: Store['getOrcadMigrationCatalogState']
+  installOrcadMigrationReceivedBlobs?: Store['installOrcadMigrationReceivedBlobs']
+  peekOrcadMigrationTerminalRestoreHint?: Store['peekOrcadMigrationTerminalRestoreHint']
+  consumeOrcadMigrationTerminalRestoreHint?: Store['consumeOrcadMigrationTerminalRestoreHint']
   persistPtyBinding?: Store['persistPtyBinding']
   admitTerminalPane?: Store['admitTerminalPane']
   withdrawTerminalPane?: Store['withdrawTerminalPane']

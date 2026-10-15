@@ -174,7 +174,7 @@ class RemovalRuntime extends OrcaRuntimeService {
   }
 
   retryRemoval(record: WorktreeRemovalRecord) {
-    return this.retryFailedLocalRemoval(
+    return this.retryFailedRemoval(
       { kind: 'local' },
       { id: record.worktreeId, path: record.worktreePath },
       [],
@@ -223,10 +223,10 @@ describe('workspace removal runtime dispatch', () => {
     expect(() => runtime.finishInterruptedWorktreeRemovals()).toThrow(runtime.helperFailure)
   })
 
-  it('uses the runtime helper override before retrying a failed removal', () => {
+  it('uses the runtime helper override before retrying a failed removal', async () => {
     runtime.stopAtHelper = true
     failedWorktreeRemovals.set(record.worktreeId, record)
-    expect(() => runtime.retryRemoval(record)).toThrow(runtime.helperFailure)
+    await expect(runtime.retryRemoval(record)).rejects.toThrow(runtime.helperFailure)
   })
 
   it('captures the watcher callback and retains its job-host receiver', async () => {
