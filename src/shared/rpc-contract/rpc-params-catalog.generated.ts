@@ -315,6 +315,7 @@ import {
   HostedReviewCreationEligibility,
   HostedReviewForBranch
 } from './hosted-review-params'
+import { JiraFavouriteFilterParams } from './jira-favourite-filter-params'
 import {
   AssignableUsers,
   AttachmentImage,
@@ -505,7 +506,14 @@ import {
   DictationStart,
   SpeechModelAction
 } from './speech-params'
-import { RepoAddRemote, SshBrowseDir, SshTarget, SshTargetAdd, SshTargetUpdate } from './ssh-params'
+import {
+  RepoAddRemote,
+  SshBrowseDir,
+  SshConnect,
+  SshTarget,
+  SshTargetAdd,
+  SshTargetUpdate
+} from './ssh-params'
 import { ContinueInterruptedParams } from './structured-agent-session-continue-params'
 import {
   AcknowledgeAttentionParams,
@@ -1002,6 +1010,7 @@ export const RPC_PARAMS_BY_METHOD = {
   'jira.issueCommentsStream': IssueKey,
   'jira.listAssignableUsers': AssignableUsers,
   'jira.listCreateFields': ProjectIssueTypeFields,
+  'jira.listFavouriteFilters': JiraFavouriteFilterParams,
   'jira.listIssueTypes': ProjectIssueTypes,
   'jira.listIssues': ListIssues,
   'jira.listPriorities': SiteSelection,
@@ -1070,6 +1079,7 @@ export const RPC_PARAMS_BY_METHOD = {
   'markdown.saveTab': SaveMarkdownTab,
   'mobileRelay.hosts.list': null,
   'mobileRelay.hosts.worktrees': MobileRelayHostWorktreesParamsSchema,
+  'mobileRelay.projectSections': null,
   'mobileWeb.bundle.chunk': MobileWebBundleChunkParamsSchema,
   'mobileWeb.bundle.manifest': null,
   'mobileWeb.bundle.range': MobileWebBundleChunkParamsSchema,
@@ -1236,7 +1246,7 @@ export const RPC_PARAMS_BY_METHOD = {
   'speech.models.list': null,
   'ssh.addTarget': SshTargetAdd,
   'ssh.browseDir': SshBrowseDir,
-  'ssh.connect': SshTarget,
+  'ssh.connect': SshConnect,
   'ssh.getState': SshTarget,
   'ssh.listEditableTargets': null,
   'ssh.listRemovedTargetLabels': null,

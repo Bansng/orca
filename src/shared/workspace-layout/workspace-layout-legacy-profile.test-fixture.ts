@@ -60,6 +60,47 @@ export const LEGACY_WORKSPACE_LAYOUT_PROFILES: readonly WorkspaceLayoutProfile[]
     }
     return session
   }),
+  local('legacy row repeating a tab-bar tab’s terminal, selected', () => {
+    const session = twoTabs()
+    session.tabsByWorktree[GIT_KEY]!.push({
+      ...session.tabsByWorktree[GIT_KEY]![0]!,
+      id: 'tab-legacy',
+      title: 'Terminal 3',
+      sortOrder: 2,
+      createdAt: 1_700_000_009_000
+    })
+    session.terminalLayoutsByTabId['tab-legacy'] = {
+      root: { type: 'leaf', leafId: leaf(3) },
+      activeLeafId: leaf(3),
+      expandedLeafId: null,
+      ptyIdsByLeafId: { [leaf(3)]: 'pty-a' }
+    }
+    session.activeTabId = 'tab-legacy'
+    session.activeTabIdByWorktree = { [GIT_KEY]: 'tab-legacy' }
+    return session
+  }),
+  local('legacy split row sharing one pane’s terminal with a tab-bar tab', () => {
+    const session = twoTabs()
+    session.tabsByWorktree[GIT_KEY]!.push({
+      ...session.tabsByWorktree[GIT_KEY]![0]!,
+      id: 'tab-legacy',
+      title: 'Terminal 3',
+      sortOrder: 2,
+      createdAt: 1_700_000_009_000
+    })
+    session.terminalLayoutsByTabId['tab-legacy'] = {
+      root: {
+        type: 'split',
+        direction: 'vertical',
+        first: { type: 'leaf', leafId: leaf(3) },
+        second: { type: 'leaf', leafId: leaf(4) }
+      },
+      activeLeafId: leaf(3),
+      expandedLeafId: null,
+      ptyIdsByLeafId: { [leaf(3)]: 'pty-a', [leaf(4)]: 'pty-c' }
+    }
+    return session
+  }),
   local('row terminal differs from its focused pane’s', () => {
     const session = twoTabs()
     session.tabsByWorktree[GIT_KEY]![0]!.ptyId = 'pty-stale'
@@ -70,7 +111,7 @@ export const LEGACY_WORKSPACE_LAYOUT_PROFILES: readonly WorkspaceLayoutProfile[]
     session.tabsByWorktree[GIT_KEY]![0]!.ptyId = null
     return session
   }),
-  local('tab-bar entry declaring a group that does not list it', () => {
+  local('tab listed by two groups, its tab-bar entry naming the second', () => {
     const session = addWorkspace(emptySession(), GIT_KEY, [
       { id: 'g1', tabs: [{ id: 'tab-a', leaves: [[leaf(1), 'pty-a']] }] },
       { id: 'g2', tabs: [{ id: 'tab-b', leaves: [[leaf(2), 'pty-b']] }] }

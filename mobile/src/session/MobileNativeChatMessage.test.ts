@@ -1,11 +1,22 @@
 import { createElement } from 'react'
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { AgentJournalToolCallItem } from '../../../src/shared/agent-session-journal-types'
+import type {
+  AgentJournalStatusItem,
+  AgentJournalToolCallItem
+} from '../../../src/shared/agent-session-journal-types'
 import { MAX_TOOL_DETAIL_LENGTH } from '../../../src/shared/native-chat-tool-summary'
 import { projectStructuredItemToNativeChat } from '../../../src/shared/structured-agent-session-projection'
-import type { NativeChatMessage } from '../../../src/shared/native-chat-types'
+import {
+  NATIVE_CHAT_INTERRUPTED_STATUS_TEXT,
+  type NativeChatMessage
+} from '../../../src/shared/native-chat-types'
 import { AGENT_SESSION_HOST_STATUS_COPY } from '../../../src/shared/agent-session-host-status-rows'
+import {
+  agentSessionFailureFact,
+  readProviderRetry
+} from '../../../src/shared/agent-session-failure'
+import { agentSessionFailureWords } from '../../../src/shared/agent-session-failure-words'
 import { colors } from '../theme/mobile-theme'
 import { styles } from './mobile-native-chat-message-styles'
 
@@ -37,6 +48,8 @@ vi.mock('react-native', async () => {
 })
 vi.mock('expo-clipboard', () => ({ setStringAsync: vi.fn() }))
 vi.mock('lucide-react-native', () => ({
+  AlertCircle: 'AlertCircle',
+  AlertTriangle: 'AlertTriangle',
   ArrowUp: 'ArrowUp',
   Brain: 'Brain',
   ChevronDown: 'ChevronDown',
@@ -114,10 +127,86 @@ describe('MobileNativeChatMessage', () => {
     expect(tree.root.findAll((node) => String(node.type) === 'MobileMarkdown')).toHaveLength(0)
     expect(
       tree.root.findAll(
-        (node) => String(node.type) === 'View' && node.props.style === styles.contextBoundary
+        (node) =>
+          String(node.type) === 'View' && node.props.accessibilityLabel === 'Context cleared'
       )
     ).toHaveLength(1)
-    expect(styles.contextBoundary.borderTopColor).toBe(colors.borderSubtle)
+  })
+
+  // Each row as its host writes it: Claude's API retry and sign-in rows use these shared words.
+  const statusRow = (body: AgentJournalStatusItem): NativeChatMessage =>
+    projectStructuredItemToNativeChat({
+      itemId: 'status',
+      revision: 1,
+      sequence: 2,
+      observedAt: 2,
+      body
+    })!
+  it.each([
+    [
+      'an API retry as a warning',
+      statusRow({
+        kind: 'status',
+        tone: 'warning',
+        ...agentSessionFailureWords(
+          agentSessionFailureFact('providerRetrying', {
+            retry: readProviderRetry({
+              error: 'overloaded',
+              status: 529,
+              attempt: 2,
+              maxRetries: 10
+            })
+          }),
+          { surface: 'row', agentName: 'Claude' }
+        )
+      }),
+      colors.statusAmber
+    ],
+    [
+      'a sign-in failure as an error',
+      statusRow({
+        kind: 'status',
+        tone: 'error',
+        ...agentSessionFailureWords(agentSessionFailureFact('notSignedIn'), {
+          agentName: 'Claude',
+          provider: 'claude',
+          surface: 'row'
+        })
+      }),
+      colors.statusRed
+    ],
+    [
+      'an interruption as a faint aside',
+      {
+        id: 'interrupted',
+        role: 'system',
+        blocks: [{ type: 'text', text: NATIVE_CHAT_INTERRUPTED_STATUS_TEXT }],
+        timestamp: 1,
+        source: 'transcript'
+      } satisfies NativeChatMessage,
+      colors.textMuted
+    ]
+  ])('draws %s, never as the agent speaking', (_, message, color) => {
+    const tree = render(message)
+    expect(tree.root.findAll((node) => String(node.type) === 'MobileMarkdown')).toHaveLength(0)
+    const text = tree.root.find(
+      (node) => String(node.type) === 'Text' && node.props.selectable === true
+    )
+    expect(text.props.children).toBe(message.blocks.find((block) => block.type === 'text')?.text)
+    expect(Object.assign({}, ...text.props.style)).toMatchObject({ color })
+  })
+
+  it('draws a compaction as a divider, not as a reply', () => {
+    const tree = render(
+      statusRow({ kind: 'status', text: 'Context compacted', presentation: 'compaction' })
+    )
+    expect(tree.root.findAll((node) => String(node.type) === 'MobileMarkdown')).toHaveLength(0)
+    expect(
+      tree.root.findAll(
+        (node) =>
+          String(node.type) === 'View' && node.props.accessibilityLabel === 'Context compacted'
+      )
+    ).toHaveLength(1)
   })
 
   it.each(['system', 'user'] as const)(

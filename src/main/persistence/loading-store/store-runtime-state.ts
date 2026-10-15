@@ -23,6 +23,7 @@ import type {
 } from '../scheduling-automations/automation-owner-projection'
 import type { ProfileStatePersistenceAuthority } from './profile-state-authority'
 import type { AutomationRun } from '../../../shared/automations-types'
+import { resolveNewPaneShellPath } from '../migrating-orcad-catalog/orcad-shell-history-installer'
 import { OrcadTerminalRestoreHintStore } from '../migrating-orcad-catalog/orcad-terminal-restore-hint-store'
 
 export type DurableProfileStateMutation<T> = {
@@ -36,6 +37,8 @@ export type StoreRuntimeOptions = {
   dataFile?: string
   storageAuthority?: AutomationStorageAuthority
   profileStateAuthority?: ProfileStatePersistenceAuthority
+  /** The shell a new pane on this host runs, given its default-shell setting; tests pass a fake. */
+  paneShellPath?: (defaultShell: string | undefined) => string
 }
 
 /** Mutable coordination state shared only with this Store's private collaborators. */
@@ -44,6 +47,9 @@ export class StoreRuntimeState {
   readonly dataFile: string
   readonly storageAuthority: AutomationStorageAuthority
   readonly profileStateAuthority: ProfileStatePersistenceAuthority | undefined
+  readonly paneShellPath: (defaultShell: string | undefined) => string
+  /** Worktrees whose moved shell history waits for their live shells to exit. */
+  readonly deferredShellHistoryWorktreeIds = new Set<string>()
   automationListProjectionCache: AutomationListProjectionCache | null = null
   activeViewPreference!: ActiveViewPreference
   readonly terminalScrollbackSnapshotStorage: TerminalScrollbackSnapshotStorage
@@ -103,6 +109,7 @@ export class StoreRuntimeState {
     this.dataFile = options.dataFile ?? getDataFile()
     this.storageAuthority = options.storageAuthority ?? 'desktop'
     this.profileStateAuthority = options.profileStateAuthority
+    this.paneShellPath = options.paneShellPath ?? resolveNewPaneShellPath
     this.staleProfileStateTempCleanup = this.profileStateAuthority
       ? removeStaleDurableWriteTempFiles(this.dataFile, {
           minimumAgeMs: STALE_DURABLE_WRITE_TEMP_AGE_MS

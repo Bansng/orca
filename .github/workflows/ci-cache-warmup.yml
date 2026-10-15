@@ -14,6 +14,7 @@ on:
       - '.github/actions/install-node-dependencies/**'
       - '.github/actions/restore-pnpm-verification/**'
       - '.github/actions/prepare-native-runtime/**'
+      - '.github/actions/prepare-windows-cli-launcher/**'
       - '.github/actions/prepare-git-compatibility/**'
       - '.github/actions/prepare-headless-compiler/**'
       - 'config/scripts/headless-detector-compiler-cache.mjs'
@@ -30,6 +31,8 @@ on:
       - '.npmrc'
       - '.pnpmfile.cjs'
       - 'config/scripts/ensure-native-runtime.mjs'
+      - 'config/scripts/initialize-windows-native-toolchain.mjs'
+      - 'config/scripts/capture-windows-native-environment.cmd'
       - 'config/scripts/rebuild-native-deps.mjs'
       - 'config/scripts/node-pty-job-ownership.cjs'
       - 'config/scripts/windows-pe-machine.cjs'
@@ -47,8 +50,6 @@ on:
   pull_request:
     paths:
       - '.github/workflows/ci-cache-warmup.yml'
-      - '.github/workflows/ci-cache-warmup-platform-jobs.yml'
-      - '.github/workflows/ci-cache-warmup-platforms.yml'
       - '.github/actions/prepare-headless-compiler/**'
       - 'config/scripts/headless-detector-compiler-cache.mjs'
       - '.github/actions/prepare-wayland-clipboard/**'

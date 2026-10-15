@@ -21,19 +21,32 @@ import {
   orcadMigrationStagingKey,
   type OrcadMigrationRequestIdentity
 } from './orcad-migration-staged-file'
+import {
+  assertOrcadMigrationShellHistoryValid,
+  installOrcadMigrationShellHistory
+} from './orcad-shell-history-installer'
 import type {
   OrcadTerminalRestoreHintPlacement,
   OrcadTerminalRestoreHintStore
 } from './orcad-terminal-restore-hint-store'
 
-type OrcadMigrationBlobContentCheck = (bytes: Buffer) => void
+type OrcadMigrationStagedBlobFile = {
+  key: string
+  path: string
+  manifest: OrcadMigrationManifest
+}
+
+type OrcadMigrationBlobContentCheck = (file: OrcadMigrationStagedBlobFile) => void
 
 const UTF8 = new TextDecoder('utf-8', { fatal: true })
 
 const BLOB_CONTENT_CHECKS: Partial<Record<OrcadMigrationBlobKind, OrcadMigrationBlobContentCheck>> =
   {
-    'terminal-restore-hints': (bytes) => {
-      parseOrcadMigrationTerminalRestoreHintsText(decodeUtf8(bytes))
+    'terminal-restore-hints': ({ path }) => {
+      parseOrcadMigrationTerminalRestoreHintsText(decodeUtf8(readFileSync(path)))
+    },
+    'shell-history': ({ key, path, manifest }) => {
+      assertOrcadMigrationShellHistoryValid(key, path, manifest.payload)
     }
   }
 
@@ -51,7 +64,7 @@ export function assertOrcadMigrationBlobContentsValid(
       continue
     }
     try {
-      check(readFileSync(path))
+      check({ key: descriptor.key, path, manifest })
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error)
       throw new Error(`orcad_migration_blob_content_invalid:${descriptor.blobKind}:${reason}`)
@@ -63,6 +76,17 @@ export type OrcadMigrationBlobInstall = {
   migration: OrcadMigrationRequestIdentity
   root: string
   terminalRestoreHints: OrcadTerminalRestoreHintStore
+  /** This host's `getHistoryRoot()`, where its panes' HISTFILEs live. */
+  shellHistoryRoot: string
+  /** The shell binary a new pane on this host would actually run. */
+  paneShellPath: () => string
+  /**
+   * The runtime's live-shell check. Without it (store load, before a runtime attached) shell
+   * history waits: a shell that outlived a restart would overwrite whatever lands under it.
+   */
+  worktreeHasLiveShells?: (worktreeId: string) => boolean
+  /** Worktrees whose history install waits for their live shells to exit. */
+  deferredShellHistoryWorktreeIds: Set<string>
   /** The worktree that owns the pane on this host, or null when the pane is not here. */
   paneWorktreeId: (paneKey: string) => string | null
   now: number
@@ -71,10 +95,37 @@ export type OrcadMigrationBlobInstall = {
 /**
  * Idempotent: a blob already installed is only deleted, and the hint store remembers installed
  * migrations so a retry never revives a hint a pane already took. A write failure keeps the blob
- * for the next retry: a commit retry, a catalog-state query, or the next store load.
+ * for the next retry: a commit retry, a catalog-state query, the runtime's post-attach pass, or
+ * (for restore hints) the next store load.
  */
 export function installOrcadMigrationReceivedBlobs(install: OrcadMigrationBlobInstall): void {
-  installTerminalRestoreHints(install)
+  let firstError: unknown = null
+  // One kind's failure must not hold back the others; each keeps its own blobs for the retry.
+  for (const installKind of [installTerminalRestoreHints, installShellHistory]) {
+    try {
+      installKind(install)
+    } catch (error) {
+      firstError ??= error
+    }
+  }
+  if (firstError !== null) {
+    throw firstError
+  }
+}
+
+function installShellHistory(install: OrcadMigrationBlobInstall): void {
+  if (!install.worktreeHasLiveShells) {
+    return
+  }
+  installOrcadMigrationShellHistory({
+    migration: install.migration,
+    root: install.root,
+    historyRoot: install.shellHistoryRoot,
+    paneShellPath: install.paneShellPath,
+    worktreeHasLiveShells: install.worktreeHasLiveShells,
+    deferredWorktreeIds: install.deferredShellHistoryWorktreeIds,
+    now: install.now
+  })
 }
 
 function installTerminalRestoreHints(install: OrcadMigrationBlobInstall): void {

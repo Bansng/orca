@@ -85,11 +85,15 @@ function setup() {
     [FOLDER_KEY]: LOCAL_EXECUTION_HOST_ID,
     [SSH_KEY]: SSH_HOST
   }
+  /** Each terminal's live title; none until a test sets one. */
+  const liveTitles = new Map<string, string>()
+  const liveTitle = vi.fn((ptyId: string) => liveTitles.get(ptyId) ?? null)
   const stream = new WorkspaceLayoutStream({
     store: () => fake.store,
-    homeHostId: (key) => homes[key] ?? null
+    homeHostId: (key) => homes[key] ?? null,
+    liveTitle
   })
-  return { ...fake, stream, homes, partitions }
+  return { ...fake, stream, homes, partitions, liveTitles, liveTitle }
 }
 
 const flush = () => new Promise<void>((resolve) => queueMicrotask(resolve))
@@ -121,7 +125,8 @@ describe('WorkspaceLayoutStream', () => {
     homes[SSH_KEY] = LOCAL_EXECUTION_HOST_ID
     const strayless = new WorkspaceLayoutStream({
       store: () => setup().store,
-      homeHostId: (key) => homes[key] ?? null
+      homeHostId: (key) => homes[key] ?? null,
+      liveTitle: () => null
     }).subscribe(() => {}).snapshot
     expect(strayless.map((entry) => entry.key)).toEqual([GIT_KEY, FOLDER_KEY])
   })
@@ -210,7 +215,8 @@ describe('WorkspaceLayoutStream', () => {
     const fake = fakeStore(new Map([[LOCAL_EXECUTION_HOST_ID, rowsOnly(keys, ['t1', 't2'])]]))
     const stream = new WorkspaceLayoutStream({
       store: () => fake.store,
-      homeHostId: () => LOCAL_EXECUTION_HOST_ID
+      homeHostId: () => LOCAL_EXECUTION_HOST_ID,
+      liveTitle: () => null
     })
     const events: WorkspaceLayoutEvent[] = []
     const before = new Map(
@@ -318,5 +324,90 @@ describe('WorkspaceLayoutStream', () => {
     expect(events.map((event) => [event.type, event.key])).toEqual([['workspace', GIT_KEY]])
     expect(warn).toHaveBeenCalledTimes(1)
     warn.mockRestore()
+  })
+
+  describe('live pane titles', () => {
+    const panesOf = (layout: PublishedWorkspaceLayout) =>
+      layout.tabs.flatMap((tab) => tab.terminal?.panes ?? [])
+    const ptyIdsOf = (layout: PublishedWorkspaceLayout) =>
+      panesOf(layout).flatMap((pane) => (pane.ptyId ? [pane.ptyId] : []))
+
+    it('lays each pane terminal title over its pane, and only there', () => {
+      const { stream, liveTitles } = setup()
+      const bare = stream.subscribe(() => {}).snapshot
+      const [first, second] = ptyIdsOf(bare.find((entry) => entry.key === GIT_KEY)!.layout)
+      liveTitles.set(first, 'claude: working')
+      liveTitles.set(second, 'vim')
+      const late = setup()
+      late.liveTitles.set(first, 'claude: working')
+      late.liveTitles.set(second, 'vim')
+      const titled = late.stream.subscribe(() => {}).snapshot
+      const git = titled.find((entry) => entry.key === GIT_KEY)!.layout
+      const byPty = new Map(panesOf(git).map((pane) => [pane.ptyId, pane.liveTitle]))
+      expect(byPty.get(first)).toBe('claude: working')
+      expect(byPty.get(second)).toBe('vim')
+      // Removing the live titles leaves exactly the layout published without them.
+      const stripped = titled.map((entry) => ({
+        key: entry.key,
+        layout: JSON.parse(
+          JSON.stringify(entry.layout, (k, v) => (k === 'liveTitle' ? undefined : v))
+        )
+      }))
+      expect(stripped).toEqual(bare)
+    })
+
+    it('publishes a title change without reading the Store, one frame per burst', async () => {
+      const { stream, store, liveTitles, write } = setup()
+      const events: WorkspaceLayoutEvent[] = []
+      const { snapshot } = stream.subscribe((event) => events.push(event))
+      const [ptyId] = ptyIdsOf(snapshot.find((entry) => entry.key === GIT_KEY)!.layout)
+      store.getWorkspaceSession.mockClear()
+      for (let frame = 0; frame < 50; frame++) {
+        liveTitles.set(ptyId, `build ${frame}`)
+        stream.markLiveTitlesDirty()
+      }
+      await flush()
+      expect(store.getWorkspaceSession).not.toHaveBeenCalled()
+      expect(events).toHaveLength(1)
+      const event = events[0]
+      expect(event.type === 'workspace' && event.key).toBe(GIT_KEY)
+      expect(
+        event.type === 'workspace' && panesOf(event.layout).find((p) => p.ptyId === ptyId)
+      ).toMatchObject({ liveTitle: 'build 49' })
+
+      // An unchanged title sends nothing; a structural write keeps the title on.
+      stream.markLiveTitlesDirty()
+      await flush()
+      expect(events).toHaveLength(1)
+      const session = localDesktopSession()
+      session.tabGroups![GIT_KEY]![0]!.tabOrder.reverse()
+      write(LOCAL_EXECUTION_HOST_ID, session)
+      await flush()
+      const rewritten = events.at(-1)!
+      expect(
+        rewritten.type === 'workspace' && panesOf(rewritten.layout).find((p) => p.ptyId === ptyId)
+      ).toMatchObject({ liveTitle: 'build 49' })
+
+      // A title that goes away is dropped from the pane.
+      liveTitles.delete(ptyId)
+      stream.markLiveTitlesDirty()
+      await flush()
+      const cleared = events.at(-1)!
+      expect(cleared.type === 'workspace' && panesOf(cleared.layout).some((p) => p.liveTitle)).toBe(
+        false
+      )
+    })
+
+    it('reads no title while nobody subscribes', async () => {
+      const { stream, liveTitle } = setup()
+      stream.markLiveTitlesDirty()
+      await flush()
+      expect(liveTitle).not.toHaveBeenCalled()
+      stream.subscribe(() => {}).unsubscribe()
+      liveTitle.mockClear()
+      stream.markLiveTitlesDirty()
+      await flush()
+      expect(liveTitle).not.toHaveBeenCalled()
+    })
   })
 })

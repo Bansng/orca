@@ -112,6 +112,25 @@ function placeClosedTabs(
   }
 }
 
+/** A selection naming a dropped row follows its tab-bar twin, as the window's startup does. */
+function followSubsumedTabSelections(
+  view: DesktopLayoutView,
+  canonicalTabIdBySubsumedTabId: ReadonlyMap<string, string>
+): void {
+  const follow = (tabId: string) => canonicalTabIdBySubsumedTabId.get(tabId) ?? tabId
+  if (view.activeTabId) {
+    view.activeTabId = follow(view.activeTabId)
+  }
+  if (view.activeTabIdByWorktree) {
+    view.activeTabIdByWorktree = Object.fromEntries(
+      Object.entries(view.activeTabIdByWorktree).map(([key, tabId]) => [
+        key,
+        tabId ? follow(tabId) : tabId
+      ])
+    )
+  }
+}
+
 /**
  * Loads by fixed precedence only. What the next save would write differently from `stored` is
  * reported as one field-by-field diff, so every changed value is in it by construction.
@@ -158,6 +177,7 @@ export function loadWorkspaceLayoutWithoutReport(
   }
   const terminalHomes = resolveTerminalHomes(session)
   const layouts = new Map<string, TerminalLayoutSnapshot>()
+  const canonicalTabIdBySubsumedTabId = new Map<string, string>()
   for (const key of workspaceKeys(session)) {
     layout.workspaces[key] = loadWorkspace({
       session,
@@ -167,9 +187,11 @@ export function loadWorkspaceLayoutWithoutReport(
       context,
       view: desktopView,
       facts,
-      layouts
+      layouts,
+      canonicalTabIdBySubsumedTabId
     })
   }
+  followSubsumedTabSelections(desktopView, canonicalTabIdBySubsumedTabId)
   const carried: CarriedSessionFields = {
     ...pickStoredFields(session, CARRIED_SESSION_FIELDS),
     unownedTerminalLayouts: Object.fromEntries(

@@ -6,6 +6,9 @@ import type {
 import type { OrcadMigrationBlobDescriptor } from '../../shared/orcad-migration-blob-transfer'
 import type { Store } from '../persistence'
 
+/** A moved history waits while a shell runs in its worktree: that shell would overwrite it. */
+type WorktreeHasLiveShells = (worktreeId: string) => boolean
+
 type OrcadMigrationCatalogFlushStore = Partial<Pick<Store, 'flushPendingOrThrowAsync'>>
 type OrcadMigrationCatalogStageStore = OrcadMigrationCatalogFlushStore &
   Partial<Pick<Store, 'stageOrcadMigrationCatalog'>>
@@ -31,6 +34,7 @@ export async function commitStagedOrcadMigrationCatalogDurably(args: {
   signal?: AbortSignal
   expectedBlobs?: readonly OrcadMigrationBlobDescriptor[]
   onDurableCommit: () => void
+  worktreeHasLiveShells?: WorktreeHasLiveShells
 }): Promise<OrcadMigrationCatalogState> {
   // SAFETY: Returned or mutable Store slots retain their original native missing-method failure.
   const result = args.store.commitStagedOrcadMigrationCatalog!(
@@ -39,17 +43,18 @@ export async function commitStagedOrcadMigrationCatalogDurably(args: {
   )
   await flushMigrationState(args.store, args.signal)
   args.onDurableCommit()
-  installReceivedBlobs(args.store, args.manifest)
+  installReceivedBlobs(args.store, args.manifest, args.worktreeHasLiveShells)
   return result
 }
 
 /** After the durable commit, on its retries and state queries; the store load retries too. */
 function installReceivedBlobs(
   store: Partial<Pick<Store, 'installOrcadMigrationReceivedBlobs'>>,
-  manifest: OrcadMigrationManifest
+  manifest: OrcadMigrationManifest,
+  worktreeHasLiveShells: WorktreeHasLiveShells | undefined
 ): void {
   try {
-    store.installOrcadMigrationReceivedBlobs?.(manifest)
+    store.installOrcadMigrationReceivedBlobs?.(manifest, { worktreeHasLiveShells })
   } catch (error) {
     // The catalog is committed; a failed install keeps its blob for the next retry.
     console.error('[orcad-migration] installing received blobs failed:', error)
@@ -76,11 +81,12 @@ export function getOrcadMigrationCatalogState(args: {
     Pick<Store, 'getOrcadMigrationCatalogState' | 'installOrcadMigrationReceivedBlobs'>
   >
   manifest: OrcadMigrationManifest
+  worktreeHasLiveShells?: WorktreeHasLiveShells
 }): OrcadMigrationCatalogState {
   // SAFETY: Returned or mutable Store slots retain their original native missing-method failure.
   const result = args.store.getOrcadMigrationCatalogState!(args.manifest)
   if (result.state === 'committed') {
-    installReceivedBlobs(args.store, args.manifest)
+    installReceivedBlobs(args.store, args.manifest, args.worktreeHasLiveShells)
   }
   return result
 }

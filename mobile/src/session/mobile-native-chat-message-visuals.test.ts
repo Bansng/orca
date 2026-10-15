@@ -148,7 +148,20 @@ describe('MobileNativeChatMessage visuals', () => {
   })
 
   it('never renders visuals in system rows', () => {
-    const props = markdownProps(message('s1', 'system', '::orca-visual{file="a.html"}'))
-    expect(props.renderVisual).toBeUndefined()
+    act(() => {
+      renderer = create(
+        createElement(
+          MobileNativeChatVisualContext.Provider,
+          { value: renderVisual },
+          createElement(MobileNativeChatMessage, {
+            message: message('s1', 'system', '::orca-visual{file="a.html"}')
+          })
+        )
+      )
+    })
+    expect(renderer!.root.findAll((node) => String(node.type) === 'MobileMarkdown')).toEqual([])
+    expect(
+      renderer!.root.findAll((node) => String(node.type) === 'Text').map((node) => node.children)
+    ).toContainEqual(['::orca-visual{file="a.html"}'])
   })
 })

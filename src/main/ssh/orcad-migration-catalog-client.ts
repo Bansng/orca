@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { pairedRuntimeConnectionFromOffer } from '../../shared/paired-runtime-connection'
 import {
   parseOrcadMigrationCatalogAbortResult,
@@ -149,6 +150,26 @@ export async function stageRemoteOrcadMigrationBlobChunk(
     throw new Error(`orcad_migration_blob_failed:${response.error.message}`)
   }
   return parseOrcadMigrationBlobChunkResult(response.result, request)
+}
+
+const ServerRepositoriesSchema = z.object({
+  repos: z.array(z.object({ id: z.string().min(1), path: z.string().min(1) }))
+})
+
+/** The projects the destination already holds, as ids and host paths, through the same preflight. */
+export async function listRemoteOrcadRepositories(
+  pairingCode: string,
+  options: CatalogRequestOptions = {}
+): Promise<{ id: string; path: string }[]> {
+  const pairing = parsePairingCode(pairingCode)
+  if (!pairing) {
+    throw new Error('orcad_migration_pairing_code_invalid')
+  }
+  const response = await sendSupportedMigrationRequest(pairing, 'repo.list', undefined, options)
+  if (!response.ok) {
+    throw new Error(`orcad_migration_repositories_failed:${response.error.message}`)
+  }
+  return ServerRepositoriesSchema.parse(response.result).repos.map(({ id, path }) => ({ id, path }))
 }
 
 async function requestCatalogState(

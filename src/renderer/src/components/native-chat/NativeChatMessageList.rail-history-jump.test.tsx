@@ -5,6 +5,26 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useCallback, useMemo, useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+// Why: these fixtures have neither inline visual owners nor sender navigation.
+const unusedChatLeaves = vi.hoisted(() => ({
+  inlineVisual: vi.fn(() => {
+    throw new Error('Unexpected inline visual in transcript fixture')
+  }),
+  openSender: vi.fn(() => {
+    throw new Error('Unexpected sender navigation in transcript fixture')
+  })
+}))
+vi.mock('./NativeChatInlineVisual', () => ({
+  NativeChatInlineVisual: unusedChatLeaves.inlineVisual
+}))
+vi.mock('@/lib/open-agent-message-sender', () => ({
+  openAgentMessageSender: unusedChatLeaves.openSender
+}))
+afterEach(() => {
+  expect(unusedChatLeaves.inlineVisual).not.toHaveBeenCalled()
+  expect(unusedChatLeaves.openSender).not.toHaveBeenCalled()
+})
 import type {
   AgentJournalItemBody,
   AgentJournalRenderItem
@@ -12,7 +32,7 @@ import type {
 import type { NativeChatMessage } from '../../../../shared/native-chat-types'
 import { projectStructuredItemsToNativeChat } from '../../../../shared/structured-agent-session-projection'
 import { NativeChatMessageList } from './NativeChatMessageList'
-import { transcriptRowOffset } from './native-chat-window-test-layout'
+import { transcriptRowOffset, transcriptWindowTop } from './native-chat-window-test-layout'
 import type { NativeChatRailOutlineEntry } from './native-chat-message-rail-items'
 import type { NativeChatOlderPageResult } from './native-chat-pagination'
 import {
@@ -160,12 +180,11 @@ describe('jumping from the rail while following the end', () => {
     Object.defineProperty(layout, 'aboveTranscriptPx', {
       configurable: true,
       get: () =>
-        TOP_GUTTER_PX +
-        (screen
-          .queryByRole('button', { name: /load earlier messages/i })
-          ?.closest('[data-native-chat-transcript-column]')
-          ? OLDER_HISTORY_ROW_PX
-          : 0)
+        transcriptWindowTop(
+          document.querySelector('[data-native-chat-window]'),
+          TOP_GUTTER_PX,
+          OLDER_HISTORY_ROW_PX
+        )
     })
     vi.spyOn(HTMLElement.prototype, 'scrollTo').mockImplementation(function scrollTo(
       this: HTMLElement,

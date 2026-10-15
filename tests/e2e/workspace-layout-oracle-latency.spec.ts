@@ -1,6 +1,8 @@
 /**
- * Measures command → drawn update for layout commands, idle and with three panes flooding output
- * (`yes`), one of them in a hidden worktree, and time to first drawn after relaunching a large
+ * Measures command → drawn update for layout commands, idle, with three panes flooding output
+ * (`yes`), one of them in a hidden worktree, and with the same three panes flooding terminal titles
+ * instead (a new title per line, the worst case for live pane titles), and time to first drawn
+ * after relaunching a large
  * profile. Measuring only: it records each number in the oracle report and never fails on one,
  * so a later budget can gate on it. The plain run has no layout subscriber, so main is measured as
  * users run it; the subscribed run holds one `layout.subscribe` stream open in the window, as the
@@ -52,16 +54,20 @@ import type { RuntimeMobileSessionTabsResult } from '../../src/shared/runtime-se
 const SAMPLES = Number(process.env.ORCA_LAYOUT_ORACLE_LATENCY_SAMPLES ?? 10)
 const STARTUP_SAMPLES = Number(process.env.ORCA_LAYOUT_ORACLE_STARTUP_SAMPLES ?? 10)
 const FLOOD_COMMAND = 'yes orca-latency-flood'
+// About 50 titles a second, each different, so none is folded away as a spinner frame: a busy
+// agent's title burst. The echo proves the loop runs.
+const TITLE_FLOOD_COMMAND =
+  'i=0; while :; do i=$((i+1)); printf "\\033]0;orca-title-flood %d\\007" $i; [ $((i % 50)) = 0 ] && echo orca-latency-flood; sleep 0.02; done'
 const CLOSE_CONFIRM = 'Stop and Close'
 const LARGE_PROFILE = { hiddenWorktrees: 12, tabsPerWorktree: 3, activePanes: 4 }
 
-type Condition = 'idle' | 'flood'
+type Condition = 'idle' | 'flood' | 'titles'
 type Sample = { outerMs: number; inApp: InAppSample }
 type Samples = Record<string, Sample[]>
 /** Main's memory at a phase's start and end, in MB; no GC is forced, so read it as a trend. */
 type MainMemory = { heapUsedMb: [number, number]; rssMb: [number, number] }
 /** What the window's layout stream received during a phase. */
-type StreamTraffic = { frames: number; kb: number }
+type StreamTraffic = { frames: number; kb: number; seconds: number }
 
 declare global {
   // oxlint-disable-next-line typescript-eslint/consistent-type-definitions -- declaration merging requires interface
@@ -354,16 +360,27 @@ async function measureLatency(testInfo: TestInfo, subscribed: boolean): Promise<
     const measured = list.terminals[0]!
     const hidden = await createHiddenWorktree(client, worktreeId, 'latency-flood')
     cleanups.push(hidden.remove)
-    for (const target of [worktree, worktree, `id:${hidden.id}`]) {
-      const flood = await client.call<{ terminal: RuntimeTerminalCreate }>('terminal.create', {
-        worktree: target,
-        command: FLOOD_COMMAND
-      })
-      await expectFlooding(client, flood.result.terminal.handle)
+    const startFloods = async (command: string): Promise<string[]> => {
+      const handles: string[] = []
+      for (const target of [worktree, worktree, `id:${hidden.id}`]) {
+        const flood = await client.call<{ terminal: RuntimeTerminalCreate }>('terminal.create', {
+          worktree: target,
+          command
+        })
+        await expectFlooding(client, flood.result.terminal.handle)
+        handles.push(flood.result.terminal.handle)
+      }
+      await client.call('terminal.focus', { terminal: measured.handle, navigation: 'host' })
+      await waitForActiveTerminalManager(page)
+      return handles
     }
-    await client.call('terminal.focus', { terminal: measured.handle, navigation: 'host' })
-    await waitForActiveTerminalManager(page)
+    const floods = await startFloods(FLOOD_COMMAND)
     const flood = await measurePhase('flood')
+    for (const handle of floods) {
+      await client.call('terminal.close', { terminal: handle })
+    }
+    await startFloods(TITLE_FLOOD_COMMAND)
+    const titles = await measurePhase('titles')
 
     const summary = Object.fromEntries(
       Object.entries(samples).map(([action, values]) => [
@@ -378,7 +395,8 @@ async function measureLatency(testInfo: TestInfo, subscribed: boolean): Promise<
     )
     const perCondition = <T>(read: (phase: Phase) => T): Record<Condition, T> => ({
       idle: read(idle),
-      flood: read(flood)
+      flood: read(flood),
+      titles: read(titles)
     })
     const mb = (bytes: number): number => Math.round(bytes / 1024 / 102.4) / 10
     writeLatencyReport(testInfo, {
@@ -395,7 +413,8 @@ async function measureLatency(testInfo: TestInfo, subscribed: boolean): Promise<
         ? {
             streamTraffic: perCondition(({ from, to }) => ({
               frames: to.frames - from.frames,
-              kb: Math.round((to.bytes - from.bytes) / 1024)
+              kb: Math.round((to.bytes - from.bytes) / 1024),
+              seconds: Math.round((to.at - from.at) / 1000)
             }))
           }
         : {}),
