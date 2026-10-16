@@ -7,6 +7,8 @@ import type { TerminalLeafMoveRequest } from '../../../../shared/terminal-leaf-m
 import { commitTerminalSurfaceClose } from '@/store/terminals/terminal-surface-close-intent'
 import type { PaneCwdEntry } from './resolve-split-cwd'
 import { detachTerminalLayoutLeaf } from './terminal-layout-leaf-detach'
+import { moveLeafThroughLayoutOwner } from './terminal-pane-detach-layout-owner'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../shared/layout-owner-switch'
 export {
   isTerminalTabStripDropTarget,
   resolveTerminalTabStripDropTarget
@@ -139,12 +141,24 @@ async function moveLeafToNewTab(
     leafId,
     ptyId: args.livePtyId ?? persistedPtyId ?? null
   }
-  const answer = await window.api.pty.moveLeafToNewTab(request).catch((error: unknown) => {
+  // Switch point: main moves the pane and names the new tab.
+  const answer = await (
+    ORCA_LAYOUT_OWNER_IS_MAIN
+      ? moveLeafThroughLayoutOwner(request, {
+          groupId: args.targetGroupId,
+          index: args.targetIndex
+        })
+      : window.api.pty.moveLeafToNewTab(request)
+  ).catch((error: unknown) => {
     console.warn('[terminal-pane-detach] main did not answer the move', error)
     return null
   })
   if (answer?.status === 'moved') {
-    return applyMove(args, request, true, answer.ptyId)
+    const moved =
+      ORCA_LAYOUT_OWNER_IS_MAIN && answer.tabId
+        ? { ...request, targetTabId: answer.tabId }
+        : request
+    return applyMove(args, moved, true, answer.ptyId)
   }
   if (answer?.status === 'not_held') {
     return applyMove(args, request, false, request.ptyId)

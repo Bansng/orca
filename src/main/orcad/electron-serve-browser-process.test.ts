@@ -5,11 +5,28 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as RunProcessModule from '@orca/process-host'
+import type * as FsPromisesModule from 'node:fs/promises'
 import type { RuntimeBrowserCommandHost } from '../runtime/browser/browser-command-contracts'
 
-const { spawnProcessMock } = vi.hoisted(() => ({
-  spawnProcessMock: vi.fn<(spec: ProcessSpec) => ReturnType<typeof RunProcessModule.spawnProcess>>()
+const { spawnProcessMock, lockedRemovalPaths } = vi.hoisted(() => ({
+  spawnProcessMock:
+    vi.fn<(spec: ProcessSpec) => ReturnType<typeof RunProcessModule.spawnProcess>>(),
+  lockedRemovalPaths: new Set<string>()
 }))
+
+// Stands in for Windows, where the killed sidecar's helpers still hold its profile for a moment.
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof FsPromisesModule>()
+  const rm: typeof actual.rm = async (path, options) => {
+    if (lockedRemovalPaths.has(String(path))) {
+      throw Object.assign(new Error(`EBUSY: resource busy or locked, rmdir '${String(path)}'`), {
+        code: 'EBUSY'
+      })
+    }
+    return actual.rm(path, options)
+  }
+  return { ...actual, rm, default: { ...actual, rm } }
+})
 
 // Why wrap rather than fake: the provider must still go through the real spawn
 // path (argv/env handling, a real pid to signal); only the program is swapped
@@ -20,6 +37,7 @@ vi.mock('@orca/process-host', async (importOriginal) => ({
 }))
 
 import { BROWSER_SIDECAR_OWNER_ENV } from '../../shared/browser-sidecar-lifetime'
+import { headlessServeOzonePlatformSwitches } from '../../shared/headless-serve-ozone-platform'
 import { ElectronServeBrowserProcess } from './electron-serve-browser-process'
 import { startOrcadBrowserProvider } from './orcad-browser-startup'
 import { resolveOrcadBrowserProvider } from './orcad-browser-provider'
@@ -205,7 +223,14 @@ describe('ElectronServeBrowserProcess start-up', () => {
     expect(spec.program).toBe(INSTALLED_EXECUTABLE)
     const args = [...(spec.args ?? [])]
     expect(args).toEqual(
-      expect.arrayContaining(['--serve', '--serve-port', '--serve-json', '--serve-no-pairing'])
+      expect.arrayContaining([
+        '--serve',
+        '--serve-port',
+        '--serve-json',
+        '--serve-no-pairing',
+        // The sidecar is a headless serve too, so on Linux it must not inherit Wayland.
+        ...headlessServeOzonePlatformSwitches(process.platform)
+      ])
     )
     const port = Number(args[args.indexOf('--serve-port') + 1])
     expect(Number.isInteger(port) && port > 0 && port < 65_536).toBe(true)
@@ -225,6 +250,12 @@ describe('ElectronServeBrowserProcess start-up', () => {
     expect(spec.env?.XDG_STATE_HOME).toBe(join(isolatedHome, 'state'))
     expect(args).toEqual(expect.arrayContaining(['--password-store=basic', '--use-mock-keychain']))
     expect(processHandle.isAvailable()).toBe(true)
+  })
+
+  it('marks the launch as the orcad sidecar so the installed app hands user opens on', async () => {
+    await startProvider()
+
+    expect(spawnSpec().env?.ORCA_ORCAD_SIDECAR).toBe('1')
   })
 
   it('keeps polling until the sidecar advertises browser.headless.v1', async () => {
@@ -264,6 +295,31 @@ describe('ElectronServeBrowserProcess start-up', () => {
     expect(processHandle.isAvailable()).toBe(false)
     expect(existsSync(userDataPath)).toBe(false)
     expect(() => process.kill(metadata.pid, 0)).toThrow()
+  })
+
+  it('still stops cleanly when the sidecar profile stays locked after the process exits', async () => {
+    const processHandle = await startProvider()
+    const userDataPath = (spawnSpec().args ?? [])
+      .find((arg) => arg.startsWith('--user-data-dir='))!
+      .slice('--user-data-dir='.length)
+    const metadata = JSON.parse(
+      await readFile(join(userDataPath, 'orca-runtime.json'), 'utf8')
+    ) as { pid: number }
+    lockedRemovalPaths.add(userDataPath)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+
+    try {
+      await expect(processHandle.stop()).resolves.toBeUndefined()
+      expect(warn).toHaveBeenCalledWith(
+        '[orcad] Electron browser sidecar data was not removed:',
+        expect.objectContaining({ code: 'EBUSY' })
+      )
+      expect(() => process.kill(metadata.pid, 0)).toThrow()
+    } finally {
+      lockedRemovalPaths.delete(userDataPath)
+      warn.mockRestore()
+      await rm(userDataPath, { recursive: true, force: true })
+    }
   })
 })
 

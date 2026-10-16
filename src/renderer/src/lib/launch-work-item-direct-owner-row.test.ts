@@ -43,6 +43,7 @@ describe('launchWorkItemDirect owner row', () => {
       settings: {},
       ensureDetectedAgents: vi.fn().mockResolvedValue([]),
       ensureRemoteDetectedAgents: vi.fn().mockResolvedValue([]),
+      ensureRuntimeDetectedAgents: vi.fn().mockResolvedValue([]),
       createWorktree: mocks.createWorktree
     }
   })
@@ -84,6 +85,10 @@ describe('launchWorkItemDirect owner row', () => {
     )
     expect(mocks.resolvePrBase).not.toHaveBeenCalled()
     expect(mocks.createWorktree.mock.calls[0]?.at(-1)).toEqual({ executionHostId: 'runtime:env-b' })
+    // Why (#29599): the server lists agents per workspace, so nothing is probed before it exists,
+    // and never this client in its place.
+    expect(mocks.store.ensureRuntimeDetectedAgents).not.toHaveBeenCalled()
+    expect(mocks.store.ensureDetectedAgents).not.toHaveBeenCalled()
   })
 
   it('asks the user instead of tie-breaking by focus when two hosts share the repo id', async () => {

@@ -24,6 +24,8 @@ import {
   loadPairedBrowserTabCreator
 } from './paired-browser-tab-creator'
 import { findGroupAndWorktree } from '../tab-group-state'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../../shared/layout-owner-switch'
+import { recordBrowserTabOpen } from './browser-layout-owner-commands'
 
 export function createBrowserTabActions(
   set: BrowserSliceSet,
@@ -172,6 +174,10 @@ export function createBrowserTabActions(
         if (shouldActivate && created) {
           get().focusGroup(worktreeId, created.groupId)
         }
+      }
+      // Switch point: main records the tab under these ids before any later command names it.
+      if (ORCA_LAYOUT_OWNER_IS_MAIN) {
+        recordBrowserTabOpen(get(), browserTab)
       }
       return browserTab
     },

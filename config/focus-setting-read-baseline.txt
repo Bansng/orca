@@ -225,7 +225,6 @@
 1 src/renderer/src/components/terminal-pane/TerminalPaneSurface.tsx
 1 src/renderer/src/components/terminal-pane/pending-split-close-test-fixture.ts
 1 src/renderer/src/components/terminal-pane/pty-connection/agent-idle-working-handlers.ts
-1 src/renderer/src/components/terminal-pane/pty-connection/cold-restore-resume-startup.ts
 1 src/renderer/src/components/terminal-pane/pty-connection/interrupt-input-intent.ts
 1 src/renderer/src/components/terminal-pane/pty-connection/pane-agent-identity.ts
 1 src/renderer/src/components/terminal-pane/pty-connection/pane-host-capability-flags.ts
@@ -264,9 +263,7 @@
 2 src/renderer/src/components/use-task-page-store-bindings.ts
 2 src/renderer/src/components/use-terminal-activation-actions.ts
 2 src/renderer/src/components/use-terminal-bulk-close-actions.ts
-1 src/renderer/src/components/use-terminal-controller.ts
 8 src/renderer/src/components/use-terminal-create-actions.ts
-1 src/renderer/src/components/use-terminal-watcher-effects.ts
 2 src/renderer/src/components/use-worktree-jump-palette-controller.ts
 1 src/renderer/src/components/use-worktree-jump-palette-create-action.ts
 2 src/renderer/src/components/use-worktree-jump-palette-filter.ts
@@ -339,13 +336,11 @@
 2 src/renderer/src/lib/remap-open-editor-tabs-for-path-change.ts
 1 src/renderer/src/lib/remote-workspace-drop-test-fixtures.ts
 2 src/renderer/src/lib/repo-runtime-owner.ts
-2 src/renderer/src/lib/resume-sleeping-agent-session.ts
 1 src/renderer/src/lib/runtime-session-mirror-owners.ts
 1 src/renderer/src/lib/runtime-session-mirror-targets.ts
 1 src/renderer/src/lib/runtime-workspace-file-route.ts
 1 src/renderer/src/lib/single-runtime-legacy-owner.ts
 1 src/renderer/src/lib/sleeping-agent-session-launch.ts
-1 src/renderer/src/lib/sleeping-record-execution-host-scope.ts
 1 src/renderer/src/lib/structured-agent-session-launch.ts
 1 src/renderer/src/lib/structured-agent-session-provisional-tab.ts
 4 src/renderer/src/lib/structured-agent-session-tab-activation.ts
@@ -360,11 +355,9 @@
 1 src/renderer/src/lib/workspace-file-drag-source.ts
 1 src/renderer/src/lib/workspace-tab-commands.ts
 1 src/renderer/src/lib/workspace-tab-palette-activation.ts
-3 src/renderer/src/lib/workspace-terminal-host-authority.ts
 1 src/renderer/src/lib/worktree-activation-pty-inventory.ts
 3 src/renderer/src/lib/worktree-activation.ts
 1 src/renderer/src/lib/worktree-creation-agent-seeds.ts
-1 src/renderer/src/lib/worktree-initial-terminal-seeding.ts
 1 src/renderer/src/lib/worktree-jump-navigation.ts
 2 src/renderer/src/lib/worktree-operation-route.ts
 1 src/renderer/src/lib/worktree-row-open-in-owner.ts

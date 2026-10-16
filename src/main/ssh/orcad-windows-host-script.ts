@@ -121,7 +121,7 @@ function readiness(dir) {
 }
 
 // A launch creates the readiness file first, so a slot with neither it nor a process record
-// never launched: GC may remove it, while every other reader treats it as UNKNOWN.
+// never launched: like DEAD, that is proven exit (GC may remove it, a wake may start it).
 function livenessWord(dir) {
   const launched = [${text(ORCAD_WINDOWS_PROCESS_FILENAME)}, ${text(ORCAD_READINESS_FILENAME)}]
   if (!launched.some((name) => fs.existsSync(path.join(dir, name)))) {

@@ -50,6 +50,17 @@ describe('SSH host server status line', () => {
     })
   })
 
+  it('warns when the SSH session that started a macOS host’s server ended', () => {
+    expect(
+      sshHostServerStatusLine(plain, {
+        managedServer: { kind: 'managed', environmentId: 'e', launchSessionEnded: true }
+      })
+    ).toEqual({
+      tone: 'warning',
+      text: 'Terminals on this Mac may have lost local network access because the SSH session that started the managed server ended. Restart the managed server to restore it.'
+    })
+  })
+
   it('shows a managed server being updated, and why it kept its version', () => {
     expect(
       sshHostServerStatusLine(plain, { managedServer: { kind: 'setting-up', phase: 'updating' } })
@@ -140,6 +151,27 @@ describe('SSH host server status line', () => {
         text: expect.stringContaining('install an older version of Orca')
       })
     }
+  })
+
+  it('names the relay terminals that keep a bridged host unmoved, and how to clear them', () => {
+    const line = sshHostServerStatusLine(plain, {
+      managedServer: {
+        kind: 'relay',
+        reason: 'relay_terminals_live',
+        terminals: 1,
+        bridged: true,
+        detail: 'Terminals an older version of Orca started in /root/repo are still running…'
+      }
+    })
+    expect(line).toMatchObject({ tone: 'warning' })
+    expect(line?.text).toContain('They keep working here')
+    expect(line?.text).toContain('Close them or end them on the host, then reconnect')
+    expect(line?.detail).toContain('/root/repo')
+    const unverifiable = sshHostServerStatusLine(plain, {
+      managedServer: { kind: 'relay', reason: 'relay_terminals_unverifiable', bridged: true }
+    })
+    expect(unverifiable?.text).toContain('couldn’t confirm')
+    expect(unverifiable?.text).not.toContain('They keep working here')
   })
 
   it('asks for a reconnect while an older Orca’s terminals still run, counting them', () => {

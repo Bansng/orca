@@ -16,6 +16,8 @@ import { equalStringSets, sortedUniquePtyIds } from './terminal-pty-identities'
 import { resolveTerminalStopRuntimeEnvironmentId } from './terminal-workspace-routing'
 import { removePanesAttention } from '../slices/workspace-attention/subject-attention-transitions'
 import { settleAttentionRemovedBy } from '../slices/workspace-attention/attention-removal-follow-up'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../shared/layout-owner-switch'
+import { recordPaneSleepThroughLayoutOwner } from './terminal-sleep-layout-owner'
 
 export function createTerminalPaneHibernationActions(
   set: TerminalStoreSet,
@@ -170,6 +172,10 @@ export function createTerminalPaneHibernationActions(
         for (const snapshot of handlerSnapshots) {
           snapshot.commit?.()
         }
+      }
+      // Switch point: main records the sleep this window decided, once the stop settled.
+      if (ORCA_LAYOUT_OWNER_IS_MAIN) {
+        recordPaneSleepThroughLayoutOwner(get(), worktreeId, sleepingAgentSessionRecords)
       }
       settleAttentionRemovedBy(set, get, () =>
         set((s) => {

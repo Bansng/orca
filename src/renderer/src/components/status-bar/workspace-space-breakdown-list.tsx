@@ -1,11 +1,19 @@
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { AlertTriangle, FolderSearch, Loader2 } from 'lucide-react'
 import type {
   WorkspaceSpaceItem,
   WorkspaceSpaceWorktree
 } from '../../../../shared/workspace-space-types'
+import type { ExecutionHostId } from '../../../../shared/execution-host'
 import { formatBytes, formatCompactCount } from './workspace-space-format'
 import { getLargestWorkspaceSpaceItemSize } from './workspace-space-presentation'
 import { translate } from '@/i18n/i18n'
+import { getRevealInFileManagerLabel, revealInFileManager } from '@/lib/reveal-in-file-manager'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from '../ui/context-menu'
 
 export function WorkspaceSpaceSizeBar({
   value,
@@ -109,13 +117,31 @@ export function WorkspaceSpaceBreakdownList({
             'No files found.'
           )}
         </div>
+      ) : worktree.topLevelItems.length === 0 ? (
+        <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+          {translate(
+            'workspaceSpace.savedScan.folderDetailsUnavailable',
+            'Folder details are not saved with past scans. Refresh to inspect this workspace.'
+          )}
+        </div>
       ) : (
         <div className="max-h-72 overflow-y-auto scrollbar-sleek px-3 py-3">
           <div className="space-y-2">
             {worktree.topLevelItems.slice(0, 12).map((item) => (
-              <BreakdownRow key={`${item.path}:${item.name}`} item={item} maxSize={maxChildSize} />
+              <BreakdownRow
+                key={`${item.path}:${item.name}`}
+                item={item}
+                maxSize={maxChildSize}
+                executionHostId={worktree.executionHostId ?? 'unresolved'}
+              />
             ))}
-            {omittedItem ? <BreakdownRow item={omittedItem} maxSize={maxChildSize} /> : null}
+            {omittedItem ? (
+              <BreakdownRow
+                item={omittedItem}
+                maxSize={maxChildSize}
+                executionHostId={worktree.executionHostId ?? 'unresolved'}
+              />
+            ) : null}
           </div>
         </div>
       )}
@@ -125,12 +151,14 @@ export function WorkspaceSpaceBreakdownList({
 
 function BreakdownRow({
   item,
-  maxSize
+  maxSize,
+  executionHostId
 }: {
   item: WorkspaceSpaceItem
   maxSize: number
+  executionHostId: ExecutionHostId | 'unresolved'
 }): React.JSX.Element {
-  return (
+  const row = (
     <div className="space-y-1.5 rounded-md px-2 py-1.5 hover:bg-accent/50">
       <div className="flex min-w-0 items-center justify-between gap-3 text-xs">
         <span className="min-w-0 truncate font-medium">{item.name}</span>
@@ -140,5 +168,19 @@ function BreakdownRow({
       </div>
       <WorkspaceSpaceSizeBar value={item.sizeBytes} max={maxSize} />
     </div>
+  )
+  if (!item.path) {
+    return row
+  }
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onSelect={() => void revealInFileManager(item.path, executionHostId)}>
+          <FolderSearch className="size-3.5" />
+          {getRevealInFileManagerLabel()}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }

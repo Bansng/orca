@@ -203,6 +203,7 @@ export function buildDefaultSettings(args: {
     claudeAgentTeamsDefaultDisabledMigrated: true,
     skipDeleteWorktreeConfirm: false,
     alwaysForceDeleteWorktrees: false,
+    alwaysForceDeletePreservedBranches: false,
     skipCloseTerminalWithRunningProcessConfirm: false,
     skipDeleteAutomationConfirm: false,
     skipDeleteArtifactConfirm: false,

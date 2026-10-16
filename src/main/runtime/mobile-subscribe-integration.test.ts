@@ -306,19 +306,6 @@ describe('mobile subscribe integration', () => {
     expect(ptySizes.get('pty-1')).toEqual({ cols: 150, rows: 40 })
   })
 
-  // Why: 'phone' sticky-fit mode was removed; auto-mode now always restores on last unsubscribe.
-  it('handleMobileUnsubscribe restores after auto-mode last unsubscribe', async () => {
-    const { runtime, ptySizes } = createRuntime()
-    // mode defaults to 'auto'
-    await runtime.handleMobileSubscribe('pty-1', 'client-a', { cols: 45, rows: 20 })
-    expect(ptySizes.get('pty-1')).toEqual({ cols: 45, rows: 20 })
-
-    runtime.handleMobileUnsubscribe('pty-1', 'client-a')
-    await vi.advanceTimersByTimeAsync(LEGACY_RESTORE_MS)
-    // Restored to desktop dims — no sticky-phone retention.
-    expect(ptySizes.get('pty-1')).toEqual({ cols: 150, rows: 40 })
-  })
-
   it('preserves previousDims across re-subscribes to same terminal', async () => {
     const { runtime, ptySizes } = createRuntime()
 
@@ -632,32 +619,50 @@ describe('mobile subscribe integration', () => {
       expect(ptySizes.get('pty-1')).toEqual({ cols: 214, rows: 72 })
     })
 
-    it('updates lastRendererSizes for a never-subscribed PTY', () => {
-      // Why: a geometry report before first subscribe must populate lastRendererSizes so the baseline captures real dims, not the spawn default.
-      const { runtime } = createRuntime()
-      runtime.recordRendererGeometry('pty-99', 180, 50)
+    it('restores reported geometry captured before the first mobile subscribe', async () => {
+      const { runtime, ptySizes, resizes } = createRuntime()
+      runtime.recordRendererGeometry('pty-1', 180, 50)
+      expect(ptySizes.get('pty-1')).toEqual({ cols: 150, rows: 40 })
+      expect(resizes).toEqual([])
 
-      const renderer = runtime.getLastRendererSize('pty-99')
-      expect(renderer).toEqual({ cols: 180, rows: 50 })
+      await runtime.handleMobileSubscribe('pty-1', 'client-a', { cols: 45, rows: 20 })
+      expect(await runtime.reclaimTerminalForDesktop('pty-1')).toBe(true)
+      expect(ptySizes.get('pty-1')).toEqual({ cols: 180, rows: 50 })
     })
 
-    it('ignores non-positive dims', () => {
-      const { runtime } = createRuntime()
+    it('ignores non-positive dims when capturing restore geometry', async () => {
+      const { runtime, ptySizes, resizes } = createRuntime()
+      runtime.recordRendererGeometry('pty-1', 180, 50)
       runtime.recordRendererGeometry('pty-1', 0, 0)
       runtime.recordRendererGeometry('pty-1', -5, 10)
       runtime.recordRendererGeometry('pty-1', 10, -5)
-      expect(runtime.getLastRendererSize('pty-1')).toBeNull()
+      expect(ptySizes.get('pty-1')).toEqual({ cols: 150, rows: 40 })
+      expect(resizes).toEqual([])
+
+      await runtime.handleMobileSubscribe('pty-1', 'client-a', { cols: 45, rows: 20 })
+      expect(await runtime.reclaimTerminalForDesktop('pty-1')).toBe(true)
+      expect(ptySizes.get('pty-1')).toEqual({ cols: 180, rows: 50 })
     })
 
     it('bypasses the cascade-suppress window (it is measurement-only)', async () => {
-      // Why: the measurement-only channel must bypass the 500ms cascade-suppress that gates pty:resize, since it can carry a fresh measurement right after a flip.
-      const { runtime } = createRuntime()
-      // Arm cascade-suppress.
+      const { runtime, ptySizes, resizes } = createRuntime()
+      await runtime.handleMobileSubscribe('pty-1', 'client-a', { cols: 45, rows: 20 })
       runtime.setMobileDisplayMode('pty-1', 'desktop')
       await runtime.applyMobileDisplayMode('pty-1')
-      // Within the 500ms window:
+      expect(runtime.isResizeSuppressed()).toBe(true)
+      expect(ptySizes.get('pty-1')).toEqual({ cols: 150, rows: 40 })
+      resizes.length = 0
+
       runtime.recordRendererGeometry('pty-1', 130, 40)
-      expect(runtime.getLastRendererSize('pty-1')).toEqual({ cols: 130, rows: 40 })
+      expect(ptySizes.get('pty-1')).toEqual({ cols: 150, rows: 40 })
+      expect(resizes).toEqual([])
+
+      runtime.setMobileDisplayMode('pty-1', 'auto')
+      await runtime.applyMobileDisplayMode('pty-1')
+      expect(ptySizes.get('pty-1')).toEqual({ cols: 45, rows: 20 })
+      runtime.setMobileDisplayMode('pty-1', 'desktop')
+      await runtime.applyMobileDisplayMode('pty-1')
+      expect(ptySizes.get('pty-1')).toEqual({ cols: 130, rows: 40 })
     })
   })
 

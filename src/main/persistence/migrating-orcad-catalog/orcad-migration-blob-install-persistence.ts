@@ -1,3 +1,4 @@
+import { ORCAD_MIGRATION_BLOB_KIND_CONTRACTS } from '../../../shared/orcad-migration-blob-transfer'
 import type { OrcadMigrationManifest } from '../../../shared/orcad-migration-manifest'
 import type { PersistedState } from '../../../shared/persisted-state-types'
 import { parsePaneKey } from '../../../shared/stable-pane-id'
@@ -5,6 +6,7 @@ import { getHistoryRoot } from '../../terminal-history-paths'
 import type { StoreRuntimeState } from '../loading-store/store-runtime-state'
 import { findOrcadMigrationImportReceipt } from './orcad-catalog-receipt-ledger'
 import { installOrcadMigrationReceivedBlobs } from './orcad-migration-blob-installers'
+import { listOrcadMigrationReceivedBlobNames } from './orcad-migration-blob-staging'
 import type { OrcadMigrationRequestIdentity } from './orcad-migration-staged-file'
 
 type OrcadMigrationBlobInstallRuntime = Pick<
@@ -70,6 +72,21 @@ export class OrcadMigrationBlobInstallPersistence {
         )
       }
     }
+  }
+
+  /** Whether any committed migration still holds a received shell history; only the runtime installs those. */
+  hasPendingOrcadMigrationShellHistory(): boolean {
+    const { runtime } = this[orcadMigrationBlobInstallContext]
+    return [
+      ...(runtime.state.orcadMigrationImportReceipts ?? []),
+      ...(runtime.state.orcadMigrationEvictedReceipts ?? [])
+    ].some((receipt) =>
+      listOrcadMigrationReceivedBlobNames(
+        runtime.orcadMigrationBlobRoot,
+        receipt,
+        'shell-history'
+      ).some((key) => ORCAD_MIGRATION_BLOB_KIND_CONTRACTS['shell-history'].key.test(key))
+    )
   }
 
   /** Retries a history install that waited on this worktree's shells; a no-op for any other. */

@@ -23,6 +23,7 @@ import { RUNTIME_ENVIRONMENT_HANDLER_CHANNELS } from './runtime-environment-hand
 import { registerOrcadRuntimeLifecycleHandlers } from './orcad-runtime-lifecycle-handlers'
 import { registerOrcadRuntimeConversionHandlers } from './orcad-runtime-conversion-handlers'
 import { registerOrcadDeltaMoveHandlers } from './orcad-delta-move-handlers'
+import { registerOrcadLeaveBehindHandlers } from './orcad-leave-behind-handlers'
 import { registerOrcadRuntimeMaintenanceHandlers } from './orcad-runtime-maintenance-handlers'
 import { clearPublishedManagedServer } from './ssh-renderer-broadcast'
 import { clearManagedServerNotes } from './runtime-environment-managed-tunnel'
@@ -34,6 +35,7 @@ import { advanceRuntimeEnvironmentCapabilityIncarnation } from './runtime-enviro
 import { retireMobileDesktopRelayEnvironment } from './runtime-environment-mobile-relay-hosts'
 import { watchRuntimeEnvironmentPreference } from './runtime-environment-preference'
 import { isGatedOffWslHost } from '../wsl/wsl-host-gate'
+import { resetDesktopBrowserBridgeEnvironment } from './desktop-browser-bridge-reconcile'
 
 const remoteRuntimeSubscriptions = new Map<string, RetainedRemoteRuntimeSubscription>()
 const getUserDataPath = (): string => app.getPath('userData')
@@ -76,6 +78,7 @@ export function invalidateRuntimeEnvironmentTransport(environmentId: string): Pr
   closeRemoteRuntimeRequestConnection(environmentId)
   closeSubscriptionsForEnvironment(environmentId)
   retireMobileDesktopRelayEnvironment(environmentId)
+  resetDesktopBrowserBridgeEnvironment(environmentId)
   reactivateRuntimeEnvironmentStatus(environmentId)
   return retirePairedRuntimeBrowserClientHostEnvironment(
     environmentId,
@@ -150,6 +153,7 @@ export function registerRuntimeEnvironmentHandlers(store: Store): void {
   registerOrcadRuntimeLifecycleHandlers({ getUserDataPath })
   registerOrcadRuntimeConversionHandlers(getUserDataPath)
   registerOrcadDeltaMoveHandlers(getUserDataPath)
+  registerOrcadLeaveBehindHandlers()
   registerOrcadRuntimeMaintenanceHandlers({
     getUserDataPath,
     getActiveEnvironmentId: () => store.getSettings().activeRuntimeEnvironmentId,

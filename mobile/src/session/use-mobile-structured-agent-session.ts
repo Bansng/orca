@@ -115,7 +115,7 @@ export function useMobileStructuredAgentSession(args: {
     fence: state.fence,
     mutate,
     optionStamp,
-    takesSendOptions: hostSupport?.sendOptions === true
+    hostSupport
   })
   const { conversationCommands, invokeStructuredOption, optionSnapshot, setStructuredOption } =
     options
@@ -149,6 +149,7 @@ export function useMobileStructuredAgentSession(args: {
   )
   const sends = useMobileStructuredSends({
     sessionKey,
+    cursor: state.cursor,
     submissions: state.submissions,
     queuedMessages,
     onSendError

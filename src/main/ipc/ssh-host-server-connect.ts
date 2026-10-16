@@ -97,6 +97,27 @@ export function publishManagedServerConnect(
 }
 
 /**
+ * COMPAT(legacy-relay-bridge): a host that can't move only because relay terminals run in it stays
+ * connected, so the bridge keeps those terminals working in their tabs until they exit.
+ */
+export function publishBridgedUnservedHostServer(
+  target: SshTarget,
+  decision: Extract<HostServerOnConnectResult, { route: 'unserved' }>
+): SshConnectionState {
+  const managedServer = unservedServerStatus(decision)
+  setSshHostServerStatus(target.id, managedServer)
+  const state: SshConnectionState = {
+    ...(connectionManager!.getState(target.id) ?? { targetId: target.id, reconnectAttempt: 0 }),
+    targetId: target.id,
+    status: 'connected',
+    error: null,
+    managedServer
+  }
+  broadcastSshState(getCurrentMainWindow, target.id, state)
+  return getPublicSshState(target.id) ?? state
+}
+
+/**
  * A host the managed server doesn't serve: publish why and fail the connect. There is no fallback;
  * the renderer translates the status, and this message is only its untranslated twin.
  */

@@ -136,7 +136,10 @@ export function TerminalPaneSurface({
         data-pane-title-surface={titleUsesLightSurface ? 'light' : 'dark'}
         style={terminalContainerStyle}
         onContextMenuCapture={contextMenu.onContextMenuCapture}
-        onMouseDownCapture={handlePrimarySelectionMiddleMouseDown}
+        onMouseDownCapture={(event) => {
+          contextMenu.onMouseDownCapture(event)
+          handlePrimarySelectionMiddleMouseDown(event)
+        }}
         onAuxClickCapture={handlePrimarySelectionAuxClick}
         onDragOver={(event) => {
           if (

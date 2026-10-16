@@ -5,6 +5,9 @@ import {
   pushRecentTabId,
   sanitizeRecentTabIds
 } from '../tab-group-state'
+import type { Tab } from '../../../../../shared/tab-types'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../../shared/layout-owner-switch'
+import { recordPromotedEditorTabsInLayoutOwner } from '../editor/tabs/editor-tab-layout-owner'
 
 export function createTabsFocusActions(
   _set: TabsSliceSet,
@@ -40,6 +43,7 @@ export function createTabsFocusActions(
       ),
 
     activateTab: (tabId, opts) => {
+      const promoted: Tab[] = []
       set((state) => {
         const scopedWorktreeId = opts?.worktreeId
         let found: ReturnType<typeof findTabAndWorktree>
@@ -56,6 +60,9 @@ export function createTabsFocusActions(
           return state
         }
         const { tab, worktreeId } = found
+        if (ORCA_LAYOUT_OWNER_IS_MAIN && tab.isPreview && !opts?.preservePreview) {
+          promoted.push(tab)
+        }
         return {
           unifiedTabsByWorktree: {
             ...state.unifiedTabsByWorktree,
@@ -91,6 +98,10 @@ export function createTabsFocusActions(
           }
         }
       })
+      // Switch point: main records that activating a preview made it permanent.
+      if (ORCA_LAYOUT_OWNER_IS_MAIN && promoted.length > 0) {
+        recordPromotedEditorTabsInLayoutOwner(get(), promoted)
+      }
     }
   }
 }

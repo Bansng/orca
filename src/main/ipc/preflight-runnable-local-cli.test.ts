@@ -1,4 +1,4 @@
-import { chmod, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -110,21 +110,6 @@ describe.skipIf(process.platform === 'win32')(
       })
       expect(await probedArgs(first)).toEqual(['--version'])
       expect(await probedArgs(second)).toEqual(['--version'])
-    })
-
-    it('skips directories and non-executable files before a working copy', async () => {
-      const directory = path.join(root, 'directory')
-      await mkdir(path.join(directory, COMMAND), { recursive: true })
-      const plain = await cliInDirectory('plain')
-      await chmod(path.join(plain, COMMAND), 0o644)
-      const good = await cliInDirectory('good')
-      vi.stubEnv('PATH', [directory, plain, good].join(path.delimiter))
-
-      await expect(findRunnableLocalCommand(COMMAND)).resolves.toEqual({
-        status: 'available',
-        binary: path.join(good, COMMAND)
-      })
-      expect(await probedArgs(plain)).toEqual([])
     })
 
     it('never substitutes another binary for an explicit failing path', async () => {

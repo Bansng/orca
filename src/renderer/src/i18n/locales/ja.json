@@ -12,7 +12,14 @@
     }
   },
   "githubChecks": {
-    "retrying": "再試行中…"
+    "retrying": "再試行中…",
+    "logsNotYetAvailable": "ログ出力はまだ利用できません。",
+    "logsLoadErrorDetails": "ログを読み込めませんでした。更新して再試行してください。",
+    "logsLoadErrorSidebar": "ログを読み込めませんでした。「詳細を表示」を開き、更新して再試行してください。",
+    "logsEmpty": "ログ出力は返されませんでした。",
+    "logsNotRequested": "ログ抜粋はリクエストされていません。チェックごとに失敗したジョブの抜粋を最大5件読み込みます。",
+    "noLogExcerpt": "利用できるログの抜粋はありません。",
+    "refreshingDetails": "チェックの詳細を更新中…"
   },
   "settings": {
     "chat": {
@@ -1062,6 +1069,14 @@
       "aiVaultResumeRefusal": {
         "openInChat": "この {{value0}} の会話はチャットで開かれています。開くにはセッション履歴を更新してください。",
         "ownershipUnknown": "Orca はこの {{value0}} の会話の所有者を確認できませんでした。セッション履歴を更新して、再試行してください。"
+      },
+      "pendingWorktreeCreation": {
+        "checkingOutFiles": "ファイルをチェックアウト中… {{percent}}%",
+        "provisioningVm": "VMをプロビジョニング中…",
+        "settingUpWorkspace": "ワークスペースをセットアップ中…",
+        "preparingWorkspace": "ワークスペースを準備中…",
+        "creatingWorktree": "ワークツリーを作成中…",
+        "fetchingBaseBranch": "ベースブランチを取得中…"
       }
     },
     "hooks": {
@@ -3134,7 +3149,11 @@
               "command_label": "コマンド",
               "agent_toolbar_hint": "/目標、スキル、パスをサポートします",
               "agent_footer_hint": "複数行のプロンプトは問題ありません。焦点を合わせてください。",
-              "resize_hint": "角をドラッグしてサイズを変更します"
+              "resize_hint": "角をドラッグしてサイズを変更します",
+              "length_over_limit": "長すぎるため保存できません。",
+              "length_count": "{{value0}} / {{value1}} 文字",
+              "size_count": "{{value0}} / {{value1}}",
+              "prompt_over_host_limit": "このホストには長すぎます。より長いプロンプトを保存するには、ホストの Orca を更新してください。"
             },
             "TerminalQuickCommandDialogFooter": {
               "2e2b958dfc": "保存",
@@ -8726,7 +8745,8 @@
           "addDescription": "SSH でログインできる永続的なマシンを追加します。",
           "editingPrefix": "編集中",
           "allowRemoteCliControl": "このホストの orca CLI による Orca の操作を許可する",
-          "allowRemoteCliControlHelp": "オフの場合、このホストで実行される orca コマンドは、このホスト自身のターミナルにのみアクセスできます。オンにすると、このコンピュータ上の他のホスト、オーケストレーション、ファイル、連携にもアクセスできるようになります。"
+          "allowRemoteCliControlHelp": "オンにすると、このホストで実行される orca コマンドは、このホストのワークスペース内に限り、接続中のみ、このデスクトップの Orca ブラウザのタブを開いて操作できます。このホストで古い Orca が起動したターミナルも、自身の監督下の作業についてオーケストレーションコマンド（check、inbox、send、ask、reply）を実行できます。ファイル、クリップボード、Cookie は読み取れません。オフの場合、このホスト自身の Orca サーバーにのみアクセスします。",
+          "allowRemoteCliControlReset": "アップデート後に Orca がこれをオフにしました。この設定でこのホストがデスクトップのブラウザを操作でき、このホストで古い Orca が起動したターミナルがオーケストレーションコマンドを実行できるようになったためです。必要な場合のみ再度オンにしてください。"
         },
         "TasksPane": {
           "f71d8a9dd3": "タスクプロバイダー",
@@ -12412,6 +12432,10 @@
           "detailsUnavailable": "プランの認証情報の詳細は、Orca を実行しているコンピュータでのみ読み取ることができます。",
           "siteUnavailable": "ホストプランサイトが利用できない"
         },
+        "sshManagedHostRemove": {
+          "description": "{{label}} では管理対象の Orca サーバーが実行されています。管理対象サーバーで「停止…」を使ってホストからサーバーを削除するか、ホストがもう存在しない場合は「登録を解除…」を使ってください。その後、この SSH ホストを削除できます。",
+          "open": "管理対象サーバーを開く"
+        },
         "managedServers": {
           "row": {
             "notRunning": "実行していません",
@@ -12453,7 +12477,11 @@
             "target": "SSH ホスト経由で接続",
             "port": "サーバーポート",
             "link": "SSH を使用",
-            "linking": "接続中…"
+            "linking": "接続中…",
+            "pendingLink": "SSH 経由の接続が完了しませんでした。",
+            "pendingUnlink": "SSH アクセスの停止が完了しませんでした。",
+            "retry": "再試行",
+            "cancelLink": "キャンセル"
           },
           "search": {
             "title": "管理対象サーバー",
@@ -12534,6 +12562,7 @@
           "tunnelUnsupported": "このバージョンの Orca はこのホストをサポートしていません。ホストの SSH サーバーがポート転送を許可しておらず、SSH セッション経由でも Orca のサーバーに接続できませんでした。引き続き使用するには、以前のバージョンの Orca をインストールしてください。",
           "setupRetry": "Orca はこのホストでサーバーを起動できませんでした。もう一度接続してください。",
           "moveHeld": "サーバー側のコピーを確認できなかったため、Orca はこのホストのプロジェクトを管理対象サーバーへ移動する処理を一時停止しました。データは失われていません。移動が完了するまで、ホストはプロジェクトを保持したままロックされます。再接続すると再開します。サーバーが復帰できない場合は、設定 > 管理対象サーバーで停止するか登録を解除してください。",
+          "olderTerminalsBridged": "まだ管理サーバーに移行していません。以前のバージョンの Orca で開始されたターミナルがこのホストのプロジェクトでまだ実行中です。ターミナルはここで引き続き使えます。閉じるかホスト上で終了してから再接続してください。",
           "olderTerminalsUncounted": "以前のバージョンの Orca で開始されたターミナルがこのホストでまだ実行中で、自動では終了しません。そのバージョンの Orca で閉じるか、ホスト上で終了してから再接続してください。",
           "olderTerminalsUnverifiable": "以前のバージョンの Orca で開始されたターミナルが終了したことを確認できませんでした。再接続してもう一度お試しください。",
           "olderTerminals_one": "以前のバージョンの Orca で開始された {{count}} 個のターミナルがこのホストでまだ実行中で、自動では終了しません。そのバージョンの Orca で閉じるか、ホスト上で終了してから再接続してください。",
@@ -12565,6 +12594,13 @@
           "description": "このホストはそのまま管理対象サーバーに戻ります。古いバージョンの Orca がここに追加または変更したものは移動されず、クリーンアップされるまでこのコンピュータの保存済み設定にのみ残ります。",
           "cancel": "キャンセル",
           "confirm": "サーバーのバージョンを保持"
+        },
+        "moveAnyway": {
+          "action": "それでも移行…",
+          "title": "このホストをそれでも移行",
+          "description": "Orca はこのホストを管理サーバーへ移行しますが、以下の保存済み項目は含めません。これらはこのコンピューターに残り、管理サーバーには表示されません。未保存の編集は保持され、削除されることはありません。",
+          "cancel": "キャンセル",
+          "confirm": "それでも移行"
         },
         "ZcodeCliSetupSection": {
           "title": "ZCode で GLM を使用する",
@@ -13274,7 +13310,6 @@
                 "a6de3e5a20": "キュー内のコメントをクリア",
                 "49ea0937e4": "コメントを解決リストに追加",
                 "9fecebb29d": "追加",
-                "b8c4e2a1f7": "完全なログを表示",
                 "f8a2c91d04": "Agent のキューに追加",
                 "b4e8a1c902": "キュー待ち",
                 "7c1f0a2b11": "開く",
@@ -14138,10 +14173,7 @@
             "databaseCount_other": "{{value0}} 個のデータベース",
             "scanning": "{{value0}}をスキャン中",
             "reading": "{{value0}} ファイルを読み込み中",
-            "stoppedAfter": "{{value0}}で停止",
-            "scanned": "{{value0}}をスキャン済み",
-            "stoppedAt": "{{value0}} で停止",
-            "refresh": "更新"
+            "scanned": "{{value0}}をスキャン済み"
           }
         }
       },
@@ -17947,6 +17979,13 @@
           "deleteColumn": "列を削除",
           "deleteTable": "テーブルを削除"
         }
+      }
+    },
+    "startup": {
+      "webHostUnreachable": {
+        "title": "Orca ホストに接続できませんでした",
+        "description": "失われたものはありません。ホストが応答すると Orca は再読み込みされます。それまで変更は保存されません。",
+        "retry": "今すぐ再試行"
       }
     }
   },

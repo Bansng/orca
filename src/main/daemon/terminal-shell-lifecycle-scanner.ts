@@ -20,10 +20,15 @@ const PRIVATE_MODE = /\x1b\[\?([0-9;]*)([hl])|\x9b\?([0-9;]*)([hl])/
 const KITTY_KEYBOARD = /\x1b\[([<>=])([0-9;]*)u|\x9b([<>=])([0-9;]*)u/
 // oxlint-disable-next-line no-control-regex -- terminal escape sequences require control chars
 const FULL_RESET = /\x1bc/
+// oxlint-disable-next-line no-control-regex -- terminal escape sequences require control chars
+const MODIFY_OTHER_KEYS = /\x1b\[>4(?:;([0-9]*))?m|\x9b>4(?:;([0-9]*))?m/
 
-// Groups: 1 OSC 133 payload, 2/3 and 4/5 private-mode params + final, 6/7 and 8/9 kitty prefix + params.
+// Groups: 1 OSC 133 payload, 2/3 and 4/5 private-mode params + final, 6/7 and 8/9 kitty prefix + params,
+// 10 and 11 modifyOtherKeys level.
 const SEQUENCE_RE = new RegExp(
-  [LIFECYCLE_OSC, PRIVATE_MODE, KITTY_KEYBOARD, FULL_RESET].map((re) => re.source).join('|'),
+  [LIFECYCLE_OSC, PRIVATE_MODE, KITTY_KEYBOARD, FULL_RESET, MODIFY_OTHER_KEYS]
+    .map((re) => re.source)
+    .join('|'),
   'g'
 )
 
@@ -158,6 +163,15 @@ export class TerminalShellLifecycleScanner {
         if (cleanExit) {
           events.cleanExitCandidate = { generation: this.generationState }
         }
+        continue
+      }
+      if (match[0].endsWith('m')) {
+        // A disarm (level 0) is part of our own ground, so like kitty only an arm revokes.
+        const level = Number(match[10] ?? match[11] ?? '') || 0
+        if (level > 0) {
+          this.revoke()
+        }
+        this.inputModes.applyModifyOtherKeys(level)
         continue
       }
       const kittyPrefix = match[6] ?? match[8]

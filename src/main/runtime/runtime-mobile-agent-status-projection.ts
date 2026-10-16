@@ -71,7 +71,16 @@ export function renewRuntimeMobileAgentStatusFromPtyTitle(
       return status
     }
     if (pty.lastAgentStatus === null && !terminalTitleBlocksExplicitAgentStatus(pty.lastOscTitle)) {
-      return status
+      // Why: an earlier title-only `working` was published at a later stamp; returning the
+      // older hook stamp makes clients keep that `working` forever (#28102). updatedAt is
+      // the ordering clock, so advance it while evidenceObservedAt keeps freshness honest.
+      return status.state !== 'working' && titleEvidenceAt > status.updatedAt
+        ? {
+            ...status,
+            updatedAt: titleEvidenceAt,
+            evidenceObservedAt: agentStatusAuthorityObservedAt(status)
+          }
+        : status
     }
     const titleState =
       pty.lastAgentStatus === 'working'
@@ -111,6 +120,8 @@ export type RuntimeHookAgentRowLookup = {
   agentType: string | null
   agentIsLive: boolean
   live: HookLiveAgentRow | null
+  /** Latest fresh nonterminal row hydrated across a host restart: unverifiable, never live. */
+  restored: HookLiveAgentRow | null
 }
 
 /** Resume identity stays valid until relaunch; ownership and live status remain freshness-bounded. */
@@ -120,6 +131,7 @@ export function selectRuntimeHookAgentRowForPane(
   let session: AgentStatusIpcPayload | null = null
   let agent: AgentStatusIpcPayload | null = null
   let live: AgentStatusIpcPayload | null = null
+  let restored: AgentStatusIpcPayload | null = null
   const freshAfter = Date.now() - AGENT_STATUS_STALE_AFTER_MS
   for (const entry of rows) {
     if (entry.providerSession && (!session || entry.receivedAt > session.receivedAt)) {
@@ -143,6 +155,19 @@ export function selectRuntimeHookAgentRowForPane(
     ) {
       live = entry
     }
+    if (
+      entry.providerSessionOnly !== true &&
+      entry.restoredUnconfirmed === true &&
+      entry.state !== 'done' &&
+      (entry.evidenceObservedAt ?? entry.receivedAt) >= freshAfter &&
+      (!restored || entry.receivedAt > restored.receivedAt)
+    ) {
+      restored = entry
+    }
+  }
+  // A confirmed row at least as new as the restored one supersedes it.
+  if (restored && live && live.receivedAt >= restored.receivedAt) {
+    restored = null
   }
   return {
     providerSession: session?.providerSession ?? null,
@@ -150,17 +175,18 @@ export function selectRuntimeHookAgentRowForPane(
     providerSessionReceivedAt: session?.receivedAt ?? null,
     agentType: agent?.agentType ?? null,
     agentIsLive: agent != null && agent.state !== 'done',
-    live: live
-      ? {
-          payload: pickParsedAgentStatusPayload(live),
-          updatedAt: live.receivedAt,
-          ...(live.evidenceObservedAt !== undefined
-            ? { evidenceObservedAt: live.evidenceObservedAt }
-            : {}),
-          stateStartedAt: live.stateStartedAt ?? live.receivedAt,
-          ...(live.worktreeId ? { worktreeId: live.worktreeId } : {})
-        }
-      : null
+    live: live ? toHookLiveAgentRow(live) : null,
+    restored: restored ? toHookLiveAgentRow(restored) : null
+  }
+}
+
+function toHookLiveAgentRow(row: AgentStatusIpcPayload): HookLiveAgentRow {
+  return {
+    payload: pickParsedAgentStatusPayload(row),
+    updatedAt: row.receivedAt,
+    ...(row.evidenceObservedAt !== undefined ? { evidenceObservedAt: row.evidenceObservedAt } : {}),
+    stateStartedAt: row.stateStartedAt ?? row.receivedAt,
+    ...(row.worktreeId ? { worktreeId: row.worktreeId } : {})
   }
 }
 

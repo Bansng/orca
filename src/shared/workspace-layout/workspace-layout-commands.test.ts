@@ -384,6 +384,80 @@ describe('layout command effects', () => {
     )
   })
 
+  it('a window drag-out names the tab, outranks a stale binding and moves a last pane', () => {
+    const { model, tabA, tabB, leafA2, leafB, ctx } = setup()
+    const workspace = model.workspaces[WS]!
+    const withData: WorkspaceLayoutModel = {
+      ...model,
+      workspaces: {
+        [WS]: {
+          ...workspace,
+          leaves: { ...workspace.leaves, [leafA2]: { ptyId: 'pty-old', incarnationId: 'inc' } }
+        }
+      }
+    }
+    const stale = build(
+      ctx,
+      [
+        {
+          type: 'movePaneToNewTab',
+          workspace: WS,
+          tabId: tabA,
+          leafId: leafA2,
+          windowDetach: { ptyId: 'pty-live', tabId: 'tab-main' }
+        }
+      ],
+      withData
+    )
+    expect(stale.results[0]).toEqual({ tabId: 'tab-main', ptyId: 'pty-live' })
+    expect(stale.model.workspaces[WS]!.leaves?.[leafA2]).toEqual({ ptyId: 'pty-live' })
+    // A copy that never bound the pane keeps its incarnation, as the desktop's move does.
+    const unbound = applyLayoutCommand(
+      {
+        ...model,
+        workspaces: {
+          [WS]: {
+            ...workspace,
+            leaves: { ...workspace.leaves, [leafA2]: { incarnationId: 'inc' } }
+          }
+        }
+      },
+      {
+        type: 'movePaneToNewTab',
+        workspace: WS,
+        tabId: tabA,
+        leafId: leafA2,
+        windowDetach: { ptyId: 'pty-live', tabId: 'tab-main' }
+      },
+      ctx
+    )
+    expect(unbound.ok && unbound.model.workspaces[WS]!.leaves?.[leafA2]).toEqual({
+      ptyId: 'pty-live',
+      incarnationId: 'inc'
+    })
+
+    // Main's copy lacks the window's other panes, so the tab stays for them (no rule check: to
+    // main's copy alone it reads as the tab re-ided).
+    const last = applyLayoutCommand(
+      model,
+      {
+        type: 'movePaneToNewTab',
+        workspace: WS,
+        tabId: tabB,
+        leafId: leafB,
+        windowDetach: { ptyId: null }
+      },
+      ctx
+    )
+    if (!last.ok) {
+      throw new Error(last.code)
+    }
+    const newTabId = last.result.tabId!
+    expect(terminalTab(last.model, newTabId).panes.root).toEqual({ type: 'leaf', leafId: leafB })
+    expect(terminalTab(last.model, tabB).panes.root).toBeNull()
+    expect(last.result.ptyId).toBeNull()
+  })
+
   it('equalizes same-axis panes into equal shares', () => {
     const { model, tabA, leafA2, ctx } = setup()
     const three = build(

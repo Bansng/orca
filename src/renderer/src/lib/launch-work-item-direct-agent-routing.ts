@@ -7,6 +7,10 @@ import type { AgentSessionLaunchPlan } from '@/lib/agent-session-launch-plan'
 import { resolveSourceControlLaunchPlatform } from '@/lib/source-control-launch-platform'
 import { beginStructuredAgentSessionProvisionalLaunch } from '@/lib/structured-agent-session-provisional-tab'
 import type { DeclinedStructuredLaunchTerminalOptions } from '@/lib/structured-agent-session-launch-admission'
+import {
+  ensureDetectedAgentsForNewWorktree,
+  type RepoHostFields
+} from '@/lib/agent-detection-target-inventory'
 
 export function buildDirectWorkItemStartup(args: {
   agent: TuiAgent | null
@@ -42,21 +46,20 @@ type PromptDelivery = 'draft' | 'submit-after-ready'
 
 export async function resolveDirectWorkItemAgent(args: {
   agentOverride?: TuiAgent
+  worktreeId: string
+  repoHost: RepoHostFields
   launchConnectionId: string | null
   repoConnectionId: string | null
   detectedAgentsPromise: Promise<string[]> | null
   latestStore: AppState
 }): Promise<{ agent: TuiAgent | null; unavailable: boolean }> {
-  const detectedAgents =
-    args.agentOverride !== undefined
-      ? args.launchConnectionId
-        ? await args.latestStore.ensureRemoteDetectedAgents(args.launchConnectionId)
-        : await args.latestStore.ensureDetectedAgents()
-      : args.launchConnectionId === args.repoConnectionId
-        ? await args.detectedAgentsPromise!
-        : args.launchConnectionId
-          ? await args.latestStore.ensureRemoteDetectedAgents(args.launchConnectionId)
-          : await args.latestStore.ensureDetectedAgents()
+  // Why: the new workspace's own host answers; a paired server's project must not probe this client.
+  const detectedAgents: string[] =
+    args.agentOverride === undefined &&
+    args.detectedAgentsPromise &&
+    args.launchConnectionId === args.repoConnectionId
+      ? await args.detectedAgentsPromise
+      : await ensureDetectedAgentsForNewWorktree(args.latestStore, args.worktreeId, args.repoHost)
   if (args.agentOverride !== undefined) {
     return {
       agent: args.agentOverride,

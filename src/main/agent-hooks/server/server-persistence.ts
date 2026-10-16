@@ -1,7 +1,11 @@
 import { createHash } from 'node:crypto'
 
 import { isValidPaneKey } from './server-status-identity'
-import { LAST_STATUS_FILE_VERSION, STATUS_PERSIST_MIN_INTERVAL_MS } from './server-constants'
+import {
+  HYDRATE_MAX_AGE_MS,
+  LAST_STATUS_FILE_VERSION,
+  STATUS_PERSIST_MIN_INTERVAL_MS
+} from './server-constants'
 import type {
   EnrichedAgentHookEventPayload,
   LastStatusFile,
@@ -10,6 +14,7 @@ import type {
 } from './server-types'
 import { authorityCommitmentsMatch } from './server-persistence-validation'
 import { AgentHookServerHydration } from './server-hydration'
+import { pruneAgentExits, serializeAgentExits } from './agent-exit-evidence'
 import { AtomicSnapshotWriter } from '../../persistence/atomic-snapshot-writer'
 
 export abstract class AgentHookServerPersistence extends AgentHookServerHydration {
@@ -73,10 +78,16 @@ export abstract class AgentHookServerPersistence extends AgentHookServerHydratio
         }
       }
     }
+    // Why: only a successor claim forgets an exit, so a pane that never runs another agent would keep it.
+    pruneAgentExits(this.agentExitedAtByPaneKey, Date.now() - HYDRATE_MAX_AGE_MS, (paneKey) =>
+      this.state.lastStatusByPaneKey.has(paneKey)
+    )
+    const agentExits = serializeAgentExits(this.agentExitedAtByPaneKey)
     const file: LastStatusFile = {
       version: LAST_STATUS_FILE_VERSION,
       entries,
-      authorityCommitments
+      authorityCommitments,
+      ...(agentExits.length > 0 ? { agentExits } : {})
     }
     return JSON.stringify(file)
   }

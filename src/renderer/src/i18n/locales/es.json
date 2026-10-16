@@ -12,7 +12,14 @@
     }
   },
   "githubChecks": {
-    "retrying": "Reintentando…"
+    "retrying": "Reintentando…",
+    "logsNotYetAvailable": "La salida del registro aún no está disponible.",
+    "logsLoadErrorDetails": "No se pudieron cargar los registros. Usa Actualizar para reintentarlo.",
+    "logsLoadErrorSidebar": "No se pudieron cargar los registros. Abre Ver detalles completos y usa Actualizar para reintentarlo.",
+    "logsEmpty": "No se devolvió ninguna salida del registro.",
+    "logsNotRequested": "No se solicitó el extracto del registro. Se cargan como máximo cinco extractos de trabajos fallidos por comprobación.",
+    "noLogExcerpt": "No hay ningún extracto del registro disponible.",
+    "refreshingDetails": "Actualizando los detalles de la comprobación…"
   },
   "settings": {
     "chat": {
@@ -1062,6 +1069,14 @@
       "aiVaultResumeRefusal": {
         "openInChat": "Esta conversación de {{value0}} está abierta en un chat. Actualiza el historial de sesiones para abrirla.",
         "ownershipUnknown": "Orca no pudo confirmar quién es el propietario de esta conversación de {{value0}}. Actualiza el historial de sesiones e inténtalo de nuevo."
+      },
+      "pendingWorktreeCreation": {
+        "checkingOutFiles": "Extrayendo archivos… {{percent}}%",
+        "provisioningVm": "Provisionando VM…",
+        "settingUpWorkspace": "Configurando tu espacio de trabajo…",
+        "preparingWorkspace": "Preparando el espacio de trabajo…",
+        "creatingWorktree": "Creando el worktree…",
+        "fetchingBaseBranch": "Obteniendo la rama base…"
       }
     },
     "hooks": {
@@ -8704,7 +8719,8 @@
           "addDescription": "Agrega una máquina persistente en la que puedas iniciar sesión por SSH.",
           "editingPrefix": "Editando",
           "allowRemoteCliControl": "Permitir que la orca CLI de este host controle Orca",
-          "allowRemoteCliControlHelp": "Cuando está desactivado, los comandos orca ejecutados en este host solo llegan a sus propios terminales. Actívalo para que lleguen a otros hosts, la orquestación, los archivos y las integraciones de este equipo."
+          "allowRemoteCliControlHelp": "Cuando está activado, los comandos orca ejecutados en este host pueden abrir y controlar pestañas del navegador de Orca en este escritorio, solo en los espacios de trabajo de este host y solo mientras esté conectado. Las terminales iniciadas por una versión anterior de Orca en este host también pueden ejecutar comandos de orquestación (check, inbox, send, ask, reply) para su propio trabajo supervisado. No pueden leer tus archivos, tu portapapeles ni tus cookies. Cuando está desactivado, solo llegan al propio servidor de Orca de este host.",
+          "allowRemoteCliControlReset": "Orca lo desactivó tras una actualización, porque ahora permite que este host controle el navegador de tu escritorio y que las terminales iniciadas por una versión anterior de Orca en este host ejecuten comandos de orquestación. Vuelve a activarlo solo si lo deseas."
         },
         "TasksPane": {
           "f71d8a9dd3": "Proveedores de tareas",
@@ -12412,6 +12428,10 @@
         "UnsealedCredentialNotice": {
           "body": "{{credential}} se almacena sin cifrar: este sistema no tiene ningún conjunto de claves del sistema operativo que Orca pueda usar. Cualquiera que pueda leer su disco o una copia de seguridad del mismo puede leer la credencial. Instale y desbloquee gnome-keyring o kwallet, luego guárdelo nuevamente para sellarlo."
         },
+        "sshManagedHostRemove": {
+          "description": "{{label}} ejecuta un servidor Orca gestionado. En Servidores gestionados, usa Detener… para quitar el servidor del host, u Olvidar… si el host ya no existe. Después podrás eliminar este host SSH.",
+          "open": "Abrir Servidores gestionados"
+        },
         "managedServers": {
           "row": {
             "notRunning": "No está en ejecución",
@@ -12453,7 +12473,11 @@
             "target": "Conectar a través del host SSH",
             "port": "Puerto del servidor",
             "link": "Usar SSH",
-            "linking": "Conectando…"
+            "linking": "Conectando…",
+            "pendingLink": "La conexión por SSH no terminó.",
+            "pendingUnlink": "La desactivación del acceso SSH no terminó.",
+            "retry": "Reintentar",
+            "cancelLink": "Cancelar"
           },
           "search": {
             "title": "Servidores gestionados",
@@ -12534,6 +12558,7 @@
           "tunnelUnsupported": "Esta versión de Orca no admite este host: su servidor SSH no permite el reenvío de puertos y Orca tampoco pudo llegar a su servidor a través de la sesión SSH. Para seguir usándolo, instala una versión anterior de Orca.",
           "setupRetry": "Orca no pudo iniciar su servidor en este host. Intenta conectarte de nuevo.",
           "moveHeld": "Orca pausó el traslado de los proyectos de este host a su servidor gestionado porque no pudo confirmar la copia del servidor. No se pierde nada: el host conserva sus proyectos y queda bloqueado hasta que termine el traslado. Conéctate de nuevo para reanudarlo. Si el servidor no puede volver, detenlo u olvídalo en Configuración > Servidores gestionados.",
+          "olderTerminalsBridged": "Aún no se ha movido a un servidor administrado: los terminales iniciados por una versión anterior de Orca siguen ejecutándose en los proyectos de este host. Siguen funcionando aquí. Ciérralos o termínalos en el host y vuelve a conectarte.",
           "olderTerminalsUncounted": "Los terminales iniciados por una versión anterior de Orca siguen ejecutándose en este host y no se detienen solos. Ciérralos en esa versión de Orca o termínalos en el host y vuelve a conectarte.",
           "olderTerminalsUnverifiable": "Orca no pudo confirmar que los terminales iniciados por una versión anterior de Orca hayan terminado. Vuelve a conectarte para intentarlo de nuevo.",
           "olderTerminals_one": "{{count}} terminal iniciado por una versión anterior de Orca sigue ejecutándose en este host y no se detiene solo. Ciérralo en esa versión de Orca o termínalo en el host y vuelve a conectarte.",
@@ -12565,6 +12590,13 @@
           "description": "Este host vuelve a su servidor gestionado tal como está. Lo que la versión anterior de Orca agregó o cambió aquí no se mueve; permanece solo en los ajustes guardados de esta computadora hasta que se limpien.",
           "cancel": "Cancelar",
           "confirm": "Conservar la versión del servidor"
+        },
+        "moveAnyway": {
+          "action": "Mover de todos modos…",
+          "title": "Mover este host de todos modos",
+          "description": "Orca mueve este host a su servidor gestionado sin los elementos guardados que aparecen abajo. Se quedan en este equipo y no aparecen en el servidor gestionado. Las ediciones sin guardar se conservan; nunca se eliminan.",
+          "cancel": "Cancelar",
+          "confirm": "Mover de todos modos"
         },
         "ZcodeCliSetupSection": {
           "title": "Usar GLM con ZCode",
@@ -13274,7 +13306,6 @@
                 "a6de3e5a20": "Limpiar comentarios en cola",
                 "49ea0937e4": "Agregar comentario a la lista de resolución",
                 "9fecebb29d": "Agregar",
-                "b8c4e2a1f7": "Ver logs completos",
                 "f8a2c91d04": "Poner en cola para el agente",
                 "b4e8a1c902": "En cola",
                 "7c1f0a2b11": "Abrir",
@@ -14138,10 +14169,7 @@
             "databaseCount_other": "{{value0}} bases de datos",
             "scanning": "Analizando {{value0}}",
             "reading": "Leyendo {{value0}} archivos",
-            "stoppedAfter": "Detenido tras {{value0}}",
-            "scanned": "Analizados {{value0}}",
-            "stoppedAt": "detenido en {{value0}}",
-            "refresh": "Actualizar"
+            "scanned": "Analizados {{value0}}"
           }
         }
       },
@@ -17947,6 +17975,13 @@
           "deleteColumn": "Eliminar columna",
           "deleteTable": "Eliminar tabla"
         }
+      }
+    },
+    "startup": {
+      "webHostUnreachable": {
+        "title": "No se pudo contactar con tu host de Orca",
+        "description": "No se perdió nada. Orca se recargará cuando el host responda y no guardará cambios hasta entonces.",
+        "retry": "Reintentar ahora"
       }
     }
   },

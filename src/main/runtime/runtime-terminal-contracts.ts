@@ -74,6 +74,7 @@ export type TerminalCreateOptions = {
   accountEnv?: Record<string, string>
   launchPreferences?: AgentLaunchPreferences
   terminalKittyKeyboardProtocol?: boolean
+  terminalImageViewerSupported?: boolean
   terminalColorQueryReplies?: TerminalOscColorQueryReplyColors
   viewMode?: 'terminal' | 'chat'
   /** The tab group a background create joins; defaults to the first group. */
@@ -211,6 +212,14 @@ export type OrchestrationCompatibilitySshAttachmentAuthority = Extract<
   OrchestrationCompatibilityHostStamp,
   { kind: 'ssh' }
 >
+
+/** COMPAT(legacy-relay-bridge): a relay-era terminal this runtime no longer hosts, which the
+ *  bridge verified for the one CLI call its attachment lives for. */
+export type OrchestrationCompatibilitySshTerminal = Readonly<{
+  handle: string
+  paneKey: string
+  processIncarnation?: string
+}>
 
 export type TerminalWaiter = {
   handle: string

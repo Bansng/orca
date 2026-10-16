@@ -22,6 +22,11 @@ import { emptySplitGroup, insertSplitGroup } from '../slices/tabs/tabs-group-act
 import { ownsGlobalSelection } from '../global-selection-owner'
 import { getLocalProjectExecutionRuntimeContext } from '@/lib/local-preflight-context'
 import type { TerminalSlice, TerminalStoreGet, TerminalStoreSet } from './terminal-state'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../shared/layout-owner-switch'
+import {
+  recordCreatedTerminalTabInLayoutOwner,
+  terminalTabCreateCommand
+} from './terminal-tab-create-through-layout-owner'
 import {
   getRemoteConnectionIdForWorktree,
   resolveCreatedTabShellOverride,
@@ -277,6 +282,10 @@ export function createTerminalTabCreationActions(
           }
         }
       })
+      // Switch point: main writes the tab under these ids before any later command names it.
+      if (ORCA_LAYOUT_OWNER_IS_MAIN) {
+        recordCreatedTerminalTabInLayoutOwner(get(), terminalTabCreateCommand(get(), tab))
+      }
       if (options?.initialPtyId) {
         // Why: a tab born with a live PTY (CLI/runtime create) wakes the workspace like any other bind.
         clearWorktreeSleepIntent(worktreeId)

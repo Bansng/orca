@@ -499,11 +499,11 @@ describe('liveness and stop commands, run for real', () => {
     expect(existsSync(terminatedFile)).toBe(false)
   })
 
-  it('reports UNKNOWN with no pid file, and DEAD for a pid that has exited', () => {
-    // A slot installed but never launched: only GC reads it apart from UNKNOWN.
+  it('reports NEVER_LAUNCHED with no launch artifacts, UNKNOWN with no pid, DEAD for an exited pid', () => {
+    // A slot installed but never launched: proven exit, so GC may remove it and a wake may start it.
     rmSync(join(versionDir, ORCAD_READINESS_FILENAME), { force: true })
     const neverLaunched = sh(orcadLivenessProbeCommand(host, versionDir))
-    expect(parseOrcadLiveness(neverLaunched)).toBe('UNKNOWN')
+    expect(parseOrcadLiveness(neverLaunched)).toBe('NEVER_LAUNCHED')
     expect(orcadLivenessAnswerBlocksGc(neverLaunched)).toBe(false)
     writeFileSync(join(versionDir, ORCAD_READINESS_FILENAME), '')
     expect(orcadLivenessAnswerBlocksGc(sh(orcadLivenessProbeCommand(host, versionDir)))).toBe(true)

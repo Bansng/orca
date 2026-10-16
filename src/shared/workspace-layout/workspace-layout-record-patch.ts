@@ -4,6 +4,7 @@
 // isolates the command, and only those records and fields are written.
 
 import type { WorkspaceSessionState } from '../workspace-session-state-types'
+import { adoptTouchedFoldedRows } from './workspace-layout-folded-rows'
 
 type Json = Record<string, unknown>
 
@@ -16,25 +17,40 @@ const LIST_FIELDS: Record<string, (record: Json) => unknown> = {
   browserTabsByWorktree: (record) => record.id
 }
 
-// Why 2: a session map (layouts by tab, sleeping records by pane) holds records; a changed record
-// field is replaced whole, as diffStoredSession reports it.
+// Session maps hold records (layouts by tab, sleeping records by pane): patch down to each record's
+// fields and replace a changed field whole, as diffStoredSession reports it.
 const MAP_RECORD_DEPTH = 2
 
 /**
  * `stored` with the records the command touched (those differing between `before` and `after`)
- * written as `after` has them. A touched record the load supplied is written whole; every
- * untouched record stays as stored.
+ * written as `after` has them. A touched record the load supplied is written whole, and a folded
+ * legacy row whose claim the command touched takes its loaded form; every untouched record stays
+ * as stored. `stored` itself when the command changed nothing.
  */
 export function patchStoredSession(
   stored: WorkspaceSessionState,
   before: WorkspaceSessionState,
   after: WorkspaceSessionState
 ): WorkspaceSessionState {
-  const storedFields = toJson(stored)
+  const patched = patchRecords(stored, before, after)
+  const adopted = adoptTouchedFoldedRows(stored, patched, before)
+  return adopted === stored ? patched : patchRecords(adopted, before, after)
+}
+
+function patchRecords(
+  stored: WorkspaceSessionState,
+  before: WorkspaceSessionState,
+  after: WorkspaceSessionState
+): WorkspaceSessionState {
   const beforeFields = toJson(before)
   const afterFields = toJson(after)
+  const changed = changedKeys(beforeFields, afterFields)
+  if (changed.length === 0) {
+    return stored
+  }
+  const storedFields = toJson(stored)
   const patched: Json = { ...storedFields }
-  for (const field of changedKeys(beforeFields, afterFields)) {
+  for (const field of changed) {
     const idOf = LIST_FIELDS[field]
     // The command dropped the field: stored records the load never read go with it.
     if (afterFields[field] === undefined) {
@@ -81,6 +97,12 @@ function patchList(stored: Json[], before: Json[], after: Json[], idOf: (record:
   const find = (list: Json[], id: unknown) => list.find((record) => idOf(record) === id)
   const result = [...stored]
   const ids = new Set([...before.map(idOf), ...after.map(idOf)])
+  const kept = (list: Json[], other: Json[]) => {
+    const otherIds = new Set(other.map(idOf))
+    return list.map(idOf).filter((id) => otherIds.has(id))
+  }
+  // Records kept their relative order: sort orders changed only to close a removal's gap.
+  const renumberedOnly = sameJson(kept(before, after), kept(after, before))
   for (const id of ids) {
     const old = find(before, id)
     const next = find(after, id)
@@ -88,6 +110,17 @@ function patchList(stored: Json[], before: Json[], after: Json[], idOf: (record:
       continue
     }
     const index = result.findIndex((record) => idOf(record) === id)
+    // A record the load supplied that the command only renumbered stays unwritten (a close's
+    // siblings); writing it whole would add it where the stored partition has none.
+    if (
+      index === -1 &&
+      renumberedOnly &&
+      old &&
+      next &&
+      sameJson({ ...old, sortOrder: 0 }, { ...next, sortOrder: 0 })
+    ) {
+      continue
+    }
     if (!next) {
       if (index !== -1) {
         result.splice(index, 1)
@@ -107,7 +140,7 @@ function patchList(stored: Json[], before: Json[], after: Json[], idOf: (record:
   const queue = after
     .map((record) => result.find((candidate) => idOf(candidate) === idOf(record)))
     .filter((record): record is Json => record !== undefined)
-  return result.map((record) => (placed.has(idOf(record)) ? queue.shift()! : record))
+  return result.map((record) => (placed.has(idOf(record)) ? (queue.shift() ?? record) : record))
 }
 
 /** After the nearest record that precedes it in `after` and is already in the list. */
@@ -117,8 +150,8 @@ function insertionIndex(
   position: number,
   idOf: (record: Json) => unknown
 ): number {
-  for (let previous = position - 1; previous >= 0; previous--) {
-    const index = result.findIndex((record) => idOf(record) === idOf(after[previous]!))
+  for (const preceding of after.slice(0, position).toReversed()) {
+    const index = result.findIndex((record) => idOf(record) === idOf(preceding))
     if (index !== -1) {
       return index + 1
     }

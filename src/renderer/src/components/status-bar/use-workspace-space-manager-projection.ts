@@ -70,11 +70,16 @@ export function useWorkspaceSpaceManagerProjection(args: {
   const rows = useMemo(
     () =>
       sortWorkspaceSpaceRows(
-        filterWorkspaceSpaceRows(sourceRows, query, onlyDeletable),
+        filterWorkspaceSpaceRows(sourceRows, query, onlyDeletable).filter(
+          (row) =>
+            !onlyDeletable ||
+            decisionDetailsByWorktreeId.get(getWorkspaceSpaceWorktreeIdentity(row))
+              ?.canOpenWorkspace === true
+        ),
         sortKey,
         sortDirection
       ),
-    [onlyDeletable, query, sortDirection, sortKey, sourceRows]
+    [decisionDetailsByWorktreeId, onlyDeletable, query, sortDirection, sortKey, sourceRows]
   )
 
   const nextInspectedWorktreeId = resolveWorkspaceSpaceInspectedWorktreeId(

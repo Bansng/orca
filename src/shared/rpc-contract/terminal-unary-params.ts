@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { TERMINAL_KITTY_FILE_MAX_BYTES } from '../terminal-kitty-file'
 import { OptionalFiniteNumber, OptionalString, requiredString } from './rpc-param-primitives'
 import { isTuiAgent } from '../tui-agent-config'
 import { SpawnIntentParam } from './agent-session-params'
@@ -8,6 +9,7 @@ import {
   listSupportedWindowsShellOverrides
 } from '../windows-terminal-shell'
 import { TERMINAL_PANE_SPLIT_SOURCES } from '../feature-education-telemetry'
+import { OptionalExecutionHostId } from './worktree-params'
 
 export const TerminalHandle = z.object({
   terminal: requiredString('Missing terminal handle'),
@@ -15,8 +17,26 @@ export const TerminalHandle = z.object({
   expectedIncarnationId: requiredString('Missing PTY incarnation').optional()
 })
 
+export const TerminalReadKittyFile = TerminalHandle.extend({
+  path: z
+    .string()
+    .min(1)
+    .max(4096)
+    .refine((path) => !path.includes('\0')),
+  offset: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).optional(),
+  length: z.number().int().nonnegative().max(TERMINAL_KITTY_FILE_MAX_BYTES).optional()
+})
+
 export const TerminalFocus = TerminalHandle.extend({
   navigation: z.enum(['caller', 'host']).optional()
+})
+
+/** `terminal.reveal` takes no handle: a pane a paired server owns has none on this host. */
+export const TerminalReveal = z.object({
+  worktreeId: requiredString('Missing worktree id').pipe(z.string().max(1024)),
+  tabId: requiredString('Missing tab id').pipe(z.string().max(128)),
+  leafId: requiredString('Missing leaf id').pipe(z.string().max(128)).optional(),
+  executionHostId: OptionalExecutionHostId
 })
 
 /**

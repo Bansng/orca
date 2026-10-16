@@ -146,6 +146,16 @@ export function createRepoRemovalActions(
             throw err
           }
         }
+        if (target.kind === 'environment') {
+          // Why: the host confirmed the removal (or is gone), and this desktop's own persisted rows
+          // for that host are swept only by an explicit removal, never by the startup sweep (#17776).
+          // A paired web client keeps no such rows, and its bridge throws synchronously.
+          try {
+            await window.api.repos.removeForHost({ repoId: projectId, hostId: ownerHostId })
+          } catch (error) {
+            console.warn('[repos] failed to drop paired-host project residue', error)
+          }
+        }
 
         get().clearOrcaHookTrustForRepo(projectId)
         const repoPath = get().repos.find((repo) =>

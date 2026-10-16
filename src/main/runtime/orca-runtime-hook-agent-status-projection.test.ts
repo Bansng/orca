@@ -229,13 +229,55 @@ describe('headless hook agent-status projection (#11761)', () => {
   // #12346: a row hydrated from last-status.json may describe a turn that ended while
   // no receiver was up, so its recent `receivedAt` proves nothing. Publishing it would
   // resurrect the question card on every restart, with no agent left to answer it.
-  it('refuses a hydrated unconfirmed row while keeping its resume identity', async () => {
+  it('refuses a hydrated unconfirmed row as live while keeping its resume identity', async () => {
     const agentStatus = await projectAgentStatus([hookRow({ restoredUnconfirmed: true })])
 
     expect(agentStatus).toEqual(
-      expect.objectContaining({ state: 'done', prompt: '', providerSession: PROVIDER_SESSION })
+      expect.objectContaining({
+        state: 'waiting',
+        restoredUnconfirmed: true,
+        providerSession: PROVIDER_SESSION
+      })
     )
     expect(agentStatus).not.toHaveProperty('interactivePrompt')
+    expect(agentStatus).not.toHaveProperty('toolName')
+  })
+
+  // A managed server restart re-hydrates last-status.json while the daemon keeps the agent
+  // running: the turn is unverifiable, so it must not be published as finished.
+  it('keeps a restored working turn unverifiable instead of done', async () => {
+    const receivedAt = Date.now() - 60_000
+    const agentStatus = await projectAgentStatus([
+      hookRow({
+        state: 'working',
+        prompt: 'refactor the parser',
+        toolName: undefined,
+        interactivePrompt: undefined,
+        receivedAt,
+        stateStartedAt: receivedAt - 5_000,
+        restoredUnconfirmed: true
+      })
+    ])
+
+    expect(agentStatus).toEqual(
+      expect.objectContaining({
+        state: 'working',
+        prompt: 'refactor the parser',
+        restoredUnconfirmed: true,
+        updatedAt: receivedAt,
+        stateStartedAt: receivedAt - 5_000
+      })
+    )
+  })
+
+  it('lets a shell title retire a restored turn as done', async () => {
+    const agentStatus = await projectAgentStatus(
+      [hookRow({ state: 'working', interactivePrompt: undefined, restoredUnconfirmed: true })],
+      (runtime) => observePaneTitle(runtime, 'bash')
+    )
+
+    expect(agentStatus === undefined || agentStatus.state === 'done').toBe(true)
+    expect(agentStatus).not.toHaveProperty('restoredUnconfirmed')
   })
 
   // #7970: a retained OSC 9999 row is the pane's own report and keeps precedence.

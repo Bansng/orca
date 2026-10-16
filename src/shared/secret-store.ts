@@ -25,6 +25,23 @@ export type SecretStore = {
    * or sealing with a backend that does not meaningfully protect. Null means sealed.
    */
   describeProtectionGap(): string | null
+  /** Only a store whose key can live in a lockable keychain (orcad on macOS) has this. */
+  keychainLock?: SecretStoreKeychainLock
+}
+
+/** `unlocked_after_lock`: the key loaded again after this server saw its keychain locked. */
+export type SecretStoreKeychainLockState = 'locked' | 'unlocked_after_lock'
+
+export type SecretStoreKeyMoveResult =
+  | { ok: true }
+  | { ok: false; reason: 'keychain_locked' | 'not_in_keychain' | 'failed'; message: string }
+
+export type SecretStoreKeychainLock = {
+  state(): SecretStoreKeychainLockState | null
+  /** Retries a locked key; resolves true once each time it became loadable since the last call. */
+  recover(): Promise<boolean>
+  /** Moves the key from the keychain into the owner-only key file, keeping every credential. */
+  moveKeyToFile(): Promise<SecretStoreKeyMoveResult>
 }
 
 /**

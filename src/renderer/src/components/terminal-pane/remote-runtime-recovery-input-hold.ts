@@ -44,7 +44,10 @@ export type RemoteRuntimeRecoveryInputHold = {
   /** Ends the latest connect's expectation: without a bound terminal its typing is dropped. */
   settleExpectation: (expectation: RestoredInputExpectation, bound: boolean) => void
   /** Delivers held input to the endpoint it was typed into, or drops it if the pane rebound elsewhere. */
-  release: (bound: RemoteRuntimeInputEndpoint, writer: HeldInputWriter) => void
+  release: (
+    bound: RemoteRuntimeInputEndpoint,
+    writer: HeldInputWriter
+  ) => { done: Promise<void> } | undefined
   discard: () => void
 }
 
@@ -150,7 +153,7 @@ export function createRemoteRuntimeRecoveryInputHold(
         }
         return
       }
-      void current.buffer
+      const done = current.buffer
         .flush({
           ...writer,
           isCurrent: () => held === current && writer.isCurrent()
@@ -161,6 +164,7 @@ export function createRemoteRuntimeRecoveryInputHold(
             held = null
           }
         })
+      return { done }
     },
     discard
   }

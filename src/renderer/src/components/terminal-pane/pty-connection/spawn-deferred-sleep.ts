@@ -15,6 +15,10 @@ import {
   setPaneSpawnDeferral
 } from '@/lib/pane-spawn-deferral-registry'
 import {
+  cancelDeferredRestoreRetry,
+  queueDeferredRestoreRetry
+} from '@/lib/pane-spawn-deferral-drain'
+import {
   canResumeHostAutomaticRestores,
   resumeHostAutomaticRestores
 } from '@/runtime/resume-host-automatic-restores'
@@ -159,7 +163,14 @@ export function installSpawnDeferredSleep(session: ConnectPanePtySession): void 
     const deferral = { reason, resume: () => void session.resumeDeferredSpawn() }
     setPaneSpawnDeferral(session.cacheKey, deferral)
     if (reason === 'paused') {
+      // Why no background retry: a crash pause is cleared by the user, not by waiting.
       offerHostResume(session, deferral)
+    } else {
+      queueDeferredRestoreRetry(
+        session.cacheKey,
+        session.runtimeEnvironmentId ?? null,
+        async () => (await session.resumeDeferredSpawn().catch(() => null)) !== null
+      )
     }
     if (!visibleAtSpawn) {
       // Why: a pane opened while its hidden restore was in flight resumes as the user's own.
@@ -173,6 +184,7 @@ export function installSpawnDeferredSleep(session: ConnectPanePtySession): void 
       return Promise.resolve(null)
     }
     session.deferredSpawn = null
+    cancelDeferredRestoreRetry(session.cacheKey)
     const resume = deferredResumeRecord(session, deferred.startupOverride)
     if (
       resume &&
@@ -215,6 +227,7 @@ export function installSpawnDeferredSleep(session: ConnectPanePtySession): void 
 
   session.disposeSpawnDeferral = (): void => {
     session.deferredSpawn = null
+    cancelDeferredRestoreRetry(session.cacheKey)
     clearPaneSpawnDeferral(session.cacheKey)
   }
 }

@@ -170,4 +170,26 @@ describe('parseJiraConnectionStatus', () => {
       ]
     })
   })
+
+  it("keeps a newer host's locked-Keychain reason and drops values it does not know", () => {
+    const locked = parseJiraConnectionStatus({
+      connected: true,
+      viewer: null,
+      credentialError: 'Could not decrypt saved Jira credential.',
+      credentialErrorReason: 'keychain_locked'
+    })
+    expect(locked.credentialErrorReason).toBe('keychain_locked')
+    expect(
+      parseJiraConnectionStatus({ connected: true, viewer: null, canMoveCredentialKeyToFile: true })
+        .canMoveCredentialKeyToFile
+    ).toBe(true)
+    const future = parseJiraConnectionStatus({
+      connected: true,
+      viewer: null,
+      credentialErrorReason: 'some_future_reason',
+      canMoveCredentialKeyToFile: 'yes'
+    })
+    expect(future.credentialErrorReason).toBeUndefined()
+    expect(future.canMoveCredentialKeyToFile).toBeUndefined()
+  })
 })

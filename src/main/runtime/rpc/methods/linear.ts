@@ -1,4 +1,5 @@
 import { defineMethod } from '../core'
+import { recoverIntegrationCredentialKey } from '../../../integration-credential-keychain'
 import { LINEAR_PROJECT_CREATE_METHOD } from './linear-project-create'
 import { LINEAR_ISSUE_LIST_METHOD, LINEAR_MCP_ISSUE_LIST_METHOD } from './linear-issue-list-method'
 import {
@@ -43,7 +44,10 @@ export const LINEAR_METHODS = [
     name: 'linear.status',
     permission: 'workspace',
     params: null,
-    handler: async (_params, { runtime }) => runtime.linearStatus()
+    handler: async (_params, { runtime }) => {
+      await recoverIntegrationCredentialKey()
+      return runtime.linearStatus()
+    }
   }),
   defineMethod({
     name: 'linear.testConnection',

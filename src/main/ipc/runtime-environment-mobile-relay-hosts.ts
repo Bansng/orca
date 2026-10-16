@@ -3,9 +3,9 @@ import { pairedRuntimeBrowserClientHostsPage } from '../browser/paired-runtime-b
 import { listEnvironments } from '../../shared/runtime-environment-store'
 import {
   getPreferredPairingOffer,
-  isWslHostRuntimeEnvironment,
   type KnownRuntimeEnvironment
 } from '../../shared/runtime-environments'
+import { classifyRuntimeEnvironmentHost } from '../../shared/runtime-environment-host-kind'
 import {
   runtimeEnvironmentStatusFromSnapshot,
   type RuntimeEnvironmentStatus
@@ -31,9 +31,17 @@ export function retireMobileDesktopRelayEnvironment(environmentId: string): void
  * distros, connected only for work open here, so a phone must not wake or route to them.
  */
 function listRelayableEnvironments(userDataPath: string) {
-  return listEnvironments(userDataPath).filter(
-    (environment) => !isWslHostRuntimeEnvironment(environment)
-  )
+  return listEnvironments(userDataPath).filter(isRelayableToPhones)
+}
+
+function isRelayableToPhones(environment: KnownRuntimeEnvironment): boolean {
+  const host = classifyRuntimeEnvironmentHost(environment)
+  switch (host.kind) {
+    case 'network':
+      return true
+    case 'wsl':
+      return false
+  }
 }
 
 /** The desktop's configured servers, addressed only by exact environment id. */

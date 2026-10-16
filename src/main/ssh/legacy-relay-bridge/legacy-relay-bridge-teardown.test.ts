@@ -78,6 +78,7 @@ beforeEach(async () => {
     // Main publishes to the window as legacy-relay-bridge-ipc.ts does.
     onPanesChanged: (panes) => renderer.listeners.forEach((listener) => listener(panes)),
     onData: vi.fn(),
+    onReplay: vi.fn(),
     onExit: vi.fn(),
     report: vi.fn()
   })

@@ -5,14 +5,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getManagedOrcadFenceEnvironmentId } from '../../shared/managed-orcad-ssh-owner'
 import { encodePairingOffer, PAIRING_OFFER_VERSION } from '../../shared/pairing'
 import type { OrcadMigrationManifest } from '../../shared/orcad-migration-manifest'
-import { addManagedOrcadEnvironment } from '../../shared/runtime-environment-managed-orcad-store'
+import {
+  addManagedOrcadEnvironment,
+  removeManagedOrcadEnvironment
+} from '../../shared/runtime-environment-managed-orcad-store'
 import { listEnvironments } from '../../shared/runtime-environment-store'
 import type { Repo } from '../../shared/repo-types'
 import type { SshTarget } from '../../shared/ssh-types'
 import { closeTestStores, createSqliteTestStore } from '../persistence-test-harness'
 import { Store } from '../persistence/loading-store/store'
 import type { OrcadMigrationDestinationCatalog } from './orcad-migration-cutover-coordinator'
-import { listOrcadMigrationSourceCutovers } from './orcad-migration-cutover-journal'
+import {
+  listOrcadMigrationSourceCutovers,
+  removeOrcadMigrationJournalsForDestination
+} from './orcad-migration-cutover-journal'
 import { planOrcadDeltaMove } from './orcad-migration-delta-plan'
 import {
   linkedOrcadMigrationProjects,
@@ -63,6 +69,7 @@ let userDataPath: string
 let store: Store
 // The host's managed server, which another desktop on the same login already uses.
 let server: Store
+let targetStore: SshConnectionStore
 let destination: OrcadMigrationDestinationCatalog & { stage: ReturnType<typeof vi.fn> }
 
 /** The real server-side import behind the T6-9 calls, as orcad runs it. */
@@ -95,7 +102,8 @@ beforeEach(() => {
   store.addRepo(repo('desktop-repo', '/root/migrepo'))
   store.addRepo(repo('desktop-only', '/root/tool'))
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: SshConnectionStore wraps the real test store it is given.
-  mocks.state.targetStore = new SshConnectionStore(store as never)
+  targetStore = new SshConnectionStore(store as never)
+  mocks.state.targetStore = targetStore
   destination = serverDestination()
   mocks.ensureTunnel.mockResolvedValue(undefined)
   mocks.deploy.mockImplementation(async (path: string, args: { name: string }) => {
@@ -304,6 +312,59 @@ describe('moving onto a server another desktop already added the same project to
   })
 })
 
+// #29560: `orca environment stop` unlinks the server but leaves its profile on the host.
+describe('moving the host again after its server was stopped', () => {
+  // The local half of stop (unlinkEnvironmentLocally); the server keeps its profile.
+  function stopServer(): void {
+    const owner = getManagedOrcadFenceEnvironmentId(store.getSshTarget(TARGET.id))
+    if (!owner) {
+      throw new Error('no managed server to stop')
+    }
+    removeManagedOrcadEnvironment(userDataPath, owner)
+    targetStore.getOrcadRuntimeClaims().release(TARGET.id, owner)
+    removeOrcadMigrationJournalsForDestination(userDataPath, TARGET.id, owner)
+  }
+
+  it('links the projects the server kept from the first move instead of conflicting', async () => {
+    store.setWorktreeMeta('desktop-repo::/root/migrepo', { comment: 'before the first move' })
+    await expect(convert()).resolves.toMatchObject({ outcome: 'converted' })
+    // Used on the server while it was managed.
+    server.setWorktreeMeta('desktop-repo::/root/migrepo', { comment: 'edited on the server' })
+    stopServer()
+
+    await expect(convert()).resolves.toMatchObject({
+      outcome: 'converted',
+      linkedProjects: [
+        { path: '/root/migrepo', automations: 0 },
+        { path: '/root/tool', automations: 0 }
+      ]
+    })
+    expect(serverRepoIds()).toEqual(['desktop-only', 'desktop-repo'])
+    expect(server.getWorktreeMeta('desktop-repo::/root/migrepo')?.comment).toBe(
+      'edited on the server'
+    )
+    expect(store.getWorktreeMeta('desktop-repo::/root/migrepo')?.comment).toBe(
+      'before the first move'
+    )
+  })
+
+  it('resumes, not relinks, a move the server committed before the reply was lost', async () => {
+    const commit = destination.commit
+    destination.commit = async (manifest) => {
+      await commit(manifest)
+      throw new Error('socket closed')
+    }
+    await expect(convert()).rejects.toThrow('socket closed')
+    const [pending] = listOrcadMigrationSourceCutovers(userDataPath)
+    destination = serverDestination()
+
+    const result = await convert()
+    expect(result).toMatchObject({ outcome: 'converted', migrationId: pending?.migrationId })
+    expect(result).not.toHaveProperty('linkedProjects')
+    expect(listOrcadMigrationSourceCutovers(userDataPath)[0]?.linkedRepositoryIds).toBeUndefined()
+  })
+})
+
 describe('what a linked project leaves behind', () => {
   it('counts this desktop’s automations on each linked project only', () => {
     const runIn = (repoId: string) => ({
@@ -332,15 +393,17 @@ describe('what a linked project leaves behind', () => {
 
 describe('which projects are the same checkout', () => {
   const incoming = [{ id: 'mine', path: '/root/app' }]
+  const NONE = { otherId: [], sameId: [] }
 
   it('links the same absolute path on the host, spelled with a trailing slash', () => {
-    expect(repositoriesHeldByServer(incoming, [{ id: 'theirs', path: '/root/app/' }])).toEqual([
-      'mine'
-    ])
+    expect(repositoriesHeldByServer(incoming, [{ id: 'theirs', path: '/root/app/' }])).toEqual({
+      otherId: ['mine'],
+      sameId: []
+    })
   })
 
   it('keeps a POSIX path that differs only in case apart', () => {
-    expect(repositoriesHeldByServer(incoming, [{ id: 'theirs', path: '/root/App' }])).toEqual([])
+    expect(repositoriesHeldByServer(incoming, [{ id: 'theirs', path: '/root/App' }])).toEqual(NONE)
   })
 
   it('folds case on a Windows host', () => {
@@ -349,14 +412,17 @@ describe('which projects are the same checkout', () => {
         [{ id: 'mine', path: 'C:\\src\\app' }],
         [{ id: 'theirs', path: 'c:/src/app' }]
       )
-    ).toEqual(['mine'])
+    ).toEqual({ otherId: ['mine'], sameId: [] })
   })
 
-  it('leaves a project the server holds under the same id to the import', () => {
-    expect(repositoriesHeldByServer(incoming, [{ id: 'mine', path: '/root/app' }])).toEqual([])
+  it('tells apart a project the server holds under the same id', () => {
+    expect(repositoriesHeldByServer(incoming, [{ id: 'mine', path: '/root/app' }])).toEqual({
+      otherId: [],
+      sameId: ['mine']
+    })
   })
 
   it('does not link a different path', () => {
-    expect(repositoriesHeldByServer(incoming, [{ id: 'theirs', path: '/root/app2' }])).toEqual([])
+    expect(repositoriesHeldByServer(incoming, [{ id: 'theirs', path: '/root/app2' }])).toEqual(NONE)
   })
 })

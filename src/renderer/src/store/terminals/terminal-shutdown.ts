@@ -12,6 +12,8 @@ import { equalStringSets, sortedUniquePtyIds } from './terminal-pty-identities'
 import { resolveTerminalStopRuntimeEnvironmentId } from './terminal-workspace-routing'
 import { createTerminalShutdownGuardController } from './terminal-shutdown-guards'
 import { commitTerminalShutdownState } from './terminal-shutdown-state'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../shared/layout-owner-switch'
+import { recordPaneSleepThroughLayoutOwner } from './terminal-sleep-layout-owner'
 
 type ExactTerminalStopResult = {
   stoppedPtyIds?: string[]
@@ -155,6 +157,10 @@ export function createTerminalShutdownActions(
       }
 
       guards.commitHandlerSnapshots()
+      // Switch point: main records a sleep's resumes once the terminals stopped (none on removal).
+      if (ORCA_LAYOUT_OWNER_IS_MAIN) {
+        recordPaneSleepThroughLayoutOwner(get(), worktreeId, sleepingAgentSessionRecords)
+      }
       commitTerminalShutdownState({
         exitGuardPtyIds,
         get,

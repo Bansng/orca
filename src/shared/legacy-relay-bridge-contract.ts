@@ -20,13 +20,25 @@ export type LegacyRelayBridgeAttachResult =
   /** The relay holding it can't be reached right now; the pane stays bound and waits. */
   | { status: 'unverifiable' }
 
+export type LegacyRelayBridgeCloseResult =
+  /** The relay accepted the stop; its own exit report retires the pane. */
+  | { status: 'requested' }
+  /** No relay for the host can be holding it. */
+  | { status: 'exited' }
+  | { status: 'not-bridged' }
+  /** The relay can't be asked now; the stop is sent once it can. Never read as exited. */
+  | { status: 'unverifiable' }
+
 export const LEGACY_RELAY_BRIDGE_CHANNELS = {
   listPanes: 'legacyRelayBridge:listPanes',
   attach: 'legacyRelayBridge:attach',
   write: 'legacyRelayBridge:write',
   resize: 'legacyRelayBridge:resize',
   detach: 'legacyRelayBridge:detach',
+  close: 'legacyRelayBridge:close',
+  setOutputPaused: 'legacyRelayBridge:setOutputPaused',
   panes: 'legacyRelayBridge:panes',
   data: 'legacyRelayBridge:data',
+  replay: 'legacyRelayBridge:replay',
   exit: 'legacyRelayBridge:exit'
 } as const

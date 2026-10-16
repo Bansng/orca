@@ -5,6 +5,7 @@ import {
   ORCAD_READINESS_FILENAME,
   orcadLaunchCommand,
   orcadLivenessBlocksGc,
+  orcadLivenessProvenExited,
   orcadLivenessProbeCommand,
   OrcadRemoteLaunchUnsupportedError,
   parseOrcadLiveness,
@@ -100,11 +101,21 @@ describe('liveness', () => {
   it.each([
     ['LIVE', 'LIVE', true],
     ['DEAD', 'DEAD', false],
+    ['NEVER_LAUNCHED', 'NEVER_LAUNCHED', false],
     ['', 'UNKNOWN', true],
     ['garbage', 'UNKNOWN', true]
   ])('parses %s and blocks GC = %s', (output, expected, blocks) => {
     expect(parseOrcadLiveness(output)).toBe(expected)
     expect(orcadLivenessBlocksGc(parseOrcadLiveness(output))).toBe(blocks)
+  })
+
+  it.each([
+    ['DEAD', true],
+    ['NEVER_LAUNCHED', true],
+    ['LIVE', false],
+    ['UNKNOWN', false]
+  ] as const)('%s is proven exit = %s', (liveness, exited) => {
+    expect(orcadLivenessProvenExited(liveness)).toBe(exited)
   })
 })
 

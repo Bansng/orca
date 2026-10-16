@@ -15,6 +15,7 @@
 1 src/renderer/src/components/status-bar/workspace-space-decision-inputs.ts
 2 src/renderer/src/components/tab-bar/terminal-tab-activity-status.ts
 3 src/renderer/src/components/tab-bar/use-tab-bar-runtime-model-worktree-write-probe.ts
+1 src/renderer/src/components/tab-group/tab-group-layout-owner-commands.ts
 1 src/renderer/src/components/tab-group/useTabGroupWorkspaceModel.ts
 1 src/renderer/src/components/terminal-pane/pty-connection-test-deps.ts
 4 src/renderer/src/components/terminal-pane/terminal-recovery-ledger-test-store.ts

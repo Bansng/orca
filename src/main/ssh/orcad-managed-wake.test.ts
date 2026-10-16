@@ -107,6 +107,22 @@ describe('wakeStoppedManagedOrcad', () => {
     expect(launches()).toEqual([])
   })
 
+  it('starts an active slot with no launch artifacts at all: nothing ever ran from it', async () => {
+    host = stoppedHost()
+    host.pidFiles.clear()
+    // Neither a PID file nor a readiness file, so the host answers NEVER_LAUNCHED, not UNKNOWN.
+    vi.mocked(execCommand).mockImplementation(async (_conn, command) =>
+      command.includes('echo LIVE;') && !host.alive.has(OLD) ? 'NEVER_LAUNCHED' : host.exec(command)
+    )
+
+    const wake = await wakeStoppedManagedOrcad(slot)
+
+    expect(wake.outcome).toBe('started')
+    expect([...host.alive]).toEqual([OLD])
+    expect(host.fence).toBe(false)
+    expect(launches()).toHaveLength(1)
+  })
+
   it('defers to an update or recovery that holds the activation fence', async () => {
     host = stoppedHost()
     host.fence = true

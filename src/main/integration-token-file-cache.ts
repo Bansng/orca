@@ -12,6 +12,14 @@ import {
 
 type TokenFileState = { present: boolean; token?: string; error?: string }
 const MAX_CREDENTIAL_ENTRIES = 128
+const decryptFailureResets = new Set<() => void>()
+
+/** Drops every recorded decrypt failure, e.g. once a locked keychain opens, so status stops citing it. */
+export function forgetIntegrationCredentialDecryptFailures(): void {
+  for (const reset of decryptFailureResets) {
+    reset()
+  }
+}
 
 export function createIntegrationTokenFileCache(args: {
   service: IntegrationCredentialService
@@ -37,6 +45,13 @@ export function createIntegrationTokenFileCache(args: {
     }
     return entry.get()
   }
+  decryptFailureResets.add(() => {
+    for (const [id, entry] of entries) {
+      if (entry.get().error !== undefined) {
+        entries.delete(id)
+      }
+    }
+  })
   return {
     has(id: string): boolean {
       return stateFor(id).present

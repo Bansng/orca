@@ -20,6 +20,11 @@ export function WorktreeForceDeleteButton({
   size = 'sm',
   disabled = false,
   buttonRef,
+  fullWidth = false,
+  menuSide,
+  moreActionsLabel,
+  alwaysForceDeleteLabel,
+  alwaysForceDeleteTooltip,
   children
 }: {
   toastId?: string
@@ -29,6 +34,11 @@ export function WorktreeForceDeleteButton({
   size?: 'sm' | 'default'
   disabled?: boolean
   buttonRef?: Ref<HTMLButtonElement>
+  fullWidth?: boolean
+  menuSide?: 'top' | 'bottom'
+  moreActionsLabel?: string
+  alwaysForceDeleteLabel?: string
+  alwaysForceDeleteTooltip?: string
   children?: ReactNode
 }): React.JSX.Element {
   const [isSaving, setIsSaving] = useState(false)
@@ -62,6 +72,7 @@ export function WorktreeForceDeleteButton({
   return (
     <DropdownMenu modal={false}>
       <ButtonGroup
+        className={fullWidth ? 'w-full' : undefined}
         onBlur={(event) => {
           if (
             event.relatedTarget instanceof HTMLElement &&
@@ -77,6 +88,7 @@ export function WorktreeForceDeleteButton({
           variant="destructive"
           size={size}
           disabled={disabled || isSaving}
+          className={fullWidth ? 'min-w-0 flex-1' : undefined}
           onClick={forceDelete}
         >
           {children ??
@@ -89,7 +101,10 @@ export function WorktreeForceDeleteButton({
               variant="destructive"
               size={size === 'sm' ? 'icon-sm' : 'icon'}
               disabled={disabled || isSaving}
-              aria-label={translate('workspaceDeletion.moreActions', 'More force delete options')}
+              aria-label={
+                moreActionsLabel ??
+                translate('workspaceDeletion.moreActions', 'More force delete options')
+              }
             >
               <ChevronDown className="size-3.5" />
             </Button>
@@ -99,6 +114,7 @@ export function WorktreeForceDeleteButton({
       {onAlwaysForceDelete ? (
         <DropdownMenuContent
           align="end"
+          side={menuSide}
           // Sonner restores toast focus on blur; the portaled menu owns its focus.
           onFocus={(event) => event.stopPropagation()}
           onBlur={(event) => event.stopPropagation()}
@@ -111,14 +127,16 @@ export function WorktreeForceDeleteButton({
                   void alwaysForceDelete()
                 }}
               >
-                {translate('workspaceDeletion.alwaysForceDelete', 'Always force delete')}
+                {alwaysForceDeleteLabel ??
+                  translate('workspaceDeletion.alwaysForceDelete', 'Always force delete')}
               </DropdownMenuItem>
             </TooltipTrigger>
             <TooltipContent side="left" sideOffset={8}>
-              {translate(
-                'workspaceDeletion.alwaysForceDeleteTooltip',
-                'Applies to all future workspace deletions.'
-              )}
+              {alwaysForceDeleteTooltip ??
+                translate(
+                  'workspaceDeletion.alwaysForceDeleteTooltip',
+                  'Applies to all future workspace deletions.'
+                )}
             </TooltipContent>
           </Tooltip>
         </DropdownMenuContent>
