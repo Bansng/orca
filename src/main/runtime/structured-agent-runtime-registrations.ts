@@ -117,6 +117,7 @@ function createAcpAdapter(
     const part = acpStructuredLaunchPart(spec, {
       readJournal,
       ...(deps.resolveAgentFullAccess ? { resolveFullAccess: deps.resolveAgentFullAccess } : {}),
+      dataDirectory: deps.stateDirectory,
       logger: deps.logger
     })
     return new AcpStructuredSessionAdapter({
