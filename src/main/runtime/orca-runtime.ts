@@ -26,7 +26,11 @@ import {
 import { findWorkspaceReferences } from './runtime-reference-find'
 import { createReferenceAgentIndex, referenceConnectionHosts } from './runtime-reference-agents'
 import type { RuntimeReferenceFindParams } from '../../shared/runtime-reference-contracts'
-import { getRepoExecutionHostId } from '../../shared/execution-host'
+import { getRepoExecutionHostId, parseExecutionHostId } from '../../shared/execution-host'
+import type {
+  LayoutApplyReply,
+  LayoutCommand
+} from '../../shared/workspace-layout/workspace-layout-command-types'
 import type { TerminalCreateOptions } from './runtime-terminal-contracts'
 
 // oxlint-disable-next-line typescript/no-unsafe-declaration-merging -- SAFETY: The existing Linear installer supplies the canonical prototype surface.
@@ -165,6 +169,20 @@ class OrcaRuntimeService extends OrcaRuntimeWithMigrationCatalog {
     listener: Parameters<WorkspaceLayoutStream['subscribe']>[0]
   ): ReturnType<WorkspaceLayoutStream['subscribe']> {
     return this.workspaceLayoutStream.subscribe(listener)
+  }
+
+  /** A window's layout command (`layout.apply`), applied to the partition that holds the tab. */
+  async applyLayoutCommand(command: LayoutCommand & { tabId: string }): Promise<LayoutApplyReply> {
+    const hostId = this.getWorkspaceSessionHostIdForTab(command.workspace, command.tabId)
+    // Why: a paired server's workspaces keep today's mirrored layout until that server owns it.
+    if (parseExecutionHostId(hostId)?.kind === 'runtime') {
+      return { ok: false, code: 'host_not_owned' }
+    }
+    const store = this.requireStore()
+    if (!store.applyLayoutCommand) {
+      throw new Error('layout_store_unavailable')
+    }
+    return store.applyLayoutCommand(command, hostId)
   }
 
   /** This desktop's display-only copy of each paired server's layout (`layout.getRemoteSnapshots`). */
