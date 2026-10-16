@@ -41,6 +41,7 @@ import {
   type AgentSessionLaunchPlan
 } from '@/lib/agent-session-launch-plan'
 import { newAgentLaunchRequestId } from '@/lib/agent-launch-request-id'
+import { ensureDetectedAgentsForRepo } from '@/lib/agent-detection-target-inventory'
 
 /**
  * "Use" flow: create the workspace, activate it, launch the default agent,
@@ -106,11 +107,7 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
   }
   // Why: agent detection shells out and can be cold/slow. Start it now, but
   // don't let it serialize setup-policy resolution or git worktree creation.
-  const detectedAgentsPromise = agentOverride
-    ? null
-    : repoConnectionId
-      ? store.ensureRemoteDetectedAgents(repoConnectionId)
-      : store.ensureDetectedAgents()
+  const detectedAgentsPromise = agentOverride ? null : ensureDetectedAgentsForRepo(store, repo)
 
   const setupResolution = await resolveDirectSetupDecision(repoId, repo, repoOwnerHostId)
   if (setupResolution.kind === 'needs-modal') {
@@ -212,6 +209,7 @@ export async function launchWorkItemDirect(args: LaunchWorkItemDirectArgs): Prom
       agentOverride,
       agentArgs,
       repoConnectionId,
+      repoHost: repo,
       detectedAgentsPromise,
       latestStore,
       settings,

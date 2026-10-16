@@ -10,6 +10,10 @@ import type {
   AgentLaunchTabPublishRequest
 } from '../../shared/agent-launch-tab-publication'
 import type { AgentLaunchPaneVerdictEvent } from '../../shared/agent-launch-pane-verdict'
+import type {
+  TerminalPaneRevealReply,
+  TerminalPaneRevealRequest
+} from '../../shared/terminal-pane-reveal'
 import type { RuntimeNavigationTarget } from '../../shared/runtime-navigation'
 import type { TerminalSurfaceCloseTarget } from '../../shared/terminal-surface-close-target'
 import type {
@@ -52,6 +56,10 @@ import type {
   WorktreeSleepRequest,
   WorktreeSleepResponse
 } from '../../shared/worktree-sleep-request'
+import type {
+  RemoteCliBrowserScopeQuery,
+  RemoteCliBrowserScopeReply
+} from '../../shared/desktop-browser-bridge-protocol'
 
 export type CloseActiveTabPayload = { sourceId: string }
 
@@ -112,6 +120,11 @@ export type UiCommandEventApi = {
     }) => void
   ) => () => void
   replyTabCreate: (reply: { requestId: string; browserPageId?: string; error?: string }) => void
+  /** Main asks whether a paired environment owns a workspace before running that host's CLI command. */
+  onRequestRemoteCliBrowserScope: (
+    callback: (data: RemoteCliBrowserScopeQuery) => void
+  ) => () => void
+  replyRemoteCliBrowserScope: (reply: RemoteCliBrowserScopeReply) => void
   onRequestTabSetProfile: (
     callback: (data: {
       requestId: string
@@ -202,6 +215,8 @@ export type UiCommandEventApi = {
   onPublishAgentLaunchTab: (callback: (data: AgentLaunchTabPublishRequest) => void) => () => void
   replyAgentLaunchTabPublish: (reply: AgentLaunchTabPublishReply) => void
   onAgentLaunchPaneVerdict: (callback: (data: AgentLaunchPaneVerdictEvent) => void) => () => void
+  onRevealTerminalPane: (callback: (data: TerminalPaneRevealRequest) => void) => () => void
+  replyTerminalPaneReveal: (reply: TerminalPaneRevealReply) => void
   onSplitTerminal: (
     callback: (data: {
       tabId: string

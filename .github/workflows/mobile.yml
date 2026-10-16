@@ -6,6 +6,8 @@ on:
       - opened
       - synchronize
       - reopened
+      - ready_for_review
+      - converted_to_draft
     paths:
       - 'mobile/**'
       # Why all of src/shared: mobile imports hundreds of its modules, directly and through the RPC
@@ -94,7 +96,7 @@ concurrency:
 jobs:
   verify:
     name: Mobile verify
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft != true
     # Why ARM: 209s of this job is Vitest and nothing here needs x86: no Android SDK, emulator, gradle,
     # Hermes or Watchman, no docker, and no artifacts. The Gemfile.lock lists the generic `ruby`
     # platform, so frozen bundler installs without an aarch64-linux entry.

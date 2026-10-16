@@ -91,6 +91,12 @@ export async function probeActiveOrcadReadiness(
       `orcad ${expectation.fullVersion} is recorded active but its process has exited.`
     )
   }
+  if (liveness === 'NEVER_LAUNCHED') {
+    throw new OrcadActiveReadinessError(
+      'exited',
+      `orcad ${expectation.fullVersion} is recorded active but was never started from its install directory.`
+    )
+  }
   if (liveness !== 'LIVE') {
     throw new OrcadActiveReadinessError(
       'unverifiable',

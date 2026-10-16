@@ -150,6 +150,7 @@ export abstract class RuntimeConstructionServices {
   protected abstract getValidatedExplicitWorktreeIdSelector(
     selector: string | undefined
   ): string | null
+  abstract getExplicitSessionWorktreeIdSelector(selector: string | undefined): string | null
   protected abstract buildResolvedWorktreeFromId(worktreeId: string): ResolvedWorktree | null
   protected abstract listKnownResolvedWorktreesForExplicitTarget(
     targetWorktreeId: string,

@@ -1,6 +1,12 @@
 // applyLayoutCommand: every layout change a client can ask for, applied to the model in one step.
 // Pure and synchronous, so the runtime applies commands in arrival order on one thread.
 
+import {
+  closeBrowserPage,
+  openBrowserPage,
+  replaceBrowserPage,
+  setBrowserTabProfile
+} from './workspace-layout-browser-commands'
 import { applied, refuse, type Applied } from './workspace-layout-command-steps'
 import type { LayoutCommand, LayoutContext } from './workspace-layout-command-types'
 import {
@@ -29,6 +35,7 @@ import {
   setChatPane,
   setTabProps
 } from './workspace-layout-tab-commands'
+import { moveTabToWorkspace } from './workspace-layout-workspace-move'
 
 const CREATES_WORKSPACE = new Set<LayoutCommand['type']>([
   'createTerminalTab',
@@ -68,7 +75,7 @@ function applyCommand(
     case 'closePane':
       return closePane(model, command)
     case 'closeTabs':
-      return closeTabs(model, command)
+      return closeTabs(model, command, context)
     case 'moveTab':
       return moveTab(model, command)
     case 'splitGroup':
@@ -95,8 +102,18 @@ function applyCommand(
       return openEditorTab(model, command, context)
     case 'promotePreviewTab':
       return promotePreviewTab(model, command)
+    case 'moveTabToWorkspace':
+      return moveTabToWorkspace(model, command, context)
     case 'openBrowserTab':
       return openBrowserTab(model, command, context)
+    case 'openBrowserPage':
+      return openBrowserPage(model, command)
+    case 'closeBrowserPage':
+      return closeBrowserPage(model, command)
+    case 'replaceBrowserPage':
+      return replaceBrowserPage(model, command)
+    case 'setBrowserTabProfile':
+      return setBrowserTabProfile(model, command)
     case 'openAgentSessionTab':
       return openAgentSessionTab(model, command, context)
     case 'startPane':

@@ -1,4 +1,4 @@
-import { AlertTriangle, GitBranch, Server, Trash2 } from 'lucide-react'
+import { AlertTriangle, FolderSearch, GitBranch, Server, Trash2 } from 'lucide-react'
 import type { WorkspaceSpaceWorktree } from '../../../../shared/workspace-space-types'
 import { cn } from '@/lib/utils'
 import { Badge } from '../ui/badge'
@@ -7,8 +7,10 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuSeparator,
   ContextMenuTrigger
 } from '../ui/context-menu'
+import { getRevealInFileManagerLabel, revealInFileManager } from '@/lib/reveal-in-file-manager'
 import { HoverCard, HoverCardTrigger } from '../ui/hover-card'
 import { formatBytes, getWorkspaceSpaceBranchLabel } from './workspace-space-format'
 import { isWorkspaceSpaceRowReadyToDelete } from './workspace-space-presentation'
@@ -176,21 +178,30 @@ export function WorkspaceSpaceWorktreeRow({
     </div>
   )
 
-  if (!canDelete) {
-    return row
-  }
-
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{row}</ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem variant="destructive" onSelect={onDelete}>
-          <Trash2 className="size-3.5" />
-          {translate(
-            'auto.components.status.bar.WorkspaceSpaceManagerPanel.792a214457',
-            'Delete workspace'
-          )}
+        <ContextMenuItem
+          onSelect={() =>
+            void revealInFileManager(worktree.path, worktree.executionHostId ?? 'unresolved')
+          }
+        >
+          <FolderSearch className="size-3.5" />
+          {getRevealInFileManagerLabel()}
         </ContextMenuItem>
+        {canDelete ? (
+          <>
+            <ContextMenuSeparator />
+            <ContextMenuItem variant="destructive" onSelect={onDelete}>
+              <Trash2 className="size-3.5" />
+              {translate(
+                'auto.components.status.bar.WorkspaceSpaceManagerPanel.792a214457',
+                'Delete workspace'
+              )}
+            </ContextMenuItem>
+          </>
+        ) : null}
       </ContextMenuContent>
     </ContextMenu>
   )

@@ -6,6 +6,7 @@ import { ipcRenderer, type IpcRendererEvent } from 'electron'
 import {
   LEGACY_RELAY_BRIDGE_CHANNELS as CHANNELS,
   type LegacyRelayBridgeAttachResult,
+  type LegacyRelayBridgeCloseResult,
   type LegacyRelayBridgedPane
 } from '../../shared/legacy-relay-bridge-contract'
 
@@ -15,8 +16,12 @@ export type LegacyRelayBridgeApi = {
   write: (args: { ptyId: string; data: string }) => void
   resize: (args: { ptyId: string; cols: number; rows: number }) => void
   detach: (args: { ptyId: string }) => void
+  /** Stops the shell its closed tab ran. */
+  close: (args: { ptyId: string }) => Promise<LegacyRelayBridgeCloseResult>
+  setOutputPaused: (args: { ptyId: string; paused: boolean }) => void
   onPanes: (callback: (panes: LegacyRelayBridgedPane[]) => void) => () => void
   onData: (callback: (event: { ptyId: string; data: string }) => void) => () => void
+  onReplay: (callback: (event: { ptyId: string; replay: string }) => void) => () => void
   onExit: (callback: (event: { ptyId: string; code: number }) => void) => () => void
 }
 
@@ -34,7 +39,10 @@ export const legacyRelayBridgeApi: LegacyRelayBridgeApi = {
   write: (args) => ipcRenderer.send(CHANNELS.write, args),
   resize: (args) => ipcRenderer.send(CHANNELS.resize, args),
   detach: (args) => ipcRenderer.send(CHANNELS.detach, args),
+  close: (args) => ipcRenderer.invoke(CHANNELS.close, args),
+  setOutputPaused: (args) => ipcRenderer.send(CHANNELS.setOutputPaused, args),
   onPanes: (callback) => subscribe(CHANNELS.panes, callback),
   onData: (callback) => subscribe(CHANNELS.data, callback),
+  onReplay: (callback) => subscribe(CHANNELS.replay, callback),
   onExit: (callback) => subscribe(CHANNELS.exit, callback)
 }

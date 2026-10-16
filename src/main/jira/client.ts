@@ -1,4 +1,5 @@
 import { CredentialDecryptionError } from '../integration-credential-file'
+import { integrationCredentialKeychainFields } from '../integration-credential-keychain'
 import type {
   JiraAuthType,
   JiraConnectArgs,
@@ -75,6 +76,10 @@ export function getStatus(): JiraConnectionStatus {
     activeSiteId: activeSite?.id ?? null,
     selectedSiteId: file.selectedSiteId ?? activeSite?.id ?? null,
     ...(credentialError ? { credentialError } : {}),
+    ...integrationCredentialKeychainFields({
+      saved: sites.length > 0,
+      decryptFailed: credentialError !== undefined
+    }),
     credentialProtection,
     supportsScopedTokens: true
   }

@@ -30,6 +30,13 @@ export const REMOTE_CLI_UNAVAILABLE =
 
 export type LegacyRelayOwnerClaim = { ownerGeneration: number; ownerLease: string }
 
+/** Serves the `orca` commands run inside the old relay's terminals; params are the host's. */
+export type LegacyRelayCliServer = {
+  /** `signal` aborts when this client's connection closes, so a waiting check stops with it. */
+  cli: (params: Record<string, unknown>, signal: AbortSignal) => Promise<unknown>
+  postOutput: (params: Record<string, unknown>, signal: AbortSignal) => Promise<unknown>
+}
+
 export type LegacyRelayClientOptions = {
   clientInstanceId: string
   /** A claim this client held before a drop, so the owner role resumes without waiting. */
@@ -38,6 +45,8 @@ export type LegacyRelayClientOptions = {
   openTransport: () => Promise<MultiplexerTransport>
   /** Test seam for the owner-claim retry wait. */
   sleep?: (ms: number) => Promise<void>
+  /** Absent: every relay-era `orca` command is refused with REMOTE_CLI_UNAVAILABLE. */
+  cliServer?: LegacyRelayCliServer
 }
 
 /** Another client holds this relay's terminals while attached; never displaced. */
@@ -53,6 +62,9 @@ export type LegacyRelayPty = {
   cwd?: string
   title?: string
   worktreeId?: string
+  /** The relay's own claims about the process; the bridge checks them against desktop records. */
+  incarnationId?: string
+  terminalHandle?: string
 }
 
 type DataListener = (relayPtyId: string, data: string) => void
@@ -74,10 +86,17 @@ const PtyRowSchema = z.object({
   id: z.string().min(1),
   cwd: z.string().optional().catch(undefined),
   title: z.string().optional().catch(undefined),
-  worktreeId: z.string().optional().catch(undefined)
+  worktreeId: z.string().optional().catch(undefined),
+  incarnationId: z.string().min(1).max(512).optional().catch(undefined),
+  terminalHandle: z.string().min(1).max(512).optional().catch(undefined)
 })
 
 const AttachResultSchema = z.object({ replay: z.string().optional().catch(undefined) }).nullable()
+
+function replayOf(result: unknown): string {
+  const parsed = AttachResultSchema.safeParse(result)
+  return (parsed.success ? parsed.data?.replay : undefined) ?? ''
+}
 
 function parseOwnerGrant(value: unknown): LegacyRelayOwnerClaim {
   const grant = OwnerGrantSchema.safeParse(value)
@@ -96,13 +115,15 @@ function parsePtyList(value: unknown): LegacyRelayPty[] {
     if (!parsed.success) {
       return []
     }
-    const { id, cwd, title, worktreeId } = parsed.data
+    const { id, cwd, title, worktreeId, incarnationId, terminalHandle } = parsed.data
     return [
       {
         relayPtyId: id,
         ...(cwd === undefined ? {} : { cwd }),
         ...(title === undefined ? {} : { title }),
-        ...(worktreeId === undefined ? {} : { worktreeId })
+        ...(worktreeId === undefined ? {} : { worktreeId }),
+        ...(incarnationId === undefined ? {} : { incarnationId }),
+        ...(terminalHandle === undefined ? {} : { terminalHandle })
       }
     ]
   })
@@ -116,24 +137,34 @@ export class LegacyRelayClient {
   private constructor(
     private readonly mux: SshChannelMultiplexer,
     /** Null for a relay that predates owner claims (it serves any client). */
-    readonly ownerClaim: LegacyRelayOwnerClaim | null
+    readonly ownerClaim: LegacyRelayOwnerClaim | null,
+    cliServer: LegacyRelayCliServer | undefined
   ) {
     mux.onNotification((method, params) => this.route(method, params))
-    // The old relay forwards `orca` commands run inside its terminals to its attached client.
-    // This build has no relay-era remote CLI, so it says why instead of "Method not found".
-    for (const method of ['orca.cli', 'orca.cli.postOutput']) {
-      mux.onRequest(method, () => {
-        throw new Error(REMOTE_CLI_UNAVAILABLE)
-      })
-    }
-    mux.onDispose(() => this.closeListeners.forEach((listener) => listener()))
+    // The old relay forwards `orca` commands run inside its terminals to its attached client;
+    // without a server this says why instead of "Method not found".
+    const closed = new AbortController()
+    mux.onRequest('orca.cli', (params) =>
+      cliServer
+        ? cliServer.cli(params, closed.signal)
+        : Promise.reject(new Error(REMOTE_CLI_UNAVAILABLE))
+    )
+    mux.onRequest('orca.cli.postOutput', (params) =>
+      cliServer
+        ? cliServer.postOutput(params, closed.signal)
+        : Promise.reject(new Error(REMOTE_CLI_UNAVAILABLE))
+    )
+    mux.onDispose(() => {
+      closed.abort()
+      this.closeListeners.forEach((listener) => listener())
+    })
   }
 
   static async open(options: LegacyRelayClientOptions): Promise<LegacyRelayClient> {
     const mux = new SshChannelMultiplexer(await options.openTransport())
     try {
       const claim = await claimOwner(mux, options)
-      return new LegacyRelayClient(mux, claim)
+      return new LegacyRelayClient(mux, claim, options.cliServer)
     } catch (error) {
       mux.dispose()
       throw error
@@ -154,15 +185,23 @@ export class LegacyRelayClient {
     )
   }
 
-  /** Resumes output for one PTY and returns its screen so far. Throws "not found" when it is gone. */
-  async attach(relayPtyId: string): Promise<{ replay: string }> {
+  /**
+   * Resumes output for one PTY and returns its screen so far. Throws "not found" when it is gone.
+   * `atSnapshot` runs in stream order: output routed before it is in the screen, output after is not.
+   */
+  async attach(
+    relayPtyId: string,
+    atSnapshot?: (replay: string) => void
+  ): Promise<{ replay: string }> {
     const result = await this.mux.request(
       'pty.attach',
       { id: relayPtyId, suppressReplayNotification: true, requireReplay: true },
-      { timeoutMs: REQUEST_TIMEOUT_MS }
+      {
+        timeoutMs: REQUEST_TIMEOUT_MS,
+        ...(atSnapshot ? { beforeResolve: (value: unknown) => atSnapshot(replayOf(value)) } : {})
+      }
     )
-    const parsed = AttachResultSchema.safeParse(result)
-    return { replay: (parsed.success ? parsed.data?.replay : undefined) ?? '' }
+    return { replay: replayOf(result) }
   }
 
   write(relayPtyId: string, data: string): void {
@@ -171,6 +210,23 @@ export class LegacyRelayClient {
 
   resize(relayPtyId: string, cols: number, rows: number): void {
     this.mux.notify('pty.resize', { id: relayPtyId, cols, rows })
+  }
+
+  /**
+   * The old relay's own stop: it kills the shell and reports `pty.exit` (v1.4.2xx wire shape).
+   * The incarnation fence is omitted, never sent undefined, for relays that predate it.
+   */
+  async shutdown(relayPtyId: string, expectedIncarnationId?: string): Promise<void> {
+    await this.mux.request(
+      'pty.shutdown',
+      {
+        id: relayPtyId,
+        immediate: false,
+        keepHistory: false,
+        ...(expectedIncarnationId ? { expectedIncarnationId } : {})
+      },
+      { timeoutMs: REQUEST_TIMEOUT_MS }
+    )
   }
 
   onData(listener: DataListener): () => void {

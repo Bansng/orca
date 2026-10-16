@@ -68,6 +68,27 @@ describe('runtime environment mobile relay hosts', () => {
     expect(mocks.resolveManaged).not.toHaveBeenCalled()
   })
 
+  it('relays SSH-managed servers, with and without the persisted deployment kind', async () => {
+    const tunnel = { sshTargetId: 't', sshTargetGeneration: 1, localPort: 1, remotePort: 2 }
+    mocks.environments = [
+      { id: 'legacy', name: 'A', createdAt: 1, runtimeId: null, orcadDeployment: tunnel },
+      {
+        id: 'managed',
+        name: 'B',
+        createdAt: 2,
+        runtimeId: null,
+        orcadDeployment: { kind: 'ssh', ...tunnel }
+      }
+    ]
+    const hosts = createRuntimeEnvironmentMobileRelayHosts()
+    expect(hosts.list().environments.map((environment) => environment.id)).toEqual([
+      'legacy',
+      'managed'
+    ])
+    await hosts.resolve('managed')
+    expect(mocks.resolveManaged).toHaveBeenCalledWith('/user-data', 'managed')
+  })
+
   it("lists configured servers with the desktop's own status, ignoring another pairing's snapshot", () => {
     mocks.environments = [
       { id: 'env-1', name: 'VM', createdAt: 1, pairingRevision: 7, runtimeId: 'runtime-a' },

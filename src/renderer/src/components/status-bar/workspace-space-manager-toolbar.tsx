@@ -32,7 +32,7 @@ export function WorkspaceSpaceManagerToolbar({
   } = model
   return (
     <>
-      {hasRows ? (
+      {selectedDeletableIds.length > 0 ? (
         <div className="sticky top-0 z-10 -mx-1 flex flex-wrap items-center justify-between gap-2 rounded-md border border-border/70 bg-background/95 px-3 py-2 shadow-xs backdrop-blur">
           <div className="min-w-0 text-xs text-muted-foreground">
             <span className="font-medium text-foreground">

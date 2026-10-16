@@ -19,6 +19,8 @@ export abstract class OrcaRuntimeWithCreateMobileSessionTerminal extends OrcaRun
     selector: string | undefined
   ): string | null
 
+  abstract getExplicitSessionWorktreeIdSelector(selector: string | undefined): string | null
+
   protected abstract getMobileSessionTabsForWorktree(
     worktreeId: string,
     clientNavigationId?: string
@@ -38,6 +40,7 @@ export abstract class OrcaRuntimeWithCreateMobileSessionTerminal extends OrcaRun
       agentPrompt?: string
       launchConfig?: SleepingAgentLaunchConfig
       launchAgent?: TuiAgent
+      terminalImageViewerSupported?: boolean
       viewMode?: 'terminal' | 'chat'
       activate?: boolean
       select?: boolean
@@ -85,7 +88,7 @@ export abstract class OrcaRuntimeWithCreateMobileSessionTerminal extends OrcaRun
     }
     if (select) {
       const worktreeId =
-        this.getValidatedExplicitWorktreeIdSelector(worktreeSelector) ??
+        this.getExplicitSessionWorktreeIdSelector(worktreeSelector) ??
         (await this.resolveWorktreeSelector(worktreeSelector)).id
       this.applyMobileSessionTabNavigation(
         this.getMobileSessionTabsForWorktree(worktreeId),

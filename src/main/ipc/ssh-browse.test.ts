@@ -70,7 +70,7 @@ describe('registerSshBrowseHandler', () => {
       ]
     })
     expect(exec).toHaveBeenCalledWith(
-      expect.stringContaining('\ncd "$HOME" && pwd && command ls -1Ap\n')
+      expect.stringContaining('\ncd "$HOME" && pwd && entries=$(command ls -1A) && ')
     )
     expect(channel.listenerCount('data')).toBe(0)
     expect(channel.listenerCount('exit')).toBe(0)
@@ -160,7 +160,7 @@ describe('registerSshBrowseHandler', () => {
       entries: []
     })
     expect(exec).toHaveBeenCalledWith(
-      expect.stringContaining("\ncd '/tmp/it'\\''s here' && pwd && command ls -1Ap\n")
+      expect.stringContaining("\ncd '/tmp/it'\\''s here' && pwd && entries=$(command ls -1A) && ")
     )
   })
 
@@ -203,7 +203,7 @@ describe('registerSshBrowseHandler', () => {
     expect(exec).toHaveBeenCalledTimes(2)
     expect(exec).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining("\ncd 'C:/Users/alice' && pwd && command ls -1Ap\n")
+      expect.stringContaining("\ncd 'C:/Users/alice' && pwd && entries=$(command ls -1A) && ")
     )
     expect(exec.mock.calls[1]?.[0]).toMatch(/^powershell\.exe /)
     expect(exec.mock.calls[1]?.[1]).toEqual({ wrapCommand: false })

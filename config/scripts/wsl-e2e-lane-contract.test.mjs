@@ -17,6 +17,7 @@ describe('real WSL terminal lane', () => {
     'tests/e2e/helpers/wsl-golden-stub-agent.ts',
     'tests/e2e/golden-tab-bar-agent-launch.spec.ts',
     'tests/e2e/terminal-windows-shell-paste-ownership.spec.ts',
+    'tests/e2e/terminal-inline-images-windows.spec.ts',
     '.github/actions/setup-wsl-test-runtime/setup.ps1',
     '.github/workflows/windows-wsl-e2e.yml'
   ])('routes %s to both WSL sentinels', (path) => {

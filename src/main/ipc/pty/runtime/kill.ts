@@ -9,6 +9,10 @@ import {
 import { isPtyAlreadyGoneError, delay, verifyPtyStopped } from '../provider/liveness'
 import type { PtyRuntimeControllerDeps } from './controller-deps'
 import { errorMessage } from '../../../../shared/error-message'
+import {
+  closeLegacyRelayPane,
+  isLegacyRelayBridgedPty
+} from '../../../ssh/legacy-relay-bridge/legacy-relay-bridge-registry'
 
 // Bounds the wait for an observed exit to reach the runtime record when the caller set no deadline.
 const OBSERVED_EXIT_RECORD_WAIT_MS = 10_000
@@ -38,6 +42,12 @@ export function killPtyFromRuntimeController(
   } = deps
   runtime?.markPtyStopRequested?.(ptyId)
   const connectionId = getPtySshConnectionId(ptyId)
+  // COMPAT(legacy-relay-bridge, revisit 2027-01-15): an older relay's shell stops through the
+  // bridge, which retires its lease only on the relay's proof; tombstoning it here would orphan it.
+  if (connectionId && isLegacyRelayBridgedPty(ptyId)) {
+    void closeLegacyRelayPane(ptyId)
+    return true
+  }
   // Why: close runtime tails without clearing provider ownership, so
   // a retry can still target a PTY that survived the failed shutdown.
   const reportStopFailure = (err: unknown): void => {

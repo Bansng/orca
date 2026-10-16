@@ -5,6 +5,7 @@ import { translate } from '@/i18n/i18n'
 import { Metric, UpdatedMetric } from './workspace-space-metrics'
 import { WorkspaceSpaceTreemap } from './workspace-space-treemap'
 import { WorkspaceSpaceBreakdownList } from './workspace-space-breakdown-list'
+import { getWorkspaceSpaceWorktreeIdentity } from './workspace-space-delete-selection'
 import type { useWorkspaceSpaceManagerPanel } from './use-workspace-space-manager-panel'
 
 type WorkspaceSpaceManagerModel = ReturnType<typeof useWorkspaceSpaceManagerPanel>
@@ -31,6 +32,29 @@ export function WorkspaceSpaceManagerOverview({
     sourceRows,
     zoomedWorktree
   } = model
+  if (!analysis && !isScanning) {
+    return (
+      <div className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-border bg-card px-6 py-10 text-center">
+        <div className="mb-5 flex size-12 items-center justify-center rounded-lg border border-border bg-muted/40">
+          <HardDrive className="size-6 text-muted-foreground" />
+        </div>
+        <h2 className="text-lg font-semibold text-foreground">
+          {translate('workspaceSpace.empty.title', 'See where workspace storage goes')}
+        </h2>
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">
+          {translate(
+            'workspaceSpace.empty.description',
+            'Scan your workspaces to compare sizes, inspect their largest folders, and review space you can reclaim.'
+          )}
+        </p>
+        {scanError ? <p className="mt-4 max-w-md text-sm text-destructive">{scanError}</p> : null}
+        <Button variant="default" size="sm" onClick={refresh} className="mt-6">
+          <RefreshCw className="size-4" />
+          {translate('workspaceSpace.empty.scan', 'Scan workspaces')}
+        </Button>
+      </div>
+    )
+  }
   return (
     <>
       <div className="grid overflow-hidden rounded-lg border border-border/65 bg-background/35 md:grid-cols-4 md:divide-x md:divide-border/60">
@@ -42,10 +66,7 @@ export function WorkspaceSpaceManagerOverview({
           value={analysis ? formatBytes(analysis.totalSizeBytes) : '—'}
         />
         <Metric
-          label={translate(
-            'auto.components.status.bar.WorkspaceSpaceManagerPanel.83f1a0a932',
-            'Reclaimable'
-          )}
+          label={translate('workspaceSpace.metric.linkedWorktrees', 'Linked worktrees')}
           value={analysis ? formatBytes(analysis.reclaimableBytes) : '—'}
         />
         <Metric
@@ -80,8 +101,8 @@ export function WorkspaceSpaceManagerOverview({
                     { value0: progressLabel ?? 'Scanning workspace sizes' }
                   )
                 : translate(
-                    'auto.components.status.bar.WorkspaceSpaceManagerPanel.d595295d7d',
-                    '{{value0}} can be reclaimed from linked worktrees.',
+                    'workspaceSpace.summary.linkedWorktrees',
+                    '{{value0}} is used by linked worktrees. Managed worktrees can be removed here.',
                     { value0: formatBytes(analysis.reclaimableBytes) }
                   )
               : isScanning
@@ -163,11 +184,13 @@ export function WorkspaceSpaceManagerOverview({
       ) : null}
 
       {hasRows || isInitialScan ? (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.6fr)]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.6fr)]">
           <WorkspaceSpaceTreemap
             rows={sourceRows}
             isScanning={isInitialScan}
-            selectedWorktreeId={inspectedWorktree?.worktreeId ?? null}
+            selectedWorktreeId={
+              inspectedWorktree ? getWorkspaceSpaceWorktreeIdentity(inspectedWorktree) : null
+            }
             zoomedWorktree={zoomedWorktree}
             onSelect={setInspectedWorktreeId}
             onZoomChange={setTreemapZoomWorktreeId}

@@ -4,6 +4,10 @@ import type { TaskPageComposerActionsModel } from '../../use-task-page-composer-
 import { LoaderCircle } from 'lucide-react'
 import { JiraIcon } from '@/components/icons/JiraIcon'
 import { translate } from '@/i18n/i18n'
+import {
+  keychainLockedCredentialMessage,
+  useCredentialHostName
+} from '@/components/settings/keychain-credential-notice'
 import { Button } from '@/components/ui/button'
 import { jiraListGridStyle } from '../../jira-list-columns'
 import { JiraListColumnsMenu } from '../../jira-list-columns-menu'
@@ -67,6 +71,15 @@ export function TaskPageJiraContent({
     accountBackedTaskSourceHostId,
     setJiraRefreshNonce
   } = model
+  const { jiraStatusContextKey } = model
+  const credentialHost = useCredentialHostName(
+    jiraStatusContextKey,
+    jiraStatus.credentialErrorReason === 'keychain_locked'
+  )
+  const jiraCredentialError =
+    jiraStatus.credentialErrorReason === 'keychain_locked'
+      ? keychainLockedCredentialMessage('Jira', credentialHost)
+      : jiraStatus.credentialError
   const boardTarget = ipcOrRuntimeTargetForHostId(
     jiraTaskSourceContext?.hostId ?? accountBackedTaskSourceHostId
   )
@@ -142,12 +155,12 @@ export function TaskPageJiraContent({
             />
           ) : null}
 
-          {jiraStatus.credentialError ? (
+          {jiraCredentialError ? (
             <div className="border-b border-border px-4 py-4 text-sm text-destructive">
-              {jiraStatus.credentialError}
+              {jiraCredentialError}
             </div>
           ) : null}
-          {!jiraStatus.credentialError && jiraError ? (
+          {!jiraCredentialError && jiraError ? (
             <TaskPageJiraErrorBanner
               error={jiraError}
               open={jiraErrorDetailsOpen}
@@ -155,7 +168,7 @@ export function TaskPageJiraContent({
             />
           ) : null}
           <TaskPageJiraTextFallbackNotice
-            rejection={jiraStatus.credentialError ? null : jiraJqlRejection}
+            rejection={jiraCredentialError ? null : jiraJqlRejection}
           />
 
           {jiraLoading && jiraIssues.length === 0 ? (
@@ -174,7 +187,7 @@ export function TaskPageJiraContent({
           {!jiraLoading &&
           displayedJiraIssues.length === 0 &&
           !jiraError &&
-          !jiraStatus.credentialError ? (
+          !jiraCredentialError ? (
             <div className="px-4 py-10 text-center">
               <p className="text-sm font-medium text-foreground">
                 {translate('auto.components.TaskPage.eba87f2edb', 'No Jira issues found')}

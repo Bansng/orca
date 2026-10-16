@@ -1,6 +1,9 @@
 import type { ExecutionHostId } from '../../../src/shared/execution-host'
 import type { AgentWorkingMode } from '../../../src/shared/agent-status-types'
-import type { RuntimeWorktreeAgentRow } from '../../../src/shared/runtime-types'
+import type {
+  RuntimeWorktreeAgentRow,
+  RuntimeWorktreePsSummary
+} from '../../../src/shared/runtime-types'
 import type { ProjectSectionRepo } from '../../../src/shared/project-section-grouping'
 import type { WorkspaceRowFilters } from '../../../src/shared/workspace-view/workspace-row-filters'
 
@@ -38,6 +41,7 @@ export type Worktree = {
   /** Workspace options facts the host stamps (RuntimeWorktreePsSummary); older hosts send none. */
   defaultBranch?: boolean
   automationCreated?: true
+  automationName?: string
   cliCreated?: true
   detachedHead?: true
   worktreeInstanceId?: string
@@ -55,11 +59,13 @@ export type Worktree = {
   lastOutputAt?: number
   isPinned: boolean
   isActive?: boolean
-  linkedPR: { number: number; state: string } | null
+  linkedPR: RuntimeWorktreePsSummary['linkedPR']
   linkedIssue?: number | null
   linkedLinearIssue?: string | null
   linkedGitLabMR?: number | null
   linkedGitLabIssue?: number | null
+  /** Every linked issue and review; hosts before the attachment list omit it. Unchecked wire data. */
+  linkedItems?: RuntimeWorktreePsSummary['linkedItems']
   comment?: string
   status?: 'working' | 'active' | 'permission' | 'done' | 'inactive'
   workingMode?: AgentWorkingMode

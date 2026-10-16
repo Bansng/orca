@@ -12,7 +12,14 @@
     }
   },
   "githubChecks": {
-    "retrying": "재시도 중…"
+    "retrying": "재시도 중…",
+    "logsNotYetAvailable": "로그 출력을 아직 사용할 수 없습니다.",
+    "logsLoadErrorDetails": "로그를 불러오지 못했습니다. 새로고침하여 다시 시도하세요.",
+    "logsLoadErrorSidebar": "로그를 불러오지 못했습니다. 전체 세부정보 보기를 열고 새로고침하여 다시 시도하세요.",
+    "logsEmpty": "로그 출력이 반환되지 않았습니다.",
+    "logsNotRequested": "로그 발췌를 요청하지 않았습니다. 검사마다 실패한 작업의 로그 발췌를 최대 5개 불러옵니다.",
+    "noLogExcerpt": "사용 가능한 로그 발췌가 없습니다.",
+    "refreshingDetails": "검사 세부 정보 새로 고치는 중…"
   },
   "settings": {
     "chat": {
@@ -1062,6 +1069,14 @@
       "aiVaultResumeRefusal": {
         "openInChat": "이 {{value0}} 대화는 채팅에서 열려 있습니다. 열려면 세션 기록을 새로고침하세요.",
         "ownershipUnknown": "Orca가 이 {{value0}} 대화의 소유자를 확인할 수 없습니다. 세션 기록을 새로고침한 후 다시 시도하세요."
+      },
+      "pendingWorktreeCreation": {
+        "checkingOutFiles": "파일 체크아웃 중… {{percent}}%",
+        "provisioningVm": "VM 프로비저닝 중…",
+        "settingUpWorkspace": "워크스페이스 설정 중…",
+        "preparingWorkspace": "워크스페이스 준비 중…",
+        "creatingWorktree": "작업 트리 만드는 중…",
+        "fetchingBaseBranch": "기본 브랜치 가져오는 중…"
       }
     },
     "hooks": {
@@ -3134,7 +3149,11 @@
               "command_label": "명령",
               "agent_toolbar_hint": "/목표, 기술, 경로 지원",
               "agent_footer_hint": "여러 줄로 된 프롬프트는 괜찮습니다. 집중하세요.",
-              "resize_hint": "크기를 조정하려면 모서리를 드래그하세요."
+              "resize_hint": "크기를 조정하려면 모서리를 드래그하세요.",
+              "length_over_limit": "너무 길어서 저장할 수 없습니다.",
+              "length_count": "{{value0}} / {{value1}}자",
+              "size_count": "{{value0}} / {{value1}}",
+              "prompt_over_host_limit": "이 호스트에는 너무 깁니다. 더 긴 프롬프트를 저장하려면 호스트의 Orca를 업데이트하세요."
             },
             "TerminalQuickCommandDialogFooter": {
               "2e2b958dfc": "저장",
@@ -8689,7 +8708,8 @@
           "addDescription": "SSH로 로그인할 수 있는 영구 머신을 추가합니다.",
           "editingPrefix": "편집 중",
           "allowRemoteCliControl": "이 호스트의 orca CLI가 Orca를 제어하도록 허용",
-          "allowRemoteCliControlHelp": "꺼져 있으면 이 호스트에서 실행한 orca 명령은 이 호스트의 터미널에만 적용됩니다. 켜면 다른 호스트와 이 컴퓨터의 오케스트레이션, 파일 및 연동 기능에도 접근할 수 있습니다."
+          "allowRemoteCliControlHelp": "켜면 이 호스트에서 실행한 orca 명령이 이 호스트의 작업 공간에서만, 연결되어 있는 동안에만 이 데스크톱의 Orca 브라우저 탭을 열고 조작할 수 있습니다. 이 호스트에서 이전 버전의 Orca가 시작한 터미널도 자신이 감독받는 작업에 대해 오케스트레이션 명령(check, inbox, send, ask, reply)을 실행할 수 있습니다. 파일, 클립보드, 쿠키는 읽을 수 없습니다. 끄면 이 호스트 자체의 Orca 서버에만 접근합니다.",
+          "allowRemoteCliControlReset": "업데이트 후 Orca가 이 설정을 껐습니다. 이제 이 호스트가 데스크톱 브라우저를 조작할 수 있고, 이 호스트에서 이전 버전의 Orca가 시작한 터미널이 오케스트레이션 명령을 실행할 수 있게 되었기 때문입니다. 원하는 경우에만 다시 켜세요."
         },
         "TasksPane": {
           "f71d8a9dd3": "작업 제공자",
@@ -12412,6 +12432,10 @@
           "detailsUnavailable": "요금제 자격 증명 세부 정보는 Orca를 실행 중인 컴퓨터에서만 볼 수 있습니다.",
           "siteUnavailable": "호스트 요금제 사이트 이용 불가"
         },
+        "sshManagedHostRemove": {
+          "description": "{{label}}에서 관리형 Orca 서버가 실행 중입니다. 관리형 서버에서 중지…를 사용해 호스트에서 서버를 제거하거나, 호스트가 없어졌다면 잊기…를 사용하세요. 그런 다음 이 SSH 호스트를 제거할 수 있습니다.",
+          "open": "관리형 서버 열기"
+        },
         "managedServers": {
           "row": {
             "notRunning": "실행 중이 아님",
@@ -12453,7 +12477,11 @@
             "target": "SSH 호스트를 통해 연결",
             "port": "서버 포트",
             "link": "SSH 사용",
-            "linking": "연결 중…"
+            "linking": "연결 중…",
+            "pendingLink": "SSH를 통한 연결이 완료되지 않았습니다.",
+            "pendingUnlink": "SSH 액세스 중지가 완료되지 않았습니다.",
+            "retry": "다시 시도",
+            "cancelLink": "취소"
           },
           "search": {
             "title": "관리형 서버",
@@ -12534,6 +12562,7 @@
           "tunnelUnsupported": "이 버전의 Orca는 이 호스트를 지원하지 않습니다. 호스트의 SSH 서버가 포트 포워딩을 허용하지 않으며, SSH 세션을 통해서도 Orca 서버에 연결할 수 없었습니다. 계속 사용하려면 이전 버전의 Orca를 설치하세요.",
           "setupRetry": "Orca가 이 호스트에서 서버를 시작하지 못했습니다. 다시 연결해 보세요.",
           "moveHeld": "서버의 사본을 확인하지 못해 Orca가 이 호스트의 프로젝트를 관리형 서버로 옮기는 작업을 일시 중지했습니다. 손실된 것은 없습니다. 이동이 끝날 때까지 호스트는 프로젝트를 유지한 채 잠겨 있습니다. 다시 연결하면 재개됩니다. 서버를 되살릴 수 없다면 설정 > 관리형 서버에서 중지하거나 잊기를 선택하세요.",
+          "olderTerminalsBridged": "아직 관리 서버로 옮기지 않았습니다. 이전 버전의 Orca에서 시작한 터미널이 이 호스트의 프로젝트에서 아직 실행 중입니다. 터미널은 여기에서 계속 작동합니다. 닫거나 호스트에서 종료한 후 다시 연결하세요.",
           "olderTerminalsUncounted": "이전 버전의 Orca에서 시작한 터미널이 이 호스트에서 아직 실행 중이며 저절로 종료되지 않습니다. 해당 버전의 Orca에서 닫거나 호스트에서 종료한 후 다시 연결하세요.",
           "olderTerminalsUnverifiable": "이전 버전의 Orca에서 시작한 터미널이 종료되었는지 확인할 수 없습니다. 다시 연결하여 다시 시도하세요.",
           "olderTerminals_one": "이전 버전의 Orca에서 시작한 터미널 {{count}}개가 이 호스트에서 아직 실행 중이며 저절로 종료되지 않습니다. 해당 버전의 Orca에서 닫거나 호스트에서 종료한 후 다시 연결하세요.",
@@ -12565,6 +12594,13 @@
           "description": "이 호스트는 현재 상태 그대로 관리형 서버로 돌아갑니다. 이전 버전의 Orca가 여기에서 추가하거나 변경한 내용은 이동되지 않으며, 정리될 때까지 이 컴퓨터의 저장된 설정에만 남습니다.",
           "cancel": "취소",
           "confirm": "서버 버전 유지"
+        },
+        "moveAnyway": {
+          "action": "그래도 이동…",
+          "title": "이 호스트를 그래도 이동",
+          "description": "Orca는 아래에 저장된 항목을 제외하고 이 호스트를 관리형 서버로 이동합니다. 이 항목들은 이 컴퓨터에 남아 있으며 관리형 서버에는 표시되지 않습니다. 저장하지 않은 편집은 보존되며 절대 삭제되지 않습니다.",
+          "cancel": "취소",
+          "confirm": "그래도 이동"
         },
         "ZcodeCliSetupSection": {
           "apiKey": "ZCode API 키 설정",
@@ -13274,7 +13310,6 @@
                 "a6de3e5a20": "대기 중인 댓글 지우기",
                 "49ea0937e4": "댓글을 해결 목록에 추가",
                 "9fecebb29d": "추가",
-                "b8c4e2a1f7": "전체 로그 보기",
                 "f8a2c91d04": "에이전트 대기열에 추가",
                 "b4e8a1c902": "Queued",
                 "7c1f0a2b11": "열기",
@@ -14138,10 +14173,7 @@
             "databaseCount_other": "데이터베이스 {{value0}}개",
             "scanning": "{{value0}} 스캔 중",
             "reading": "파일 {{value0}}개 읽는 중",
-            "stoppedAfter": "{{value0}}에서 중지됨",
-            "scanned": "{{value0}} 스캔함",
-            "stoppedAt": "{{value0}}에서 중지됨",
-            "refresh": "새로 고침"
+            "scanned": "{{value0}} 스캔함"
           }
         }
       },
@@ -17947,6 +17979,13 @@
           "deleteColumn": "열 삭제",
           "deleteTable": "표 삭제"
         }
+      }
+    },
+    "startup": {
+      "webHostUnreachable": {
+        "title": "Orca 호스트에 연결할 수 없습니다",
+        "description": "손실된 내용은 없습니다. 호스트가 응답하면 Orca가 다시 로드되며, 그때까지 변경사항은 저장되지 않습니다.",
+        "retry": "지금 다시 시도"
       }
     }
   },

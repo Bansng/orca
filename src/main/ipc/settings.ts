@@ -205,7 +205,8 @@ export function registerSettingsHandlers(
       originWebContentsId: event.sender.id
     }
     const result =
-      'alwaysForceDeleteWorktrees' in sanitizedArgs
+      'alwaysForceDeleteWorktrees' in sanitizedArgs ||
+      'alwaysForceDeletePreservedBranches' in sanitizedArgs
         ? await store.updateSettingsAndFlush(sanitizedArgs, updateOptions)
         : store.updateSettings(sanitizedArgs, updateOptions)
     const proxySettingsChanged =

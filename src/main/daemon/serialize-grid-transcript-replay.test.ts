@@ -125,7 +125,10 @@ const KNOWN_PREEXISTING_I2_FAILURES: Record<string, number> = {
   // short, as for Qoder. The unscrubbed captures diverge identically, so the scrub is not the cause.
   'omp-18-composer': 2,
   'omp-18-composer-narrow': 7,
-  'omp-18-setup': 6
+  'omp-18-setup': 6,
+  // STA-10739 ConPTY capture, serializer untouched: a cursor wrap-pending at column 120 (ConPTY
+  // pads the row to the edge) restores at column 119 on the unresized schedule.
+  'pwsh-7-6-psreadline-history-prediction-conpty': 2
 }
 
 // Exact resize checkpoints and full GridDiff hashes from base 6835b9b4e3ea, not this branch.

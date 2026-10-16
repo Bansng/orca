@@ -640,7 +640,10 @@ describe('repo slice runtime routing', () => {
       params: { repo: remoteRepo.id },
       timeoutMs: 15_000
     })
-    expect(reposRemoveForHost).not.toHaveBeenCalled()
+    expect(reposRemoveForHost).toHaveBeenCalledWith({
+      repoId: remoteRepo.id,
+      hostId: 'runtime:env-1'
+    })
   })
 
   it('removes SSH-owned repos through local IPC even when a runtime is focused', async () => {
@@ -714,7 +717,10 @@ describe('repo slice runtime routing', () => {
       params: { repo: remoteRepo.id },
       timeoutMs: 15_000
     })
-    expect(reposRemoveForHost).not.toHaveBeenCalled()
+    expect(reposRemoveForHost).toHaveBeenCalledWith({
+      repoId: remoteRepo.id,
+      hostId: 'runtime:env-1'
+    })
   })
 
   it('evicts GitHub caches for removed repos using repo id and legacy path keys', async () => {

@@ -18,14 +18,15 @@ export function buildRuntimeWorktreePsSummaries(args: {
     const meta =
       args.store?.getWorktreeMeta?.(worktree.id) ?? args.store?.getAllWorktreeMeta()[worktree.id]
     const repo = repoById.get(worktree.repoId)
-    let linkedPR: { number: number; state: string } | null = null
+    let linkedPR: RuntimeWorktreePsSummary['linkedPR'] = null
     const branch = worktree.branch.replace(/^refs\/heads\//, '')
     if (branch && ghCache) {
       const cached =
         (repo?.id ? ghCache.pr[`${repo.id}::${branch}`] : undefined) ??
         (repo?.path ? ghCache.pr[`${repo.path}::${branch}`] : undefined)
       if (cached?.data) {
-        linkedPR = { number: cached.data.number, state: cached.data.state }
+        const { number, state, title, url, checksStatus } = cached.data
+        linkedPR = { number, state, title, url, checksStatus }
       }
     }
     if (!linkedPR && meta?.linkedPR != null) {

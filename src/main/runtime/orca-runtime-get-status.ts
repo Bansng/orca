@@ -50,6 +50,9 @@ import { wakeFolderRepoGitUpgradeWatch } from '../ipc/folder-repo-git-upgrade-wa
 import { runWorktreeChangeInvalidators } from '../ipc/worktree-change-invalidators'
 import { MACHINE_NAME_PUBLISH_WAIT_MS } from './runtime-machine-name'
 import { getManagedServerActions } from './managed-server-actions-registry'
+import type { WorktreeSortOrderUpdate } from '../../shared/worktree/sort-order-update'
+import { isDesktopBrowserBridgeHostEnabled } from './desktop-browser-bridge/desktop-browser-bridge-registry'
+import { DESKTOP_BROWSER_BRIDGE_RUNTIME_CAPABILITY } from '../../shared/desktop-browser-bridge-protocol'
 
 type RuntimeStatusHost = {
   getAvailableAuthoritativeWindow(): unknown
@@ -135,6 +138,9 @@ export abstract class OrcaRuntimeWithGetStatus extends OrcaRuntimeWithGetRuntime
     }
     if (getManagedServerActions()) {
       capabilities.push(MANAGED_SERVER_RUNTIME_CAPABILITY)
+    }
+    if (isDesktopBrowserBridgeHostEnabled()) {
+      capabilities.push(DESKTOP_BROWSER_BRIDGE_RUNTIME_CAPABILITY)
     }
     // Why not a static capability: dev trees and `orca serve` installs may carry no
     // out/mobile-web, and advertising a bundle this install cannot produce would promise a
@@ -292,21 +298,29 @@ export abstract class OrcaRuntimeWithGetStatus extends OrcaRuntimeWithGetRuntime
 
   notifyWorktreesChanged(
     repoId: string,
-    options?: { invalidateGitScans?: boolean; sortOrderOnly?: boolean }
+    options?: {
+      invalidateGitScans?: boolean
+      sortOrderOnly?: boolean
+      sortOrders?: WorktreeSortOrderUpdate[]
+    }
   ): void {
     // Headless hosts invalidate here unless only metadata changed.
     if (options?.invalidateGitScans !== false) {
       runWorktreeChangeInvalidators(repoId)
     }
     if (options) {
-      this.notifier?.worktreesChanged(repoId, undefined, options)
+      const { sortOrders: _sortOrders, ...notifierOptions } = options
+      this.notifier?.worktreesChanged(repoId, undefined, notifierOptions)
     } else {
       this.notifier?.worktreesChanged(repoId)
     }
     this.emitClientEvent({
       type: 'worktreesChanged',
       repoId,
-      ...(options?.sortOrderOnly === true ? { sortOrderOnly: true } : {})
+      ...(options?.sortOrderOnly === true ? { sortOrderOnly: true } : {}),
+      ...(options?.sortOrderOnly === true && options.sortOrders
+        ? { sortOrders: options.sortOrders }
+        : {})
     })
   }
 

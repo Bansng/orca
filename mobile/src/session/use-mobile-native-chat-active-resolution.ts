@@ -56,8 +56,11 @@ export function useMobileNativeChatActiveResolution(args: {
   const activeChatStructured =
     activeChatResolution != null && activeSessionTab?.type === 'agent-session'
   const activeTabStatus = activeSessionTab?.agentStatus
+  // Why: a turn restored across a host restart is unverifiable, so it must not offer Stop.
   const activeTabAgentWorking =
-    activeTabStatus?.state === 'working' && activeTabStatus.workingMode !== 'monitoring'
+    activeTabStatus?.state === 'working' &&
+    activeTabStatus.workingMode !== 'monitoring' &&
+    activeTabStatus.restoredUnconfirmed !== true
   const nativeChatStatus = activeChatResolution && !activeChatStructured ? activeTabStatus : null
   const routeKey = `${hostId}\0${worktreeId}\0${activeSessionTabId ?? ''}`
   const streamIdentity = `${routeKey}\0${activeChatSessionId ?? ''}\0${activeHandleRef.current ?? ''}`

@@ -10,6 +10,8 @@ import type { WorkspaceSessionState } from '../../../shared/workspace-session-st
 import { retireLeavesFromTerminalLayout } from '../../runtime/mobile-session-terminal-retirement'
 import { createMinimalPersistedTerminalTab } from '../restoring-sessions/session-owner-fields'
 import { layoutContainsLeafId } from '../restoring-sessions/terminal-layout-normalization'
+import { writeRestorable } from './restorable-write'
+import type { TerminalTopologyCommitContext } from './terminal-topology-commit'
 import {
   advanceTerminalTopologyRevision,
   isTerminalOwnerPartition,
@@ -49,6 +51,21 @@ function liveTabIds(session: WorkspaceSessionState): Set<string> {
 function hasTabId(session: WorkspaceSessionState, tabId: string): boolean {
   return (
     liveTabIds(session).has(tabId) || Object.hasOwn(session.terminalLayoutsByTabId ?? {}, tabId)
+  )
+}
+
+/** A tab other than the source holds the leaf; a layout left behind by a removed row owns nothing. */
+export function leafHeldByOtherTab(
+  session: WorkspaceSessionState,
+  sourceTabId: string,
+  leafId: string
+): boolean {
+  const tabIds = liveTabIds(session)
+  return Object.entries(session.terminalLayoutsByTabId ?? {}).some(
+    ([tabId, layout]) =>
+      tabId !== sourceTabId &&
+      tabIds.has(tabId) &&
+      layoutContainsLeafId(layout?.root ?? null, leafId)
   )
 }
 
@@ -154,17 +171,7 @@ export function planTerminalLeafMove(
   if (partitions.some(({ session }) => hasTabId(session, request.targetTabId))) {
     return refuse('target_tab_exists')
   }
-  // A layout left behind by a removed tab row owns nothing.
-  const leafElsewhere = owners.some(({ session }) => {
-    const tabIds = liveTabIds(session)
-    return Object.entries(session.terminalLayoutsByTabId ?? {}).some(
-      ([tabId, layout]) =>
-        tabId !== sourceTabId &&
-        tabIds.has(tabId) &&
-        layoutContainsLeafId(layout?.root ?? null, leafId)
-    )
-  })
-  if (leafElsewhere) {
+  if (owners.some(({ session }) => leafHeldByOtherTab(session, sourceTabId, leafId))) {
     return refuse('leaf_in_other_tab')
   }
   const holders = owners.flatMap(({ hostId, session }) => {
@@ -231,4 +238,35 @@ export function rekeyMovedLeafProfileRecords(
         }
       : {})
   }
+}
+
+/** Pane-keyed UI marks and SSH leases follow a moved leaf; returns their restores. */
+export function writeMovedLeafProfileRecords(
+  request: TerminalLeafMoveRequest,
+  context: TerminalTopologyCommitContext
+): (() => void)[] {
+  const { state } = context
+  const restores: (() => void)[] = []
+  const rekeyed = rekeyMovedLeafProfileRecords(state, request)
+  if (rekeyed.ui) {
+    restores.push(
+      writeRestorable(
+        () => state.ui,
+        (ui) => (state.ui = ui),
+        rekeyed.ui
+      )
+    )
+    context.markDirty('ui')
+  }
+  if (rekeyed.sshRemotePtyLeases) {
+    restores.push(
+      writeRestorable(
+        () => state.sshRemotePtyLeases,
+        (leases) => (state.sshRemotePtyLeases = leases),
+        rekeyed.sshRemotePtyLeases
+      )
+    )
+    context.markDirty('sshRemotePtyLeases')
+  }
+  return restores
 }

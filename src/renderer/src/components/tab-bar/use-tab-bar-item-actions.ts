@@ -1,11 +1,14 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
 import { clearClientHostedBrowserRowSelection } from '@/lib/pane-manager/client-hosted-browser-row-state'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../shared/layout-owner-switch'
 import type { TabBarItem } from './tab-bar-item-model'
 import type { TabBarProps } from './tab-bar-props'
+import { withLayoutOwnerTabProps } from './tab-bar-layout-owner-props'
 
 type TabBarItemActionSource = {
   props: Pick<
     TabBarProps,
+    | 'worktreeId'
     | 'onActivate'
     | 'onActivateFile'
     | 'onActivateBrowserTab'
@@ -63,7 +66,7 @@ export function useTabBarItemActions(source: TabBarItemActionSource): TabBarItem
       clearClientHostedBrowserRowSelection()
       activate()
     }
-    return {
+    const actions: TabBarItemActions = {
       activateTerminal: (tabId) => activateRealTab(() => latest.current.props.onActivate(tabId)),
       activateFile: (fileId) =>
         activateRealTab(() => latest.current.props.onActivateFile?.(fileId)),
@@ -88,5 +91,9 @@ export function useTabBarItemActions(source: TabBarItemActionSource): TabBarItem
       togglePinned: (item) => latest.current.togglePinned(item),
       toggleViewMode: (tabId) => latest.current.toggleTabViewMode(tabId)
     }
+    // Switch point: rename, color and pin go to main first.
+    return ORCA_LAYOUT_OWNER_IS_MAIN
+      ? { ...actions, ...withLayoutOwnerTabProps(actions, () => latest.current.props.worktreeId) }
+      : actions
   }, [])
 }

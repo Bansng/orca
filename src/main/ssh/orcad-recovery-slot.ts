@@ -14,7 +14,12 @@ import {
   OrcadActiveReadinessError,
   probeActiveOrcadReadiness
 } from './orcad-active-readiness'
-import { orcadLivenessProbeCommand, parseOrcadLiveness } from './orcad-remote-launch'
+import {
+  orcadLivenessProbeCommand,
+  orcadLivenessProvenExited,
+  parseOrcadLiveness,
+  type OrcadLiveness
+} from './orcad-remote-launch'
 import {
   parseOrcadStopOutcome,
   stopOrcadCommand,
@@ -93,7 +98,7 @@ export async function ensureOrcadSlotServing(
       expectation(identity)
     )
   }
-  if (liveness === 'UNKNOWN') {
+  if (!orcadLivenessProvenExited(liveness)) {
     throw new OrcadActiveReadinessError(
       'unverifiable',
       `orcad ${identity.version} process state is unverifiable.`
@@ -143,7 +148,7 @@ export async function quiesceInterruptedOrcadSlot(
   let exited = stopped === 'stopped' || stopped === 'already-exited'
   if ((stopped === 'unknown' || stopped === 'unconfirmed') && remoteDir !== null) {
     // No verified answer, e.g. the slot died before readiness; liveness decides.
-    exited = (await slotLiveness(options, remoteDir)) === 'DEAD'
+    exited = orcadLivenessProvenExited(await slotLiveness(options, remoteDir))
   }
   if (otherSlot) {
     const other = await slotLiveness(options, otherSlot.remoteDir)
@@ -155,7 +160,7 @@ export async function quiesceInterruptedOrcadSlot(
       )
       return 'other-slot-serving'
     }
-    if (other !== 'DEAD') {
+    if (!orcadLivenessProvenExited(other)) {
       throw new OrcadActiveReadinessError(
         'unverifiable',
         `orcad ${version ?? 'candidate'} (${stopped}) and ${otherSlot.version} (${other}) cannot both be ` +
@@ -186,10 +191,11 @@ export async function quiesceInterruptedOrcadSlot(
   return 'exited'
 }
 
+/** Asks the host whether anything runs from this slot directory. */
 export async function slotLiveness(
   options: OrcadSlotOptions,
   remoteDir: string
-): Promise<'LIVE' | 'DEAD' | 'UNKNOWN'> {
+): Promise<OrcadLiveness> {
   return parseOrcadLiveness(
     await execOrcadRemote(options, orcadLivenessProbeCommand(options.host, remoteDir))
   )

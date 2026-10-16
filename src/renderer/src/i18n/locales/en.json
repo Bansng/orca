@@ -180,7 +180,14 @@
     }
   },
   "githubChecks": {
-    "retrying": "Retrying…"
+    "retrying": "Retrying…",
+    "logsNotYetAvailable": "Log output is not available yet.",
+    "logsLoadErrorDetails": "Couldn't load logs. Use Refresh to retry.",
+    "logsLoadErrorSidebar": "Couldn't load logs. Open View full details, then use Refresh to retry.",
+    "logsEmpty": "No log output was returned.",
+    "logsNotRequested": "Log excerpt wasn't requested. At most five failed-job excerpts are loaded per check.",
+    "noLogExcerpt": "No log excerpt is available.",
+    "refreshingDetails": "Refreshing check details…"
   },
   "settings": {
     "chat": {
@@ -1230,6 +1237,14 @@
       "aiVaultResumeRefusal": {
         "openInChat": "This {{value0}} conversation is open in a chat. Refresh Session History to open it.",
         "ownershipUnknown": "Orca could not confirm who owns this {{value0}} conversation. Refresh Session History and try again."
+      },
+      "pendingWorktreeCreation": {
+        "checkingOutFiles": "Checking out files… {{percent}}%",
+        "provisioningVm": "Provisioning VM…",
+        "settingUpWorkspace": "Setting up your workspace…",
+        "preparingWorkspace": "Preparing workspace…",
+        "creatingWorktree": "Creating worktree…",
+        "fetchingBaseBranch": "Fetching base branch…"
       }
     },
     "hooks": {
@@ -3350,7 +3365,11 @@
               "command_label": "Command",
               "agent_toolbar_hint": "Supports /goal, skills, paths",
               "agent_footer_hint": "Multi-line prompts are fine — keep them focused.",
-              "resize_hint": "Drag corner to resize"
+              "resize_hint": "Drag corner to resize",
+              "length_over_limit": "Too long to save.",
+              "length_count": "{{value0}} / {{value1}} characters",
+              "prompt_over_host_limit": "Too long for this host. Update Orca on the host to save longer prompts.",
+              "size_count": "{{value0}} / {{value1}}"
             },
             "TerminalQuickCommandDialogFooter": {
               "2e2b958dfc": "Save",
@@ -4256,6 +4275,8 @@
             "f8f0f9d8cc": "Network issue",
             "bf2e739f18": "Sign-in unavailable",
             "f8b8dbed85": "Usage unavailable",
+            "remoteOwnerUnreachable": "Usage unavailable — cannot reach {{server}}",
+            "remoteOwnerNoUsage": "Usage unavailable — {{server}} does not report usage. Update Orca on that host.",
             "3d3c9c0c1f": "Claude usage will refresh after the live Claude terminal rotates its credentials.",
             "42fdd4da1d": "Claude sign-in is being refreshed. Agent sessions may still be signed in.",
             "c06c1d215d": "Claude usage could not be refreshed because the network request failed.",
@@ -8971,7 +8992,8 @@
           "8c922dffba": "Reuse SSH connection for faster setup",
           "53e9aabfc0": "Uses OpenSSH multiplexing when available. Turn off for hosts with custom SSH restrictions.",
           "allowRemoteCliControl": "Allow this host's orca CLI to control Orca",
-          "allowRemoteCliControlHelp": "When off, orca commands run on this host reach only its own terminals. Turn on to let them reach other hosts, orchestration, files, and integrations on this computer.",
+          "allowRemoteCliControlHelp": "When on, orca commands run on this host can open and drive Orca browser tabs on this desktop, only in this host's workspaces and only while it is connected. Terminals started by an older Orca on this host can also run orchestration commands (check, inbox, send, ask, reply) for their own supervised work. They cannot read your files, clipboard or cookies. When off, they reach only this host's own Orca server.",
+          "allowRemoteCliControlReset": "Orca turned this off after an update, because it now lets this host drive your desktop browser and lets terminals started by an older Orca on this host run orchestration commands. Turn it on again only if you want that.",
           "editTitle": "Edit SSH host",
           "addTitle": "Add SSH host",
           "editDescription": "Update connection details for this machine. Changes apply on next connect.",
@@ -12595,6 +12617,10 @@
         "UnsealedCredentialNotice": {
           "body": "{{credential}} is stored unencrypted — this system has no OS keyring Orca can use. Anyone who can read your disk or a backup of it can read the credential. Install and unlock gnome-keyring or kwallet, then save it again to seal it."
         },
+        "sshManagedHostRemove": {
+          "description": "{{label}} runs a managed Orca server. Under Managed servers, use Stop… to remove the server from the host, or Forget… if the host is gone. Then you can remove this SSH host.",
+          "open": "Open Managed servers"
+        },
         "managedServers": {
           "row": {
             "notRunning": "Not running",
@@ -12636,7 +12662,11 @@
             "target": "Reach through SSH host",
             "port": "Server port",
             "link": "Use SSH",
-            "linking": "Connecting…"
+            "linking": "Connecting…",
+            "pendingLink": "Connecting through SSH didn’t finish.",
+            "pendingUnlink": "Stopping SSH access didn’t finish.",
+            "retry": "Retry",
+            "cancelLink": "Cancel"
           },
           "search": {
             "title": "Managed servers",
@@ -12717,6 +12747,7 @@
           "tunnelUnsupported": "This host isn’t supported by this version of Orca: its SSH server doesn’t allow port forwarding, and Orca couldn’t reach its server through the SSH session either. To keep using it, install an older version of Orca.",
           "setupRetry": "Orca couldn’t start its server on this host. Try connecting again.",
           "moveHeld": "Orca paused moving this host’s projects to its managed server because it couldn’t confirm the server’s copy. Nothing is lost: the host keeps its projects and stays locked until the move finishes. Connect again to resume. If the server can’t come back, stop or forget it in Settings > Managed servers.",
+          "olderTerminalsBridged": "Not moved to a managed server yet: terminals started by an older version of Orca are still running in this host’s projects. They keep working here. Close them or end them on the host, then reconnect.",
           "olderTerminalsUncounted": "Terminals started by an older version of Orca are still running on this host, and they don’t stop on their own. Close them in that version of Orca or end them on the host, then reconnect.",
           "olderTerminalsUnverifiable": "Orca couldn’t confirm that terminals started by an older version of Orca have exited. Reconnect to try again.",
           "olderTerminals_one": "{{count}} terminal started by an older version of Orca is still running on this host, and it doesn’t stop on its own. Close it in that version of Orca or end it on the host, then reconnect.",
@@ -12725,7 +12756,8 @@
           "linkedProjects_one": "This host’s Orca server already had {{paths}}, so this desktop now uses the server’s copy. This desktop’s tabs and {{count}} automation there were not moved, and worktrees it created there show as external worktrees.",
           "linkedProjects_other": "This host’s Orca server already had {{paths}}, so this desktop now uses the server’s copy. This desktop’s tabs and {{count}} automations there were not moved, and worktrees it created there show as external worktrees.",
           "linkedProjects": "This host’s Orca server already had {{paths}}, so this desktop now uses the server’s copy. This desktop’s tabs and {{count}} automations there were not moved, and worktrees it created there show as external worktrees.",
-          "linkedProjectsNoAutomations": "This host’s Orca server already had {{paths}}, so this desktop now uses the server’s copy. This desktop’s tabs there were not moved, and worktrees it created there show as external worktrees."
+          "linkedProjectsNoAutomations": "This host’s Orca server already had {{paths}}, so this desktop now uses the server’s copy. This desktop’s tabs there were not moved, and worktrees it created there show as external worktrees.",
+          "launchSessionEnded": "Terminals on this Mac may have lost local network access because the SSH session that started the managed server ended. Restart the managed server to restore it."
         },
         "ZcodeCliSetupSection": {
           "title": "Use GLM with ZCode",
@@ -12805,6 +12837,13 @@
           "cancel": "Cancel",
           "confirm": "Keep the server’s version"
         },
+        "moveAnyway": {
+          "action": "Move anyway…",
+          "title": "Move this host anyway",
+          "description": "Orca moves this host to its managed server without the saved items below. They stay on this computer and don’t appear on the managed server. Unsaved edits are kept, never deleted.",
+          "cancel": "Cancel",
+          "confirm": "Move anyway"
+        },
         "NotificationHostToggles": {
           "offCount": "{{count}} off",
           "machines": "Machines",
@@ -12833,6 +12872,22 @@
           "remove": "Remove",
           "forceUpdate": "Force update",
           "turnOn": "Turn on in Experimental"
+        },
+        "restartServer": {
+          "action": "Restart managed server…",
+          "title": "Restart managed server",
+          "description": "Orca restarts this host’s managed server from your current connection. It restarts only when no terminals are running on the host, because terminals that are still open keep the lost access. Close them first.",
+          "cancel": "Cancel",
+          "confirm": "Restart",
+          "terminalsUnknown": "Orca couldn’t confirm whether terminals are running on this host, so it didn’t restart the managed server.",
+          "terminalsRunning": "{{count}} terminals are still running on this host. Close them, then restart the managed server."
+        },
+        "keychainCredentialNotice": {
+          "locked": "{{service}} is unavailable on {{host}}: its macOS login Keychain is locked. This happens after a reboot when you only sign in over SSH. Sign in to that Mac at its screen once. Orca then offers to switch the host to file storage so this stops happening.",
+          "unnamedHost": "the remote server",
+          "moved": "Switched {{host}} to file storage",
+          "offerMove": "{{host}} keeps its credential key in its macOS login Keychain, which was locked after a reboot. Switch to file storage to keep Linear and Jira working when you only sign in over SSH. The key then sits in a file only this account can read, which protects it less than the Keychain: it is not tied to this machine, so a backup or shared copy of ~/.orca can open the credentials.",
+          "moveAction": "Switch to file storage"
         }
       },
       "right": {
@@ -13469,7 +13524,6 @@
                 "fd46a70f1a": "Started",
                 "a54ae21c6f": "Status:",
                 "e4e3af15ee": "View full details",
-                "b8c4e2a1f7": "View full logs",
                 "a2fb3f4408": "Showing first 100 jobs",
                 "df137989b3": "Showing first 20 annotations",
                 "1f2b980522": "Loading check details…",
@@ -14368,10 +14422,7 @@
             "databaseCount_other": "{{value0}} databases",
             "scanning": "Scanning {{value0}}",
             "reading": "Reading {{value0}} files",
-            "stoppedAfter": "Stopped after {{value0}}",
-            "scanned": "Scanned {{value0}}",
-            "stoppedAt": "stopped at {{value0}}",
-            "refresh": "Refresh"
+            "scanned": "Scanned {{value0}}"
           }
         }
       },
@@ -18130,6 +18181,13 @@
           "deleteTable": "Delete table"
         }
       }
+    },
+    "startup": {
+      "webHostUnreachable": {
+        "title": "Couldn't reach your Orca host",
+        "description": "Nothing was lost. Orca will reload when the host answers, and won't save changes until then.",
+        "retry": "Retry now"
+      }
     }
   },
   "components": {
@@ -18895,6 +18953,12 @@
       },
       "claudeSignIn": {
         "signingIn": "Signing in…"
+      },
+      "hostPermission": {
+        "checking": "Checking this host's chat permissions…",
+        "launchRefused": "Orca did not start a {{value0}} chat",
+        "outdatedHost": "This host runs an older Orca that ignores chat permissions, so {{value0}} would run here without asking. Update Orca on this host to use {{value1}}.",
+        "unverified": "Orca couldn't confirm this host applies chat permissions. Reconnect to it to send."
       }
     },
     "tab": {
@@ -19875,7 +19939,10 @@
     "preferenceSaveFailed": "Could not save deletion preference",
     "alwaysForceDelete": "Always force delete",
     "moreActions": "More force delete options",
-    "alwaysForceDeleteTooltip": "Applies to all future workspace deletions."
+    "alwaysForceDeleteTooltip": "Applies to all future workspace deletions.",
+    "moreBranchActions": "More branch delete options",
+    "alwaysForceDeleteBranches": "Always delete preserved branches",
+    "alwaysForceDeleteBranchesTooltip": "Applies to branches kept after future workspace deletions."
   },
   "worktree": {
     "nestedRemoval": {
@@ -20121,6 +20188,40 @@
       "truncated": "Some favourites could not be listed. Manage your favourites in Jira to narrow the list.",
       "clear": "Clear Jira favourite",
       "activeLabel": "Jira favourites: {{name}}"
+    }
+  },
+  "workspaceSpace": {
+    "compact": {
+      "linkedAndUnavailable": "{{value0}} in linked worktrees · {{value1}} unavailable",
+      "linkedAndScanned": "{{value0}} in linked worktrees · {{value1}} workspaces",
+      "linked": "Linked"
+    },
+    "savedScan": {
+      "folderDetailsUnavailable": "Folder details are not saved with past scans. Refresh to inspect this workspace."
+    },
+    "empty": {
+      "title": "See where workspace storage goes",
+      "description": "Scan your workspaces to compare sizes, inspect their largest folders, and review space you can reclaim.",
+      "scan": "Scan workspaces"
+    },
+    "metric": {
+      "linkedWorktrees": "Linked worktrees"
+    },
+    "summary": {
+      "linkedWorktrees": "{{value0}} is used by linked worktrees. Managed worktrees can be removed here."
+    },
+    "status": {
+      "notManaged": "Not managed"
+    },
+    "chart": {
+      "folderSizes": "Folder sizes",
+      "workspaceSizes": "Workspace sizes",
+      "clickToZoom": "Click a workspace to zoom"
+    },
+    "window": {
+      "close": "Close",
+      "errorTitle": "Space hit an error.",
+      "errorDescription": "Close and reopen Space to try again."
     }
   }
 }

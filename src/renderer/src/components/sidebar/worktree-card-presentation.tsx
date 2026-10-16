@@ -43,6 +43,7 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
     showIdentityInNewCard,
     conflictOperation,
     cardProps,
+    cardDetails,
     cacheStartedAt,
     hasDetails,
     hasPorts,
@@ -88,19 +89,17 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
 
   // Why: pinned trees mix repos, so ordinary rows keep the repo icon; cross-repo children use the name.
   const showPinnedRepoIcon = inPinnedSection && !!repo && !showProjectName
-  // Why: new card style retired the Compact/Detailed switch; repo identity uses the compact chip, not a lower pill.
-  const showRepoIdentityInTitle = newCardStyle || compactCards
   const showInlineRepoBadge =
-    showRepoIdentityInTitle && !!repo && !hideRepoBadge && !isFolder && !showPinnedRepoIcon
+    cardDetails.repoInTitle && !!repo && !hideRepoBadge && !isFolder && !showPinnedRepoIcon
   const showRepoBadgeInMetaRow =
-    !showRepoIdentityInTitle && !!repo && !hideRepoBadge && !showPinnedRepoIcon
+    !cardDetails.repoInTitle && !!repo && !hideRepoBadge && !showPinnedRepoIcon
   const contextLabel = getVisibleContextLabel(
     undefined,
     hostContextLabel,
     cardProps.includes('host')
   )
   const showHostContextBadge = !!contextLabel && (!compactCards || !!showProjectName)
-  const showDetachedHeadInMetaRow = !compactCards && !isFolder && detachedHeadDisplay !== null
+  const showDetachedHeadInMetaRow = cardDetails.metaRow && !isFolder && detachedHeadDisplay !== null
   const showBranch =
     !isFolder &&
     branch.length > 0 &&
@@ -128,9 +127,10 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
     cacheStartedAt != null ||
     showMetaRowDetails
   )
-  const hasMetaRow = compactCards
-    ? hasMetadataBadge || cacheStartedAt != null
-    : hasDetailedMetaRowContent
+  // Why: without the identity meta row, a compact card keeps a row only for badges and the timer.
+  const hasMetaRow = cardDetails.metaRow
+    ? hasDetailedMetaRowContent
+    : hasMetadataBadge || cacheStartedAt != null
   const showHeaderActions = showTitleRowPrimary || showDeleteQuickAction
   // Why: normalize the title once so title/branch de-dupe and identity-only hover eligibility stay in sync.
   const trimmedVisibleCardTitle = visibleCardTitle.trim()

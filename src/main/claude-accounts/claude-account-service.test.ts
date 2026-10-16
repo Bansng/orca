@@ -285,6 +285,29 @@ describe('ClaudeAccountService', () => {
     await expect(adding).rejects.toThrow('cancelled')
   })
 
+  it('opens the link of a WSL sign-in through the desktop opener', async () => {
+    const LINK =
+      'https://claude.com/cai/oauth/authorize?redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fcallback'
+    const f = fixture()
+    const opened: string[] = []
+    f.service.setWslSignInLinkOpener((link) => opened.push(link))
+    f.runtimeAuth.prepareAccountFolder.mockImplementation(async (id: string) => {
+      mkdirSync(f.home(id), { recursive: true })
+      return { configDir: `/home/u/claude-profiles/${id}/home`, readPath: f.home(id) }
+    })
+    f.runLogin.mockImplementationOnce(async (_args, config, _timeoutMs, options) => {
+      expect(options?.browser).toBe(
+        `/home/u/claude-profiles/${newId(f)}/home/.orca-sign-in-browser`
+      )
+      writeFileSync(join(config.windowsPath, '.orca-sign-in-browser.link'), LINK)
+      await vi.waitFor(() => expect(opened).toEqual([LINK]))
+      f.signIn(newId(f), 'wsl@example.test')
+      return ''
+    })
+    await f.service.addAccount({ runtime: 'wsl', wslDistro: 'Ubuntu' })
+    expect(opened).toEqual([LINK])
+  })
+
   it('runs a WSL login against the guest folder', async () => {
     const f = fixture()
     f.runtimeAuth.prepareAccountFolder.mockImplementation(async (id: string) => {

@@ -106,6 +106,7 @@ jobs:
       - name: Build E2E outputs
         env:
           VITE_EXPOSE_STORE: 'true'
+          ORCA_CI_MAIN_SOURCEMAPS: '0'
         run: pnpm run build:electron-vite:parallel --mode e2e
 
       # The CLI emits into out/main too; start only after Electron finishes clearing that tree.

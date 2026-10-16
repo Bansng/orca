@@ -1,6 +1,10 @@
 import { toast } from 'sonner'
 import { getConnectionId } from '@/lib/connection-context'
-import { ensureDetectedAgentsForWorktree } from '@/lib/agent-detection-target-inventory'
+import {
+  ensureDetectedAgentsForRepo,
+  ensureDetectedAgentsForWorktree,
+  type RepoHostFields
+} from '@/lib/agent-detection-target-inventory'
 import { focusTerminalTabSurface } from '@/lib/focus-terminal-tab-surface'
 import { findGithubPrWorkspaceAttachment } from '@/lib/github-work-item-workspace-attachment'
 import { launchAgentInNewTab } from '@/lib/launch-agent-in-new-tab'
@@ -44,15 +48,6 @@ type SavedAgentOverrideResult =
   | { kind: 'launch-default' }
   | { kind: 'blocked' }
 
-async function detectAgentsForConnection(
-  connectionId: string | null | undefined
-): Promise<TuiAgent[]> {
-  const store = useAppStore.getState()
-  return typeof connectionId === 'string'
-    ? await store.ensureRemoteDetectedAgents(connectionId)
-    : await store.ensureDetectedAgents()
-}
-
 function isAgentAvailable(agent: TuiAgent, detectedAgents: TuiAgent[]): boolean {
   return (
     detectedAgents.includes(agent) &&
@@ -62,13 +57,18 @@ function isAgentAvailable(agent: TuiAgent, detectedAgents: TuiAgent[]): boolean 
 
 async function resolveSavedAgentOverride(
   savedAgent: TuiAgent | null | undefined,
-  connectionId: string | null | undefined
+  repo: RepoHostFields | null
 ): Promise<SavedAgentOverrideResult> {
   if (!savedAgent) {
     return { kind: 'launch-default' }
   }
-  const detectedAgents = await detectAgentsForConnection(connectionId)
-  if (!isAgentAvailable(savedAgent, detectedAgents)) {
+  const pendingAgents = ensureDetectedAgentsForRepo(useAppStore.getState(), repo ?? {})
+  // Why: a paired server answers per workspace, so only the enabled check can run before it exists;
+  // the direct launch checks installation on the new workspace.
+  const available = pendingAgents
+    ? isAgentAvailable(savedAgent, await pendingAgents)
+    : isTuiAgentEnabled(savedAgent, useAppStore.getState().settings?.disabledTuiAgents)
+  if (!available) {
     toast.error(
       translate(
         'auto.lib.fix.checks.agent.launch.4c7f783a7a',
@@ -237,7 +237,7 @@ export async function startFixChecksAgent(args: StartFixChecksAgentArgs): Promis
     return false
   }
 
-  const agentOverride = await resolveSavedAgentOverride(savedAgentId, repo?.connectionId)
+  const agentOverride = await resolveSavedAgentOverride(savedAgentId, repo)
   if (agentOverride.kind === 'blocked') {
     return false
   }

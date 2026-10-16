@@ -27,6 +27,7 @@ import {
 } from './managed-server-update-check'
 import { managedResultAfterUpdate, unservedManagedResult } from './managed-server-serving-gate'
 import { orcadMigrationConflictGuidance } from './orcad-migration-conflict-guidance'
+import { keptForBridgedTerminals, relayTerminalReason } from './ssh-host-server-bridged-unserved'
 import {
   classifyOrcadHostUnavailable,
   ORCAD_TUNNEL_UNAVAILABLE_REASON
@@ -61,8 +62,11 @@ export type HostServerOnConnectResult =
       detail?: string
       terminals?: number
       terminalsElsewhere?: boolean
+      canLeaveBehind?: true
       /** A move that stopped short kept the host locked; the next connect resumes it. */
       held?: true
+      /** COMPAT(legacy-relay-bridge): the connect stays up so the bridge serves the terminals. */
+      bridged?: true
     }
 
 export type HostServerTerminalVerdict = {
@@ -207,13 +211,14 @@ async function convertHost(
   trace: HostServerDecisionTrace,
   options: { checkTerminals: boolean }
 ): Promise<HostServerOnConnectResult> {
+  let terminals: HostServerTerminalVerdict | null = null
   try {
-    const terminals = options.checkTerminals ? await deps.relayTerminals(target) : null
+    terminals = options.checkTerminals ? await deps.relayTerminals(target) : null
     if (terminals && terminals.verdict !== 'exited' && !terminals.bridged) {
       // Why unverifiable too: loss of contact is never evidence that a relay terminal exited.
       return {
         route: 'unserved',
-        reason: terminalReason(terminals.verdict),
+        reason: relayTerminalReason(terminals.verdict),
         terminals: terminals.count,
         ...(terminals.elsewhere ? { terminalsElsewhere: true } : {})
       }
@@ -229,7 +234,9 @@ async function convertHost(
     reportHostServerConversion(deps.report, target, trace, converted)
     return await afterConversion(target, deps, converted)
   } catch (error) {
-    return setupFailed(target, deps, trace, error, false)
+    // COMPAT(legacy-relay-bridge): the terminals run on in their old tabs until they exit.
+    const failed = await setupFailed(target, deps, trace, error, false)
+    return keptForBridgedTerminals(failed, terminals, error)
   }
 }
 
@@ -249,10 +256,6 @@ function setupFailed(
   }
   const detail = error instanceof Error ? error.message : String(error)
   return unfinished(target, deps, unavailable, empty, 'failed', detail)
-}
-
-function terminalReason(verdict: 'live' | 'unverifiable'): SshManagedServerRelayReason {
-  return verdict === 'live' ? 'relay_terminals_live' : 'relay_terminals_unverifiable'
 }
 
 async function afterDeploy(
@@ -293,9 +296,14 @@ async function afterConversion(
       return deferred(target, deps, result, false)
     case 'refused':
       if (result.code === 'orcad_migration_terminals') {
-        return { route: 'unserved', reason: terminalReason(result.verdict) }
+        return { route: 'unserved', reason: relayTerminalReason(result.verdict) }
       }
-      return { route: 'unserved', reason: 'refused', detail: result.reason }
+      return {
+        route: 'unserved',
+        reason: 'refused',
+        detail: result.reason,
+        ...(result.canLeaveBehind ? { canLeaveBehind: true } : {})
+      }
   }
 }
 

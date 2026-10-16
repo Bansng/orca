@@ -2383,13 +2383,16 @@
           },
           "WorkspaceSpaceCompactPanel": {
             "2837dc7c72": "cancelling",
+            "9be86c46a0": "Freeable",
             "bef4dc0457": "{{value0}} reclaimable · {{value1}} unavailable"
           },
           "WorkspaceSpaceManagerPanel": {
             "02b27c2230": "workspace",
             "1cc6cd4c0f": "workspaces",
             "433bb7f595": "ok",
-            "d254f04097": "cancelling"
+            "83f1a0a932": "Reclaimable",
+            "d254f04097": "cancelling",
+            "d595295d7d": "{{value0}} can be reclaimed from linked worktrees."
           },
           "resource": {
             "manager": {
@@ -2677,6 +2680,11 @@
           },
           "candidateRow": {
             "contextCount": "Context: {{value0}}"
+          }
+        },
+        "space": {
+          "WorkspaceSpacePage": {
+            "8d0048e1cb": "Workspace disk usage and reclaimable worktree storage."
           }
         }
       }
@@ -3216,6 +3224,11 @@
       "reopened_other": "Reopened {{count}} terminals",
       "resumed_one": "{{count}} agent session resumed.",
       "resumed_other": "{{count}} agent sessions resumed."
+    }
+  },
+  "workspaceSpace": {
+    "chart": {
+      "workspaceSizes": "Workspace sizes"
     }
   },
   "worktreeJumpPalette": {

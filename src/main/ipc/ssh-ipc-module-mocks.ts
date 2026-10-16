@@ -117,7 +117,13 @@ export function createSshIpcMocks(): SshIpcMocks {
         error: null,
         reconnectAttempt: 0
       })),
-      publishUnservedHostServer: vi.fn(() => new Error('This SSH host isn’t supported'))
+      publishUnservedHostServer: vi.fn(() => new Error('This SSH host isn’t supported')),
+      publishBridgedUnservedHostServer: vi.fn((target: { id: string }) => ({
+        targetId: target.id,
+        status: 'connected',
+        error: null,
+        reconnectAttempt: 0
+      }))
     },
     sshConnectionStore: {
       isRuntimeOwnedSshTarget: (target: { owner?: unknown }) => target.owner !== undefined,

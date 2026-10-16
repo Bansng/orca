@@ -83,6 +83,7 @@ export class CodexAccountService {
   private cancelPendingCodexLogin: (() => boolean) | null = null
   private pendingLoginUrl: string | null = null
   private readonly pendingLoginUrlListeners = new Set<(url: string | null) => void>()
+  private openWslLoginUrl: ((url: string) => void) | null = null
   private readonly identity: CodexAccountIdentity
   private readonly configMirror: CodexConfigMirror
   private readonly managedHomePaths: CodexManagedHomePath
@@ -181,6 +182,11 @@ export class CodexAccountService {
   /** Registration lasts the process's lifetime; there is no teardown to hand back. */
   onPendingLoginUrlChanged(listener: (url: string | null) => void): void {
     this.pendingLoginUrlListeners.add(listener)
+  }
+
+  /** Lets the desktop open a WSL login's link; orcad never sets one. */
+  setWslLoginUrlOpener(opener: ((url: string) => void) | null): void {
+    this.openWslLoginUrl = opener
   }
 
   private setPendingLoginUrl(url: string | null): void {
@@ -292,7 +298,8 @@ export class CodexAccountService {
         setCancel: (cancel) => {
           this.cancelPendingCodexLogin = cancel
         },
-        onAuthUrl: (url) => this.setPendingLoginUrl(url)
+        onAuthUrl: (url) => this.setPendingLoginUrl(url),
+        openWslAuthUrl: this.openWslLoginUrl
       })
     } finally {
       // Why: both die with the login server — no surface may keep offering a

@@ -47,6 +47,8 @@ export function createHarnessStoreState(
     setRateLimitsFromPush: vi.fn(),
     setSshConnectionState: vi.fn(),
     setSshTargetLabels: vi.fn(),
+    setSshTargetsMetadata: vi.fn(),
+    setRemovedSshTargetLabels: vi.fn(),
     setPortForwards: vi.fn(),
     clearPortForwards: vi.fn(),
     setDetectedPorts: vi.fn(),
