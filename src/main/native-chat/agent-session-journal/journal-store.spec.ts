@@ -496,6 +496,12 @@ export function registerJournalStoreTests(): void {
       const leftover = journal.submissions().find((entry) => entry.clientMessageId === 'earlier')
       expect(journal.wroteBeforeOpen(leftover?.acceptedSequence)).toBe(true)
 
+      await journal.resolveDispatch({
+        clientMessageId: 'earlier',
+        state: 'unknown',
+        reason: 'unconfirmed from an earlier host',
+        fence: 1
+      })
       // Sequences restart with an epoch, so a row accepted after it can sit below the open cursor.
       await journal.replaceEpochItems('handle_forked', 1, [])
       await journal.appendSubmission(submission('later'))

@@ -29,7 +29,7 @@ import { LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host'
 import {
   beginStructuredAgentSessionAuthoritativeInventory,
   startStructuredAgentLaunchCancellationCleanup
-} from '../../lib/structured-agent-session-launch-cancellation'
+} from '../../lib/launch-cancel-tombstones-compat/structured-agent-session-launch-cancellation'
 import { suppressCancelledStructuredSessionTabs } from '../structured-agent-session-tab-retirement'
 import { LOCAL_STRUCTURED_SESSION_OWNER } from '../local-structured-session-owner'
 import { closeStructuredAgentSession } from '../structured-agent-session-close'

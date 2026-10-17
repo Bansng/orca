@@ -334,7 +334,7 @@ describe('reattaching a Grok chat the journal holds', () => {
         handle: { nativeId: PROVIDER_SESSION },
         replaces: { key: 'acp-key-saved-1', reason: 'restore-failed', replacedAt: 5_000 }
       })
-      expect(acquired.link.supersedesKey).toBeUndefined()
+      expect(acquired.link?.supersedesKey).toBeUndefined()
       expect(rig.sent('session/new')).toHaveLength(1)
       const rows = await notRestoredRows(rig)
       expect(rows).toHaveLength(1)

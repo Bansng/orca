@@ -35,9 +35,7 @@ const FINISHED: AiVaultScanProgress = {
 
 it('says the finished total in the strip and opens to one row per agent', async () => {
   render(<AiVaultScanProgressStrip progress={FINISHED} />)
-  expect(screen.getByText('102,452 files').parentElement?.textContent).toBe(
-    'Scanned 102,452 files'
-  )
+  expect(screen.getByText('102,452 files').parentElement?.textContent).toBe('Scanned 102,452 files')
   expect(screen.queryByText('Codex')).toBeNull()
 
   await userEvent.setup().click(screen.getByRole('button'))
@@ -120,7 +118,12 @@ it('shows a running scan at once but a finished one only with the list it produc
 
   act(() => push({ scanKey: 'scope-a', progress: FINISHED }))
   expect(aView.getByText('Scanned', { exact: false })).toBeTruthy()
-  act(() => push({ scanKey: 'scope-b', progress: { ...FINISHED, scanId: 'scan-b', stage: 'finding', settledAt: null } }))
+  act(() =>
+    push({
+      scanKey: 'scope-b',
+      progress: { ...FINISHED, scanId: 'scan-b', stage: 'finding', settledAt: null }
+    })
+  )
   expect(bView.getByText('Scanning', { exact: false })).toBeTruthy()
   expect(aView.getByText('Scanned', { exact: false })).toBeTruthy()
 

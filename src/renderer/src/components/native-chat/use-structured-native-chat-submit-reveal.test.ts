@@ -30,7 +30,8 @@ it('reveals before launch Retry, but waits for a successful queue Resume', async
   const { result } = renderHook(() => useStructuredNativeChatSubmitReveal(controller, retryLaunch))
   result.current.messageListRef.current = {
     revealLatest: () => order.push('reveal'),
-    revealFindMatch: () => {}
+    revealFindMatch: () => {},
+    messageCopyText: () => null
   }
 
   act(() => result.current.retryLaunch())

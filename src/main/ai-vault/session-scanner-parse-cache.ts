@@ -16,6 +16,7 @@ import type { ResumableSessionParseState, SessionFileCandidate } from './session
 import { refreshCachedCodexTitle } from './session-scanner-codex-cached-title'
 import {
   getSessionParseCacheEntry,
+  noteSessionParseCacheListed,
   storeSessionParseCacheEntry,
   type SessionParseCacheEntry
 } from './session-parse-cache-store'
@@ -35,10 +36,7 @@ import {
 
 export {
   invalidateSessionParseCacheEntry,
-  resetSessionParseCacheForTests,
-  seedSessionParseCache,
-  snapshotSessionParseCacheForPersistence,
-  type PersistedSessionParseCacheEntry
+  resetSessionParseCacheForTests
 } from './session-parse-cache-store'
 
 // Incremental append-parsing applies only to transcripts that are append-only
@@ -135,6 +133,20 @@ export async function parseAgentSessionFileCached(
 }
 
 /**
+ * A Session History scan's parse. Listing the path first is what exempts its row
+ * from the count bound kept for other readers.
+ */
+export function parseListedSessionFile(
+  candidate: SessionFileCandidate,
+  platform: NodeJS.Platform,
+  stats: SessionParseStats,
+  signal?: AbortSignal
+): Promise<AiVaultSession | null> {
+  noteSessionParseCacheListed(candidate.file.path)
+  return parseAgentSessionFileCached(candidate, platform, stats, undefined, signal)
+}
+
+/**
  * What a caller other than the session list needs out of this parse.
  *
  * `any`: some bytes must be read. A cursor already at the file's current stat
@@ -177,13 +189,14 @@ async function parseCachedInLane(
   signal?: AbortSignal
 ): Promise<AiVaultSession | null> {
   const { file } = candidate
-  if (
+  const forceWholeRead =
     requireRead === 'whole' ||
     (requireRead === 'any' && sessionParseCacheCoversTranscript(candidate, platform))
-  ) {
+  if (forceWholeRead) {
     requestWholeTranscriptRead(file.path)
   }
-  const entry = getSessionParseCacheEntry(file.path)
+  // Not looked up again after a forced read: a failed database delete would hand the row back.
+  const entry = forceWholeRead ? undefined : getSessionParseCacheEntry(file.path)
 
   if (entry !== undefined && sessionParseCacheCoversTranscript(candidate, platform)) {
     if (sidecarUnchanged(entry.sidecar, file.sidecar)) {

@@ -11,7 +11,7 @@
  * Tab-keyed (evicted via the doomed-tab set):
  *   lastKnownRelayPtyIdByTabId, pendingReconnectPtyIdByTabId,
  *   deferredSshSessionIdsByTabId, pendingInitialCwdByTabId,
- *   pendingIssueCommandSplitByTabId, pendingSetupSplitByTabId, pendingStartupByTabId
+ *   pendingIssueCommandSplitByTabId, pendingStartupByTabId
  * Pty-keyed (evicted via the doomed-pty set derived from live and durable bindings):
  *   codexRestartNoticeByPtyId, migrationUnsupportedByPtyId,
  *   suppressedPtyExitIds, pendingCodexPaneRestartIds
@@ -97,10 +97,6 @@ function seedMaps(store: ReturnType<typeof createTestStore>): void {
       [TAB1]: { command: 'a' },
       [TAB2]: { command: 'b' }
     },
-    pendingSetupSplitByTabId: {
-      [TAB1]: { command: 'setup-a', direction: 'vertical' },
-      [TAB2]: { command: 'setup-b', direction: 'vertical' }
-    },
     pendingStartupByTabId: { [TAB1]: { command: 'start-a' }, [TAB2]: { command: 'start-b' } },
     codexRestartNoticeByPtyId: {
       [PTY1]: { previousAccountLabel: 'a1', nextAccountLabel: 'a2' },
@@ -153,7 +149,6 @@ describe('bulk worktree purge evicts the per-tab/per-pty terminal maps it previo
     expect(s.deferredSshSessionIdsByTabId[TAB1]).toBeUndefined()
     expect(s.pendingInitialCwdByTabId[TAB1]).toBeUndefined()
     expect(s.pendingIssueCommandSplitByTabId[TAB1]).toBeUndefined()
-    expect(s.pendingSetupSplitByTabId[TAB1]).toBeUndefined()
     expect(s.pendingStartupByTabId[TAB1]).toBeUndefined()
     expect(s.codexRestartNoticeByPtyId[PTY1]).toBeUndefined()
     expect(s.migrationUnsupportedByPtyId[PTY1]).toBeUndefined()
@@ -170,7 +165,6 @@ describe('bulk worktree purge evicts the per-tab/per-pty terminal maps it previo
     expect(s.deferredSshSessionIdsByTabId[TAB2]).toBe('ssh-sess-2')
     expect(s.pendingInitialCwdByTabId[TAB2]).toBe('/path/wt2')
     expect(s.pendingIssueCommandSplitByTabId[TAB2]).toEqual({ command: 'b' })
-    expect(s.pendingSetupSplitByTabId[TAB2]).toEqual({ command: 'setup-b', direction: 'vertical' })
     expect(s.pendingStartupByTabId[TAB2]).toEqual({ command: 'start-b' })
     expect(s.codexRestartNoticeByPtyId[PTY2]).toBeDefined()
     expect(s.migrationUnsupportedByPtyId[PTY2]).toBeDefined()

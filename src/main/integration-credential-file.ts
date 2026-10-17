@@ -9,12 +9,11 @@ import {
   unlinkSync,
   writeSync
 } from 'node:fs'
-import { getSecretStore, hasSecretStore } from '../shared/secret-store'
+import { getSecretStore } from '../shared/secret-store'
 import { fsyncFileSync } from '../shared/secure-file'
 import { writeRestrictedWindowsFile } from '../shared/secure-path-windows-acl'
 import {
   credentialDecryptionMessage,
-  keychainLockedCredentialHint,
   type IntegrationCredentialService
 } from '../shared/integration-credential-errors'
 
@@ -124,10 +123,7 @@ export function restrictCredentialFileToOwner(path: string): void {
 
 export class CredentialDecryptionError extends Error {
   constructor(service: IntegrationCredentialService) {
-    const message = credentialDecryptionMessage(service)
-    // Why read the store here: the reason must survive RPC, where only the message travels.
-    const locked = hasSecretStore() && getSecretStore().keychainLock?.state() === 'locked'
-    super(locked ? `${message} ${keychainLockedCredentialHint()}` : message)
+    super(credentialDecryptionMessage(service))
     this.name = 'CredentialDecryptionError'
   }
 }

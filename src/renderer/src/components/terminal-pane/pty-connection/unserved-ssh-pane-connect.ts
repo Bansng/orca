@@ -11,7 +11,7 @@ import {
 } from '../legacy-relay-bridge-panes'
 
 /** Inert: the reconnect overlay and the host's conversion own this pane, so input never remounts it. */
-export function createUnservedSshPaneTransport(): PtyTransport {
+function createUnservedSshPaneTransport(): PtyTransport {
   return {
     ...createUnresolvedOwnerPtyTransport(
       'SSH connection is not active. Use the reconnect dialog or Settings to connect.'

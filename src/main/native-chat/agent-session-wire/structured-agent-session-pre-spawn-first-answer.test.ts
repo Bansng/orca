@@ -100,7 +100,6 @@ async function firstAnswerAndReplay(thrown: AgentSessionPreSpawnError) {
       probe: { outcome: 'reservation-unused' as const }
     },
     callerKey: 'client-1',
-    optionRevision: () => 0,
     params: createParams(),
     now: () => NOW,
     onAttached: () => {}

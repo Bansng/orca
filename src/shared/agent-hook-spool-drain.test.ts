@@ -9,7 +9,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { drainAgentHookSpool, drainAgentHookSpoolAsync } from './agent-hook-spool'
+import { drainAgentHookSpoolAsync } from './agent-hook-spool'
 
 const directories: string[] = []
 afterEach(() => {
@@ -30,29 +30,22 @@ function fixture() {
   return { endpointDir, path, contents, line, getPersistedLaunchTokenHash: () => undefined }
 }
 
-it.each(['sync', 'async'] as const)(
-  'retains the complete file after a %s admission fails',
-  async (mode) => {
-    const data = fixture()
-    const ingest = vi.fn((record) => {
-      if (record.payload === 'tool') {
-        throw new Error('admission failed')
-      }
-    })
-    if (mode === 'sync') {
-      expect(() => drainAgentHookSpool({ ...data, ingest })).toThrow('admission failed')
-    } else {
-      await expect(
-        drainAgentHookSpoolAsync({ ...data, ingest: async (record) => ingest(record) })
-      ).rejects.toThrow('admission failed')
+it('retains the complete file after an admission fails', async () => {
+  const data = fixture()
+  const ingest = vi.fn((record) => {
+    if (record.payload === 'tool') {
+      throw new Error('admission failed')
     }
-    expect(readFileSync(data.path, 'utf8')).toBe(data.contents)
-    const retried = vi.fn()
-    expect(await drainAgentHookSpoolAsync({ ...data, ingest: retried })).toBe(2)
-    expect(retried.mock.calls.map(([record]) => record.payload)).toEqual(['start', 'tool'])
-    expect(readFileSync(data.path, 'utf8')).toBe('')
-  }
-)
+  })
+  await expect(
+    drainAgentHookSpoolAsync({ ...data, ingest: async (record) => ingest(record) })
+  ).rejects.toThrow('admission failed')
+  expect(readFileSync(data.path, 'utf8')).toBe(data.contents)
+  const retried = vi.fn()
+  expect(await drainAgentHookSpoolAsync({ ...data, ingest: retried })).toBe(2)
+  expect(retried.mock.calls.map(([record]) => record.payload)).toEqual(['start', 'tool'])
+  expect(readFileSync(data.path, 'utf8')).toBe('')
+})
 
 it('waits for the owner probe before later records and preserves appended records', async () => {
   const data = fixture()

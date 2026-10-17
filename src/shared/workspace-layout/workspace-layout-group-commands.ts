@@ -1,11 +1,18 @@
 // Commands on tab groups and the group split tree, built on the headless host's group moves so
 // the runtime and today's headless host agree on the tree. There is no empty-group command: a
-// group exists only while it holds a tab, so memory and disk never differ.
+// group exists only while it holds a tab, so memory and disk never differ. An open into a new
+// split makes its group and tab in one step (openInNewGroup).
 
 import type { TabGroupLayoutNode } from '../tab-types'
 import { buildHeadlessTabGroupMove, buildHeadlessTabGroupSplit } from './tab-group-moves'
 import { moveGroupLeafBeside } from './tab-group-layout-tree'
-import { applied, findTab, refuse, type Applied } from './workspace-layout-command-steps'
+import {
+  applied,
+  findTab,
+  refuse,
+  workspaceOrEmpty,
+  type Applied
+} from './workspace-layout-command-steps'
 import type { CommandOf, LayoutContext } from './workspace-layout-command-types'
 import type { WorkspaceLayout, WorkspaceLayoutModel } from './workspace-layout-model'
 import { withWorkspace } from './workspace-layout-removal'
@@ -125,4 +132,72 @@ export function setGroupRatios(
   return applied(
     withWorkspace(model, command.workspace, { ...workspace, groupLayout: command.groupLayout })
   )
+}
+
+type NewGroupOpen = CommandOf<'createTerminalTab' | 'openEditorTab' | 'openBrowserTab'>
+
+/**
+ * `open` into a new group `command.groupId` beside `split.besideGroupId`, as the window's split
+ * does, or as the workspace's only group where main holds none. The group is added empty and
+ * `open` fills it in the same apply, so it holds no preview to replace and no other tab for the
+ * file. A group main already holds here takes the tab without a split; no split, just `open`.
+ */
+export function openInNewGroup(
+  model: WorkspaceLayoutModel,
+  command: NewGroupOpen,
+  open: (model: WorkspaceLayoutModel) => Applied
+): Applied {
+  const split = command.split
+  if (!split) {
+    return open(model)
+  }
+  const workspaces = Object.values(model.workspaces)
+  // The same open again finds its tab; `open` decides between no change and a taken id.
+  if (
+    command.tabId &&
+    workspaces.some((entry) => entry.tabs.some((tab) => tab.id === command.tabId))
+  ) {
+    return open(model)
+  }
+  const groupId = command.groupId
+  if (!groupId) {
+    return refuse('invalid_params')
+  }
+  const workspace = workspaceOrEmpty(model, command.workspace)
+  // A group main already holds here (with a tab the window no longer shows) takes the tab as is.
+  if (workspace.groups.some((group) => group.id === groupId)) {
+    return open(model)
+  }
+  if (workspaces.some((entry) => entry.groups.some((group) => group.id === groupId))) {
+    return refuse('group_exists')
+  }
+  const besideHeld = workspace.groups.some((group) => group.id === split.besideGroupId)
+  // Beside a group main lacks: refused, unless main has no group here at all (the window split off
+  // its emptied root), where the new group is the only one.
+  if (!besideHeld && workspace.groups.length > 0) {
+    return refuse('group_not_found')
+  }
+  const groupLayout = besideHeld
+    ? moveGroupLeafBeside(
+        workspace.groupLayout ?? { type: 'leaf', groupId: split.besideGroupId },
+        groupId,
+        split.besideGroupId,
+        split.direction
+      )
+    : undefined
+  const opened = open(
+    withWorkspace(model, command.workspace, {
+      ...workspace,
+      groups: [...workspace.groups, { id: groupId, tabOrder: [] }],
+      ...(groupLayout ? { groupLayout } : {})
+    })
+  )
+  if (!opened.ok) {
+    return opened
+  }
+  const filled = opened.model.workspaces[command.workspace]?.groups.some(
+    (group) => group.id === groupId && group.tabOrder.length > 0
+  )
+  // An open that placed nothing (an initial surface the workspace already has) adds no group.
+  return filled ? opened : applied(model, opened.result)
 }

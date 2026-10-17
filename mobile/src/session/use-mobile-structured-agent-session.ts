@@ -222,20 +222,20 @@ export function useMobileStructuredAgentSession(args: {
       stopRequestInFlight,
       ...(stopping
         ? {
-            afterStop: mobileStructuredSendQueues(queueCapable, state.items)
+            afterStop: mobileStructuredSendQueues(queueCapable, state)
               ? ('queue' as const)
               : ('send' as const)
           }
         : {})
     }),
-    [thinking, activityText, stopping, stopRequestInFlight, queueCapable, state.items]
+    [thinking, activityText, stopping, stopRequestInFlight, queueCapable, state]
   )
-  const status = state.status === 'idle' ? 'idle' : state.status
+  const { items, currentRequests, actionablePromptIds, status } = state
   // The host's answer where it gives one: a prompt an agent that ended raised takes no answer.
   const [approvalPrompt, questionPrompt] = useMemo(() => {
-    const prompts = { items: state.items, actionablePromptIds: state.actionablePromptIds }
+    const prompts = { items, currentRequests, actionablePromptIds }
     return [actionableStructuredApproval(prompts), actionableStructuredQuestion(prompts)] as const
-  }, [state.items, state.actionablePromptIds])
+  }, [items, currentRequests, actionablePromptIds])
   // What a refused command's line on the phone stands on.
   const commandRefusalCauses = useMemo(
     () => ({

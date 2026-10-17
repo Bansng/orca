@@ -33,8 +33,6 @@ export const HOST_OPERATION_OWNERSHIP = {
   gitlab: 'credential',
   host: 'host',
   hostedReview: 'credential',
-  // Linear/Jira key storage; the target comes from the status's own host, like linear/jira.
-  integrationCredentials: 'scope-picked',
   jira: 'scope-picked',
   layout: 'host',
   linear: 'scope-picked',

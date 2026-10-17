@@ -44,6 +44,9 @@ export type MobileNativeChatTurnRow = {
    *  toggle re-renders roster rows alone. */
   subagentGroupsOpen?: ReadonlySet<string>
   onToggleSubagentGroup: (groupId: string) => void
+  /** A long message of yours the reader opened; held here so scrolling it away keeps it open. */
+  userMessageOpen: boolean
+  onToggleUserMessage: (messageId: string) => void
 }
 
 /** The live activity line, when it draws, and whether the reader opened the block it discloses. */
@@ -171,6 +174,7 @@ export function useMobileNativeChatTurnDisclosure({
   const [expandedTurnIds, toggleExpandedTurn] = useScopedOpenKeys(scopeKey)
   const [expandedReasoning, toggleReasoning] = useScopedOpenKeys(scopeKey)
   const [openSubagentGroups, toggleSubagentGroup] = useScopedOpenKeys(scopeKey)
+  const [openUserMessages, toggleUserMessage] = useScopedOpenKeys(scopeKey)
   const bars = useMemo(() => nativeChatTurnBarRows(rows, turnKeys), [rows, turnKeys])
 
   const { active, activeTurnKey, completedByTurn } = turnStatuses
@@ -240,7 +244,9 @@ export function useMobileNativeChatTurnDisclosure({
         ...(message.blocks.some(isSubagentGroupBlock)
           ? { subagentGroupsOpen: openSubagentGroups }
           : {}),
-        onToggleSubagentGroup: toggleSubagentGroup
+        onToggleSubagentGroup: toggleSubagentGroup,
+        userMessageOpen: message.role === 'user' && openUserMessages.has(message.id),
+        onToggleUserMessage: toggleUserMessage
       }
     },
     [
@@ -259,7 +265,9 @@ export function useMobileNativeChatTurnDisclosure({
       expandedReasoning,
       toggleReasoning,
       openSubagentGroups,
-      toggleSubagentGroup
+      toggleSubagentGroup,
+      openUserMessages,
+      toggleUserMessage
     ]
   )
 

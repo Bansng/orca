@@ -31,6 +31,7 @@ export type RestoredInputExpectation = { readonly endpoint: HeldEndpoint }
 
 export type RemoteRuntimeRecoveryInputHold = {
   isHolding: () => boolean
+  hasPendingInput: () => boolean
   isHoldingBeforeBind: () => boolean
   enqueue: (endpoint: HeldEndpoint, data: string, inputKind: TerminalInputKind) => boolean
   enqueueAccepted: (
@@ -102,6 +103,7 @@ export function createRemoteRuntimeRecoveryInputHold(
 
   return {
     isHolding: () => held?.buffer.isBuffering() === true,
+    hasPendingInput: () => held?.buffer.hasPendingInput() === true,
     isHoldingBeforeBind: () => held?.beforeBind === true && held.buffer.isBuffering(),
     enqueue: (endpoint, data, inputKind) =>
       bufferFor(endpoint).enqueue(data, 'ordinary', inputKind),

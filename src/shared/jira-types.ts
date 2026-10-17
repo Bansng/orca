@@ -1,4 +1,3 @@
-import type { IntegrationCredentialErrorReason } from './integration-credential-errors'
 import type { SecretAtRestProtection } from './secret-at-rest-protection'
 // 'cloud' = Atlassian Cloud (email + API token, Basic auth, REST v3).
 // 'server' = self-hosted Jira Server/Data Center (personal access token,
@@ -34,10 +33,6 @@ export type JiraConnectionStatus = {
   // Set when a stored token file exists but could not be decrypted, so the
   // UI can explain reads failing while the connection still looks saved.
   credentialError?: string
-  // Optional, from a newer host: why credentialError happened, and whether the host can move its
-  // credential key out of a lockable keychain. Older hosts omit both; older clients ignore them.
-  credentialErrorReason?: IntegrationCredentialErrorReason
-  canMoveCredentialKeyToFile?: boolean
   // 'plaintext' when any stored token is unsealed, so Settings can warn. Optional:
   // an older remote host omits it, and absent must read as "unknown", not "sealed".
   credentialProtection?: SecretAtRestProtection | null

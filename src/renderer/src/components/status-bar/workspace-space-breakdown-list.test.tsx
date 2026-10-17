@@ -73,6 +73,27 @@ describe('WorkspaceSpaceBreakdownList', () => {
     expect(revealInFileManager).toHaveBeenCalledWith('/workspace/src', 'local')
   })
 
+  it('keeps compacted folder details available in the overflow popover', () => {
+    const { container } = render(
+      <WorkspaceSpaceBreakdownList
+        isScanning={false}
+        worktree={worktree({
+          topLevelItems: [
+            item('first', 500),
+            item('second', 400),
+            item('third', 300),
+            item('fourth', 200),
+            item('fifth', 100)
+          ]
+        })}
+      />
+    )
+
+    expect(renderedRowNames(container)).toEqual(['first', 'second', 'third', 'fourth'])
+    fireEvent.click(screen.getByText('Show more folder details'))
+    expect(screen.getAllByText('fifth')).toHaveLength(1)
+  })
+
   it('renders one row per counted top-level item, including the omitted aggregate', () => {
     const { container } = render(
       <WorkspaceSpaceBreakdownList

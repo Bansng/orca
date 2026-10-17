@@ -22,7 +22,7 @@ export function isBrowserWorkspaceOwnedByPairedServer(
  * Whether `environmentId`'s own machine is the single owner of `worktreeId`. Gates the browser
  * commands a managed SSH host forwards, so a host reaches only its own workspaces' tabs.
  */
-export function isBrowserWorkspaceOwnedByEnvironment(
+function isBrowserWorkspaceOwnedByEnvironment(
   state: WorktreeOperationRouteState,
   worktreeId: string,
   environmentId: string

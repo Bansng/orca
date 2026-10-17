@@ -20,6 +20,8 @@ import type { PtyPaneStartup } from '../pty-connection-types'
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
 import { isPtyExitReplacedByRestart } from '../pty-exit-delivery'
 import { armRestartReplacement } from './restart-replacement-on-show'
+import { closeExitedSplitPaneThroughLayoutOwner } from './exited-split-pane-close'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../../shared/layout-owner-switch'
 
 // Why live+done arms too: kept from #16308's wake-sweep widening; hibernation itself only writes worktree-sleep notes.
 export function noteArmsHibernatedPaneWake(record: SleepingAgentSessionRecord): boolean {
@@ -28,6 +30,11 @@ export function noteArmsHibernatedPaneWake(record: SleepingAgentSessionRecord): 
     record.origin !== 'quit' &&
     !(record.origin === 'live' && agentTurnEndedUncleanly(record))
   )
+}
+
+/** A tab's sole pane keeps a dead terminal it freshly spawned and the user never typed into. */
+function keepsUntouchedFreshPane(session: ConnectPanePtySession, ptyId: string): boolean {
+  return session.spawnedFreshPtyId === ptyId && !Number.isFinite(session.lastTerminalInputAt)
 }
 
 /** PTY exit handling, hibernated-pane wake targets, and post-exit focus transfer. */
@@ -321,7 +328,7 @@ export function installPtyExitHibernate(session: ConnectPanePtySession): void {
       // for this ptyId — reattach/coldRestore skip it) that the user never typed
       // into, so a reattached-dead session or an explicit `exit` still tears
       // down as before.
-      if (session.spawnedFreshPtyId === ptyId && !Number.isFinite(session.lastTerminalInputAt)) {
+      if (keepsUntouchedFreshPane(session, ptyId)) {
         return
       }
       session.deps.onPtyExitRef.current(ptyId, exitCode)
@@ -341,6 +348,23 @@ export function installPtyExitHibernate(session: ConnectPanePtySession): void {
       // strands a binding-less pane the exit path never revisits — it remounts
       // as a permanently blank ghost on reveal.
       session.focusSurvivingPtyPaneAfterKeptExit()
+      return
+    }
+    // Switch point: main closes the exited pane first; the window then removes it.
+    if (
+      ORCA_LAYOUT_OWNER_IS_MAIN &&
+      closeExitedSplitPaneThroughLayoutOwner({
+        worktreeId: session.deps.worktreeId,
+        tabId: session.deps.tabId,
+        manager: session.manager,
+        paneId: session.pane.id,
+        closeTab: () => {
+          if (!keepsUntouchedFreshPane(session, ptyId)) {
+            session.deps.onPtyExitRef.current(ptyId, exitCode)
+          }
+        }
+      })
+    ) {
       return
     }
     session.manager.closePane(session.pane.id)

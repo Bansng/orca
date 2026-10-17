@@ -1,10 +1,8 @@
 // Whether this window owes main a session write: one is scheduled or not yet acknowledged. Fed by
 // the session write subscriber in a layout-owner build only; layout frames wait while it is busy,
-// so a frame never replaces a change main has not received yet. Frames also wait while a layout
-// command whose answer the window draws itself is in flight.
+// so a frame never replaces a change main has not received yet.
 
 let busy = false
-let held = 0
 let idleListener: (() => void) | null = null
 
 export function reportWindowSessionWriteActivity(nextBusy: boolean): void {
@@ -12,29 +10,13 @@ export function reportWindowSessionWriteActivity(nextBusy: boolean): void {
     return
   }
   busy = nextBusy
-  if (!isWindowSessionWriteBusy()) {
+  if (!busy) {
     idleListener?.()
   }
 }
 
-/** Holds layout frames until the returned release runs; releasing twice is a no-op. */
-export function holdLayoutFramesForWindowCommand(): () => void {
-  held += 1
-  let released = false
-  return () => {
-    if (released) {
-      return
-    }
-    released = true
-    held -= 1
-    if (!isWindowSessionWriteBusy()) {
-      idleListener?.()
-    }
-  }
-}
-
 export function isWindowSessionWriteBusy(): boolean {
-  return busy || held > 0
+  return busy
 }
 
 /** The one listener: the window's layout frame sync. */

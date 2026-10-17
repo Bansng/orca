@@ -23,6 +23,7 @@ import {
 import { worktreePtyBelongsToHost, type WorktreePtyHostFence } from '../../worktree-pty-host-fence'
 import { summarizeWorktreePtyStopVerdict } from '../../worktree-pty-stop-verdict'
 import { describeMobileSessionTabCloseRefusal } from '../../mobile-session-tab-close-refusal-message'
+import { clearClosedWorktreeResumeRecords } from './worktree-sleep-resume-records'
 
 export abstract class OrcaRuntimeWithStopTerminalsForWorktree extends OrcaRuntimeWithResolveTerminalSplitSourceAuthority {
   protected abstract sleepResolvedWorktreeTerminals(
@@ -123,6 +124,16 @@ export abstract class OrcaRuntimeWithStopTerminalsForWorktree extends OrcaRuntim
     hostId: ExecutionHostId,
     closedTabIds: readonly string[]
   ): Promise<void> {
+    await this.commitWorkspaceSessionEdit(hostId, (session) =>
+      clearClosedWorktreeResumeRecords(session, worktreeId, closedTabIds)
+    )
+  }
+
+  /** Durably replaces a host partition's session with `edit`'s result: null skips, an Error refuses. */
+  protected async commitWorkspaceSessionEdit(
+    hostId: ExecutionHostId,
+    edit: (session: WorkspaceSessionState) => WorkspaceSessionState | Error | null
+  ): Promise<void> {
     if (
       !this.store?.getWorkspaceSession ||
       !this.store.setWorkspaceSession ||
@@ -133,35 +144,12 @@ export abstract class OrcaRuntimeWithStopTerminalsForWorktree extends OrcaRuntim
     const refusal = await this.store.runDurableMutation<Error | undefined>(() => {
       // SAFETY: Keep the original late lookup and failure if this capability disappears.
       const session = cloneWorkspaceSessionState(this.store!.getWorkspaceSession!(hostId))
-      const sleepingAgentSessionsByPaneKey = Object.fromEntries(
-        Object.entries(session.sleepingAgentSessionsByPaneKey ?? {}).filter(
-          ([, record]) => record.worktreeId !== worktreeId
-        )
-      )
-      const terminalPtyIncarnationsByPaneKey = Object.fromEntries(
-        Object.entries(session.terminalPtyIncarnationsByPaneKey ?? {}).filter(
-          ([paneKey]) => !closedTabIds.some((tabId) => paneKey.startsWith(`${tabId}:`))
-        )
-      )
-      const remainingTerminalRows = session.tabsByWorktree[worktreeId] ?? []
-      const remainingUnifiedTerminalTabs = (session.unifiedTabs?.[worktreeId] ?? []).filter(
-        (tab) => tab.contentType === 'terminal'
-      )
-      if (remainingTerminalRows.length > 0 || remainingUnifiedTerminalTabs.length > 0) {
-        return { value: new Error('terminal_close_incomplete'), persist: false }
+      const next = edit(session)
+      if (next instanceof Error) {
+        return { value: next, persist: false }
       }
-      const hasChanges =
-        Object.keys(sleepingAgentSessionsByPaneKey).length !==
-          Object.keys(session.sleepingAgentSessionsByPaneKey ?? {}).length ||
-        Object.keys(terminalPtyIncarnationsByPaneKey).length !==
-          Object.keys(session.terminalPtyIncarnationsByPaneKey ?? {}).length
-      if (!hasChanges) {
+      if (!next) {
         return { value: undefined, persist: false }
-      }
-      const next: WorkspaceSessionState = {
-        ...session,
-        sleepingAgentSessionsByPaneKey,
-        terminalPtyIncarnationsByPaneKey
       }
       // SAFETY: Keep the original late lookup and failure if this capability disappears.
       this.store!.setWorkspaceSession!(next, hostId)

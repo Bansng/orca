@@ -1,3 +1,4 @@
+import '../runtime/desktop-browser-bridge/desktop-browser-bridge-allowlist.spec'
 import { mkdtempSync } from 'node:fs'
 import { RuntimeBrowserCommands } from '../runtime/browser/browser-commands'
 import { setRuntimeBrowserCommandsFactory } from '../runtime/runtime-browser-commands-factory'

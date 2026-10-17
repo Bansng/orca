@@ -25,6 +25,50 @@ function restingRecord(): AgentSessionRecord {
 }
 
 describe('options at rest', () => {
+  it('keeps the account model for an older client when the starting child has no folder default', async () => {
+    const record = restingRecord()
+    const read = vi.fn(async (params: { inSessionWorkspace?: true }) => ({
+      origin: 'probe' as const,
+      models: [
+        {
+          id: params.inSessionWorkspace ? 'gpt-folder' : 'gpt-account',
+          label: 'Model',
+          isDefault: !params.inSessionWorkspace,
+          efforts: []
+        }
+      ],
+      fetchedAt: 1
+    }))
+    const starting = {
+      child: { phase: 'starting' },
+      params: { provider: 'codex' },
+      journal: { threadGoal: () => null, context: { floor: () => null } }
+    }
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this read touches only the declared context fields.
+    const context = {
+      deps: {
+        adapter: {},
+        agents: NO_STRUCTURED_AGENTS,
+        store: { getRecord: () => record },
+        modelCatalog: { read }
+      },
+      serialize: (_sessionId: string, task: () => Promise<unknown>) => task(),
+      openConversation: async () => starting,
+      conversation: async () => starting
+    } as unknown as StructuredAgentSessionMutationContext
+
+    const current = await readStructuredAgentSessionOptions(context, SESSION, {
+      readsWithoutModel: true
+    })
+    expect(current.current).toEqual({ permissionMode: 'ask' })
+    expect(read).toHaveBeenCalledTimes(1)
+    const older = await readStructuredAgentSessionOptions(context, SESSION, {
+      readsWithoutModel: false
+    })
+    expect(older.current).toEqual({ model: 'gpt-account', permissionMode: 'ask' })
+    expect(read).toHaveBeenLastCalledWith({ agent: 'codex', sessionId: SESSION, savedOnly: true })
+  })
+
   it.each(['codex', 'omp', 'grok', 'opencode'] as const)(
     'omits an unknown model for %s while the catalog is unavailable',
     async (provider) => {
@@ -58,11 +102,11 @@ describe('options at rest', () => {
       const result = await readStructuredAgentSessionOptions(context, SESSION, {
         readsWithoutModel: true
       })
-      expect(probe).toHaveBeenCalledTimes(provider === 'codex' ? 1 : 0)
+      expect(probe).not.toHaveBeenCalled()
       expect(result.models).toEqual([])
       expect(result.current).not.toHaveProperty('model')
       record.options = { model: 'later-model', effort: 'off' }
-      // Of these, only Codex's chats state a permission mode.
+      // Only Codex is registered here, and a mode is stated only for a registered agent's chat.
       expect(
         (await readStructuredAgentSessionOptions(context, SESSION, { readsWithoutModel: true }))
           .current
@@ -76,13 +120,14 @@ describe('options at rest', () => {
 })
 
 describe('live Codex option reads', () => {
-  it('leaves the session lane free while a cold listing waits, then applies it under the child fence', async () => {
+  it('keeps newer saved picks after a cold live listing waits without holding the session lane', async () => {
     const listing = Promise.withResolvers<void>()
     const queue = new StructuredAgentSessionTaskQueue()
     const child = { fence: 7 }
+    const record = restingRecord()
     const apply = vi.fn(() => ({
       models: [{ id: 'gpt-live', label: 'GPT Live', efforts: [] }],
-      current: { model: 'gpt-live' }
+      current: { model: 'gpt-live', effort: 'high', confirmed: ['model', 'effort'] as const }
     }))
     const prepareReadOptions = vi.fn(async () => {
       await listing.promise
@@ -98,7 +143,7 @@ describe('live Codex option reads', () => {
       deps: {
         adapter: { prepareReadOptions },
         agents: NO_STRUCTURED_AGENTS,
-        store: { getRecord: () => restingRecord() }
+        store: { getRecord: () => record }
       },
       serialize: (sessionId: string, task: () => Promise<unknown>) =>
         queue.serialize(sessionId, task),
@@ -114,8 +159,11 @@ describe('live Codex option reads', () => {
       'delivery can proceed'
     )
     expect(apply).not.toHaveBeenCalled()
+    record.options = { model: 'gpt-next', effort: 'low' }
     listing.resolve()
-    await expect(reading).resolves.toMatchObject({ current: { model: 'gpt-live' } })
+    await expect(reading).resolves.toMatchObject({
+      current: { model: 'gpt-next', effort: 'low', confirmed: [] }
+    })
     expect(apply).toHaveBeenCalledOnce()
   })
 

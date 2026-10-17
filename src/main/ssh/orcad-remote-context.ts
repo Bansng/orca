@@ -16,6 +16,7 @@ import {
   orcadMachineDataRoot,
   orcadMachineHomeDir,
   orcadMachineHomeProbeCommand,
+  orcadMachineOwnershipUnresolvedMessage,
   parseOrcadMachineClaim,
   parseOrcadMachineHomeProbe
 } from './orcad-machine-home'
@@ -127,6 +128,11 @@ export async function resolveOrcadMachineHome(
   )
   const { loginHome } = probe
   let decision = decideOrcadMachineHome(probe, host)
+  if (decision.kind === 'unresolved') {
+    throw new Error(
+      orcadMachineOwnershipUnresolvedMessage(decision.machineKey, probe.identity?.hostname ?? null)
+    )
+  }
   if (decision.kind === 'claim') {
     const won = parseOrcadMachineClaim(
       (

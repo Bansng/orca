@@ -37,7 +37,7 @@ import {
   beginStructuredAgentSessionAuthoritativeInventory,
   resetStructuredAgentLaunchCancellationForTests,
   startStructuredAgentLaunchCancellationCleanup
-} from '@/lib/structured-agent-session-launch-cancellation'
+} from '@/lib/launch-cancel-tombstones-compat/structured-agent-session-launch-cancellation'
 import {
   resetStructuredAgentLaunchPersistenceForTests,
   writeStructuredAgentLaunchRecord

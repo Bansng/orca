@@ -14,19 +14,25 @@ import type {
 import type { AgentSessionMutationResult } from '../../../shared/agent-session-wire'
 import { AGENT_SESSION_HISTORY_MAX_PAGE_BYTES } from './agent-session-history-page-bounds'
 import type { StructuredAgentSessionMutationContext } from './structured-agent-session-host-mutations'
-import { openWithAgent } from './structured-agent-session-send-preparation'
+import {
+  runWithReadyStructuredAgentSessionOperation,
+  openWithReadyStructuredAgentSessionChild,
+  type ReadyOperationSelection
+} from './structured-agent-session-ready-operation'
 import type { StructuredAgentSessionAttachContext } from './structured-agent-session-attach-context'
 import type { StructuredAgentSessionCaller } from './structured-agent-session-host-types'
 import { admitAndRunAgentSessionMutation } from './structured-agent-session-mutation-admission'
 import { hostStructuredAgentSessionCurrentWork } from './structured-agent-session-host-current-work'
 import { conversationCommandBlocked } from './structured-conversation-command-admission'
-import { rewindRefusal } from './structured-rewind-refusal'
+import { completedStructuredRewind } from './structured-rewind-replay'
+import { rewindRefusal, rewindRefusalBehindClear } from './structured-rewind-refusal'
 import { renameRewindTurnOpener } from './structured-rewind-journal-body'
 import { persistRewindRecord, recoverStructuredRewind } from './structured-rewind-recovery'
 import {
   mergeRetainedHostLifecycleRows,
   rewindProviderRows
 } from './structured-rewind-retained-host-rows'
+import { rewindInDoubt } from './structured-agent-session-send-preparation'
 
 export async function rewindStructuredAgentSession(
   context: StructuredAgentSessionMutationContext,
@@ -35,8 +41,13 @@ export async function rewindStructuredAgentSession(
   params: AgentSessionRewindParams
 ): Promise<AgentSessionMutationResult<AgentSessionRewindResult>> {
   const { sessionId, clientOperationId } = params.envelope
-  const store = context.deps.store
-  return context.serialize(sessionId, async () => {
+  const {
+    readChildWork,
+    deps: { store }
+  } = context
+  const fields = { itemId: params.itemId, expectedEpoch: params.expectedEpoch }
+  const operation = { method: 'agentSession.rewind', fields }
+  const run = async (selection: ReadyOperationSelection) => {
     let completionReceipt: JournalOperationReceipt | undefined
     const result = await admitAndRunAgentSessionMutation<AgentSessionRewindResult>({
       store,
@@ -46,28 +57,14 @@ export async function rewindStructuredAgentSession(
       callerKey: caller.callerKey,
       envelope: params.envelope,
       // Only the provider can do this, so an agent at rest is started first.
-      prepareSession: openWithAgent(context, params.envelope, () => {
-        const journal = context.sessions.get(sessionId)?.journal
-        const floor = journal?.context.floor()
-        if (!journal || !floor) {
-          return { ok: true }
-        }
-        if (journal.cursor().epoch !== params.expectedEpoch) {
-          return rewindRefusal('stale-epoch')
-        }
-        const target = journal.snapshot().items.find((item) => item.itemId === params.itemId)
-        return !target || target.sequence <= floor.sequence
-          ? rewindRefusal('invalid-target')
-          : { ok: true }
-      }),
+      prepareSession: openWithReadyStructuredAgentSessionChild(context, params.envelope, selection),
       journal: () => context.sessions.get(sessionId)?.journal,
       currentWork: () =>
         hostStructuredAgentSessionCurrentWork({ store, sessions: context.sessions }, sessionId),
       publish: (journal) => context.publish(sessionId, journal),
       now: context.now,
       plan: {
-        method: 'agentSession.rewind',
-        fields: { itemId: params.itemId, expectedEpoch: params.expectedEpoch },
+        ...operation,
         recoverUnknownFromDurableState: true,
         settledOutcome: (rewind: AgentSessionRewindResult) => ({
           status: 'succeeded' as const,
@@ -83,17 +80,11 @@ export async function rewindStructuredAgentSession(
           if (outcome.status === 'succeeded' && outcome.rewind) {
             return outcome.rewind
           }
-          const prior = store.getRecord(sessionId)?.rewind
-          return prior?.operationId === clientOperationId &&
-            prior.callerKey === caller.callerKey &&
-            prior.phase === 'completed' &&
-            prior.epoch
-            ? {
-                itemId: prior.itemId,
-                epoch: prior.epoch,
-                ...(prior.sequence !== undefined ? { sequence: prior.sequence } : {})
-              }
-            : null
+          return completedStructuredRewind(
+            store.getRecord(sessionId)?.rewind,
+            caller.callerKey,
+            clientOperationId
+          )
         },
         run: async (ctx) => {
           await attachContext.runtimeState.flushEventSink(sessionId)
@@ -102,13 +93,10 @@ export async function rewindStructuredAgentSession(
           if (!support?.supported) {
             return rewindRefusal(support?.reason ?? 'unsupported')
           }
-          if (
-            record.rewind?.phase === 'prepared' ||
-            record.rewind?.phase === 'provider-succeeded'
-          ) {
+          if (rewindInDoubt(record)) {
             return rewindRefusal('outcome-unknown')
           }
-          if (conversationCommandBlocked(ctx, record, context.readChildWork(sessionId))) {
+          if (conversationCommandBlocked(ctx, record, readChildWork(sessionId), 'handover')) {
             return rewindRefusal('busy')
           }
           const snapshot = ctx.journal.snapshot()
@@ -299,5 +287,15 @@ export async function rewindStructuredAgentSession(
           cursor: context.sessions.get(sessionId)!.journal.cursor()
         }
       : result
-  })
+  }
+  return runWithReadyStructuredAgentSessionOperation(
+    context,
+    caller.callerKey,
+    params.envelope,
+    operation,
+    run,
+    {
+      beforeAgent: () => rewindRefusalBehindClear(context.sessions.get(sessionId)?.journal, params)
+    }
+  )
 }

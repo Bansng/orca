@@ -171,8 +171,8 @@ class OrcaRuntimeService extends OrcaRuntimeWithMigrationCatalog {
   }
 
   /** A window's layout command (`layout.apply`), applied to the partitions that hold its tab. */
-  applyLayoutCommand(command: WindowLayoutCommand): Promise<LayoutApplyReply> {
-    return applyWindowLayoutCommand(
+  async applyLayoutCommand(command: WindowLayoutCommand): Promise<LayoutApplyReply> {
+    const reply = await applyWindowLayoutCommand(
       this.requireStore(),
       (worktreeId, tabId) => {
         if (tabId !== null) {
@@ -184,6 +184,8 @@ class OrcaRuntimeService extends OrcaRuntimeWithMigrationCatalog {
       command,
       (move) => rekeyMovedPaneOwners(this, move)
     )
+    // Sent before the reply, so the window can wait for the frame that shows the change.
+    return { ...reply, frameSeq: this.workspaceLayoutStream.settledSeq() }
   }
 
   /** This desktop's display-only copy of each paired server's layout (`layout.getRemoteSnapshots`). */

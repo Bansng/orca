@@ -3,10 +3,7 @@
  * that may skip part of the scope check.
  * COMPAT(legacy-relay-bridge): revisit 2027-01-15.
  */
-import {
-  clampOrchestrationAskTimeoutMs,
-  ORCHESTRATION_ASK_MAX_TIMEOUT_MS
-} from '../../../shared/orchestration-ask-timeout'
+import { ORCHESTRATION_ASK_MAX_TIMEOUT_MS } from '../../../shared/orchestration-ask-timeout'
 import { isDurableMutation } from '../../../shared/orchestration-rpc-contract'
 import type { OrcaRuntimeService } from '../../runtime/orca-runtime'
 import { ALL_RPC_METHODS } from '../../runtime/rpc/methods'
@@ -30,10 +27,6 @@ export function cappedWait(timeoutMs: number | undefined): number | undefined {
   return timeoutMs === undefined
     ? undefined
     : Math.min(Math.max(0, timeoutMs), ORCHESTRATION_ASK_MAX_TIMEOUT_MS)
-}
-
-export function optionalAskTimeout(timeoutMs: number | undefined): number | undefined {
-  return timeoutMs === undefined ? undefined : clampOrchestrationAskTimeoutMs(timeoutMs)
 }
 
 /** The inbox handler passes `limit` straight to SQL, where a negative one means "every row". */

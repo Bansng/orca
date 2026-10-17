@@ -3,7 +3,10 @@ import type {
   AgentSessionMutationResult
 } from '../../../shared/agent-session-wire'
 import { hasRuntimeRpcErrorCode } from '../../../shared/runtime-rpc-error-code'
-import { isDefinitiveAgentSessionCreateRefusal } from '../../../shared/agent-session-definitive-refusal'
+import {
+  isAgentSessionCreateAdmissionRefusal,
+  isDefinitiveAgentSessionCreateRefusal
+} from '../../../shared/agent-session-definitive-refusal'
 import { readAgentSessionRefusalReference } from '../../../shared/agent-session-wire-refusals'
 import { readAgentSessionErrorRefusal } from '../../../shared/agent-session-write-failure'
 import {
@@ -120,15 +123,14 @@ export async function launchStructuredAgentSession(
   if (!result.ok) {
     const { code, message, ownerVerdict } = result.refusal
     const refusal = readAgentSessionRefusalReference(result.refusal)
-    const transcriptRefusedBeforeCommit =
+    const attemptRefusedBeforeCommit =
       !priorCreateOutcomeUnknown &&
       result.refusal.createAttemptRefusedBeforeCommit === true &&
-      refusal?.code === 'agent_session_identity_required' &&
-      (refusal.details?.reason === 'transcriptNotFound' ||
-        refusal.details?.reason === 'transcriptUnreadable')
-    // A proven precommit transcript refusal lets a new operation retry.
+      refusal !== undefined &&
+      isAgentSessionCreateAdmissionRefusal(refusal)
+    // Attempt proof cannot settle an earlier create whose reply was lost.
     if (
-      !transcriptRefusedBeforeCommit &&
+      !attemptRefusedBeforeCommit &&
       !isDefinitiveAgentSessionCreateRefusal(code) &&
       ownerVerdict !== 'exited'
     ) {

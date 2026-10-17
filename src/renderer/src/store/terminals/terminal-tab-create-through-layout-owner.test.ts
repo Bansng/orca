@@ -1,7 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppState } from '../types'
 import type { LayoutApplyReply } from '../../../../shared/workspace-layout/workspace-layout-command-types'
-import { isWindowSessionWriteBusy } from '@/lib/window-session-write-activity'
+import {
+  _resetLayoutFramePositionForTests,
+  beginLayoutFramePositions,
+  endLayoutFramePositions,
+  noteLayoutFramePosition
+} from '@/runtime/layout-frame-position'
+import {
+  _resetLayoutOwnerPaneIntentsForTests,
+  takeTabRowFields
+} from '@/runtime/layout-owner-pane-intents'
 import { createTestStore, makeTab } from '../slices/store-test-helpers'
 import { createInitialTerminalThroughLayoutOwner } from './terminal-tab-create-through-layout-owner'
 
@@ -40,6 +49,8 @@ function start(state: () => AppState = () => stateWith()) {
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 beforeEach(() => {
+  _resetLayoutOwnerPaneIntentsForTests()
+  endLayoutFramePositions()
   mocks.pairedServer = null
   mocks.callRuntimeRpc.mockReset()
   mocks.callRuntimeRpc.mockImplementation(
@@ -52,7 +63,7 @@ beforeEach(() => {
 })
 
 describe('createInitialTerminalThroughLayoutOwner', () => {
-  it('asks main for the first tab and draws main’s answer, holding frames meanwhile', async () => {
+  it('asks main for the first tab and leaves drawing it, with the window’s row fields, to main’s frame', async () => {
     const { create, routed, command } = start()
 
     expect(routed).toBe(true)
@@ -61,25 +72,43 @@ describe('createInitialTerminalThroughLayoutOwner', () => {
       workspace: WORKTREE,
       initial: 'activation'
     })
-    expect(isWindowSessionWriteBusy()).toBe(true)
+    noteLayoutFramePosition(1)
+    mocks.reply?.({ ok: true, result: { tabId: command.tabId, leafId: command.leafId } })
+    await settle()
+
+    expect(create).not.toHaveBeenCalled()
+    // Kept for the frame, however late an owed write lets it in.
+    expect(takeTabRowFields(command.tabId)).toEqual({ pendingActivationSpawn: true })
+  })
+
+  it('draws main’s tab itself, under main’s ids, when no frame is coming', async () => {
+    const { create, command } = start()
+
     mocks.reply?.({ ok: true, result: { tabId: command.tabId, leafId: command.leafId } })
     await settle()
 
     expect(create).toHaveBeenCalledWith({ tabId: command.tabId, leafId: command.leafId })
-    expect(isWindowSessionWriteBusy()).toBe(false)
+    expect(takeTabRowFields(command.tabId)).toBeNull()
   })
 
-  it('draws nothing when main’s copy already has a tab there', async () => {
-    const { create } = start()
+  it('waits for a stream not yet in, and draws main’s tab itself if it ends first', async () => {
+    _resetLayoutFramePositionForTests()
+    beginLayoutFramePositions()
+    const { create, command } = start()
 
-    mocks.reply?.({ ok: true, result: {} })
+    mocks.reply?.({
+      ok: true,
+      result: { tabId: command.tabId, leafId: command.leafId },
+      frameSeq: 1
+    })
     await settle()
-
     expect(create).not.toHaveBeenCalled()
-    expect(isWindowSessionWriteBusy()).toBe(false)
+
+    endLayoutFramePositions()
+    expect(create).toHaveBeenCalledWith({ tabId: command.tabId, leafId: command.leafId })
   })
 
-  it('does not draw a tab twice when the window already shows it', async () => {
+  it('draws nothing itself when a frame showed the tab before the stream ended', async () => {
     let state = stateWith()
     const { create, command } = start(() => state)
 
@@ -88,6 +117,16 @@ describe('createInitialTerminalThroughLayoutOwner', () => {
     await settle()
 
     expect(create).not.toHaveBeenCalled()
+  })
+
+  it('draws nothing when main’s copy already has a tab there', async () => {
+    const { create, command } = start()
+
+    mocks.reply?.({ ok: true, result: {} })
+    await settle()
+
+    expect(create).not.toHaveBeenCalled()
+    expect(takeTabRowFields(command.tabId)).toBeNull()
   })
 
   it('opens the terminal as today when main holds no partition for the workspace, or fails', async () => {
@@ -101,7 +140,7 @@ describe('createInitialTerminalThroughLayoutOwner', () => {
     mocks.fail?.(new Error('layout_store_unavailable'))
     await settle()
     expect(failed.create).toHaveBeenCalledWith()
-    expect(isWindowSessionWriteBusy()).toBe(false)
+    expect(takeTabRowFields(failed.command.tabId)).toBeNull()
   })
 
   it('opens nothing as today once the user has left the workspace', async () => {

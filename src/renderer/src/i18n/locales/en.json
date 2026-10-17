@@ -427,6 +427,9 @@
     "activityWaitingSuffix": "activity waiting"
   },
   "worktreeJumpPalette": {
+    "goToWebsite": "Go to {{value0}}",
+    "openWebsiteInNewTab": "Open in a new browser tab",
+    "websiteBadge": "Website",
     "matchLabel": {
       "comment": "Comment",
       "issue": "Issue",
@@ -6255,7 +6258,8 @@
               "unstoppedPty": "Orca could not confirm every terminal in this workspace has exited, so it stopped before deleting any files. Use Force Delete to remove it anyway.",
               "unstoppedPtyLive": "This workspace still has running terminals, so Orca stopped before deleting any files. Force Delete will kill them and discard any uncommitted work they hold.",
               "runningAgentSession": "Orca could not confirm every agent session in this workspace has closed, so it stopped before deleting any files. Use Force Delete to remove it anyway.",
-              "runningAgentSessionLive": "This workspace still has running agent sessions that Orca could not close, so it stopped before deleting any files. Force Delete will discard any work they hold."
+              "runningAgentSessionLive": "This workspace still has running agent sessions that Orca could not close, so it stopped before deleting any files. Force Delete will discard any work they hold.",
+              "submodules": "This workspace contains submodules, so Git deletes it only with Force Delete. Force Delete also permanently removes anything in those submodules that was never pushed: commits, local branches and stashes."
             },
             "failure": {
               "archive": {
@@ -8992,8 +8996,7 @@
           "8c922dffba": "Reuse SSH connection for faster setup",
           "53e9aabfc0": "Uses OpenSSH multiplexing when available. Turn off for hosts with custom SSH restrictions.",
           "allowRemoteCliControl": "Allow this host's orca CLI to control Orca",
-          "allowRemoteCliControlHelp": "When on, orca commands run on this host can open and drive Orca browser tabs on this desktop, only in this host's workspaces and only while it is connected. Terminals started by an older Orca on this host can also run orchestration commands (check, inbox, send, ask, reply) for their own supervised work. They cannot read your files, clipboard or cookies. When off, they reach only this host's own Orca server.",
-          "allowRemoteCliControlReset": "Orca turned this off after an update, because it now lets this host drive your desktop browser and lets terminals started by an older Orca on this host run orchestration commands. Turn it on again only if you want that.",
+          "allowRemoteCliControlHelp": "On by default. Lets orca commands run on this host open and drive Orca browser tabs on this desktop, only in this host's workspaces and only while it is connected, and lets terminals started by an older Orca on this host run orchestration commands (check, inbox, send, ask, reply) for their own supervised work. They cannot read your files, clipboard or cookies. When off, they reach only this host's own Orca server.",
           "editTitle": "Edit SSH host",
           "addTitle": "Add SSH host",
           "editDescription": "Update connection details for this machine. Changes apply on next connect.",
@@ -12881,13 +12884,6 @@
           "confirm": "Restart",
           "terminalsUnknown": "Orca couldn’t confirm whether terminals are running on this host, so it didn’t restart the managed server.",
           "terminalsRunning": "{{count}} terminals are still running on this host. Close them, then restart the managed server."
-        },
-        "keychainCredentialNotice": {
-          "locked": "{{service}} is unavailable on {{host}}: its macOS login Keychain is locked. This happens after a reboot when you only sign in over SSH. Sign in to that Mac at its screen once. Orca then offers to switch the host to file storage so this stops happening.",
-          "unnamedHost": "the remote server",
-          "moved": "Switched {{host}} to file storage",
-          "offerMove": "{{host}} keeps its credential key in its macOS login Keychain, which was locked after a reboot. Switch to file storage to keep Linear and Jira working when you only sign in over SSH. The key then sits in a file only this account can read, which protects it less than the Keychain: it is not tied to this machine, so a backup or shared copy of ~/.orca can open the credentials.",
-          "moveAction": "Switch to file storage"
         }
       },
       "right": {
@@ -19806,7 +19802,8 @@
       "confirmBody": "Restarting ends every process running in {{sessions}}. Agents that support resume can be resumed afterwards; shells and other jobs cannot and must be started again. Do this when your agents are idle.",
       "cancel": "Cancel",
       "confirm": "Restart and end processes"
-    }
+    },
+    "restartedInputNotSent": "The terminal restarted while you were typing, so some input may not have reached it. Check the new shell before typing it again."
   },
   "fileExplorer": {
     "root": {
@@ -20191,6 +20188,13 @@
     }
   },
   "workspaceSpace": {
+    "deleteOne": "Delete {{value0}}",
+    "table": {
+      "lastActive": "Last active"
+    },
+    "breakdown": {
+      "viewAll": "Show more folder details"
+    },
     "compact": {
       "linkedAndUnavailable": "{{value0}} in linked worktrees · {{value1}} unavailable",
       "linkedAndScanned": "{{value0}} in linked worktrees · {{value1}} workspaces",
@@ -20207,8 +20211,8 @@
     "metric": {
       "linkedWorktrees": "Linked worktrees"
     },
-    "summary": {
-      "linkedWorktrees": "{{value0}} is used by linked worktrees. Managed worktrees can be removed here."
+    "scan": {
+      "moreErrors": "{{value0}} more scan errors"
     },
     "status": {
       "notManaged": "Not managed"
@@ -20219,7 +20223,6 @@
       "clickToZoom": "Click a workspace to zoom"
     },
     "window": {
-      "close": "Close",
       "errorTitle": "Space hit an error.",
       "errorDescription": "Close and reopen Space to try again."
     }

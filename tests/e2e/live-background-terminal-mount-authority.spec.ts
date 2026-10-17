@@ -556,7 +556,6 @@ test('adopts runtime-owned agent and Setup PTYs on first mount', async ({
             agentCmdOverrides: { codex: command },
             terminalWindowsShell: windowsShell,
             disabledTuiAgents: [],
-            setupScriptLaunchMode: 'new-tab',
             terminalHiddenViewParking: false
           })
           return true

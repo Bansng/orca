@@ -8,7 +8,6 @@ import { existsSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import type { Store } from '../persistence'
 import type { GitAdmissionTier } from '../../shared/rpc-contract/git-admission-tier-params'
-import type { GlobalSettings } from '../../shared/global-settings-types'
 import type { Repo } from '../../shared/repo-types'
 import type {
   CreateWorktreeArgs,
@@ -301,10 +300,9 @@ async function spawnLocalStartupAndSetupTerminals(args: {
   startup: CreateWorktreeArgs['startup']
   setup: CreateWorktreeResult['setup']
   defaultTabs: CreateWorktreeResult['defaultTabs']
-  settings: GlobalSettings
   createdWithAgent: CreateWorktreeArgs['createdWithAgent']
 }): Promise<StagedStartupResult> {
-  const { runtime, worktree, startup, setup, defaultTabs, settings, createdWithAgent } = args
+  const { runtime, worktree, startup, setup, defaultTabs, createdWithAgent } = args
   if (!startup || defaultTabs?.tabs.length) {
     return { didSpawnSetup: false }
   }
@@ -377,37 +375,17 @@ async function spawnLocalStartupAndSetupTerminals(args: {
           ),
           setup.shell
         )
-      const setupLaunchMode =
-        (settings as Partial<Pick<GlobalSettings, 'setupScriptLaunchMode'>>)
-          .setupScriptLaunchMode ?? 'new-tab'
-      if (setupLaunchMode === 'split-vertical' || setupLaunchMode === 'split-horizontal') {
-        if (!startupTerminalHandle) {
-          throw new Error('startup_terminal_missing')
-        }
-        await runtime.splitTerminal(
-          startupTerminalHandle,
-          {
-            direction: setupLaunchMode === 'split-horizontal' ? 'horizontal' : 'vertical',
-            command: setupCommand,
-            env: setup.envVars,
-            activate: false,
-            surfaceOwner: false
-          },
-          worktree
-        )
-      } else {
-        await runtime.createTerminal(
-          `id:${worktree.id}`,
-          {
-            title: 'Setup',
-            command: setupCommand,
-            env: setup.envVars,
-            activate: false,
-            surfaceOwner: false
-          },
-          worktree
-        )
-      }
+      await runtime.createTerminal(
+        `id:${worktree.id}`,
+        {
+          title: 'Setup',
+          command: setupCommand,
+          env: setup.envVars,
+          activate: false,
+          surfaceOwner: false
+        },
+        worktree
+      )
       didSpawnSetup = true
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -1700,7 +1678,6 @@ async function performLocalWorktreeCreate(
       startup: args.startup,
       setup,
       defaultTabs,
-      settings,
       createdWithAgent: args.createdWithAgent
     })
   )

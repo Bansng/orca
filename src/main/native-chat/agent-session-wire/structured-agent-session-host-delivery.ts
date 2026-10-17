@@ -13,12 +13,15 @@ import {
   type StructuredAgentSessionConversationOpenOptions
 } from './structured-agent-session-conversation-open'
 import type { StructuredAgentSessionClientDelivery } from './structured-agent-session-client-delivery'
+import type { StructuredAgentSessionDeliveryOrder } from './structured-agent-session-delivery-order'
 import { StructuredAgentSessionDeliveryLoop } from './structured-agent-session-delivery-loop'
 import { structuredAgentSessionCommandRunning } from './structured-agent-session-command-turn'
 import type { StructuredAgentSessionResumeOutcome } from './structured-agent-session-agent-start'
+import type { StructuredAgentSessionStartReadiness } from './structured-agent-session-startup-attempt'
 import type {
   StructuredAgentSessionHostDeps,
-  StructuredAgentSessionHostSession
+  StructuredAgentSessionHostSession,
+  StructuredAgentSessionProviderChildIdentity
 } from './structured-agent-session-host-types'
 import { structuredAgentSessionConversationFence } from './structured-agent-session-provider-child'
 import { structuredAgentSessionFailureWordsContext } from './structured-agent-session-send-preparation'
@@ -61,6 +64,11 @@ export function createStructuredAgentSessionConversationDelivery(input: {
     sessionId: string,
     startedFor: string
   ) => Promise<StructuredAgentSessionResumeOutcome>
+  deliveryOrder: StructuredAgentSessionDeliveryOrder
+  readiness: (
+    sessionId: string,
+    child: StructuredAgentSessionProviderChildIdentity
+  ) => StructuredAgentSessionStartReadiness | null
   /** Stops a child the chat outgrew, so the start after it reads a new login or permission mode. */
   stopOutgrownAgent: (sessionId: string) => Promise<void>
   /** Read lazily: the host's mutation context is still assembling when this is built. */
@@ -103,6 +111,8 @@ export function createStructuredAgentSessionConversationDelivery(input: {
       })
       return input.ensureProviderChild(sessionId, startedFor)
     },
+    readiness: input.readiness,
+    deliveryOrder: input.deliveryOrder,
     applyMessageOptions: (sessionId, options) =>
       applyStructuredAgentSessionMessageOptions(input.mutationContext(), sessionId, options),
     conversationFence: (sessionId) =>
@@ -143,6 +153,7 @@ export function createStructuredAgentSessionConversationDelivery(input: {
   }
   const wakesQueued = new Set<string>()
   const afterCommit = (sessionId: string, journal: AgentSessionJournal): void => {
+    input.deliveryOrder.reconcile(sessionId, journal.submissions())
     const work = hostStructuredAgentSessionCurrentWork({ store: deps.store, sessions }, sessionId)
     if (
       wakesQueued.has(sessionId) ||

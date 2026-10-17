@@ -21,6 +21,7 @@ import {
 } from './orcad-state-snapshot'
 import { posixProcessGroupCommand } from './orcad-state-mutation-owner-record'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
+import { shellEscape } from './ssh-connection-utils'
 
 const posix = getRemoteHostPlatform('linux-x64')
 
@@ -205,29 +206,78 @@ describe.skipIf(process.platform === 'win32')('snapshot commands on a real shell
 
   it('keeps the lock while a killed shell’s child still runs, and frees it once the group is gone', async () => {
     const lock = join(remoteBase, 'orcad-state-mutation.lock')
-    // Stands in for a restore whose shell dies while its rm or tar keeps going.
+    const childReceipt = join(base, 'child-pid')
+    const childScript = `echo $$ > ${shellEscape(childReceipt)}; exec sleep 30`
+    const workload = `sh -c ${shellEscape(childScript)} & wait "$!"; echo DONE`
+    const isLive = (pid: number): boolean => {
+      try {
+        process.kill(pid, 0)
+        return true
+      } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ESRCH') {
+          return false
+        }
+        throw error
+      }
+    }
+    const readPid = (file: string): number => {
+      if (!existsSync(file)) {
+        return 0
+      }
+      const value = readFileSync(file, 'utf8').trim()
+      return /^[1-9]\d*$/.test(value) ? Number(value) : 0
+    }
+    const ownGroup = Number((await sh(posixProcessGroupCommand(String(process.pid)))).trim())
+    expect(ownGroup).toBeGreaterThan(1)
+    let group = 0
+    // The child's receipt proves it started; lock publication alone precedes the workload.
     const run = spawnProcess({
       program: SHELL,
-      args: ['-c', serializedStateMutationCommand(remoteBase, 'sleep 30; echo DONE', 1)]
+      args: ['-c', serializedStateMutationCommand(remoteBase, workload, 1)]
+    })
+    let closed = false
+    run.once('close', () => {
+      closed = true
     })
     try {
-      await expect
-        .poll(() => existsSync(join(lock, 'pid')) && existsSync(join(lock, 'pgid')))
-        .toBe(true)
-      const shell = Number(readFileSync(join(lock, 'pid'), 'utf8'))
-      const group = Number(readFileSync(join(lock, 'pgid'), 'utf8'))
-      expect(group).toBeGreaterThan(1)
-      process.kill(shell, 'SIGKILL')
+      await expect.poll(() => readPid(join(lock, 'pid'))).toBeGreaterThan(1)
+      await expect.poll(() => readPid(join(lock, 'pgid'))).toBeGreaterThan(1)
+      group = readPid(join(lock, 'pgid'))
+      expect(group).not.toBe(ownGroup)
+      const shell = readPid(join(lock, 'pid'))
+      expect(shell).not.toBe(process.pid)
+      await expect.poll(() => readPid(childReceipt)).toBeGreaterThan(1)
+      const child = readPid(childReceipt)
+      expect(child).not.toBe(shell)
+      const childGroup = async (): Promise<number> =>
+        Number((await sh(posixProcessGroupCommand(String(child)))).trim())
+      expect(await childGroup()).toBe(group)
+      expect(isLive(child)).toBe(true)
 
+      process.kill(shell, 'SIGKILL')
+      await expect.poll(() => isLive(shell)).toBe(false)
+      expect(isLive(child)).toBe(true)
+      expect(await childGroup()).toBe(group)
       const next = (): Promise<string> =>
         sh(serializedStateMutationCommand(remoteBase, 'echo RAN', 1))
       expect((await next()).trim()).toBe('STATE_MUTATION_BUSY')
 
       process.kill(-group, 'SIGKILL')
-      await expect.poll(async () => (await next()).trim(), { timeout: 5_000 }).toBe('RAN')
+      await expect.poll(() => isLive(-group), { timeout: 5_000 }).toBe(false)
+      expect(isLive(child)).toBe(false)
+      expect((await next()).trim()).toBe('RAN')
       expect(existsSync(lock)).toBe(false)
     } finally {
-      run.kill('SIGKILL')
+      try {
+        group ||= readPid(join(lock, 'pgid'))
+        if (group > 1 && group !== ownGroup && isLive(-group)) {
+          process.kill(-group, 'SIGKILL')
+          await expect.poll(() => isLive(-group), { timeout: 5_000 }).toBe(false)
+        }
+      } finally {
+        run.kill('SIGKILL')
+        await expect.poll(() => closed, { timeout: 5_000 }).toBe(true)
+      }
     }
   }, 20_000)
 })

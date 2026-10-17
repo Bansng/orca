@@ -103,7 +103,7 @@ export function readSpoolFile(
 export type SpoolDrainOptions = {
   endpointDir: string
   getPersistedLaunchTokenHash: (paneKey: string) => string | undefined
-  ingest: (record: SpoolRecord) => void
+  ingest: (record: SpoolRecord) => Promise<void> | void
   now?: number
 }
 
@@ -165,28 +165,8 @@ function matchesLaunchToken(
   return !expected || launchTokenHash(record.launchToken) === expected
 }
 
-export function drainAgentHookSpool(options: SpoolDrainOptions): number {
-  const now = options.now ?? Date.now()
-  let drained = 0
-  for (const candidate of spoolCandidates(options.endpointDir)) {
-    const { records, consumed } = readSpoolFile(candidate.path, now)
-    for (const record of records) {
-      if (matchesLaunchToken(record, options)) {
-        options.ingest({ ...record, isReplay: true })
-        drained += 1
-      }
-    }
-    consumeSpoolPrefix(candidate.path, consumed)
-  }
-  return drained
-}
-
 /** Await each admission before consuming a file so owner probes preserve replay order and retry. */
-export async function drainAgentHookSpoolAsync(
-  options: Omit<SpoolDrainOptions, 'ingest'> & {
-    ingest: (record: SpoolRecord) => Promise<void> | void
-  }
-): Promise<number> {
+export async function drainAgentHookSpoolAsync(options: SpoolDrainOptions): Promise<number> {
   const now = options.now ?? Date.now()
   let drained = 0
   for (const candidate of spoolCandidates(options.endpointDir)) {

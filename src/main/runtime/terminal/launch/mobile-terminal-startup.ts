@@ -14,10 +14,7 @@ import {
   buildAgentResumeStartupPlan,
   buildAgentStartupPlan
 } from '../../../../shared/tui-agent-startup'
-import {
-  resolveTuiAgentLaunchArgs,
-  resolveTuiAgentLaunchEnv
-} from '../../../../shared/tui-agent-launch-defaults'
+import { resolveResumeLaunchRecipe } from '../../../../shared/tui-agent-launch-defaults'
 import { resolveAgentStartupPlanInputs } from '../../../../shared/agent-startup-plan-inputs'
 import {
   agentLaunchQuotingShell,
@@ -83,16 +80,7 @@ export abstract class OrcaRuntimeWithResolveMobileSessionTerminalCommand extends
       agent: record.agent,
       providerSession,
       cmdOverrides: settings.agentCmdOverrides ?? {},
-      agentArgs: launchConfig
-        ? launchConfig.agentArgs
-        : resolveTuiAgentLaunchArgs(record.agent, settings.agentDefaultArgs),
-      agentEnv: launchConfig
-        ? launchConfig.agentEnv
-        : resolveTuiAgentLaunchEnv(record.agent, settings.agentDefaultEnv),
-      ...(launchConfig?.agentCommand ? { agentCommand: launchConfig.agentCommand } : {}),
-      ...(launchConfig?.ompResumeFilePath
-        ? { ompResumeFilePath: launchConfig.ompResumeFilePath }
-        : {}),
+      ...resolveResumeLaunchRecipe(launchConfig),
       platform: launchRuntime.platform,
       shell: agentLaunchQuotingShell(launchRuntime),
       isRemote: Boolean(workspace.connectionId)

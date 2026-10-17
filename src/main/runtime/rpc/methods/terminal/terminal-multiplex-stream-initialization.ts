@@ -14,6 +14,7 @@ import {
   type TerminalMultiplexConnection
 } from './terminal-multiplex-connection'
 import type { TerminalMultiplexStream } from './terminal-stream-types'
+import { subscribeToPtyEndpointLoss } from '../../../terminal/pty-endpoint-loss-signal'
 
 export async function initializeMultiplexStream(
   state: TerminalMultiplexConnection,
@@ -38,6 +39,8 @@ export async function initializeMultiplexStream(
       request.capabilities?.outputPause === 1 && request.capabilities.outputPauseDropNotice === 1,
     pausedOutputDropNoticeSent: false,
     supportsWriteUnavailable: request.capabilities?.writeUnavailable === 1,
+    supportsEndpointLossNotice:
+      request.capabilities?.writeUnavailable === 1 && request.capabilities.endpointLossNotice === 1,
     inputSessionId: request.capabilities?.inputAck === 1 ? (request.inputSessionId ?? null) : null,
     outputPaused: false,
     supportsDesktopViewportClaims: request.capabilities?.desktopViewportClaims === 1,
@@ -99,9 +102,18 @@ export async function initializeMultiplexStream(
   })
   // Why: a multiplexed stream feeds a remote xterm view with query authority, so the main model responder yields while attached (terminal-query-authority.md).
   const releaseViewSubscriber = runtime.registerRemoteTerminalViewSubscriber(ptyId)
+  // Why: the pane must hear its daemon died now, not when its next keystroke is refused.
+  const unsubscribeEndpointLoss = stream.supportsEndpointLossNotice
+    ? subscribeToPtyEndpointLoss(ptyId, () => {
+        if (isMultiplexStreamAttached(state, stream)) {
+          state.sendFrame(stream.streamId, TerminalStreamOpcode.WriteUnavailable)
+        }
+      })
+    : () => {}
   stream.unsubscribeData = () => {
     releaseViewSubscriber()
     unsubscribeStreamData()
+    unsubscribeEndpointLoss()
   }
 
   if (isMobile && request.client?.id) {

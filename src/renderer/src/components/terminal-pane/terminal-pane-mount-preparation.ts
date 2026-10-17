@@ -47,7 +47,6 @@ export type TerminalPaneMountPreparation = {
   startupCwd: string
   terminalHomePath: string | null
   wslDistro: string | null
-  startupWithSetupSplitWait: PtyConnectionDeps['startup']
   ptyDeps: PtyConnectionDeps
   deferredSplitHandoffs: Map<number, DeferredSplitPaneHandoffHandle>
   unregisterRuntimeTab: () => void
@@ -218,13 +217,6 @@ export function prepareTerminalPaneMount(
   if (hydratedInitialScrollback.hydrated) {
     deps.initialLayoutRef.current = hydratedInitialScrollback.layout
   }
-  const startupWithSetupSplitWait =
-    deps.startup && deps.setupSplit
-      ? {
-          ...deps.startup,
-          waitForSetupSplitDirection: deps.setupSplit.direction
-        }
-      : deps.startup
   // Numeric pane ids are mount-local; the handle itself is keyed by the
   // durable tab/leaf identity so a whole-tab remount can reclaim it.
   const deferredSplitHandoffs = new Map<number, DeferredSplitPaneHandoffHandle>()
@@ -232,7 +224,6 @@ export function prepareTerminalPaneMount(
     deps,
     refs,
     startupCwd,
-    startupWithSetupSplitWait,
     mountFollowsTerminalPark,
     restoredPtyIdByLeafId: deps.initialLayoutRef.current.ptyIdsByLeafId ?? {},
     deferredSplitHandoffs
@@ -265,7 +256,6 @@ export function prepareTerminalPaneMount(
     startupCwd,
     terminalHomePath,
     wslDistro,
-    startupWithSetupSplitWait,
     ptyDeps,
     deferredSplitHandoffs,
     unregisterRuntimeTab,

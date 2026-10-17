@@ -4,8 +4,8 @@ import { lastVerifiedRuntimeStatus } from '../../../../shared/runtime-host-statu
 import { useAppStore } from '../../store'
 import type { AppState } from '../../store/types'
 import { getRuntimeEnvironmentRevision } from '../runtime-environment-revision'
-import type { WindowVisibilitySubscriptionParking } from '../window-visibility-subscription-parking'
 import type {
+  ActiveSessionTabsSubscription,
   ActiveSubscriptionArgs,
   installActiveSessionTabsSubscription
 } from './active-session-subscription'
@@ -18,7 +18,7 @@ type WarmEntry = {
   environmentId: string
   identity: string
   pairingRevision: number | undefined
-  subscription: WindowVisibilitySubscriptionParking
+  subscription: ActiveSessionTabsSubscription
 }
 
 function streamIdentity(
@@ -129,6 +129,7 @@ export function createWarmWorktreeSessionSubscriptions(
       if (warm) {
         entries.delete(key)
         entries.set(key, warm)
+        warm.subscription.reconsiderSelected()
       } else {
         const subscription = install(args)
         if (!subscription) {

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { toAppSshPtyId } from '../../../shared/ssh-pty-id'
+import { isRemoteCliControlAllowed } from '../../../shared/ssh-remote-cli-control'
 import { OrcaRuntimeService } from '../../runtime/orca-runtime'
 import { OrchestrationDb } from '../../runtime/orchestration/db'
 import { LEGACY_RELAY_CLI_UNVERIFIED } from './legacy-relay-cli-caller'
@@ -136,6 +137,20 @@ describe('the relay-era orca CLI on the desktop runtime', () => {
     allowed = false
     await expect(run(workerDone())).rejects.toThrow(LEGACY_RELAY_CLI_CONTROL_OFF)
     expect(db.getTask(ids.taskId)?.status).toBe('dispatched')
+  })
+
+  it.each([
+    ['no saved value', {}, true],
+    ['an explicit true', { allowRemoteCliControl: true }, true],
+    ['an explicit false', { allowRemoteCliControl: false }, false]
+  ])('admits per the saved switch: %s', async (_label, saved, admitted) => {
+    allowed = isRemoteCliControlAllowed(saved)
+    const check = run(['orchestration', 'check', '--json'])
+    if (admitted) {
+      expect((await check).exitCode).toBe(0)
+    } else {
+      await expect(check).rejects.toThrow(LEGACY_RELAY_CLI_CONTROL_OFF)
+    }
   })
 
   it('refuses commands outside orchestration', async () => {

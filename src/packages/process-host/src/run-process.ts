@@ -10,6 +10,8 @@ import { hasSpawnObserver, notifySpawnObserver } from './spawn-observer'
 import { createOutputSink } from './bounded-output-sink'
 import { createChildTerminationReporter } from './child-termination-reporter'
 
+export { WindowsCmdLineBreakError } from './windows-command-line'
+
 import type {
   PipedChildProcess,
   PipedProcessSpec,

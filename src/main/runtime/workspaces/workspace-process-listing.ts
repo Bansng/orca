@@ -42,10 +42,8 @@ import {
   structuredWorkerOpenTaskTitle,
   structuredWorkerOwesWork
 } from '../structured-worker-custody'
-import {
-  resolvedTuiAgentArgsBypassPermissions,
-  resolveTuiAgentLaunchEnv
-} from '../../../shared/tui-agent-launch-defaults'
+import { resolveTuiAgentLaunchEnv } from '../../../shared/tui-agent-launch-defaults'
+import { preModeChatGetsFullAccess } from '../../../shared/agent-chat-permission-mode'
 import { isTuiAgent } from '../../../shared/tui-agent-config'
 import { nativeChatShellEnvironmentPolicy } from '../../../shared/native-chat-shell-environment'
 import { claudeStructuredAuthPolicyForSettings } from '../../claude-accounts/claude-structured-auth-policy'
@@ -54,7 +52,7 @@ import { structuredAgentConfiguredArgs } from '../../native-chat/structured-agen
 import { claudeCliFlagSupport } from '../../claude/claude-cli-flag-support'
 import {
   runtimeHiddenHostIds,
-  runtimeHiddenRepoIds,
+  runtimeHiddenRepos,
   runtimeVisibleRepos,
   withoutHiddenHosts
 } from '../runtime-visible-catalog'
@@ -75,10 +73,10 @@ export abstract class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithWorktr
       sourceDefaultsSupported,
       visibilitySettings
     )
-    const hiddenRepoIds = runtimeHiddenRepoIds(this.store)
+    const hiddenRepos = runtimeHiddenRepos(this.store)
     const resolvedWorktrees = resolvedWorktreeSnapshot.worktrees.filter(
       (worktree) =>
-        !hiddenRepoIds.has(worktree.repoId) &&
+        !hiddenRepos.hasWorktree(worktree) &&
         this.isRuntimeWorktreeVisible(
           worktree,
           visibilitySourceMatchersByRepoId.get(worktree.repoId),
@@ -252,11 +250,7 @@ export abstract class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithWorktr
         claudeStructuredAuthPolicyForSettings(this.requireStore().getSettings()),
       resolveAgentFullAccess: (agent) =>
         isTuiAgent(agent) &&
-        resolvedTuiAgentArgsBypassPermissions(
-          agent,
-          this.requireStore().getSettings(),
-          process.platform
-        ),
+        preModeChatGetsFullAccess(agent, this.requireStore().getSettings(), process.platform),
       resolveAgentLaunchEnv: (agent) =>
         isTuiAgent(agent)
           ? this.structuredAgentLaunchEnv(agent, this.requireStore().getSettings())

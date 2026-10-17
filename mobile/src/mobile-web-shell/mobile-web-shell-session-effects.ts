@@ -83,8 +83,7 @@ export async function readManifest(
         pageVersion: manifest.pageVersion,
         totalBytes: manifest.totalBytes,
         totalAssets: manifest.assets.length,
-        routes: manifest.routes,
-        wire: manifest
+        routes: manifest.routes
       }
     })
   } catch (error) {

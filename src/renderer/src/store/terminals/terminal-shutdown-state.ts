@@ -88,7 +88,6 @@ export function commitTerminalShutdownState({
       }
 
       const runtimePaneTitlesByTabId = copyOnWriteRecord(state.runtimePaneTitlesByTabId)
-      const pendingSetupSplitByTabId = copyOnWriteRecord(state.pendingSetupSplitByTabId)
       const pendingIssueCommandSplitByTabId = copyOnWriteRecord(
         state.pendingIssueCommandSplitByTabId
       )
@@ -97,7 +96,6 @@ export function commitTerminalShutdownState({
       const lastTerminalInputAtByPaneKey = copyOnWriteRecord(state.lastTerminalInputAtByPaneKey)
 
       for (const tab of tabs) {
-        pendingSetupSplitByTabId.delete(tab.id)
         pendingIssueCommandSplitByTabId.delete(tab.id)
         const panePrefix = `${tab.id}:`
         for (const paneKey of Object.keys(state.lastTerminalInputAtByPaneKey)) {
@@ -126,7 +124,6 @@ export function commitTerminalShutdownState({
         pendingPtyShutdownIds: pendingPtyShutdownIds.read(),
         pendingCodexPaneRestartIds: pendingCodexPaneRestartIds.read(),
         codexRestartNoticeByPtyId: codexRestartNoticeByPtyId.read(),
-        pendingSetupSplitByTabId: pendingSetupSplitByTabId.read(),
         pendingIssueCommandSplitByTabId: pendingIssueCommandSplitByTabId.read(),
         terminalLayoutsByTabId: terminalLayoutsByTabId.read(),
         ...removeTabsAttention(

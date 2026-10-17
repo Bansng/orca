@@ -67,6 +67,8 @@ export type TerminalMultiplexStream = {
   supportsOutputPauseDropNotice: boolean
   pausedOutputDropNoticeSent: boolean
   supportsWriteUnavailable: boolean
+  // Also sends WriteUnavailable unprompted when the PTY's daemon endpoint drops.
+  supportsEndpointLossNotice: boolean
   // Set only when the client negotiated `inputAck`; sequenced Input frames are then deduped and acked.
   inputSessionId: string | null
   outputPaused: boolean

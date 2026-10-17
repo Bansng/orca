@@ -33,6 +33,7 @@ import { useAppStore } from '@/store'
 import { replaceRuntimeEnvironmentRevisions } from './runtime-environment-revision'
 import { clearHostLiveTerminalProbesForTests } from './host-live-terminal-probe'
 import { resetWebSessionTabsSnapshotFreshnessForTests } from './web-session-tabs-sync/tracking-lifecycle'
+import { recordReceivedWebSessionTabsSnapshot } from './web-session-tabs-sync/tracking'
 import { useWebSessionTabsSync } from './web-session-tabs-sync/use-web-session-tabs-sync'
 import { clearRuntimeEnvironmentConnectionGenerationsForTests } from '@/store/slices/runtime-status'
 import { resetWebRuntimeInitialTerminalBootstrapForTests } from './web-runtime-initial-terminal-bootstrap'
@@ -304,6 +305,58 @@ describe('session-tabs streams across worktree switches on one host', () => {
       activeTabType: null,
       tabs: []
     })
+
+    expect(mocks.createTerminal).not.toHaveBeenCalled()
+  })
+
+  it('seeds the first terminal once the user returns to a warm empty worktree', async () => {
+    await connect()
+    const streamA = latestStream(WORKTREE_A)
+    await selectWorktree(WORKTREE_B)
+    // A's first answer lands while B is selected, so its bootstrap waits.
+    await publish(streamA, {
+      type: 'snapshot',
+      ...terminalSnapshot(WORKTREE_A, 1),
+      activeGroupId: null,
+      activeTabId: null,
+      activeTabType: null,
+      tabs: []
+    })
+    expect(mocks.createTerminal).not.toHaveBeenCalled()
+
+    await selectWorktree(WORKTREE_A)
+
+    expect(latestStream(WORKTREE_A)).toBe(streamA)
+    expect(mocks.createTerminal).toHaveBeenCalledTimes(1)
+    expect(mocks.createTerminal).toHaveBeenCalledWith(
+      expect.objectContaining({ worktreeId: WORKTREE_A, environmentId: ENV })
+    )
+    await selectWorktree(WORKTREE_B)
+    await selectWorktree(WORKTREE_A)
+    expect(mocks.createTerminal).toHaveBeenCalledTimes(1)
+  })
+
+  it('drops a held first-terminal verdict once newer host evidence supersedes it', async () => {
+    await connect()
+    const streamA = latestStream(WORKTREE_A)
+    await selectWorktree(WORKTREE_B)
+    const empty = {
+      ...terminalSnapshot(WORKTREE_A, 1),
+      activeGroupId: null,
+      activeTabId: null,
+      activeTabType: null,
+      tabs: []
+    }
+    await publish(streamA, { type: 'snapshot', ...empty })
+    // A newer answer (e.g. browser-only) reached the mirror through another stream.
+    recordReceivedWebSessionTabsSnapshot(
+      ENV,
+      { ...empty, snapshotVersion: 2 },
+      undefined,
+      'runtime-a'
+    )
+
+    await selectWorktree(WORKTREE_A)
 
     expect(mocks.createTerminal).not.toHaveBeenCalled()
   })

@@ -31,7 +31,6 @@
 25 src/renderer/src/lib/workspace-session-patch.ts
 3 src/renderer/src/lib/workspace-session-staged-browser-tabs.ts
 17 src/renderer/src/lib/workspace-session.ts
-21 src/renderer/src/lib/worktree-activation-created-agent-test-state.ts
 3 src/renderer/src/runtime/local-structured-session-tabs-sync/snapshot-projection.ts
 3 src/renderer/src/runtime/structured-agent-session-tab-retirement.ts
 10 src/renderer/src/runtime/sync-runtime-graph/mobile-session-group-projection.ts

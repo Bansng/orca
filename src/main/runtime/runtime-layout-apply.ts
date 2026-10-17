@@ -15,6 +15,8 @@ import type { RuntimeStore } from './runtime-store-contract'
 export type WindowLayoutCommand = LayoutCommand &
   (
     | { tabId: string }
+    // `automatic`: not the user's close; its terminal ended.
+    | { type: 'closePane'; tabId: string; automatic?: true }
     | { type: 'setGroupRatios' }
     | { type: 'closeTabs'; tabIds: [string] }
     // A browser tab's record lives in its workspace's partition, so it routes by workspace.
@@ -99,8 +101,13 @@ export async function applyWindowLayoutCommand(
   }
   const { workspace, tabId, leafId } = command
   // A launch still starting in the pane the user closed stops, and says so (as the legacy close).
-  markAgentLaunchesClosedByUser(workspace, { kind: 'pane', tabId, leafId })
-  return store.applyLayoutCommand({ ...command, userPaneClose: true }, holders)
+  if (!('automatic' in command && command.automatic)) {
+    markAgentLaunchesClosedByUser(workspace, { kind: 'pane', tabId, leafId })
+  }
+  return store.applyLayoutCommand(
+    { type: 'closePane', workspace, tabId, leafId, userPaneClose: true },
+    holders
+  )
 }
 
 /**

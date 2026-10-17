@@ -104,7 +104,9 @@ export function settleRecorded(
   finish(
     entry,
     'recorded',
-    keep ? { phase: 'recorded', issued: true, ...(cursor ? { recordedCursor: cursor } : {}) } : undefined
+    keep
+      ? { phase: 'recorded', issued: true, ...(cursor ? { recordedCursor: cursor } : {}) }
+      : undefined
   )
 }
 

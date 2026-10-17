@@ -12,17 +12,14 @@ import {
   applyStructuredAgentSessionModelCatalog,
   createStructuredAgentSessionOptionState
 } from '../../../../shared/structured-agent-session-options'
-import {
-  structuredAgentSessionOptionView,
-  type StructuredAgentSessionPendingPick
-} from '../../../../shared/structured-agent-session-option-view'
+import { structuredAgentSessionOptionView } from '../../../../shared/structured-agent-session-option-view'
 import { useStructuredAgentSessionSendOptions } from './use-structured-agent-session-send-options'
 
 const levels = (...values: string[]) => values.map((value) => ({ value, label: value }))
 
 function sendOptionsFor(
   takesSendOptions: boolean,
-  pending: StructuredAgentSessionPendingPick | null,
+  pending: Record<string, string>,
   seedOptions: Record<string, string> | undefined = { model: 'claude-gone', effort: 'max' }
 ) {
   const optionStateRef = {
@@ -46,7 +43,7 @@ function sendOptionsFor(
       { kind: 'new', seedOptions, heldOptions: {} },
       {
         optionStateRef,
-        pendingOptionRef: { current: pending },
+        pendingOptionsRef: { current: pending },
         optionView: (state, seed, held) =>
           structuredAgentSessionOptionView(state, seed, held, takesSendOptions),
         takesSendOptions
@@ -58,26 +55,27 @@ function sendOptionsFor(
 
 describe('what each composer send carries', () => {
   it('carries the shown model and effort to a host that takes them, on every send', () => {
-    const sendOptions = sendOptionsFor(true, null)
+    const sendOptions = sendOptionsFor(true, {})
     expect(sendOptions()).toEqual({ model: 'sonnet', effort: 'high' })
     expect(sendOptions()).toEqual({ model: 'sonnet', effort: 'high' })
   })
 
   it('carries the default the composer shows when nothing names a model', () => {
-    expect(sendOptionsFor(true, null, undefined)()).toEqual({ model: 'sonnet', effort: 'high' })
+    expect(sendOptionsFor(true, {}, undefined)()).toEqual({ model: 'sonnet', effort: 'high' })
   })
 
   it('carries a pick still on its way, resolved as the picker shows it', () => {
-    expect(sendOptionsFor(true, { id: 'model', value: 'opus[1m]' })()).toMatchObject({
-      model: 'opus[1m]'
+    expect(sendOptionsFor(true, { model: 'opus[1m]', effort: 'low' })()).toMatchObject({
+      model: 'opus[1m]',
+      effort: 'low'
     })
     // A gone model the pick names moves to the listed default, as the picker shows.
-    expect(sendOptionsFor(true, { id: 'model', value: 'claude-retired' })()).toMatchObject({
+    expect(sendOptionsFor(true, { model: 'claude-retired' })()).toMatchObject({
       model: 'sonnet'
     })
   })
 
   it('carries nothing to an older host', () => {
-    expect(sendOptionsFor(false, null)()).toBeUndefined()
+    expect(sendOptionsFor(false, {})()).toBeUndefined()
   })
 })

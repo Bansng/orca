@@ -74,6 +74,7 @@ export type StructuredAgentSessionChildExitContext<
   wakeDelivery?: (sessionId: string) => void
   /** An ended child's start, if still open, has nothing left to time. */
   startupAttempts?: Pick<StructuredAgentSessionStartupAttempts, 'childEnded'>
+  abortOpen?: (sessionId: string) => void
   serialize: <T>(sessionId: string, task: () => Promise<T>) => Promise<T>
   now: () => number
   logger: StructuredAgentSessionLogger
@@ -134,12 +135,15 @@ export async function endExitedStructuredAgentSessionChildUnderSerialize<
   // The host's own phase decides, so a provider that omits the flag still gets a start that
   // failed told as one: the row says so.
   const exitedDuringStartup = exit.startupUnproven === true || child.phase === 'starting'
+  if (child.phase === 'starting') {
+    context.abortOpen?.(sessionId)
+  }
   // A close during startup settles what the child was handed, never echoed, by who asked: a
   // person's Stop stops it; the host's stop fails the start, as an exit of its own would.
   const startClose = expected && exitedDuringStartup ? close?.cause : undefined
   const startFailure = expected
     ? startClose === 'host-stop'
-      ? agentSessionFailureFact('hostStopped')
+      ? (exit.failure ?? close?.failure ?? agentSessionFailureFact('hostStopped'))
       : undefined
     : exit.failure
   // A send the child was handed and never echoed cannot have run when a person's Stop ended its
@@ -167,7 +171,7 @@ export async function endExitedStructuredAgentSessionChildUnderSerialize<
     // A close keeps the cause of the stop that asked for it, and ends where it was asked.
     cause: expected ? (close?.cause ?? 'evict') : 'exit',
     reason: expected ? (close?.reason ?? null) : exit.reason,
-    ...(!expected && exit.failure ? { failure: exit.failure } : {}),
+    ...(startFailure ? { failure: startFailure } : {}),
     duringStartup: exitedDuringStartup,
     // The adapter publishes an exit only once it saw the root go, first-hand or proven.
     rootGone: true,

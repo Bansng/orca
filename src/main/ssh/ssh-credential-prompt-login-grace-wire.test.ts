@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { Server, utils, type Connection } from 'ssh2'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SshConnection } from './ssh-connection'
+import { INITIAL_RETRY_DELAY_MS } from './ssh-connection-utils'
 import { createCallbacks, createResolvedConfig, createTarget } from './ssh-connection-test-fixtures'
 import { initSshHostKeyStoreFile } from './ssh-host-key-store'
 import { resolveWithSshG } from './ssh-config-parser'
@@ -124,16 +125,25 @@ describe('a password prompt the server gives up on', () => {
     )
 
     const connecting = conn.connect()
+    void connecting.catch(() => {})
     await vi.waitFor(() => expect(onCredentialRequest).toHaveBeenCalled())
     const answered = onCredentialRequest.mock.results[0].value
-    await answered
-    // Answered but not yet used by the retry: a background dial must not replace it.
-    await vi.waitFor(() => expect(conn?.isAwaitingCredential()).toBe(true), { timeout: 1_000 })
-    await connecting
+    expect(await answered).toBe(PASSWORD)
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'], shouldClearNativeTimers: true })
+    try {
+      await vi.advanceTimersByTimeAsync(0)
+      // Answered but not yet used by the retry: a background dial must not replace it.
+      await vi.waitFor(() => expect(conn?.isAwaitingCredential()).toBe(true), { timeout: 1_000 })
+      await vi.advanceTimersByTimeAsync(INITIAL_RETRY_DELAY_MS)
+      await connecting
 
-    expect(conn.getState().status).toBe('connected')
-    expect(onCredentialRequest).toHaveBeenCalledTimes(1)
-    expect(conn.isAwaitingCredential()).toBe(false)
+      expect(conn.getState().status).toBe('connected')
+      expect(onCredentialRequest).toHaveBeenCalledTimes(1)
+      expect(conn.isAwaitingCredential()).toBe(false)
+    } finally {
+      vi.clearAllTimers()
+      vi.useRealTimers()
+    }
   }, 15_000)
 
   it('stops after the user cancels the prompt the server abandoned', async () => {

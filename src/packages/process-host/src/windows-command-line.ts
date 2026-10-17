@@ -83,11 +83,20 @@ export function quoteWindowsCmdArgument(value: string): string {
   return quoteWindows(value, true)
 }
 
+/** Thrown before spawn when a `.cmd`/`.bat` target would receive a line break. Typed so
+ * callers can tell the user the batch file is the limit, not the agent. */
+export class WindowsCmdLineBreakError extends Error {
+  constructor() {
+    super('cmd.exe cannot receive an argument containing a line break')
+    this.name = 'WindowsCmdLineBreakError'
+  }
+}
+
 export function validateWindowsCmdArguments(values: readonly string[]): void {
   for (const value of values) {
     // cmd ends a command at CR/LF regardless of quoting.
     if (/[\r\n]/.test(value)) {
-      throw new Error('cmd.exe cannot receive an argument containing a line break')
+      throw new WindowsCmdLineBreakError()
     }
   }
 }

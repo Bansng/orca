@@ -49,9 +49,14 @@ function withoutWindowFields(tab: TerminalTab): Partial<TerminalTab> {
   return fields
 }
 
-function mergeTerminalRow(existing: TerminalTab | undefined, built: TerminalTab): TerminalTab {
+function mergeTerminalRow(
+  existing: TerminalTab | undefined,
+  built: TerminalTab,
+  newRowFields: (tabId: string) => Partial<TerminalTab> | null
+): TerminalTab {
   if (!existing) {
-    return built
+    const fields = newRowFields(built.id)
+    return fields ? { ...built, ...fields } : built
   }
   if (same(withoutWindowFields(existing), withoutWindowFields(built))) {
     return existing
@@ -121,7 +126,11 @@ function setKey<T>(
 export function buildLayoutFrameStorePatch(
   state: LayoutFrameStoreState,
   built: LayoutFrameSlices,
-  keys: readonly string[]
+  keys: readonly string[],
+  /** A tab whose pane layout stays as the store has it: the window's own pane command holds it. */
+  keepsTerminalLayout: (tabId: string) => boolean = () => false,
+  /** This window's own fields for a row the frame creates. */
+  newRowFields: (tabId: string) => Partial<TerminalTab> | null = () => null
 ): Partial<LayoutFrameStoreState> {
   const patch: Partial<LayoutFrameStoreState> = {}
   const keyed = (slice: KeyedSlice, value: (key: string) => unknown): void => {
@@ -135,7 +144,9 @@ export function buildLayoutFrameStorePatch(
   }
 
   keyed('tabsByWorktree', (key) =>
-    mergeById(state.tabsByWorktree[key], built.tabsByWorktree[key], mergeTerminalRow)
+    mergeById(state.tabsByWorktree[key], built.tabsByWorktree[key], (existing, next) =>
+      mergeTerminalRow(existing, next, newRowFields)
+    )
   )
   keyed('unifiedTabsByWorktree', (key) =>
     mergeById(state.unifiedTabsByWorktree[key], built.unifiedTabsByWorktree[key])
@@ -181,12 +192,17 @@ export function buildLayoutFrameStorePatch(
     ...tabIdsOf(state.tabsByWorktree),
     ...tabIdsOf(built.tabsByWorktree)
   ])) {
+    if (
+      keepsTerminalLayout(tabId) &&
+      tabId in terminalLayouts &&
+      tabId in built.terminalLayoutsByTabId
+    ) {
+      continue
+    }
     terminalLayouts =
       setKey(terminalLayouts, tabId, built.terminalLayoutsByTabId[tabId]) ?? terminalLayouts
   }
-  if (terminalLayouts !== state.terminalLayoutsByTabId) {
-    patch.terminalLayoutsByTabId = terminalLayouts
-  }
+  Object.assign(patch, terminalLayoutsPatch(state, terminalLayouts))
 
   const keySet = new Set(keys)
   // An open file's editor state is this window's; a frame decides only which files are open.
@@ -235,4 +251,12 @@ export function buildLayoutFrameStorePatch(
     patch.remoteBrowserPageHandlesByPageId = { ...handles, ...Object.fromEntries(addedHandles) }
   }
   return patch
+}
+
+/** The patch that shows `layouts` as the store's pane trees; empty when they are the store's. */
+export function terminalLayoutsPatch(
+  state: Pick<LayoutFrameStoreState, 'terminalLayoutsByTabId'>,
+  layouts: LayoutFrameStoreState['terminalLayoutsByTabId']
+): Partial<LayoutFrameStoreState> {
+  return layouts === state.terminalLayoutsByTabId ? {} : { terminalLayoutsByTabId: layouts }
 }

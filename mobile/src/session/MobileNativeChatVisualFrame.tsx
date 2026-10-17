@@ -140,6 +140,10 @@ export const MobileNativeChatVisualFrame = memo(function MobileNativeChatVisualF
         }
         return
       }
+      // The host page relays only size and link messages; this narrows the type.
+      if (message.kind !== 'open-link') {
+        return
+      }
       const now = Date.now()
       if (now - lastLinkAt.current < MOBILE_NATIVE_CHAT_VISUAL_LINK_INTERVAL_MS) {
         return

@@ -3,7 +3,6 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { StrictMode, useContext } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { TabCloseTooltip } from './TabCloseTooltip'
 import { TabHoverCard } from './TabHoverCard'
 import {
   TAB_TOOLTIP_DELAY_MS,
@@ -11,8 +10,6 @@ import {
   TabCardOpenContext,
   TabStripTooltipProvider
 } from './TabStripTooltipProvider'
-
-vi.mock('@/hooks/useShortcutLabel', () => ({ useOptionalShortcutLabel: () => null }))
 
 function CardEvents({ id }: { id: string }): React.JSX.Element {
   const strip = useContext(TabCardOpenContext)
@@ -137,26 +134,6 @@ describe('TabStripTooltipProvider', () => {
     expect(delay.textContent).toBe('immediate')
     act(() => vi.advanceTimersByTime(1))
     expect(delay.textContent).toBe('delayed')
-  })
-
-  it('shows only the close hint when the close button receives keyboard focus', () => {
-    const { container } = render(
-      <TabStripTooltipProvider>
-        <TabHoverCard title="Build" icon={<span />} programName="Terminal">
-          <div tabIndex={0}>
-            <TabCloseTooltip>
-              <button>close</button>
-            </TabCloseTooltip>
-          </div>
-        </TabHoverCard>
-      </TabStripTooltipProvider>
-    )
-    act(() => screen.getByRole('button', { name: 'close' }).focus())
-    expect(container.ownerDocument.querySelector('[data-tab-close-tooltip]')).not.toBeNull()
-    expect(container.ownerDocument.querySelector('[data-tab-hover-card]')).toBeNull()
-    act(() => screen.getByRole('button', { name: 'close' }).parentElement?.focus())
-    expect(container.ownerDocument.querySelector('[data-tab-hover-card]')).not.toBeNull()
-    expect(container.ownerDocument.querySelector('[data-tab-close-tooltip]')).toBeNull()
   })
 
   it('keeps the strip warm while a card is open in StrictMode', () => {

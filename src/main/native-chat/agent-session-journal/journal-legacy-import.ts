@@ -66,6 +66,10 @@ export type LegacyImportResult =
     }
   | { ok: false; error: string }
 
+type PreparedLegacyImport =
+  | { ok: true; items: JournalReplacementItem[]; sourceEmpty: boolean }
+  | { ok: false; error: string }
+
 export async function importLegacyTranscriptIntoJournal(input: {
   journal: AgentSessionJournal
   agent: AgentType
@@ -90,7 +94,7 @@ export async function prepareLegacyTranscriptImport(input: {
   agent: AgentType
   sessionId: string
   options?: LegacyImportOptions
-}): Promise<{ ok: true; items: JournalReplacementItem[] } | { ok: false; error: string }> {
+}): Promise<PreparedLegacyImport> {
   const options = input.options ?? {}
   const limits = options.limits ?? DEFAULT_JOURNAL_PAYLOAD_LIMITS
   // OMP is a Pi fork that kept Pi's session format, so OMP's decoder reads Pi's sessions too.
@@ -109,17 +113,15 @@ export async function prepareLegacyTranscriptImport(input: {
   }
 
   try {
-    return {
-      ok: true,
-      items: await decodeReplacementItems({
-        filePath,
-        transcriptAgent,
-        agent: input.agent,
-        sessionId: input.sessionId,
-        decodedMessageIdentities: options.decodedMessageIdentities,
-        limits
-      })
-    }
+    const { items, consumedBytes } = await decodeReplacementItems({
+      filePath,
+      transcriptAgent,
+      agent: input.agent,
+      sessionId: input.sessionId,
+      decodedMessageIdentities: options.decodedMessageIdentities,
+      limits
+    })
+    return { ok: true, items, sourceEmpty: consumedBytes === 0 }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) }
   }
@@ -132,7 +134,7 @@ async function prepareOpenCodeImport(input: {
   sessionId: string
   options?: LegacyImportOptions
   limits: JournalPayloadLimits
-}): Promise<{ ok: true; items: JournalReplacementItem[] } | { ok: false; error: string }> {
+}): Promise<PreparedLegacyImport> {
   const dbPath = input.options?.filePath
   const read = await readOpenCodeNativeChatTranscriptFull(
     input.sessionId,
@@ -147,7 +149,8 @@ async function prepareOpenCodeImport(input: {
     sessionId: input.sessionId,
     recordId: message.id
   }))
-  return { ok: true, items: replacementItems(read.messages, identities, input.limits) }
+  const items = replacementItems(read.messages, identities, input.limits)
+  return { ok: true, items, sourceEmpty: read.sourceEmpty === true }
 }
 
 function replacementItems(
@@ -196,7 +199,7 @@ async function decodeReplacementItems(input: {
   sessionId: string
   decodedMessageIdentities?: true
   limits: JournalPayloadLimits
-}): Promise<JournalReplacementItem[]> {
+}): Promise<{ items: JournalReplacementItem[]; consumedBytes: number }> {
   const tracker = createLegacyIdentityTracker({
     transcriptAgent: input.transcriptAgent,
     agent: input.agent,
@@ -212,7 +215,7 @@ async function decodeReplacementItems(input: {
       : null
   let lineIndex = 0
   try {
-    await decodeTranscriptStream(
+    const { consumedBytes } = await decodeTranscriptStream(
       createReadStream(input.filePath),
       input.filePath,
       0,
@@ -247,7 +250,7 @@ async function decodeReplacementItems(input: {
     if (pi) {
       await pi.project(retained.push)
     }
-    return retained.items()
+    return { items: retained.items(), consumedBytes }
   } finally {
     pi?.close()
   }

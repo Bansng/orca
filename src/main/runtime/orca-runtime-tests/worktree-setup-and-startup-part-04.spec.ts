@@ -236,7 +236,7 @@ describe('OrcaRuntimeService', () => {
     expect(metaById[result.worktree.id]).toMatchObject({ createdWithAgent: 'claude' })
   })
 
-  it('honors split setup placement for opted-in local startup-draft worktrees', async () => {
+  it('uses a Setup tab beside opted-in local startup-draft agents', async () => {
     const metaById: Record<string, WorktreeMeta> = {}
     const runtimeStore = {
       ...makeRuntimeStoreWithWorkspaceSession(getDefaultWorkspaceSession()).runtimeStore,
@@ -364,16 +364,14 @@ describe('OrcaRuntimeService', () => {
     })
     expect(mainEnv.ORCA_TAB_ID).toBeDefined()
     expect(mainEnv.ORCA_PANE_KEY).toBeDefined()
-    expect(setupEnv.ORCA_TAB_ID).toBe(mainEnv.ORCA_TAB_ID)
-    const mainLeafId = mainEnv.ORCA_PANE_KEY!.slice(`${mainEnv.ORCA_TAB_ID!}:`.length)
+    expect(setupEnv.ORCA_TAB_ID).not.toBe(mainEnv.ORCA_TAB_ID)
     expect(revealTerminalSession).toHaveBeenLastCalledWith(
       result.worktree.id,
       expect.objectContaining({
         ptyId: 'pty-startup-split-setup',
-        tabId: mainEnv.ORCA_TAB_ID,
+        tabId: setupEnv.ORCA_TAB_ID,
         activate: false,
-        splitFromLeafId: mainLeafId,
-        splitDirection: 'vertical'
+        title: 'Setup'
       })
     )
   })

@@ -1,7 +1,6 @@
 import type { ClosedTerminalTabTombstonesByTabId } from '../../../../shared/closed-terminal-tab-tombstones'
 import type { TerminalLayoutSnapshot, TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
-import type { SetupSplitDirection } from '../../../../shared/worktree/launch-types'
 import type {
   AgentProviderSessionMetadata,
   SleepingAgentLaunchConfig
@@ -67,14 +66,6 @@ export type TerminalState = {
     }
   >
   pendingInitialCwdByTabId: Record<string, string>
-  pendingSetupSplitByTabId: Record<
-    string,
-    {
-      command: string
-      env?: Record<string, string>
-      direction: SetupSplitDirection
-    }
-  >
   pendingIssueCommandSplitByTabId: Record<
     string,
     {

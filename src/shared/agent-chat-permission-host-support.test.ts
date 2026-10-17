@@ -29,7 +29,8 @@ describe('what a host predating per-chat modes runs', () => {
   })
 
   it('names no mode for an agent without chat modes', () => {
-    expect(legacyHostChatPermissionMode('grok', {})).toBeNull()
+    // Grok gained chat modes in #29335; Gemini still has none.
+    expect(legacyHostChatPermissionMode('gemini', {})).toBeNull()
   })
 })
 

@@ -39,7 +39,15 @@ async function restored(): Promise<{
 function patchFor(
   state: AppState,
   session: WorkspaceSessionState,
-  frame: PublishedWorkspaceLayout
+  frame: PublishedWorkspaceLayout,
+  ...windowSide: Parameters<typeof buildLayoutFrameStorePatch> extends [
+    unknown,
+    unknown,
+    unknown,
+    ...infer Rest
+  ]
+    ? Rest
+    : never
 ) {
   const { facts, desktopView } = loadWorkspaceLayoutWithoutReport(
     'local',
@@ -47,7 +55,7 @@ function patchFor(
     nameBasedLoadContext()
   )
   const built = buildLayoutFrameSlices({ layouts: { [GIT_KEY]: frame }, facts, view: desktopView })
-  return buildLayoutFrameStorePatch(state, built, [GIT_KEY])
+  return buildLayoutFrameStorePatch(state, built, [GIT_KEY], ...windowSide)
 }
 
 function withoutTab(frame: PublishedWorkspaceLayout, tabId: string): PublishedWorkspaceLayout {
@@ -73,6 +81,40 @@ describe('laying frame slices over the store', () => {
     expect(patch.tabsByWorktree?.[GIT_KEY]?.map((tab) => tab.id)).not.toContain('tab-shell')
     expect(patch.terminalLayoutsByTabId).not.toHaveProperty('tab-shell')
     expect(patch.unifiedTabsByWorktree?.[GIT_KEY]?.map((tab) => tab.id)).not.toContain('tab-shell')
+  })
+
+  it('keeps the pane layout of a tab the window’s own pane command holds, until main drops the tab', async () => {
+    const { state, session, frame } = await restored()
+    const newRatios: PublishedWorkspaceLayout = {
+      ...frame,
+      tabs: frame.tabs.map((tab) =>
+        tab.id === 'tab-shell' && tab.terminal?.root?.type === 'split'
+          ? { ...tab, terminal: { ...tab.terminal, root: { ...tab.terminal.root, ratio: 0.2 } } }
+          : tab
+      )
+    }
+    const held = (id: string): boolean => id === 'tab-shell'
+
+    expect(patchFor(state, session, newRatios).terminalLayoutsByTabId?.['tab-shell']).toBeDefined()
+    expect(patchFor(state, session, newRatios, held).terminalLayoutsByTabId).toBeUndefined()
+    expect(
+      patchFor(state, session, withoutTab(frame, 'tab-shell'), held).terminalLayoutsByTabId
+    ).not.toHaveProperty('tab-shell')
+  })
+
+  it('gives a row the frame creates the window’s own fields for it', async () => {
+    const { state, session, frame } = await restored()
+    const shown = patchFor(state, session, withoutTab(frame, 'tab-shell'))
+    const before = { ...state, ...shown }
+    const fields = vi.fn((id: string) =>
+      id === 'tab-shell' ? { pendingActivationSpawn: true } : null
+    )
+
+    const patch = patchFor(before, session, frame, undefined, fields)
+
+    const row = patch.tabsByWorktree?.[GIT_KEY]?.find((tab) => tab.id === 'tab-shell')
+    expect(row?.pendingActivationSpawn).toBe(true)
+    expect(fields).toHaveBeenCalledTimes(1)
   })
 
   it('keeps an open file’s editor state and place, and drops a file main closed', async () => {

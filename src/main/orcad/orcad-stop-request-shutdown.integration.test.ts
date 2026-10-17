@@ -16,6 +16,7 @@ import { ORCAD_STOP_REQUEST_FILENAME } from '../../shared/orcad-stop-request'
 import {
   killChildAndWait,
   killProfileDaemons,
+  recordProfileDaemons,
   removeTestRoot
 } from './orcad-daemon-teardown-fixture'
 import { parseOrcadReadinessOutput } from '../ssh/orcad-remote-launch'
@@ -100,6 +101,7 @@ describe.skipIf(skip)('packaged orcad stop request', () => {
     expect(lock?.startedAtMs).toEqual(expect.any(Number))
     expect(Math.abs(lock!.startedAtMs! - launchedAt)).toBeLessThan(30_000)
 
+    await recordProfileDaemons(userData)
     const requestedAt = Date.now()
     writeFileSync(join(slotDir, ORCAD_STOP_REQUEST_FILENAME), '')
     const code = await exited

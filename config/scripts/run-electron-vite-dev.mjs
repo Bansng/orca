@@ -24,7 +24,11 @@ import {
   selectStaleDevBundleDirs
 } from './dev-electron-bundle-cache.mjs'
 import { startDevStorageReclaim } from './dev-storage-reclaim.mjs'
-import { isDevWebClientFresh } from './dev-web-client-freshness.mjs'
+import {
+  captureDevWebClientInputs,
+  isDevWebClientFresh,
+  recordDevWebClientInputs
+} from './dev-web-client-freshness.mjs'
 import { copyPrivateTree } from './space-sharing-copy.mjs'
 import {
   DEV_BUNDLE_ID,
@@ -510,6 +514,7 @@ function prepareDevWebClient() {
   if (isDevWebClientFresh(repoRoot)) {
     return
   }
+  const inputs = captureDevWebClientInputs(repoRoot)
   console.error('[orca-dev] Building web client for pairing...')
   execFileSync(
     process.execPath,
@@ -520,6 +525,7 @@ function prepareDevWebClient() {
       env: process.env
     }
   )
+  recordDevWebClientInputs(repoRoot, inputs)
 }
 
 // Why: every `pn dev` should be attachable from agent-browser/playwright-cli

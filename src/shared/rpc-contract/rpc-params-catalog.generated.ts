@@ -59,6 +59,7 @@ import {
   AttachmentUploadIdParams,
   AttachmentUploadStartParams
 } from './agent-session-attachment-params'
+import { CurrentRequestsParams } from './agent-session-current-requests-params'
 import { CreateAgentSessionParams, EnsureAgentSessionParams } from './agent-session-params'
 import { ReadVisualParams } from './agent-session-visual-params'
 import {
@@ -668,6 +669,7 @@ export const RPC_PARAMS_BY_METHOD = {
   'agentSession.conversationOutline': OptionsParams,
   'agentSession.create': CreateParams,
   'agentSession.createSupport': CreateSupportParams,
+  'agentSession.currentRequests': CurrentRequestsParams,
   'agentSession.ensure': AttachParams,
   'agentSession.handoffStatus': HandoffStatusParams,
   'agentSession.history': HistoryParams,
@@ -1008,7 +1010,6 @@ export const RPC_PARAMS_BY_METHOD = {
   'hostedReview.createStacked': HostedReviewCreate,
   'hostedReview.forBranch': HostedReviewForBranch,
   'hostedReview.getCreationEligibility': HostedReviewCreationEligibility,
-  'integrationCredentials.moveKeyToFile': null,
   'jira.addIssueComment': IssueCommentOfJiraParams,
   'jira.attachmentImage': AttachmentImage,
   'jira.cancelGenerateIssueSummary': CancelGenerateIssueSummary,

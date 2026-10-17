@@ -86,10 +86,10 @@
 2 src/renderer/src/components/native-chat/native-chat-attachment-upload.ts
 1 src/renderer/src/components/native-chat/native-chat-file-link.ts
 3 src/renderer/src/components/native-chat/native-chat-http-link-source-owner.ts
+1 src/renderer/src/components/native-chat/native-chat-link-target-actions.ts
 2 src/renderer/src/components/native-chat/native-chat-runtime-owner.ts
 1 src/renderer/src/components/native-chat/native-chat-skill-discovery-context.ts
 1 src/renderer/src/components/native-chat/use-native-chat-file-drops.ts
-1 src/renderer/src/components/native-chat/use-native-chat-link-actions.ts
 2 src/renderer/src/components/native-chat/use-native-chat-workspace-file-drop.ts
 1 src/renderer/src/components/new-workspace/use-jira-source-connection.ts
 4 src/renderer/src/components/new-workspace/use-linear-source-connection.ts

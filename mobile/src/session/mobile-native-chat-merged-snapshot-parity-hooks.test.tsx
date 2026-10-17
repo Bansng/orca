@@ -232,6 +232,7 @@ async function mountPhone(): Promise<Phone> {
       sendErrorMessage: null,
       onClearSendError: () => {},
       sendSurfaceId: 'host\0workspace\0tab',
+      sessionId: null,
       getSendCompletionGeneration: () => 0,
       keyboardInset: 0
     })

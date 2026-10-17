@@ -516,7 +516,7 @@ export function registerPtyConnectionReattachModeResetTests(): void {
         connectPanePty(pane as never, manager as never, deps as never)
         await flushAsyncTicks(20)
 
-        expect(transport.sendInput).not.toHaveBeenCalledWith('\x1b[I')
+        expect(transport.sendInput.mock.calls.map(([data]) => data)).not.toContain('\x1b[I')
         expect(pane.terminal.write).toHaveBeenCalledWith(
           replayEpilogue(RESET_TERMINAL_CURSOR_STYLE),
           expect.any(Function)
@@ -529,7 +529,10 @@ export function registerPtyConnectionReattachModeResetTests(): void {
       const transport = createMockTransport('tab-pty')
       transport.connect.mockImplementation(async ({ sessionId }: { sessionId?: string }) => {
         if (sessionId) {
-          return { id: sessionId, snapshot: '\x1b[?1004h\x1b[?25lstale shell snapshot' }
+          return {
+            id: sessionId,
+            snapshot: '\x1b[?1004h\x1b[?25l\x1b[?1003h\x1b[?1006hstale shell snapshot'
+          }
         }
         return null
       })
@@ -549,7 +552,7 @@ export function registerPtyConnectionReattachModeResetTests(): void {
         connectPanePty(pane as never, manager as never, deps as never)
         await flushAsyncTicks(20)
 
-        expect(transport.sendInput).not.toHaveBeenCalledWith('\x1b[I')
+        expect(transport.sendInput.mock.calls.map(([data]) => data)).not.toContain('\x1b[I')
         expect(pane.terminal.write).toHaveBeenCalledWith(
           replayEpilogue(POST_REPLAY_REATTACH_RESET),
           expect.any(Function)
@@ -594,15 +597,10 @@ export function registerPtyConnectionReattachModeResetTests(): void {
     }
 
     it('keeps mouse reporting when a reattach snapshot restores a live alternate-screen TUI', async () => {
-      await expect(
-        reattachSnapshotResetFor('\x1b[?1049h\x1b[?1002h\x1b[?1006hthird-party tui session')
-      ).resolves.toBe(replayEpilogue(POST_REPLAY_REATTACH_RESET_KEEP_MOUSE))
-    })
-
-    it('still disarms mouse reporting when a reattach snapshot ends on the normal buffer', async () => {
-      await expect(
-        reattachSnapshotResetFor('\x1b[?1003h\x1b[?1006hdead tui residue')
-      ).resolves.toBe(replayEpilogue(POST_REPLAY_REATTACH_RESET))
+      const reset = await reattachSnapshotResetFor(
+        '\x1b[?1049h\x1b[?1002h\x1b[?1006hthird-party tui session'
+      )
+      expect(reset).toBe(replayEpilogue(POST_REPLAY_REATTACH_RESET_KEEP_MOUSE))
     })
 
     it('does not treat persisted tab launchAgent metadata as a live agent reattach', async () => {
@@ -639,7 +637,7 @@ export function registerPtyConnectionReattachModeResetTests(): void {
         connectPanePty(pane as never, manager as never, deps as never)
         await flushAsyncTicks(20)
 
-        expect(transport.sendInput).not.toHaveBeenCalledWith('\x1b[I')
+        expect(transport.sendInput.mock.calls.map(([data]) => data)).not.toContain('\x1b[I')
         expect(pane.terminal.write).toHaveBeenCalledWith(
           replayEpilogue(POST_REPLAY_REATTACH_RESET),
           expect.any(Function)
@@ -677,7 +675,7 @@ export function registerPtyConnectionReattachModeResetTests(): void {
         connectPanePty(pane as never, manager as never, deps as never)
         await flushAsyncTicks(20)
 
-        expect(transport.sendInput).not.toHaveBeenCalledWith('\x1b[I')
+        expect(transport.sendInput.mock.calls.map(([data]) => data)).not.toContain('\x1b[I')
         expect(pane.terminal.write).toHaveBeenCalledWith(
           replayEpilogue(POST_REPLAY_REATTACH_RESET),
           expect.any(Function)
@@ -718,7 +716,7 @@ export function registerPtyConnectionReattachModeResetTests(): void {
         connectPanePty(pane as never, manager as never, deps as never)
         await flushAsyncTicks(20)
 
-        expect(transport.sendInput).not.toHaveBeenCalledWith('\x1b[I')
+        expect(transport.sendInput.mock.calls.map(([data]) => data)).not.toContain('\x1b[I')
         expect(pane.terminal.write).toHaveBeenCalledWith(
           replayEpilogue(POST_REPLAY_REATTACH_RESET),
           expect.any(Function)
@@ -732,6 +730,16 @@ export function registerPtyConnectionReattachModeResetTests(): void {
 
     it('resets an already-idle agent cursor again after reattach SIGWINCH repaint', async () => {
       const { connectPanePty } = await import('./pty-connection')
+      vi.useFakeTimers({
+        toFake: [
+          'setTimeout',
+          'clearTimeout',
+          'setInterval',
+          'clearInterval',
+          'Date',
+          'performance'
+        ]
+      })
       const transport = createMockTransport('tab-pty')
       transport.connect.mockImplementation(async ({ sessionId }: { sessionId?: string }) => {
         if (sessionId) {
@@ -760,7 +768,9 @@ export function registerPtyConnectionReattachModeResetTests(): void {
         restoredPtyIdByLeafId: { [LEAF_1]: 'tab-pty' }
       })
 
-      connectPanePty(pane as never, manager as never, deps as never)
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: fixtures implement the connection's pane, manager and dependency contract.
+      const args = [pane, manager, deps] as unknown as Parameters<typeof connectPanePty>
+      const binding = connectPanePty(...args)
       await flushAsyncTicks(20)
 
       expect(window.api.pty.signal).toHaveBeenCalledWith('tab-pty', 'SIGWINCH')
@@ -769,12 +779,13 @@ export function registerPtyConnectionReattachModeResetTests(): void {
         expect.any(Function)
       )
 
-      await new Promise((resolve) => setTimeout(resolve, 300))
+      await vi.advanceTimersByTimeAsync(300)
 
       expect(pane.terminal.write).toHaveBeenCalledWith(
         RESET_TERMINAL_CURSOR_STYLE,
         expect.any(Function)
       )
+      binding.dispose()
     })
 
     // Why: a reattach with both snapshot and replay paints the same tail twice (dup-TUI-output on switch); snapshot wins by precedence.

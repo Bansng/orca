@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { SquareArrowOutUpRight } from 'lucide-react'
 import { toast } from 'sonner'
 import type { ArtifactWriteRequest } from '../../../../shared/artifacts'
@@ -13,6 +13,7 @@ import { basename } from '@/lib/path'
 import { getRuntimeTargetHostId, runtimeTargetEnvironmentId } from '@/runtime/runtime-client-target'
 import { NATIVE_CHAT_VISUAL_RESERVED_HEIGHT, NativeChatVisualFrame } from './NativeChatVisualFrame'
 import { observeTranscriptVisibility } from './NativeChatTranscriptChrome'
+import { NativeChatForwardedGestureContext } from './native-chat-reader-scroll-input'
 import type { NativeChatVisualOwner } from './native-chat-visual-owner'
 import { readNativeChatVisual } from './native-chat-visual-read-client'
 import { useNativeChatVisualDocument } from './use-native-chat-visual-document'
@@ -80,6 +81,7 @@ export function NativeChatInlineVisual({
   const [retired, setRetired] = useState(false)
   // Share's popover is portalled, so hover and focus-within can't keep the toolbar shown.
   const [shareOpen, setShareOpen] = useState(false)
+  const forwardGesture = useContext(NativeChatForwardedGestureContext)
   const state = useNativeChatVisualDocument(
     { target: owner.target, sessionId: owner.sessionId, file },
     near
@@ -112,6 +114,7 @@ export function NativeChatInlineVisual({
             title={label}
             themeScope={boxRef}
             onRetired={() => setRetired(true)}
+            onReaderGesture={forwardGesture ?? undefined}
           />
           <div
             data-share-open={shareOpen}

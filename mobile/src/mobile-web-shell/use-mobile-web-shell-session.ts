@@ -165,12 +165,6 @@ export function useMobileWebShellSession(args: {
           // queued behind this one already run after it.
           await store.deleteHostCache(hostKey).catch(() => undefined)
           return
-        case 'persist-manifest':
-          // Nothing is reported back and a failure is swallowed: the routes the page is mounted
-          // under are already on the session, so all a refused or failed write costs is the
-          // freshness of the next offline verdict, never the generation being opened here.
-          await store.persistActiveManifest(hostKey, effect.manifest).catch(() => undefined)
-          return
         case 'record-update-failure':
           // Stamped here because the reducer holds neither: the host is the mount's, the time the
           // runtime's. Reports nothing, and the store swallows its own failure.

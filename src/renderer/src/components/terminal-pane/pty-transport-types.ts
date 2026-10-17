@@ -239,6 +239,8 @@ export type PtyTransport = {
   retryRecovery?: () => boolean
   /** True while the transport has a retry armed or parked; pane-level remounts must defer to it. */
   ownsRecovery?: () => boolean
+  /** Typed input the host has not applied yet, which a remount would discard. */
+  hasUndeliveredInput?: () => boolean
   /** The user dismissed the error surface; the next occurrence of the same message must surface again. */
   notifyErrorSurfaceDismissed?: () => void
   getPtyId: () => string | null

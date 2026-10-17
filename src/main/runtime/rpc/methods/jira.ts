@@ -3,7 +3,6 @@ import {
   JIRA_PAYLOAD_MAX_CHARS
 } from '../../../../shared/jira-payload-stream'
 import { defineMethod, defineStreamingMethod, type RpcContext } from '../core'
-import { recoverIntegrationCredentialKey } from '../../../integration-credential-keychain'
 import { JIRA_ATTACHMENT_IMAGE_METHODS } from './jira-attachment-image'
 import { JiraFavouriteFilterParams } from '../../../../shared/rpc-contract/jira-favourite-filter-params'
 import {
@@ -97,19 +96,13 @@ export const JIRA_METHODS = [
     name: 'jira.status',
     permission: 'workspace',
     params: null,
-    handler: async (_params, { runtime }) => {
-      await recoverIntegrationCredentialKey()
-      return runtime.jiraStatus()
-    }
+    handler: async (_params, { runtime }) => runtime.jiraStatus()
   }),
   defineMethod({
     name: 'jira.readStatus',
     permission: 'workspace',
     params: null,
-    handler: async (_params, { runtime }) => {
-      await recoverIntegrationCredentialKey()
-      return runtime.jiraReadStatus()
-    }
+    handler: async (_params, { runtime }) => runtime.jiraReadStatus()
   }),
   defineMethod({
     name: 'jira.testConnection',

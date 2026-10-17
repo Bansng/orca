@@ -11,6 +11,7 @@ import { browseSshDirectory } from '../../../ssh/ssh-remote-directory-browse'
 import { defineMethod } from '../core'
 import { getPublicSshError, getPublicSshState } from '../../public-ssh-state'
 import type { SshTarget as SshTargetRecord, SshTargetSummary } from '../../../../shared/ssh-types'
+import { isRemoteCliControlAllowed } from '../../../../shared/ssh-remote-cli-control'
 import type {
   SshEditableTarget,
   SshEditableTargetField,
@@ -64,9 +65,16 @@ function pickSshEditableFields(source: SshEditableTargetInput): SshEditableTarge
   } satisfies Record<SshEditableTargetField, unknown>
 }
 
+// Why: clients from before the default flip omit the switch when it shows off and read absent as
+// off, so this boundary sends and saves it explicitly; current clients always send a boolean.
+function withExplicitRemoteCliControl(input: SshEditableTargetInput): SshEditableTargetInput {
+  return { ...input, allowRemoteCliControl: input.allowRemoteCliControl ?? false }
+}
+
 function toSshEditableTarget(target: SshTargetRecord): SshEditableTarget {
   return {
     ...pickSshEditableFields(target),
+    allowRemoteCliControl: isRemoteCliControlAllowed(target),
     ...toSshTargetSummary(target),
     ...(target.source === undefined ? {} : { source: target.source }),
     ...(isManagedOrcadSshTarget(target) ? { managedServer: true as const } : {})
@@ -131,7 +139,10 @@ export const SSH_METHODS = [
     permission: 'workspace',
     params: SshTargetAdd,
     handler: (params) => {
-      const result = getRegisteredSshTargetMutations().add({ ...params.target, source: 'manual' })
+      const result = getRegisteredSshTargetMutations().add({
+        ...withExplicitRemoteCliControl(params.target),
+        source: 'manual'
+      })
       return {
         target: toSshEditableTarget(result.target),
         repoReadoptions: result.repoReadoptions
@@ -145,7 +156,7 @@ export const SSH_METHODS = [
     handler: (params) => {
       // Why: replace semantics, so an omitted optional field is cleared, as SSH settings do.
       const updated = getRegisteredSshTargetMutations().update(params.targetId, {
-        ...pickSshEditableFields(params.target),
+        ...pickSshEditableFields(withExplicitRemoteCliControl(params.target)),
         source: 'manual'
       })
       if (!updated) {

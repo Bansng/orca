@@ -100,7 +100,7 @@ export function seedState(): void {
           ptyIdsByLeafId: { [LEAF_ID]: 'pty-host-old-2' }
         }
       },
-      settings: { agentCmdOverrides: {}, setupScriptLaunchMode: 'new-tab' }
+      settings: { agentCmdOverrides: {} }
     } as never,
     true
   )

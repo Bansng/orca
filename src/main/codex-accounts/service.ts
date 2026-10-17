@@ -12,6 +12,7 @@ import type { CodexRuntimeHomeService } from './runtime-home-service'
 import type { Store } from '../persistence'
 import type { RateLimitService } from '../rate-limits/service'
 import { buildEncodedWslBashCommand } from '../wsl-bash-command'
+import { resolveWslInteropSpawnCwd } from '../wsl-interop-spawn-directory'
 import { admitSelfInitiatedTreeKill } from '../own-chromium-tree-kill-guard'
 import type { CodexAccountSelectionTarget } from './runtime-selection'
 import { CodexAccountIdentity, type ResolvedCodexIdentity } from './codex-account-identity'
@@ -102,7 +103,7 @@ export class CodexAccountService {
       execFileSync(
         'wsl.exe',
         ['-d', distro, '--exec', 'bash', '-lc', buildEncodedWslBashCommand(script)],
-        { windowsHide: true, encoding: 'utf-8', timeout: 5000 }
+        { windowsHide: true, encoding: 'utf-8', timeout: 5000, cwd: resolveWslInteropSpawnCwd() }
       )
     )
     this.managedHomes = new CodexManagedHomeLifecycle(this.managedHomePaths)

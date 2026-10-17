@@ -128,8 +128,6 @@ export function linearStatusScopeSignature(status: LinearConnectionStatus): stri
   return JSON.stringify({
     connected: status.connected,
     credentialError: status.credentialError ?? null,
-    credentialErrorReason: status.credentialErrorReason ?? null,
-    canMoveCredentialKeyToFile: status.canMoveCredentialKeyToFile ?? false,
     activeWorkspaceId: status.activeWorkspaceId ?? null,
     selectedWorkspaceId: getSelectedWorkspaceId(status),
     viewer: status.viewer
