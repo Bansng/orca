@@ -274,7 +274,12 @@ export function createAgentModelCatalogService(
           ...(unavailable ? { unavailable } : {})
         }
       }
-      if (params.savedOnly) {
+      // Death evidence keeps a read after an observed exit from spawning another agent; a new chat
+      // also starts released, but still needs its first listing.
+      if (
+        params.savedOnly ||
+        (scoped?.lease?.claimStatus === 'released' && scoped.lease.deathEvidence)
+      ) {
         return answer(entry)
       }
       // Past its TTL, only the probe re-derives a held reason. The reason is served meanwhile;

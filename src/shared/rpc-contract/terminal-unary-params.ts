@@ -11,6 +11,17 @@ import {
 import { TERMINAL_PANE_SPLIT_SOURCES } from '../feature-education-telemetry'
 import { OptionalExecutionHostId } from './worktree-params'
 
+// Why refused at the boundary rather than at spawn: only the host knows the allowlist, and a
+// relay-side throw reaches the caller as an opaque spawn failure after the round trip.
+export const WindowsShellOverrideParam = z
+  .string()
+  .refine(isSupportedWindowsShellOverride, {
+    message: `shell must be one of: ${listSupportedWindowsShellOverrides().join(', ')}`
+  })
+  // Why here: the host is authoritative, so it canonicalizes even when a client did not; the
+  // spawn path exact-matches `.exe` spellings and must never see `cmd` or `Git-Bash`.
+  .transform((shell) => canonicalizeWindowsShellOverride(shell) ?? shell)
+
 export const TerminalHandle = z.object({
   terminal: requiredString('Missing terminal handle'),
   // Additive fence understood by newer hosts; legacy hosts safely ignore it.
@@ -216,17 +227,7 @@ export const TerminalCreateParams = z.object({
   tabId: OptionalString,
   leafId: OptionalString,
   spawnIntent: SpawnIntentParam.optional(),
-  // Why refused at the boundary rather than at spawn: only the host knows the allowlist, and a
-  // relay-side throw reaches the caller as an opaque spawn failure after the round trip.
-  shell: z
-    .string()
-    .refine(isSupportedWindowsShellOverride, {
-      message: `shell must be one of: ${listSupportedWindowsShellOverrides().join(', ')}`
-    })
-    // Why here: the host is authoritative, so it canonicalizes even when a client did not; the
-    // spawn path exact-matches `.exe` spellings and must never see `cmd` or `Git-Bash`.
-    .transform((shell) => canonicalizeWindowsShellOverride(shell) ?? shell)
-    .optional()
+  shell: WindowsShellOverrideParam.optional()
 })
 
 export const TerminalSplit = TerminalHandle.extend({

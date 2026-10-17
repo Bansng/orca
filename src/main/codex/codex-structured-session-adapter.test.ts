@@ -225,8 +225,8 @@ describe('CodexStructuredSessionAdapter.acquire', () => {
         path: '/rollouts/thread-proven.jsonl'
       })
     })
-    expect(acquisition.link.origin).toBe('resumed')
-    expect(acquisition.link.handle).toEqual(codexProviderHandle('thread-proven'))
+    expect(acquisition.link?.origin).toBe('resumed')
+    expect(acquisition.link?.handle).toEqual(codexProviderHandle('thread-proven'))
   })
 
   it('starts a thread in place of a creation Codex never saved, and says which it replaced', async () => {

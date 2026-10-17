@@ -14,7 +14,7 @@ import type { SleepingAgentSessionRecord } from '../../../shared/agent-session-r
 import type { Worktree } from '../../../shared/worktree/types'
 import { makePaneKey } from '../../../shared/stable-pane-id'
 import { toWebTerminalSurfaceTabId } from '../../../shared/terminal-surface-id'
-import { makeCreatedAgentWorktree } from './worktree-activation-created-agent-test-state'
+import { makeCreatedAgentWorktree } from './worktree-activation-created-agent.test-fixture'
 import { resumeSleepingAgentSessionsForWorktree } from './resume-sleeping-agent-session'
 
 // #21235: a paired client is never the execution host, so no local record can tell "another client

@@ -4,6 +4,7 @@ import { RUNTIME_CAPABILITIES } from '../../../../shared/protocol-version'
 import { MOBILE_RPC_METHOD_ALLOWLIST } from '../../runtime-rpc/runtime-rpc-mobile-method-allowlist'
 import { OrcaRuntimeService } from '../../orca-runtime'
 import { eraseRpcMethods, isStreamingMethod, type RpcContext } from '../core'
+import { LAYOUT_APPLY_METHODS } from './workspace-layout'
 
 const WORKTREE = 'repo-1::/work/one'
 const SPLIT = {
@@ -73,7 +74,7 @@ describe('layout.apply', () => {
     expect(MOBILE_RPC_METHOD_ALLOWLIST.has('layout.apply')).toBe(false)
   })
 
-  it('is registered in a layout-owner build and accepts no id main should mint', async () => {
+  it('is registered in a layout-owner build; a split keeps only a valid window pane id', async () => {
     const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
     if (!apply || isStreamingMethod(apply)) {
       throw new Error('layout.apply is not a request method')
@@ -81,16 +82,25 @@ describe('layout.apply', () => {
     const applyLayoutCommand = vi.fn(async () => ({ ok: true, result: {} }))
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the handler calls only applyLayoutCommand.
     const runtime = { applyLayoutCommand } as unknown as OrcaRuntimeService
+    const newLeafId = '33333333-3333-4333-8333-333333333333'
 
-    const params = apply.params?.parse({ command: { ...SPLIT, newLeafId: 'window-minted' } })
+    const params = apply.params?.parse({ command: { ...SPLIT, newLeafId, groupId: 'window-g' } })
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the handler reads only runtime from its context.
     await apply.handler(params, { runtime } as RpcContext)
 
-    expect(applyLayoutCommand).toHaveBeenCalledWith(SPLIT)
+    expect(applyLayoutCommand).toHaveBeenCalledWith({ ...SPLIT, newLeafId })
+    expect(apply.params?.parse({ command: { ...SPLIT, id: 'window-id' } })).toEqual({
+      command: SPLIT
+    })
+    expect(
+      apply.params?.safeParse({ command: { ...SPLIT, newLeafId: 'window-minted' } }).success
+    ).toBe(false)
   })
 
   it('takes no close semantics or blank title from the window', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const pane = { workspace: WORKTREE, tabId: 'tab-1', leafId: 'leaf-1' }
 
     expect(
@@ -107,7 +117,9 @@ describe('layout.apply', () => {
   })
 
   it('accepts only a drop side and a valid pane tree for gestures', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const pane = { workspace: WORKTREE, tabId: 'tab-1', leafId: 'leaf-1' }
     const move = { type: 'movePane', ...pane, targetLeafId: 'leaf-2' }
     const ratios = { type: 'setPaneRatios', workspace: WORKTREE, tabId: 'tab-1' }
@@ -122,7 +134,9 @@ describe('layout.apply', () => {
   })
 
   it('accepts tab moves and group sizes, but no group id from the window', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const tab = { workspace: WORKTREE, tabId: 'tab-1' }
     const parse = (command: Record<string, unknown>) => apply?.params?.safeParse({ command })
 
@@ -161,7 +175,9 @@ describe('layout.apply', () => {
   })
 
   it('accepts the close of one tab with the window’s reason, but no force or refusals', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const close = { type: 'closeTabs', workspace: WORKTREE, recordClose: 'user' }
 
     expect(
@@ -179,7 +195,9 @@ describe('layout.apply', () => {
   })
 
   it('accepts a drag-out with the window’s terminal, but no tab id from the window', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const move = {
       type: 'movePaneToNewTab',
       workspace: WORKTREE,
@@ -200,7 +218,9 @@ describe('layout.apply', () => {
   })
 
   it('takes a browser tab under the window’s ids, and its page and profile changes', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const parse = (command: Record<string, unknown>) => apply?.params?.safeParse({ command })
     const open = {
       type: 'openBrowserTab',
@@ -249,7 +269,9 @@ describe('layout.apply', () => {
   })
 
   it('accepts an editor open under the window’s tab id, its promote, and an unrecorded close', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const tab = { workspace: WORKTREE, tabId: 'tab-1' }
     const open = { type: 'openEditorTab', ...tab, fileId: '/work/one/a.ts', contentType: 'editor' }
     const file = { filePath: '/work/one/a.ts', relativePath: 'a.ts', language: 'typescript' }
@@ -271,7 +293,9 @@ describe('layout.apply', () => {
   })
 
   it('accepts an editor tab move to the workspace the window resolved, naming its new ids', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const parse = (command: Record<string, unknown>) => apply?.params?.safeParse({ command })
     const move = {
       type: 'moveTabToWorkspace',
@@ -287,6 +311,42 @@ describe('layout.apply', () => {
     expect(parse({ ...move, tabs: [] })?.success).toBe(false)
     expect(parse({ ...move, groupId: undefined })?.success).toBe(false)
     expect(parse({ ...move, toWorkspace: '' })?.success).toBe(false)
+  })
+
+  it('takes an open into a new split under the window’s group id, on every open kind', async () => {
+    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const parse = (command: Record<string, unknown>) => apply?.params?.safeParse({ command })
+    const split = { besideGroupId: 'g1', direction: 'right' }
+    const opens = [
+      {
+        type: 'openEditorTab',
+        workspace: WORKTREE,
+        tabId: 'e1',
+        fileId: '/a.ts',
+        contentType: 'editor'
+      },
+      {
+        type: 'openBrowserTab',
+        workspace: WORKTREE,
+        tabId: 'b1',
+        browserTabId: 'b1',
+        pageId: 'p1'
+      },
+      {
+        type: 'createTerminalTab',
+        workspace: WORKTREE,
+        tabId: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+        leafId: '11111111-1111-4111-8111-111111111111'
+      }
+    ]
+
+    for (const open of opens) {
+      expect(parse({ ...open, groupId: 'g2', split })?.success).toBe(true)
+      expect(
+        parse({ ...open, groupId: 'g2', split: { ...split, direction: 'center' } })?.success
+      ).toBe(false)
+      expect(parse({ ...open, groupId: 'g2', split: { direction: 'right' } })?.success).toBe(false)
+    }
   })
 
   it('opens an editor tab in the workspace’s routed partition', async () => {
@@ -305,7 +365,9 @@ describe('layout.apply', () => {
   })
 
   it('accepts a sleep of one tab’s panes and a wake of exactly one pane', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const parse = (command: Record<string, unknown>) => apply?.params?.safeParse({ command })
     const paneKey = 'tab-1:11111111-1111-4111-8111-111111111111'
     const otherTabPane = 'tab-2:22222222-2222-4222-8222-222222222222'
@@ -354,7 +416,9 @@ describe('layout.apply', () => {
   })
 
   it('takes a terminal tab create under valid window ids, and only an activation initial', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const create = {
       type: 'createTerminalTab',
       workspace: WORKTREE,
@@ -391,7 +455,9 @@ describe('layout.apply', () => {
   })
 
   it('takes a tab’s custom title, color and pin, and no other tab kind or property', async () => {
-    const apply = (await registeredMethods(true)).find((method) => method.name === 'layout.apply')
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
     const tab = { workspace: WORKTREE, tabId: 'tab-1' }
     const parses = (command: Record<string, unknown>) =>
       apply?.params?.safeParse({ command: { ...tab, ...command } }).success
@@ -412,9 +478,47 @@ describe('layout.apply', () => {
 
     await expect(runtime.applyLayoutCommand(SPLIT)).resolves.toEqual({
       ok: true,
-      result: { leafId: 'minted' }
+      result: { leafId: 'minted' },
+      // No one subscribes, so the stream has sent nothing.
+      frameSeq: 0
     })
     expect(applyLayoutCommand).toHaveBeenCalledWith(SPLIT, ['ssh:target-1'])
+  })
+
+  it('names the stream position of the frame its write produced, sent before the reply', async () => {
+    let session = sessionListing('tab-1')
+    const written = new Set<(hostId: string | null) => void>()
+    const order: string[] = []
+    const store = {
+      getRepo: () => undefined,
+      getWorkspaceSessionHostIds: () => ['local'],
+      getWorkspaceSession: () => session,
+      onWorkspaceSessionWritten: (listener: (hostId: string | null) => void) => {
+        written.add(listener)
+        return () => written.delete(listener)
+      },
+      applyLayoutCommand: vi.fn(async () => {
+        session = { ...session, activeTabId: null, tabsByWorktree: {} }
+        written.forEach((listener) => listener('local'))
+        return { ok: true, result: { leafId: 'minted' } }
+      })
+    }
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the apply and stream paths read only these store methods.
+    const runtime = new OrcaRuntimeService(store as never)
+    const sent: number[] = []
+    const { seq } = runtime.subscribeWorkspaceLayouts((event) => {
+      order.push('frame')
+      sent.push(event.seq!)
+    })
+
+    const reply = await runtime.applyLayoutCommand(SPLIT).then((value) => {
+      order.push('reply')
+      return value
+    })
+
+    expect(sent).toEqual([seq + 1])
+    expect(reply.frameSeq).toBe(seq + 1)
+    expect(order).toEqual(['frame', 'reply'])
   })
 
   it('refuses a paired server’s workspace, which keeps its mirrored layout', async () => {
@@ -422,7 +526,8 @@ describe('layout.apply', () => {
 
     await expect(runtime.applyLayoutCommand(SPLIT)).resolves.toEqual({
       ok: false,
-      code: 'host_not_owned'
+      code: 'host_not_owned',
+      frameSeq: 0
     })
     expect(applyLayoutCommand).not.toHaveBeenCalled()
   })

@@ -24,7 +24,7 @@ describe('migratePlaintextCredentials', () => {
       keyDir: dir,
       platform: 'linux',
       env: {},
-      keyring: null,
+      legacyKeyring: null,
       machineIdentity: () => '0123456789abcdef0123456789abcdef'
     })
     store = orcadStore
@@ -112,7 +112,7 @@ describe('migratePlaintextCredentials', () => {
       keyDir: dir,
       platform: 'linux',
       env: {},
-      keyring: null,
+      legacyKeyring: null,
       machineIdentity: () => otherMachine
     })
 

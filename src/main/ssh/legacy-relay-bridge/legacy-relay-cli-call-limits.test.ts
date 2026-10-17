@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { toAppSshPtyId } from '../../../shared/ssh-pty-id'
+import { isRemoteCliControlAllowed } from '../../../shared/ssh-remote-cli-control'
 import { OrcaRuntimeService } from '../../runtime/orca-runtime'
 import { OrchestrationDb } from '../../runtime/orchestration/db'
 import {
@@ -65,13 +66,14 @@ const server = () =>
   })
 
 describe('limits on relay-era CLI calls', () => {
-  it('stops a waiting check once the per-host switch is turned off', async () => {
+  it('stops a waiting check once a default-on switch is turned off', async () => {
+    allowed = isRemoteCliControlAllowed({})
     const waiting = server().cli(
       { argv: ['orchestration', 'check', '--wait', '--timeout-ms', '60000', '--json'], env: ENV },
       new AbortController().signal
     )
     await new Promise((resolve) => setTimeout(resolve, 50))
-    allowed = false
+    allowed = isRemoteCliControlAllowed({ allowRemoteCliControl: false })
     const started = Date.now()
     const result = await waiting
     expect(Date.now() - started).toBeLessThan(5_000)

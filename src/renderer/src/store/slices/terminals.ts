@@ -39,7 +39,6 @@ export const createTerminalSlice: StateCreator<AppState, [], [], TerminalSlice> 
   localOnlyScrollbackByTabId: {},
   pendingStartupByTabId: {},
   pendingInitialCwdByTabId: {},
-  pendingSetupSplitByTabId: {},
   pendingIssueCommandSplitByTabId: {},
   automaticAgentResumeClaimsByTabId: {},
   nativeChatLaunchPromptByTabId: {},

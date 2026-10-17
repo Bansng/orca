@@ -231,7 +231,11 @@ async function startOrcadRuntime(
     clientCodexHomes: codexAccountHomes
   })
 
+  const { loadAgentSessionClaimSigner } = await import('../runtime/agent-session-claim-identity')
   const runtime = new OrcaRuntimeService(profileStore, undefined, {
+    // Why persistent: the terminal daemon outlives orcad, so a per-process key would make a
+    // restarted orcad unable to recognise (and adopt) the agent PTYs it already owns.
+    agentSessionClaimSigner: loadAgentSessionClaimSigner(runtimeUserDataPath, runtimeUserDataPath),
     getAdditionalAiVaultCodexHomePaths: () => [
       ...codexAccountHomes.listSessionHomes(),
       ...(accountLaunch?.listCodexSessionHomes() ?? [])

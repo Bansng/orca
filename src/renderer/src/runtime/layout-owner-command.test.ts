@@ -1,5 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { endLayoutFramePositions, noteLayoutFramePosition } from './layout-frame-position'
 import { sendLayoutCommandToOwner } from './layout-owner-command'
+import {
+  _resetLayoutOwnerPaneIntentsForTests,
+  isTabPaneTreeHeld
+} from './layout-owner-pane-intents'
 
 const mocks = vi.hoisted(
   (): {
@@ -29,6 +34,11 @@ function handlers() {
 }
 
 describe('sendLayoutCommandToOwner', () => {
+  afterEach(() => {
+    endLayoutFramePositions()
+    _resetLayoutOwnerPaneIntentsForTests()
+  })
+
   beforeEach(() => {
     mocks.callRuntimeRpc.mockReset()
     mocks.ownerEnvironmentId = null
@@ -47,6 +57,24 @@ describe('sendLayoutCommandToOwner', () => {
     expect(on.apply).not.toHaveBeenCalled()
     await vi.waitFor(() => expect(on.apply).toHaveBeenCalledWith({ leafId: 'leaf-minted' }))
     expect(on.asToday).not.toHaveBeenCalled()
+  })
+
+  it('shows main’s result only once the window holds the frame with main’s change', async () => {
+    noteLayoutFramePosition(4)
+    mocks.callRuntimeRpc.mockResolvedValue({
+      ok: true,
+      result: { leafId: 'leaf-minted' },
+      frameSeq: 5
+    })
+    const on = handlers()
+
+    sendLayoutCommandToOwner('worktree-1', SPLIT, on)
+    await vi.waitFor(() => expect(mocks.callRuntimeRpc).toHaveBeenCalled())
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(on.apply).not.toHaveBeenCalled()
+
+    noteLayoutFramePosition(5)
+    expect(on.apply).toHaveBeenCalledWith({ leafId: 'leaf-minted' })
   })
 
   it('changes nothing itself after a refusal', async () => {
@@ -82,6 +110,60 @@ describe('sendLayoutCommandToOwner', () => {
 
     await vi.waitFor(() => expect(on.asToday).toHaveBeenCalledOnce())
     expect(on.refused).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['main lacks the pane', { ok: false, code: 'pane_not_found' }],
+    ['the call fails', new Error('rpc_failed')]
+  ])('draws nothing for a pane command passing `unapplied` when %s', async (_case, answer) => {
+    if (answer instanceof Error) {
+      mocks.callRuntimeRpc.mockRejectedValue(answer)
+    } else {
+      mocks.callRuntimeRpc.mockResolvedValue(answer)
+    }
+    const on = { ...handlers(), unapplied: vi.fn() }
+
+    sendLayoutCommandToOwner('worktree-1', SPLIT, on)
+
+    await vi.waitFor(() => expect(on.unapplied).toHaveBeenCalledOnce())
+    expect(on.asToday).not.toHaveBeenCalled()
+    await vi.waitFor(() => expect(isTabPaneTreeHeld('tab-1')).toBe(false))
+  })
+
+  it('keeps the tab’s drawn tree from frames until its answer, and what awaits it, has run', async () => {
+    noteLayoutFramePosition(4)
+    mocks.callRuntimeRpc.mockResolvedValue({ ok: true, result: {}, frameSeq: 5 })
+    const on = handlers()
+    const heldInCaller = Promise.withResolvers<boolean>()
+    on.apply.mockImplementation(() => {
+      void Promise.resolve()
+        .then(() => undefined)
+        .then(() => heldInCaller.resolve(isTabPaneTreeHeld('tab-1')))
+      throw new Error('handler failed')
+    })
+
+    sendLayoutCommandToOwner('worktree-1', SPLIT, on)
+    expect(isTabPaneTreeHeld('tab-1')).toBe(true)
+    await vi.waitFor(() => expect(mocks.callRuntimeRpc).toHaveBeenCalled())
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(isTabPaneTreeHeld('tab-1')).toBe(true)
+
+    noteLayoutFramePosition(5)
+    expect(on.apply).toHaveBeenCalledOnce()
+    await expect(heldInCaller.promise).resolves.toBe(true)
+    await vi.waitFor(() => expect(isTabPaneTreeHeld('tab-1')).toBe(false))
+  })
+
+  it('holds no tab for a command that changes no pane tree', async () => {
+    mocks.callRuntimeRpc.mockResolvedValue({ ok: true, result: {} })
+
+    sendLayoutCommandToOwner(
+      'worktree-1',
+      { type: 'renameTab', tabId: 'tab-1', kind: 'custom', title: 'logs' },
+      handlers()
+    )
+
+    expect(isTabPaneTreeHeld('tab-1')).toBe(false)
   })
 
   it('does not run the fallback when the caller’s own handler throws', async () => {

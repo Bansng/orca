@@ -156,6 +156,27 @@ async function loadManagedServerCatalogs(targetId: string, load: CatalogLoad): P
   }
   useAppStore.setState((state) => withoutConvertedSshHostRows(state, targetId))
   rehomeActiveWorkspace(targetId, environmentId)
+  if (!useAppStore.getState().startupWorktreeRefreshCompleted) {
+    rehomeAfterStartupScan(targetId, environmentId, isCurrent)
+  }
+}
+
+/** Why: on cold start the server's worktree rows arrive with startup's scan, after the attempt above. */
+function rehomeAfterStartupScan(
+  targetId: string,
+  environmentId: string,
+  isCurrent: () => boolean
+): void {
+  const unsubscribe = useAppStore.subscribe((state) => {
+    if (!isCurrent()) {
+      unsubscribe()
+      return
+    }
+    if (state.startupWorktreeRefreshCompleted) {
+      unsubscribe()
+      rehomeActiveWorkspace(targetId, environmentId)
+    }
+  })
 }
 
 /** Why: an active workspace left on the SSH host keeps showing panes that dial the stopped relay. */

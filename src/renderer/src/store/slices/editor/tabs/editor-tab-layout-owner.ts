@@ -6,13 +6,14 @@
 import type { Tab } from '../../../../../../shared/tab-types'
 import type { LayoutEditorFile } from '../../../../../../shared/workspace-layout/workspace-layout-model'
 import { recordLayoutApply } from '@/runtime/layout-apply-send'
+import { newGroupSplitOf } from '@/runtime/layout-owner-new-group-split'
 import type { AppState } from '../../../types'
 import type { OpenFile } from '../types/open-file'
 import type { RestoredEditorOwnerResult } from '../types/restored-editor-owner'
 import { isEditorTabContentType } from './editor-tab-content-type'
 
 type EditorOwnerState = Parameters<typeof recordLayoutApply>[0] &
-  Pick<AppState, 'openFiles' | 'unifiedTabsByWorktree' | 'groupsByWorktree'>
+  Pick<AppState, 'openFiles' | 'unifiedTabsByWorktree' | 'groupsByWorktree' | 'layoutByWorktree'>
 
 /** A new editor tab the window just drew. */
 export function recordOpenedEditorTabInLayoutOwner(state: EditorOwnerState, tab: Tab): void {
@@ -28,6 +29,8 @@ export function recordOpenedEditorTabInLayoutOwner(state: EditorOwnerState, tab:
     fileId: tab.entityId,
     contentType: tab.contentType,
     groupId: tab.groupId,
+    // Open to the side: main makes the window's new split with the tab.
+    ...newGroupSplitOf(state, tab.worktreeId, tab.groupId, tab.id),
     ...(tab.isPreview ? { preview: true } : {}),
     // Only edit-mode files are restored after restart; the window saves no other.
     ...(file?.mode === 'edit' ? { file: restorableEditorFile(file) } : {})

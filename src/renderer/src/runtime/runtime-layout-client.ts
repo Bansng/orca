@@ -4,6 +4,7 @@
 
 import { hasRuntimeRpcErrorCode } from '../../../shared/runtime-rpc-error-code'
 import {
+  readWorkspaceLayoutFramePosition,
   readWorkspaceLayoutStreamFrame,
   type WorkspaceLayoutChangeFrame,
   type WorkspaceLayoutStreamFrame
@@ -29,7 +30,9 @@ export function subscribeRuntimeLayout(
   target: RuntimeClientTarget,
   params: { workspaces?: 'all' | string[] },
   onFrame: (frame: WorkspaceLayoutChangeFrame) => void,
-  onStatus: (status: RuntimeLayoutStreamStatus) => void
+  onStatus: (status: RuntimeLayoutStreamStatus) => void,
+  /** Each frame's stream position, an unreadable frame's too: a reply may name any frame. */
+  onPosition?: (seq: number) => void
 ): { close: () => void } {
   // Bumped whenever a stream is given up, so its late callbacks change nothing.
   let generation = 0
@@ -63,9 +66,23 @@ export function subscribeRuntimeLayout(
     stop(refusal ? { state: 'refused', code: refusal } : { state: 'lost' })
   }
 
-  const receive = (streamGeneration: number, frame: WorkspaceLayoutStreamFrame | null): void => {
+  const receive = (streamGeneration: number, value: unknown): void => {
+    if (streamGeneration !== generation) {
+      return
+    }
+    const seq = readWorkspaceLayoutFramePosition(value)
+    try {
+      deliver(streamGeneration, readWorkspaceLayoutStreamFrame(value))
+    } finally {
+      if (seq !== undefined && streamGeneration === generation) {
+        onPosition?.(seq)
+      }
+    }
+  }
+
+  const deliver = (streamGeneration: number, frame: WorkspaceLayoutStreamFrame | null): void => {
     // Null: a newer host's frame type or an unreadable frame; neither may change the cache.
-    if (streamGeneration !== generation || !frame) {
+    if (!frame) {
       return
     }
     if (frame.type === 'end') {
@@ -86,7 +103,7 @@ export function subscribeRuntimeLayout(
     setStatus({ state: 'connecting' })
     try {
       const opened = await subscribeRuntimeRpc(target, 'layout.subscribe', params, {
-        onEvent: (result) => receive(streamGeneration, readWorkspaceLayoutStreamFrame(result)),
+        onEvent: (result) => receive(streamGeneration, result),
         onError: (error) => lose(streamGeneration, error),
         onClose: () => lose(streamGeneration)
       })

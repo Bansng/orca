@@ -392,7 +392,11 @@ describe('OrcaRuntimeService', () => {
       spawnIntent: 'automatic-restore'
     })
     expect(spawn).toHaveBeenLastCalledWith(
-      expect.objectContaining({ spawnIntent: 'automatic-restore' })
+      expect.objectContaining({
+        spawnIntent: 'automatic-restore',
+        // The spawn names the session it resumes, so the host can publish it before a hook.
+        resumeProviderSession: expect.objectContaining({ id: 'provider-session-intent' })
+      })
     )
 
     await runtime.ensureAgentSession({

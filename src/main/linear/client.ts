@@ -25,7 +25,6 @@ import {
   getWorkspaceTokenProtection
 } from './linear-token-store'
 import { CredentialDecryptionError } from '../integration-credential-file'
-import { integrationCredentialKeychainFields } from '../integration-credential-keychain'
 import type {
   LinearConnectionStatus,
   LinearViewer,
@@ -198,10 +197,6 @@ export function getStatus(): LinearConnectionStatus {
     activeWorkspaceId: state.activeWorkspaceId,
     selectedWorkspaceId: state.selectedWorkspaceId,
     ...(credentialError ? { credentialError } : {}),
-    ...integrationCredentialKeychainFields({
-      saved: state.workspaces.length > 0,
-      decryptFailed: credentialError !== undefined
-    }),
     credentialProtection
   }
 }

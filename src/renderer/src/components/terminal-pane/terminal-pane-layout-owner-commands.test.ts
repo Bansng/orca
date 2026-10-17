@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PaneManager } from '@/lib/pane-manager/pane-manager'
 import { equalizeTerminalPanes } from './terminal-pane-layout-owner-commands'
+import {
+  _resetLayoutFramePositionForTests,
+  beginLayoutFramePositions,
+  endLayoutFramePositions
+} from '@/runtime/layout-frame-position'
 
 const mocks = vi.hoisted(
   (): {
@@ -31,6 +36,7 @@ describe('equalizeTerminalPanes', () => {
     mocks.callRuntimeRpc.mockReset()
     mocks.ownerEnvironmentId = null
     mocks.layoutOwnerIsMain = false
+    _resetLayoutFramePositionForTests()
   })
 
   function manager() {
@@ -55,20 +61,39 @@ describe('equalizeTerminalPanes', () => {
     expect(mocks.callRuntimeRpc).not.toHaveBeenCalled()
   })
 
-  it('a layout-owner build equalizes once main has', async () => {
+  it('a layout-owner build leaves the sizes to main’s frame, then focuses', async () => {
     mocks.layoutOwnerIsMain = true
+    beginLayoutFramePositions()
     mocks.callRuntimeRpc.mockResolvedValue({ ok: true, result: {} })
     const current = manager()
+    const then = vi.fn()
 
     equalizeTerminalPanes(
       { worktreeId: 'worktree-1', tabId: 'tab-1', getManager: () => current },
-      vi.fn()
+      then
     )
 
     expect(mocks.callRuntimeRpc).toHaveBeenCalledWith({ kind: 'local' }, 'layout.apply', {
       command: { type: 'equalizePanes', tabId: 'tab-1', workspace: 'worktree-1' }
     })
+    await vi.waitFor(() => expect(then).toHaveBeenCalledWith(current))
     expect(current.equalizePaneSizes).not.toHaveBeenCalled()
-    await vi.waitFor(() => expect(current.equalizePaneSizes).toHaveBeenCalledOnce())
+  })
+
+  it('a layout-owner build equalizes itself when no frame is coming', async () => {
+    mocks.layoutOwnerIsMain = true
+    beginLayoutFramePositions()
+    endLayoutFramePositions()
+    mocks.callRuntimeRpc.mockResolvedValue({ ok: true, result: {} })
+    const current = manager()
+    const then = vi.fn()
+
+    equalizeTerminalPanes(
+      { worktreeId: 'worktree-1', tabId: 'tab-1', getManager: () => current },
+      then
+    )
+
+    await vi.waitFor(() => expect(then).toHaveBeenCalledWith(current))
+    expect(current.equalizePaneSizes).toHaveBeenCalledOnce()
   })
 })

@@ -5,6 +5,7 @@
 import { ipcMain, type BrowserWindow } from 'electron'
 import { z } from 'zod'
 import { LEGACY_RELAY_BRIDGE_CHANNELS as CHANNELS } from '../../../shared/legacy-relay-bridge-contract'
+import { isRemoteCliControlAllowed } from '../../../shared/ssh-remote-cli-control'
 import type { Store } from '../../persistence'
 import type { OrcaRuntimeService } from '../../runtime/orca-runtime'
 import { track } from '../../telemetry/client'
@@ -51,9 +52,8 @@ export function registerLegacyRelayBridgeIpc(args: {
       ? {
           remoteCli: {
             runtime: args.runtime,
-            // Why strict true: the setting is opt-in, and an absent value is off.
             allowed: (targetId: string) =>
-              args.store.getSshTarget(targetId)?.allowRemoteCliControl === true
+              isRemoteCliControlAllowed(args.store.getSshTarget(targetId))
           }
         }
       : {}),

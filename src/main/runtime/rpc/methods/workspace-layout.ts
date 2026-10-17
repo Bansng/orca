@@ -30,7 +30,7 @@ export const WORKSPACE_LAYOUT_METHODS = [
         const subscriptionId = `layout-${connectionId ?? 'inproc'}-${++layoutSubscriptionSeq}`
         const cleanupKey = layoutCleanupKey(connectionId, subscriptionId)
         const release = (): void => runtime.cleanupSubscription(cleanupKey)
-        const { snapshot, unsubscribe } = runtime.subscribeWorkspaceLayouts((event) => {
+        const { snapshot, seq, unsubscribe } = runtime.subscribeWorkspaceLayouts((event) => {
           if (wanted(event.key)) {
             emit(event)
           }
@@ -49,7 +49,8 @@ export const WORKSPACE_LAYOUT_METHODS = [
         emit({
           type: 'snapshot',
           subscriptionId,
-          workspaces: snapshot.filter((entry) => wanted(entry.key))
+          workspaces: snapshot.filter((entry) => wanted(entry.key)),
+          seq
         })
         if (signal?.aborted) {
           release()
@@ -74,7 +75,10 @@ export const WORKSPACE_LAYOUT_METHODS = [
   })
 ]
 
-/** The window's layout commands (C1). Registered only in a layout-owner build; see methods/index.ts. */
+/**
+ * The window's layout commands (C1). Registered only in a layout-owner build; see methods/index.ts.
+ * Main mints new ids except those the window already drew under (its tabs, startup-split panes).
+ */
 export const LAYOUT_APPLY_METHODS = [
   defineMethod({
     name: 'layout.apply',

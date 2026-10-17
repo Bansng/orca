@@ -3,8 +3,8 @@ import { useAppStore } from '@/store'
 import { sendLayoutCommandToOwner } from '@/runtime/layout-owner-command'
 
 /**
- * A layout-owner build's pane gestures: an in-tab drop moves the pane once main has answered, as
- * today when main refuses; a divider's new ratios, already drawn while dragging, are saved by main
+ * A layout-owner build's pane gestures: an in-tab drop moves the pane once main has answered, and
+ * not when main refuses; a divider's new ratios, already drawn while dragging, are saved by main
  * when the drag ends.
  */
 export function layoutOwnerPaneGestures(pane: {
@@ -44,9 +44,11 @@ export function layoutOwnerPaneGestures(pane: {
       if (!leafId || !targetLeafId) {
         return false
       }
-      const settle = (): void => {
+      const settle = (moveHere: boolean): void => {
         try {
-          move()
+          if (moveHere) {
+            move()
+          }
         } finally {
           movesInFlight -= 1
           if (movesInFlight === 0 && ratiosWaiting) {
@@ -57,7 +59,13 @@ export function layoutOwnerPaneGestures(pane: {
       const taken = sendLayoutCommandToOwner(
         worktreeId,
         { type: 'movePane', tabId, leafId, targetLeafId, side: zone },
-        { apply: settle, asToday: settle, refused: settle }
+        {
+          apply: () => settle(true),
+          asToday: () => settle(true),
+          // Main's tree did not change, and frames draw main's tree: the window keeps its shape.
+          unapplied: () => settle(false),
+          refused: () => settle(false)
+        }
       )
       if (taken) {
         movesInFlight += 1

@@ -8719,8 +8719,7 @@
           "addDescription": "Agrega una máquina persistente en la que puedas iniciar sesión por SSH.",
           "editingPrefix": "Editando",
           "allowRemoteCliControl": "Permitir que la orca CLI de este host controle Orca",
-          "allowRemoteCliControlHelp": "Cuando está activado, los comandos orca ejecutados en este host pueden abrir y controlar pestañas del navegador de Orca en este escritorio, solo en los espacios de trabajo de este host y solo mientras esté conectado. Las terminales iniciadas por una versión anterior de Orca en este host también pueden ejecutar comandos de orquestación (check, inbox, send, ask, reply) para su propio trabajo supervisado. No pueden leer tus archivos, tu portapapeles ni tus cookies. Cuando está desactivado, solo llegan al propio servidor de Orca de este host.",
-          "allowRemoteCliControlReset": "Orca lo desactivó tras una actualización, porque ahora permite que este host controle el navegador de tu escritorio y que las terminales iniciadas por una versión anterior de Orca en este host ejecuten comandos de orquestación. Vuelve a activarlo solo si lo deseas."
+          "allowRemoteCliControlHelp": "Activado de forma predeterminada. Permite que los comandos orca ejecutados en este host abran y controlen pestañas del navegador de Orca en este escritorio, solo en los espacios de trabajo de este host y solo mientras esté conectado, y que las terminales iniciadas por una versión anterior de Orca en este host ejecuten comandos de orquestación (check, inbox, send, ask, reply) para su propio trabajo supervisado. No pueden leer tus archivos, tu portapapeles ni tus cookies. Cuando está desactivado, solo llegan al propio servidor de Orca de este host."
         },
         "TasksPane": {
           "f71d8a9dd3": "Proveedores de tareas",
@@ -18660,7 +18659,8 @@
         "paused": "Objetivo en pausa",
         "blocked": "Objetivo bloqueado",
         "limited": "Objetivo limitado",
-        "attachmentsUnsupported": "Elimina los adjuntos antes de establecer un objetivo."
+        "attachmentsUnsupported": "Elimina los adjuntos antes de establecer un objetivo.",
+        "set": "Objetivo establecido"
       },
       "structuredSessionHostDeclined": "Se abrió {{value0}} en una terminal",
       "structuredSessionHostDeclinedDescription": "Este servidor no puede ejecutar un chat de {{value0}} en este espacio de trabajo.",
@@ -19816,6 +19816,12 @@
       "confirmBody": "Reiniciar termina todos los procesos que se ejecutan en {{sessions}}. Los agentes que admiten reanudación pueden reanudarse después; los shells y otros trabajos no, y deben iniciarse de nuevo. Hazlo cuando tus agentes estén inactivos.",
       "cancel": "Cancelar",
       "confirm": "Reiniciar y terminar procesos"
+    },
+    "restartedInputNotSent": "El terminal se reinició mientras escribías, así que parte de la entrada puede no haberle llegado. Revisa el nuevo shell antes de volver a escribirla.",
+    "stalledDaemonBanner": {
+      "body": "El trabajo en segundo plano en este equipo se ha atascado. Es posible que la escritura y las terminales nuevas no funcionen. Reiniciar el servicio de terminal finaliza sus terminales y comandos en ejecución.",
+      "review": "Revisar las opciones de reinicio",
+      "title": "Es posible que el servicio de terminal necesite reiniciarse"
     }
   },
   "quickOpen": {
@@ -20120,6 +20126,22 @@
       "cancel": "Cancelar",
       "noTransition": "No hay ningún cambio de estado a {{column}} disponible para {{key}}.",
       "queryTooLong": "La consulta de Jira es demasiado larga. Acorta la consulta o borra los filtros."
+    },
+    "favourites": {
+      "activeLabel": "Favoritos de Jira: {{name}}",
+      "applyFailed": "No se pudo aplicar el favorito de Jira.",
+      "chooseSite": "Elige un sitio de Jira conectado para usar sus favoritos.",
+      "clear": "Borrar favorito de Jira",
+      "clearFailed": "No se pudo borrar el filtro guardado. Reinténtalo cuando termine de cargarse o guardarse.",
+      "empty": "No se encontraron favoritos de Jira.",
+      "find": "Buscar un favorito de Jira",
+      "label": "Favoritos de Jira",
+      "loadFailed": "No se pudieron cargar los favoritos de Jira.",
+      "loading": "Cargando favoritos…",
+      "refresh": "Actualizar",
+      "siteMismatch": "Elige un proyecto del sitio de Jira del favorito o borra el filtro de proyectos.",
+      "truncated": "No se pudieron mostrar algunos favoritos. Gestiona tus favoritos en Jira para acortar la lista.",
+      "unsupported": "Actualiza el host de Jira para usar los favoritos."
     }
   }
 }

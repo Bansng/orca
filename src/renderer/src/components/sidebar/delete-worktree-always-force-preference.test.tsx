@@ -128,7 +128,7 @@ it('waits for the preference to persist before force-deleting and dismissing', a
   expect(toast.dismiss).not.toHaveBeenCalled()
   await act(async () => finishSaving?.())
   expect(onForceDelete).toHaveBeenCalledOnce()
-  expect(toast.dismiss).toHaveBeenCalledWith('delete-worktree-failure:wt-1')
+  expect(toast.dismiss).toHaveBeenCalledWith('delete-worktree-failure:|wt-1')
 })
 
 it('keeps recovery available when saving the preference fails', async () => {

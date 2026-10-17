@@ -19,7 +19,6 @@ import {
   type WslHostServerStop,
   type WslHostStatus
 } from '../../shared/wsl-host-types'
-import { OrcadHostUnsupportedError } from '../orcad/orcad-host-unavailable'
 import type { WslHostDistroCandidate } from './wsl-host-distro-list'
 import { wslHostSshManagedRefusal } from './wsl-host-ssh-orcad-conflict'
 import { wslDistroHolderKey } from './wsl-distro-holder-record'
@@ -29,9 +28,11 @@ import {
   sameWslDistro,
   wslHostNotConnectedMessage,
   WSL_HOST_REMOVING_MESSAGE,
+  WSL_HOSTS_DISABLED_MESSAGE,
   wslHostRunRefusal
 } from './wsl-host-add-admission'
-import { WslOrcadLaunchDeferredError, type WslOrcadConnection } from './wsl-orcad-connection'
+import type { WslOrcadConnection } from './wsl-orcad-connection'
+import { abandonWslHostAdd, connectForWslHostAdd } from './wsl-host-first-connect'
 import type { WslOrcadConnectionStatus } from './wsl-orcad-connection-status'
 import { defaultWslOrcadEnvironmentId } from './wsl-orcad-deploy'
 
@@ -70,6 +71,8 @@ export class WslHostService {
   private readonly adding = new Map<string, Promise<WslHostAddResult>>()
   private visible = new Set<string>()
   private readonly removing = new Set<string>()
+  // Bumped on disable so an Add that started before it cannot finish as a ready host.
+  private disableGeneration = 0
 
   constructor(private readonly deps: WslHostServiceDependencies) {}
 
@@ -167,6 +170,7 @@ export class WslHostService {
       this.setVisibleWork([...this.visible], new Set())
       return
     }
+    this.disableGeneration += 1
     for (const record of this.records()) {
       await connector.disconnect(record.distro)
       await connector.releaseHolder(record.distro)
@@ -264,6 +268,7 @@ export class WslHostService {
     if (refusal) {
       return refusal
     }
+    const generation = this.disableGeneration
     const admission = admitWslHostDistro({
       requested: args.distro,
       candidates: await this.wsl.listDistros(),
@@ -282,19 +287,15 @@ export class WslHostService {
       return sharing
     }
     const environmentId = defaultWslOrcadEnvironmentId(distro.name)
-    let connection: WslOrcadConnection
-    try {
-      connection = await this.wsl.connect(distro.name)
-    } catch (error) {
-      if (error instanceof WslOrcadLaunchDeferredError) {
-        return { ok: false, kind: 'deferred', message: error.launch.reason }
-      }
-      return {
-        ok: false,
-        kind: error instanceof OrcadHostUnsupportedError ? 'unsupported-wsl1' : 'failed',
-        message: errorMessage(error)
-      }
+    const connected = await connectForWslHostAdd(this.wsl, distro.name, () =>
+      generation === this.disableGeneration
+        ? wslHostRunRefusal(this.deps)
+        : { ok: false, kind: 'disabled', message: WSL_HOSTS_DISABLED_MESSAGE }
+    )
+    if (!('connection' in connected)) {
+      return connected
     }
+    const { connection } = connected
     try {
       addWslHostEnvironment(userDataPath, {
         id: environmentId,
@@ -309,8 +310,7 @@ export class WslHostService {
         }
       })
     } catch (error) {
-      await this.wsl.disconnect(distro.name).catch(() => {})
-      await this.wsl.releaseHolder(distro.name).catch(() => {})
+      await abandonWslHostAdd(this.wsl, distro.name)
       return { ok: false, kind: 'failed', message: errorMessage(error) }
     }
     const record = this.recordForEnvironment(environmentId)

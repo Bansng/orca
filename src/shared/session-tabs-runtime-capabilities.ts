@@ -7,7 +7,13 @@ export const SESSION_TABS_SPLIT_GROUP_PLACEMENT_RUNTIME_CAPABILITY =
 export const SESSION_TABS_EMPTY_WORKTREE_ANSWER_RUNTIME_CAPABILITY =
   'session-tabs.empty-worktree-answer.v1' as const
 
+// Why: an older host strips session.tabs.createTerminal's unknown `shell` and spawns its default
+// shell, so a client sends the pick there only when advertised.
+export const SESSION_TABS_CREATE_TERMINAL_SHELL_RUNTIME_CAPABILITY =
+  'session-tabs.create-terminal-shell.v1' as const
+
 export const SESSION_TABS_RUNTIME_CAPABILITIES = [
   SESSION_TABS_SPLIT_GROUP_PLACEMENT_RUNTIME_CAPABILITY,
-  SESSION_TABS_EMPTY_WORKTREE_ANSWER_RUNTIME_CAPABILITY
+  SESSION_TABS_EMPTY_WORKTREE_ANSWER_RUNTIME_CAPABILITY,
+  SESSION_TABS_CREATE_TERMINAL_SHELL_RUNTIME_CAPABILITY
 ] as const

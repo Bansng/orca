@@ -1,56 +1,44 @@
 import {
   chmodSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
-  realpathSync,
   renameSync,
   rmSync,
   statSync,
+  utimesSync,
   writeFileSync
 } from 'node:fs'
+import { randomBytes } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { credentialDecryptionMessage } from '../../shared/integration-credential-errors'
 import { classifyUnenvelopedCredential } from '../../shared/secret-at-rest-protection'
 import { _resetSecretStoreForTests, setSecretStore } from '../../shared/secret-store'
 import { readStoredCredentialToken, writeEncryptedCredential } from '../integration-credential-file'
-import type { OrcadKeyringLookup, OrcadOsKeyring } from './orcad-os-keyring'
+import type { OrcadLegacyKeyLookup, OrcadLegacyKeyringReader } from './orcad-legacy-keyring-key'
 import { orcadSecretStateFileName } from './orcad-secret-key-record'
+import {
+  deriveOrcadSealingKey,
+  orcadSealingKeyCheck,
+  sealOrcadSecret
+} from './orcad-secret-sealing'
 import { createOrcadSecretStore } from './orcad-secret-store'
 
 const MACHINE_A = '0123456789abcdef0123456789abcdef'
 const MACHINE_B = 'fedcba9876543210fedcba9876543210'
 const STATE_A = orcadSecretStateFileName(MACHINE_A)
 
-type FakeKeyring = OrcadOsKeyring & {
-  items: Map<string, string>
-  failure: OrcadKeyringLookup | null
-  storeWorks: boolean
-}
-
-function fakeKeyring(): FakeKeyring {
-  const items = new Map<string, string>()
-  const keyring: FakeKeyring = {
-    label: 'the test keyring',
-    items,
-    failure: null,
-    storeWorks: true,
-    async lookup(account: string): Promise<OrcadKeyringLookup> {
-      if (keyring.failure) {
-        return keyring.failure
-      }
-      const value = items.get(account)
-      return value ? { kind: 'found', value } : { kind: 'missing' }
-    },
-    async store(account: string, value: string): Promise<boolean> {
-      if (keyring.storeWorks) {
-        items.set(account, value)
-      }
-      return keyring.storeWorks
-    }
+/** A keyring an older build wrote; read-only, like the real migration reader. */
+function fakeLegacyKeyring(answer: OrcadLegacyKeyLookup) {
+  const reads: string[] = []
+  const read: OrcadLegacyKeyringReader = async (account) => {
+    reads.push(account)
+    return answer
   }
-  return keyring
+  return { read, reads }
 }
 
 describe('createOrcadSecretStore', () => {
@@ -68,24 +56,41 @@ describe('createOrcadSecretStore', () => {
 
   const prepare = async (
     options: {
-      keyring?: OrcadOsKeyring | null
+      legacyKeyring?: OrcadLegacyKeyringReader | null
       machine?: string | null
       env?: NodeJS.ProcessEnv
-      temporaryProfile?: boolean
-      claimSettleMs?: number
+      log?: (message: string) => void
     } = {}
   ) => {
-    const store = createOrcadSecretStore()
+    const store = createOrcadSecretStore(options.log ?? (() => {}))
     const ready = await store.prepare({
       keyDir,
       platform: 'linux',
       env: options.env ?? {},
-      keyring: options.keyring ?? null,
+      legacyKeyring: options.legacyKeyring ?? null,
       machineIdentity: () => (options.machine === undefined ? MACHINE_A : options.machine),
-      isTemporaryKeyDir: () => options.temporaryProfile ?? false,
-      claimSettleMs: options.claimSettleMs ?? 0
+      isTemporaryKeyDir: () => false
     })
     return { store, ready }
+  }
+
+  /** A host an hourly build set up: its record points at a key in the OS keyring. */
+  const legacyKeyringHost = () => {
+    const master = randomBytes(32)
+    const key = deriveOrcadSealingKey(master, '')
+    const record = {
+      version: 1,
+      backend: 'os-keyring',
+      account: 'home-0123456789abcdef',
+      check: orcadSealingKeyCheck(key)
+    }
+    writeFileSync(join(keyDir, STATE_A), JSON.stringify(record), {
+      mode: 0o600
+    })
+    return {
+      encodedKey: master.toString('base64'),
+      sealed: sealOrcadSecret(key, 'lin_api_secret')
+    }
   }
 
   it('seals with a host-bound profile key when no keyring is reachable', async () => {
@@ -128,96 +133,75 @@ describe('createOrcadSecretStore', () => {
     expect(moved.store.isEncryptionAvailable()).toBe(true)
   })
 
-  it('keeps the master key in the OS keyring when one is reachable', async () => {
-    const keyring = fakeKeyring()
-    const { store, ready } = await prepare({ keyring })
+  it('never consults the OS keyring on a fresh host', async () => {
+    const keyring = fakeLegacyKeyring({ key: 'unused' })
+    const { store, ready } = await prepare({ legacyKeyring: keyring.read })
     expect(ready).toBe(true)
-    expect(store.describeProtectionGap()).toBeNull()
-    expect(keyring.items.size).toBe(1)
-    const [masterKey] = [...keyring.items.values()]
-    expect(readFileSync(join(keyDir, STATE_A), 'utf8')).not.toContain(masterKey)
-    const sealed = store.encryptString('lin_api_secret')
-    expect((await prepare({ keyring })).store.decryptString(sealed)).toBe('lin_api_secret')
+    expect(keyring.reads).toEqual([])
+    expect(store.describeProtectionGap()).toContain('private credential directory')
+    expect(JSON.parse(readFileSync(join(keyDir, STATE_A), 'utf8')).backend).toBe('host-file')
+  })
+
+  it('copies a key an older build kept in the OS keyring into the key file, once', async () => {
+    const { encodedKey, sealed } = legacyKeyringHost()
+    const keyring = fakeLegacyKeyring({ key: encodedKey })
+    const log = vi.fn()
+    const { store, ready } = await prepare({
+      legacyKeyring: keyring.read,
+      log
+    })
+    expect(ready).toBe(true)
+    expect(store.decryptString(sealed)).toBe('lin_api_secret')
+    expect(keyring.reads).toEqual(['home-0123456789abcdef'])
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('Copied the credential key'))
+    const record = JSON.parse(readFileSync(join(keyDir, STATE_A), 'utf8'))
+    expect(record).toMatchObject({
+      backend: 'host-file',
+      key: encodedKey,
+      hostBound: false
+    })
+    if (process.platform !== 'win32') {
+      expect(statSync(join(keyDir, STATE_A)).mode & 0o777).toBe(0o600)
+    }
+
+    const again = await prepare({ legacyKeyring: keyring.read })
+    expect(again.store.decryptString(sealed)).toBe('lin_api_secret')
+    expect(keyring.reads).toHaveLength(1)
   })
 
   it.each([
-    ['locked', { kind: 'unreachable', reason: 'exited 1: Cannot unlock' }],
-    ['timing out', { kind: 'unreachable', reason: 'timed out after 5s' }],
-    ['missing its item', { kind: 'missing' }]
-  ] as const)('fails closed when the recorded keyring is %s', async (_label, failure) => {
-    const keyring = fakeKeyring()
-    const sealed = (await prepare({ keyring })).store.encryptString('lin_api_secret')
-    keyring.failure = failure
-
-    const { store, ready } = await prepare({ keyring })
-    expect(ready).toBe(false)
-    expect(() => store.encryptString('x')).toThrow(/cannot unseal/)
-    expect(() => store.decryptString(sealed)).toThrow(/cannot unseal/)
-    expect(store.describeProtectionGap()).toContain('test keyring')
-
-    keyring.failure = null
-    expect((await prepare({ keyring })).store.decryptString(sealed)).toBe('lin_api_secret')
-  })
-
-  it('never creates a keyring item for a temporary profile or when told to use the file', async () => {
-    const keyring = fakeKeyring()
-    const temporary = await prepare({ keyring, temporaryProfile: true })
-    expect(temporary.store.describeProtectionGap()).toContain('private credential directory')
-    expect(keyring.items.size).toBe(0)
-    rmSync(join(keyDir, STATE_A))
-    await prepare({ keyring, env: { ORCA_HEADLESS_SECRET_STORE: 'file' } })
-    expect(keyring.items.size).toBe(0)
-  })
-
-  it.skipIf(process.platform === 'win32')(
-    'treats /tmp and the OS temp dir as disposable, by either spelling',
-    async () => {
-      const keyring = fakeKeyring()
-      for (const dir of [
-        mkdtempSync('/tmp/orcad-key-'),
-        realpathSync(mkdtempSync('/tmp/orcad-key-')),
-        keyDir
-      ]) {
-        await createOrcadSecretStore().prepare({
-          keyDir: dir,
-          env: {},
-          keyring,
-          machineIdentity: () => MACHINE_A
-        })
-        if (dir !== keyDir) {
-          rmSync(dir, { recursive: true, force: true })
-        }
-      }
-      expect(keyring.items.size).toBe(0)
+    ['locked', fakeLegacyKeyring({ failure: 'exited 36' }).read],
+    ['timing out', fakeLegacyKeyring({ failure: 'timed out after 5s' }).read],
+    [
+      'holding a different key',
+      fakeLegacyKeyring({ key: randomBytes(32).toString('base64') }).read
+    ],
+    ['unreachable from this session', null]
+  ])(
+    'starts a new key file rather than failing closed when the keyring is %s',
+    async (_label, legacyKeyring) => {
+      const { sealed } = legacyKeyringHost()
+      const log = vi.fn()
+      const { store, ready } = await prepare({ legacyKeyring, log })
+      expect(ready).toBe(true)
+      expect(log).toHaveBeenCalledTimes(1)
+      expect(log.mock.calls[0][0]).toContain('Reconnect any integration')
+      // Old credentials report the plain decrypt error, so the user reconnects.
+      setSecretStore(store)
+      expect(() => readStoredCredentialToken('Linear', sealed)).toThrow(
+        credentialDecryptionMessage('Linear')
+      )
+      const saved = join(keyDir, 'saved.enc')
+      writeEncryptedCredential('Linear', saved, 'lin_api_new')
+      expect(readStoredCredentialToken('Linear', readFileSync(saved))).toBe('lin_api_new')
+      // Later starts load the file and never ask the keyring again.
+      const later = fakeLegacyKeyring({ failure: 'exited 36' })
+      expect(
+        (await prepare({ legacyKeyring: later.read })).store.decryptString(readFileSync(saved))
+      ).toBe('lin_api_new')
+      expect(later.reads).toEqual([])
     }
   )
-
-  it('keeps its claim and fails closed when the keyring store result is uncertain', async () => {
-    const keyring = fakeKeyring()
-    const realStore = keyring.store.bind(keyring)
-    // Stores the value, then reports a timeout; the read-back is unreachable too.
-    keyring.store = async (account, value) => {
-      await realStore(account, value)
-      keyring.failure = { kind: 'unreachable', reason: 'timed out after 5s' }
-      return false
-    }
-    const uncertain = await prepare({ keyring })
-    expect(uncertain.ready).toBe(false)
-    expect(keyring.items.size).toBe(1)
-
-    keyring.failure = null
-    const recovered = await prepare({ keyring })
-    expect(recovered.ready).toBe(true)
-    expect(recovered.store.describeProtectionGap()).toBeNull()
-  })
-
-  it('falls back to the profile key when the keyring cannot store one', async () => {
-    const keyring = fakeKeyring()
-    keyring.storeWorks = false
-    const { store, ready } = await prepare({ keyring })
-    expect(ready).toBe(true)
-    expect(store.describeProtectionGap()).toContain('private credential directory')
-  })
 
   it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
     'treats a record it cannot read as unavailable, never as missing',
@@ -238,35 +222,59 @@ describe('createOrcadSecretStore', () => {
   )
 
   it('agrees on one key when two servers start against the same home at once', async () => {
-    const keyring = fakeKeyring()
-    const [first, second] = await Promise.all([prepare({ keyring }), prepare({ keyring })])
+    const [first, second] = await Promise.all([prepare(), prepare()])
     expect(first.ready && second.ready).toBe(true)
-    expect(keyring.items.size).toBe(1)
     expect(second.store.decryptString(first.store.encryptString('a'))).toBe('a')
-    expect((await prepare({ keyring })).store.decryptString(second.store.encryptString('b'))).toBe(
-      'b'
-    )
 
-    // A slow keyring write: the losing start must wait for it rather than give up.
     rmSync(join(keyDir, STATE_A))
-    keyring.items.clear()
-    const slowStore = keyring.store.bind(keyring)
-    keyring.store = async (account, value) => {
-      await new Promise((resolveDelay) => setTimeout(resolveDelay, 1_500))
-      return slowStore(account, value)
-    }
-    const slow = await Promise.all([
-      prepare({ keyring, claimSettleMs: 12_000 }),
-      prepare({ keyring, claimSettleMs: 12_000 })
+    const { encodedKey, sealed } = legacyKeyringHost()
+    const keyring = fakeLegacyKeyring({ key: encodedKey })
+    const migrated = await Promise.all([
+      prepare({ legacyKeyring: keyring.read }),
+      prepare({ legacyKeyring: keyring.read })
     ])
-    expect(slow.map(({ ready }) => ready)).toEqual([true, true])
-    expect(slow[1].store.decryptString(slow[0].store.encryptString('s'))).toBe('s')
+    expect(migrated.map(({ store }) => store.decryptString(sealed))).toEqual([
+      'lin_api_secret',
+      'lin_api_secret'
+    ])
+  })
 
-    const [fileA, fileB] = await Promise.all([
-      prepare({ machine: MACHINE_B }),
-      prepare({ machine: MACHINE_B })
-    ])
-    expect(fileB.store.decryptString(fileA.store.encryptString('c'))).toBe('c')
+  it('lets the first start migrate while a concurrent one with a locked keyring waits', async () => {
+    const { encodedKey, sealed } = legacyKeyringHost()
+    let enterMigration = (): void => {}
+    const migrating = new Promise<void>((resolveEntered) => {
+      enterMigration = resolveEntered
+    })
+    const slowSuccess: OrcadLegacyKeyringReader = async () => {
+      enterMigration()
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, 50))
+      return { key: encodedKey }
+    }
+    const fastFailure = fakeLegacyKeyring({ failure: 'exited 36' })
+    const firstStart = prepare({ legacyKeyring: slowSuccess })
+    // Why: start the second only once the first holds the lock; otherwise lock order is a race.
+    await migrating
+    const second = await prepare({ legacyKeyring: fastFailure.read })
+    const first = await firstStart
+    expect(first.store.decryptString(sealed)).toBe('lin_api_secret')
+    expect(second.store.decryptString(sealed)).toBe('lin_api_secret')
+    expect(fastFailure.reads).toEqual([])
+    expect((await prepare()).store.decryptString(second.store.encryptString('n'))).toBe('n')
+    expect(readdirSync(keyDir)).toEqual([STATE_A])
+  })
+
+  it('takes over a migration lock its crashed holder left behind', async () => {
+    const { encodedKey, sealed } = legacyKeyringHost()
+    // A lock a crashed start left behind, older than the lock's staleness window.
+    const lock = join(keyDir, `${STATE_A}.lock`)
+    mkdirSync(lock)
+    utimesSync(lock, new Date(Date.now() - 60_000), new Date(Date.now() - 60_000))
+    const { store, ready } = await prepare({
+      legacyKeyring: fakeLegacyKeyring({ key: encodedKey }).read
+    })
+    expect(ready).toBe(true)
+    expect(store.decryptString(sealed)).toBe('lin_api_secret')
+    expect(readdirSync(keyDir)).toEqual([STATE_A])
   })
 
   it('never regenerates over an unreadable key record', async () => {
@@ -286,24 +294,24 @@ describe('createOrcadSecretStore', () => {
   })
 
   it('leaves the persistent credential home alone for a temporary profile', async () => {
-    const keyring = fakeKeyring()
     const store = createOrcadSecretStore()
     const ready = await store.prepare({
       keyDir,
       userDataPath: '/tmp/orcad-smoke-profile',
       env: {},
-      keyring,
+      legacyKeyring: null,
       machineIdentity: () => MACHINE_A
     })
     expect(ready).toBe(false)
     expect(store.isEncryptionAvailable()).toBe(false)
     expect(store.describeProtectionGap()).toContain('temporary profile')
-    expect(keyring.items.size).toBe(0)
     expect(readdirSync(keyDir)).toEqual([])
   })
 
   it('keeps the explicit plaintext opt-out for shared homes', async () => {
-    const { store, ready } = await prepare({ env: { ORCA_HEADLESS_SECRET_STORE: 'plaintext' } })
+    const { store, ready } = await prepare({
+      env: { ORCA_HEADLESS_SECRET_STORE: 'plaintext' }
+    })
     expect(ready).toBe(false)
     expect(store.isEncryptionAvailable()).toBe(false)
     expect(store.describeProtectionGap()).toContain('ORCA_HEADLESS_SECRET_STORE=plaintext')
@@ -326,13 +334,12 @@ describe('createOrcadSecretStore', () => {
 
   it('fails a save closed when the key cannot load, keeping the sealed file', async () => {
     const saved = join(keyDir, 'saved.enc')
-    const keyring = fakeKeyring()
-    setSecretStore((await prepare({ keyring })).store)
+    setSecretStore((await prepare()).store)
     writeEncryptedCredential('Linear', saved, 'lin_api_original')
     const before = readFileSync(saved)
 
-    keyring.failure = { kind: 'unreachable', reason: 'locked' }
-    setSecretStore((await prepare({ keyring })).store)
+    renameSync(join(keyDir, STATE_A), join(keyDir, orcadSecretStateFileName(MACHINE_B)))
+    setSecretStore((await prepare({ machine: MACHINE_B })).store)
     expect(() => writeEncryptedCredential('Linear', saved, 'lin_api_replacement')).toThrow()
     expect(readFileSync(saved)).toEqual(before)
   })

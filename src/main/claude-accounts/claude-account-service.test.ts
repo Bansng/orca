@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -96,6 +96,13 @@ function fixture(accounts: ClaudeManagedAccount[] = [account('a'), account('b')]
 // The id the last sign-in prepared a folder for.
 function newId(f: ReturnType<typeof fixture>): string {
   return f.runtimeAuth.prepareAccountFolder.mock.calls.at(-1)![0]
+}
+
+// Why rename: the stand-in hands its link over whole; a direct write lets the poller read it empty.
+function handOverClaudeSignInLink(windowsPath: string, link: string): void {
+  const helperPath = join(windowsPath, '.orca-sign-in-browser')
+  writeFileSync(`${helperPath}.tmp`, link)
+  renameSync(`${helperPath}.tmp`, `${helperPath}.link`)
 }
 
 describe('ClaudeAccountService', () => {
@@ -230,9 +237,9 @@ describe('ClaudeAccountService', () => {
         'https://claude.com/cai/oauth/authorize?redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Fcallback'
       const f = fixture()
       let copied: string | null = null
-      f.runLogin.mockImplementationOnce(async (_args, _config, _timeoutMs, options) => {
+      f.runLogin.mockImplementationOnce(async (_args, config) => {
         // Stands in for Claude running BROWSER, then finishing once the browser signs in.
-        writeFileSync(`${options!.browser}.link`, LINK)
+        handOverClaudeSignInLink(config.windowsPath, LINK)
         await vi.waitFor(() => expect(copied).toBe(LINK))
         f.signIn(newId(f), 'new@example.test')
         return ''
@@ -299,7 +306,7 @@ describe('ClaudeAccountService', () => {
       expect(options?.browser).toBe(
         `/home/u/claude-profiles/${newId(f)}/home/.orca-sign-in-browser`
       )
-      writeFileSync(join(config.windowsPath, '.orca-sign-in-browser.link'), LINK)
+      handOverClaudeSignInLink(config.windowsPath, LINK)
       await vi.waitFor(() => expect(opened).toEqual([LINK]))
       f.signIn(newId(f), 'wsl@example.test')
       return ''

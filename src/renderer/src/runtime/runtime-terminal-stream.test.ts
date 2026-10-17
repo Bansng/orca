@@ -111,7 +111,8 @@ describe('remote runtime terminal data subscriptions', () => {
       desktopViewportClaims: 1,
       outputPause: 1,
       outputPauseDropNotice: 1,
-      writeUnavailable: 1
+      writeUnavailable: 1,
+      endpointLossNotice: 1
     })
 
     callbacks?.onBinary?.(

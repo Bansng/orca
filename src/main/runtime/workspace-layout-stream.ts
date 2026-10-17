@@ -40,6 +40,8 @@ export class WorkspaceLayoutStream {
   private dirty: Set<ExecutionHostId> | 'all' | null = null
   private liveTitlesDirty = false
   private failureLogged = false
+  /** The last change frame's position; never reset, so a reply's position outlives resubscribes. */
+  private seq = 0
 
   constructor(
     private readonly deps: {
@@ -54,6 +56,8 @@ export class WorkspaceLayoutStream {
   /** Every workspace's layout now, then each change until `unsubscribe`. */
   subscribe(listener: LayoutListener): {
     snapshot: { key: string; layout: PublishedWorkspaceLayout }[]
+    /** The position the snapshot holds. */
+    seq: number
     unsubscribe: () => void
   } {
     if (this.listeners.size === 0) {
@@ -70,6 +74,7 @@ export class WorkspaceLayoutStream {
     const snapshot = [...this.shown].map(([key, { layout }]) => ({ key, layout }))
     return {
       snapshot,
+      seq: this.seq,
       unsubscribe: () => {
         if (!this.listeners.delete(listener) || this.listeners.size > 0) {
           return
@@ -93,6 +98,12 @@ export class WorkspaceLayoutStream {
     }
     this.schedule()
     this.liveTitlesDirty = true
+  }
+
+  /** The position holding every write made so far: a pending flush is sent first. */
+  settledSeq(): number {
+    this.flush()
+    return this.seq
   }
 
   private schedule(): void {
@@ -204,7 +215,9 @@ export class WorkspaceLayoutStream {
     }
     this.published = next
     this.shown = shown
-    for (const event of events) {
+    for (const unsequenced of events) {
+      // Numbered as sent, so a failed projection never skips a position a reply could name.
+      const event = { ...unsequenced, seq: ++this.seq }
       for (const listener of this.listeners) {
         // One failing listener must not cost the others an event the stream has now published.
         try {

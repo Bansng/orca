@@ -147,10 +147,14 @@ export abstract class OrcaRuntimeWithApplyMobileSessionTabNavigation extends Orc
     }
     // Why: an originless record predates capture origins and carries no proof of which pane or
     // host wrote it, so it is left (record kept) for the window's legacy cleanup (#29303).
+    // A host that can never open a window (orcad, blocked serve) has no window wake, so the pane owns it.
     const paneOwned =
       record.origin === 'live' ||
       record.origin === 'quit' ||
-      (record.origin === 'worktree-sleep' && record.state === 'done')
+      (record.origin === 'worktree-sleep' &&
+        (record.state === 'done' ||
+          (this.getDesktopWindowStatusFn() === 'blocked' &&
+            !this.getAvailableAuthoritativeWindow())))
     return paneOwned ? record : null
   }
 

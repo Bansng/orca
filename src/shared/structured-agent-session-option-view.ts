@@ -143,9 +143,6 @@ export function structuredAgentSessionListedPicks(
   return { model: target.id, ...(carried ? { effort: carried } : {}) }
 }
 
-/** A pick on its way to the host. */
-export type StructuredAgentSessionPendingPick = { id: string; value: string }
-
 /** The Claude model and effort the composer shows (`snapshot`), which every send carries. */
 export function structuredAgentSessionSendSelection(
   agent: string,

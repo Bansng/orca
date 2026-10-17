@@ -1,3 +1,4 @@
+import { selectAgentSessionCurrentRequests } from '../../../src/shared/agent-session-current-requests'
 // The structured composer's one send seam: a slash command dispatches as a
 // conversation command, and everything else goes out as an
 // `agentSession.send` — carrying `delivery: 'queue-if-active'` only when the
@@ -30,9 +31,11 @@ import {
  *  one this build cannot answer would hold the send forever, so it starts a turn instead. */
 export function mobileStructuredSendQueues(
   queueCapable: boolean,
-  items: StructuredAgentSessionState['items']
+  state: Pick<StructuredAgentSessionState, 'items' | 'currentRequests'>
 ): boolean {
-  return queueCapable && !pendingPromptsAllUnanswerableHere(items)
+  return (
+    queueCapable && !pendingPromptsAllUnanswerableHere(selectAgentSessionCurrentRequests(state))
+  )
 }
 
 export type StructuredMobileSendAttachment = StructuredAgentSessionAttachment & {
@@ -123,7 +126,7 @@ export function useMobileStructuredSendWithOutcome(args: {
         waitsInLine: (command) =>
           command === 'compact' &&
           commandsWait &&
-          !pendingPromptsAllUnanswerableHere(stateRef.current.items),
+          !pendingPromptsAllUnanswerableHere(selectAgentSessionCurrentRequests(stateRef.current)),
         onError: onSendError,
         timeoutMs
       })
@@ -152,7 +155,7 @@ export function useMobileStructuredSendWithOutcome(args: {
         expectedRuntimeFence: currentFence,
         text,
         attachments: sendAttachments,
-        ...(mobileStructuredSendQueues(queueCapable, stateRef.current.items)
+        ...(mobileStructuredSendQueues(queueCapable, stateRef.current)
           ? { delivery: 'queue-if-active' as const }
           : {}),
         ...(options ? { options } : {}),

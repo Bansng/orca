@@ -1,4 +1,5 @@
 import type { AgentSessionUnavailable } from './agent-session-availability'
+import type { AgentSessionFrameFields } from './agent-session-frame-fields'
 import type { AgentSessionCurrentWorkFields } from './agent-session-current-work-wire'
 import type {
   AgentSessionBackgroundTask,
@@ -9,8 +10,7 @@ import type { AgentSessionWireRefusal } from './agent-session-wire-refusals'
 import type { AgentChildWorkView } from './agent-status-child-work-view'
 import type {
   AgentSessionQueuedMessage,
-  AgentSessionQueuePause,
-  AgentSessionQueuePublicationFields
+  AgentSessionQueuePause
 } from './agent-session-queued-message-wire'
 
 export * from './agent-session-wire-refusals'
@@ -35,21 +35,12 @@ import type {
   AgentJournalTurnLifecycle
 } from './agent-session-journal-types'
 import type { AgentTurnOutcome } from './agent-turn-outcome'
-import type { AgentSessionHandoffStage, AgentSessionRecord } from './agent-session-record'
+import type { AgentSessionRecord } from './agent-session-record'
 import type { AgentProviderSessionMetadata } from './agent-session-resume'
 import type { NativeChatSubagentEntry } from './native-chat-types'
 import type { StructuredAgentSessionProjectedStatus } from './structured-agent-session-projection'
 
-/** `agentSession.handoffStatus`. Named for the removed terminal handoff; released desktop clients
- *  still read `owner`. Clients parse the reply as unknown, since older hosts sent more fields. */
-export type AgentSessionHandoffStatus = {
-  owner: 'native' | 'none'
-  direction: 'to-native' | null
-  phase: 'idle' | 'switching' | 'failed'
-  stage: AgentSessionHandoffStage | null
-  operationId: string | null
-  error?: { message: string; recoverableOwner: 'none' }
-}
+export type { AgentSessionHandoffStatus } from './agent-session-handoff-status'
 
 export type {
   AgentSessionBackgroundTask,
@@ -152,7 +143,11 @@ export type AgentSessionHistoryPage = {
 } & AgentSessionCurrentWorkFields
 
 export type AgentSessionHistoryResult =
-  | { ok: true; page: AgentSessionHistoryPage; providerSession?: AgentProviderSessionMetadata }
+  | {
+      ok: true
+      page: AgentSessionHistoryPage
+      providerSession?: AgentProviderSessionMetadata
+    }
   /** Every reset carries a byte-bounded tail page so recovery cannot exceed
    *  remote outbound admission or require another call before resubscribing. */
   | {
@@ -172,10 +167,6 @@ export type AgentSessionJournalBatch = {
   removedItemIds: string[]
   submissions: AgentJournalSubmission[]
 }
-
-/** Every published frame: the host wall clock (ms epoch, see `AgentSessionHistoryPage`), and what
- *  rides beside its `queuedMessages`. */
-type AgentSessionFrameFields = { hostNow?: number } & AgentSessionQueuePublicationFields
 
 export type AgentSessionSubscribeEvent =
   | ({
@@ -482,7 +473,10 @@ export type AgentSessionOptionsResult = {
   /** Present only where this session writes context facts to its turn rows.
    *  `current` is the newest of each part the whole journal records, for a
    *  client whose loaded page starts after the row that carries it. */
-  contextUsage?: { current: AgentSessionContextUsage; contextFloor?: AgentJournalCursor }
+  contextUsage?: {
+    current: AgentSessionContextUsage
+    contextFloor?: AgentJournalCursor
+  }
   /** This session takes image attachments. Absent = unknown (an older host). */
   acceptsImages?: boolean
   models: AgentSessionModelOption[]

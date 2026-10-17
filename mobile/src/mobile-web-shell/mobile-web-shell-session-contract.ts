@@ -1,5 +1,4 @@
 import type { MobileWebShellFailureReason } from '../../modules/orca-mobile-web-shell/src/load-state'
-import type { MobileWebBundleManifestRead } from '../transport/mobile-web-bundle-reply-schemas'
 import type { MobileWebPageRoute } from './page-route-policy'
 import type {
   MobileWebBundleCompatManifest,
@@ -42,11 +41,6 @@ export type MobileWebShellManifestFacts = MobileWebBundleCompatManifest & {
   readonly totalAssets: number
   /** Undefined for a desktop older than the field, which is every route staying native. */
   readonly routes: readonly MobileWebPageRoute[] | undefined
-  /** The manifest as it arrived, which is what a same-build hit writes beside the cached assets.
-   *  Carried whole rather than rebuilt from the fields above: the store compares its asset list
-   *  against the stored one, and a re-serialised projection would drop both what this client reads
-   *  loosely and what a newer desktop added. */
-  readonly wire: MobileWebBundleManifestRead
 }
 
 /** What `readActiveGeneration` found, reduced to what a transition reads. */
@@ -142,10 +136,6 @@ export type MobileWebShellSessionEffect =
       readonly totalBytes: number
     }
   | { readonly kind: 'delete-cache' }
-  /** Rewrite the manifest stored beside the generation just opened. Only a same-build hit asks for
-   *  it: the assets are the ones the manifest names, and the routes are an edit newer. Nothing is
-   *  reported back, because the fresh routes are already on the session. */
-  | { readonly kind: 'persist-manifest'; readonly manifest: MobileWebBundleManifestRead }
   /** Mint a new session id for the generation already on screen, which is what remounts the view. */
   | { readonly kind: 'remount' }
   /** Start the clock on the page's first word. Expiry arrives as `page-ready-deadline` for the flow

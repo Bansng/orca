@@ -232,6 +232,7 @@ function Harness(props: HarnessProps) {
     sendErrorMessage: null,
     onClearSendError: vi.fn(),
     sendSurfaceId: 'surface',
+    sessionId: null,
     getSendCompletionGeneration: () => 0,
     keyboardInset: 0
   })

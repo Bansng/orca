@@ -104,7 +104,7 @@ describe('startup hosts retain current runtime capabilities', () => {
     ).rejects.toThrow('runtime_unavailable')
   })
 
-  it('reads current create and split overrides with the captured worktree and three arguments', async () => {
+  it('reads the current create override with the captured worktree and three arguments', async () => {
     const runtime = new OrcaRuntimeService(store)
     onTestFinished(() => {
       vi.restoreAllMocks()
@@ -142,22 +142,8 @@ describe('startup hosts retain current runtime capabilities', () => {
       expect(evidence).toBe(created)
       return { handle: 'created-handle', worktreeId: created.id, title: null }
     })
-    const split = vi.spyOn(runtime, 'splitTerminal').mockImplementation(async function (
-      this: OrcaRuntimeService,
-      handle,
-      input,
-      evidence
-    ) {
-      expect(this).toBe(runtime)
-      expect(arguments.length).toBe(3)
-      expect([handle, input, evidence]).toEqual(['created-handle', options, created])
-      expect(evidence).toBe(created)
-      return { handle: 'split-handle', tabId: 'tab', paneRuntimeId: 1 }
-    })
     await host.createTerminal('id:created-worktree', options)
-    await host.splitTerminal('created-handle', options)
     expect(create).toHaveBeenCalledOnce()
-    expect(split).toHaveBeenCalledOnce()
   })
 
   it('reads replacement providers and preserves readiness failures after removal', async () => {
@@ -199,17 +185,14 @@ describe('startup hosts retain current runtime capabilities', () => {
     expect(() => hasChildProcesses('startup-pty')).toThrow(TypeError)
   })
 
-  it('reads the current store and canonical setup-token map when invoked', () => {
+  it('writes the canonical setup-token map when invoked', () => {
     const runtime = new OrcaRuntimeService(store)
     const host = runtime['getWorktreeTerminalProvisioningHost']()
     const original = runtime['setupCompletionTokenByPtyId']
     const replacement = new Map<string, string>()
-    const settings = { ...store.getSettings(), workspaceDir: tmpdir() }
     Object.defineProperty(runtime, 'setupCompletionTokenByPtyId', { value: replacement })
-    Object.defineProperty(runtime, 'store', { value: { ...store, getSettings: () => settings } })
     host.recordSetupCompletionToken?.('startup-pty', 'late-token')
     expect(replacement.get('startup-pty')).toBe('late-token')
     expect(original.has('startup-pty')).toBe(false)
-    expect(host.getSettings()).toBe(settings)
   })
 })

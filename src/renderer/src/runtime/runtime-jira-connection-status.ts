@@ -1,4 +1,3 @@
-import { isIntegrationCredentialErrorReason } from '../../../shared/integration-credential-errors'
 import type {
   JiraAuthType,
   JiraConnectionStatus,
@@ -94,13 +93,6 @@ export function parseJiraConnectionStatus(value: unknown): JiraConnectionStatus 
     activeSiteId: parseOptionalSiteId(value.activeSiteId),
     selectedSiteId: parseOptionalSiteId(value.selectedSiteId),
     credentialError: typeof value.credentialError === 'string' ? value.credentialError : undefined,
-    credentialErrorReason: isIntegrationCredentialErrorReason(value.credentialErrorReason)
-      ? value.credentialErrorReason
-      : undefined,
-    canMoveCredentialKeyToFile:
-      typeof value.canMoveCredentialKeyToFile === 'boolean'
-        ? value.canMoveCredentialKeyToFile
-        : undefined,
     credentialProtection:
       value.credentialProtection === null || isSecretAtRestProtection(value.credentialProtection)
         ? value.credentialProtection

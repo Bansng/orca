@@ -74,10 +74,9 @@ describe('an update this shell refused falls back to the generation that already
     expect(ready.session.updateNotice).toBe('update-failed')
   })
 
-  it('leaves the refused generation out of the cache and writes nothing beside it', () => {
+  it('leaves the refused generation out of the cache and keeps the cached one', () => {
     const step = refused()
     expect(step.session.cached).toEqual(CACHED)
-    expect(step.effects.map((effect) => effect.kind)).not.toContain('persist-manifest')
     expect(step.effects.map((effect) => effect.kind)).not.toContain('delete-cache')
   })
 

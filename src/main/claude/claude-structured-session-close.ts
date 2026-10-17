@@ -147,8 +147,7 @@ async function finalizeClaudePublishedSession(
       cause: 'requested-close',
       fence: session.fence,
       acquisitionGeneration: session.acquisitionGeneration,
-      observedAt: Date.now(),
-      ...(session.startup.answered ? {} : { startupUnanswered: true as const })
+      observedAt: Date.now()
     }
     try {
       try {

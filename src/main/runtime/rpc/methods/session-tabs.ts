@@ -66,6 +66,7 @@ export const SESSION_TAB_METHODS = [
         afterTabId: params.afterTabId,
         targetGroupId: params.targetGroupId,
         command: params.command,
+        ...(params.shell ? { shellOverride: params.shell } : {}),
         cwd: params.cwd,
         ...(params.env ? { env: params.env } : {}),
         ...(params.envToDelete ? { envToDelete: params.envToDelete } : {}),

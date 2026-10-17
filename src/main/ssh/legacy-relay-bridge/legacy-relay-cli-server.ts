@@ -31,7 +31,6 @@ import {
   cappedInboxLimit,
   cappedWait,
   isExactLegacyRelayCliReplay,
-  optionalAskTimeout,
   runLegacyRelayCliCall
 } from './legacy-relay-cli-call-limits'
 import { formatLegacyRelayCliResult, isRecord } from './legacy-relay-cli-output'
@@ -155,7 +154,7 @@ function buildCall(
           question: flag('question'),
           resume: flag('resume'),
           options: flag('options'),
-          timeoutMs: optionalAskTimeout(numberFlag(flags, 'timeout-ms')),
+          timeoutMs: cappedWait(numberFlag(flags, 'timeout-ms')),
           compatibilityCliCommand: 'orca'
         }
       }

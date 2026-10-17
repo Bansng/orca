@@ -162,6 +162,8 @@ export abstract class OrcaRuntimeWithGetAgentSessionExecutionNamespace extends O
       launchConfig: startup.launchConfig,
       startupCommandDelivery: startup.startupCommandDelivery,
       launchAgent: request.agent,
+      // Why: like every host-built resume, the spawn names its session so readers can address it.
+      resumeProviderSession: identity.providerSession,
       terminalImageViewerSupported: _caller.terminalImageViewerSupported,
       launchRuntime,
       terminalKittyKeyboardProtocol: request.terminalKittyKeyboardProtocol,

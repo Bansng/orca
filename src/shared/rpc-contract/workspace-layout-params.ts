@@ -24,14 +24,21 @@ const OnPane = {
   leafId: z.string().min(1)
 }
 
+/** `newLeafId`: a pane the window already split under its own id (a tab's startup splits). */
 const SplitPaneCommand = z.object({
   type: z.literal('splitPane'),
   ...OnPane,
-  direction: z.enum(['horizontal', 'vertical'])
+  direction: z.enum(['horizontal', 'vertical']),
+  newLeafId: z.string().refine(isTerminalLeafId).optional()
 })
 
-/** Main marks a close as the user's; the window cannot send that mark. */
-const ClosePaneCommand = z.object({ type: z.literal('closePane'), ...OnPane })
+/** Main marks a close as the user's; the window cannot send that mark. `automatic`: not the
+ *  user's close (the pane's terminal ended), so no launch in it was stopped by the user. */
+const ClosePaneCommand = z.object({
+  type: z.literal('closePane'),
+  ...OnPane,
+  automatic: z.literal(true).optional()
+})
 
 /** A title is trimmed and non-empty; null clears it. */
 const RenamePaneCommand = z.object({
@@ -97,6 +104,14 @@ const CloseTabsCommand = z.object({
   recordClose: z.enum(['user', 'cleanup']).optional()
 })
 
+/** An open into a new group, named by the command's groupId, beside this one (NewGroupSplit). */
+const NewGroupSplit = z
+  .object({
+    besideGroupId: z.string().min(1),
+    direction: z.enum(['left', 'right', 'up', 'down'])
+  })
+  .optional()
+
 /** An edit-mode file's restorable record, as the window saves it. */
 const EditorFileRecord = z.object({
   filePath: z.string().min(1),
@@ -119,7 +134,8 @@ const OpenEditorTabCommand = z.object({
   contentType: z.enum(['editor', 'diff', 'conflict-review', 'check-details']),
   file: EditorFileRecord.optional(),
   groupId: z.string().min(1).optional(),
-  preview: z.literal(true).optional()
+  preview: z.literal(true).optional(),
+  split: NewGroupSplit
 })
 
 /** A window's drag-out of one pane into a new tab; main mints the tab's id. */
@@ -155,7 +171,8 @@ const CreateTerminalTabCommand = z.object({
     })
     .optional(),
   /** Only into a workspace with no tab in main's copy; otherwise nothing is created. */
-  initial: z.literal('activation').optional()
+  initial: z.literal('activation').optional(),
+  split: NewGroupSplit
 })
 
 /** The tab bar's rename: a title as the window stores it today; null clears it. */
@@ -187,7 +204,8 @@ const OpenBrowserTabCommand = z.object({
   sessionPartition: z.string().min(1).nullable().optional(),
   groupId: z.string().min(1).optional(),
   afterTabId: z.string().min(1).optional(),
-  index: z.number().int().nonnegative().optional()
+  index: z.number().int().nonnegative().optional(),
+  split: NewGroupSplit
 })
 
 const OnBrowserPage = {
@@ -269,7 +287,8 @@ const WakeCommand = z
  * A window's layout command (`layout.apply`, registered only in a layout-owner build). The window
  * names what it acts on; main mints every new id but a created terminal tab's
  * (see CreateTerminalTabCommand), a browser tab's and page's, which the window already shows
- * (see OpenBrowserTabCommand), and an editor tab's (see OpenEditorTabCommand).
+ * (see OpenBrowserTabCommand), an editor tab's (see OpenEditorTabCommand), and the group an open
+ * into a new split makes (see NewGroupSplit).
  */
 export const LayoutApplyParams = z.object({
   command: z.discriminatedUnion('type', [

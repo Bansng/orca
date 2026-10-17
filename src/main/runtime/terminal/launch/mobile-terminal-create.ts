@@ -32,6 +32,7 @@ export abstract class OrcaRuntimeWithCreateMobileSessionTerminal extends OrcaRun
       afterTabId?: string
       targetGroupId?: string
       command?: string
+      shellOverride?: string
       cwd?: string
       env?: Record<string, string>
       envToDelete?: string[]

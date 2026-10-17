@@ -1,6 +1,7 @@
 import { withSupportedCodexCli } from '../codex/codex-cli-installation-error'
 import { codexStructuredLaunchPart } from '../codex/codex-structured-launch-resolution'
 import { claudeStructuredLaunchPart } from '../claude/claude-structured-launch-resolution'
+import { createClaudeCommandCatalogProbe } from '../claude/claude-command-catalog-probe'
 import { CodexStructuredSessionAdapter } from '../codex/codex-structured-session-adapter'
 import { CODEX_STRUCTURED_AGENT } from '../codex/codex-structured-agent-definition'
 import { CLAUDE_STRUCTURED_AGENT } from '../claude/claude-structured-agent-definition'
@@ -14,7 +15,10 @@ import { createAcpAgentConnection } from '../acp/acp-agent-connection'
 import { acpStructuredLaunchPart } from '../acp/acp-structured-launch-resolution'
 import { AcpStructuredSessionAdapter } from '../acp/acp-structured-session-adapter'
 import { PI_RPC_RUNTIME_REGISTRATION } from '../pi/rpc-runtime-registration'
-import { claudeLaunchEnvOverlay } from './structured-agent-model-catalog-discovery'
+import {
+  claudeLaunchEnvOverlay,
+  claudeListingDeps
+} from './structured-agent-model-catalog-discovery'
 import {
   composeStructuredLaunch,
   composeStructuredLaunchRead,
@@ -95,6 +99,7 @@ function createClaudeAdapter(
     ...(deps.claudeCliFlags ? { claudeCliFlags: deps.claudeCliFlags } : {}),
     ...(overlay ? { resolveClaudeLaunchEnv: overlay } : {}),
     resolveClaudeInheritedEnv: context.environment.resolveBaseEnvironment,
+    atRestCommandProbe: createClaudeCommandCatalogProbe(claudeListingDeps(context)),
     onLifecycleEvent: context.deliverLifecycle,
     logger: deps.logger,
     onChildWorkEvidence: (sessionId, evidence, producer) =>
@@ -116,7 +121,6 @@ function createAcpAdapter(
     const sources = structuredAgentLaunchSources(context)
     const part = acpStructuredLaunchPart(spec, {
       readJournal,
-      ...(deps.resolveAgentFullAccess ? { resolveFullAccess: deps.resolveAgentFullAccess } : {}),
       dataDirectory: deps.stateDirectory,
       logger: deps.logger
     })

@@ -176,6 +176,38 @@ describe('a host that just moved to its managed server', () => {
     expect(store.getState().activeWorktreeId).toBe(worktreeId)
   })
 
+  it('moves the open workspace once the cold-start scan delivers the server rows', async () => {
+    store.setState({
+      activeRepoId: 'repo-1',
+      activeWorktreeId: worktreeId,
+      activeWorkspaceExecutionHostId: 'ssh:ssh-1'
+    })
+    applySshManagedServerTransition('ssh-1', undefined, {
+      kind: 'managed',
+      environmentId: 'env-4'
+    })
+    await vi.waitFor(() => expect(store.getState().worktreesByRepo['repo-1']).toEqual([]))
+    // Startup's own scan has not run yet, so the server's row is not known.
+    expect(store.getState().activeWorkspaceExecutionHostId).toBe('ssh:ssh-1')
+
+    store.setState({
+      worktreesByRepo: {
+        'repo-1': [
+          makeWorktree({
+            id: worktreeId,
+            repoId: 'repo-1',
+            path: '/root/repo',
+            hostId: 'runtime:env-4'
+          })
+        ]
+      },
+      startupWorktreeRefreshCompleted: true
+    })
+
+    expect(store.getState().activeWorkspaceExecutionHostId).toBe('runtime:env-4')
+    expect(store.getState().activeWorktreeId).toBe(worktreeId)
+  })
+
   it('leaves a workspace open on another host where it is', async () => {
     store.setState({
       activeRepoId: 'repo-1',

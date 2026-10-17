@@ -1,4 +1,5 @@
 import type {
+  AgentJournalSubmission,
   AgentJournalItemBody,
   AgentJournalItemIdentity,
   AgentJournalMessageItem,
@@ -8,7 +9,6 @@ import type {
   AgentSessionJournalIdentity,
   AgentSessionJournalProviderHandle
 } from '../../../shared/agent-session-journal-types'
-import type { AgentSessionMessageSource } from '../../../shared/agent-session-message-source'
 import { agentSessionJournalProviderHandle } from '../../../shared/agent-session-provider-handle-encoding'
 import { journalRowSchemaVersion } from '../../../shared/agent-session-journal-types'
 import { agentJournalLinkageFields } from '../../../shared/agent-session-journal-producer'
@@ -302,7 +302,7 @@ export function buildJournalSubmissionRow(input: {
   handoverRecorded?: true
   queuedMessageId?: string
   origin?: 'client' | 'host'
-  source?: Pick<AgentSessionMessageSource, 'kind'>
+  source?: AgentJournalSubmission['source']
   options?: Readonly<Record<string, string>>
 }): JournalSubmissionRow {
   return {

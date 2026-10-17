@@ -54,6 +54,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
     })
 
     it('uses sleeping-record launch config for pane cold restore after settings change', async () => {
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
       const { connectPanePty } = await import('./pty-connection')
       const transport = createMockTransport('fresh-pty')
       transport.connect.mockImplementation(async ({ sessionId }: { sessionId?: string }) => {
@@ -115,7 +116,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
 
       connectPanePty(pane as never, manager as never, deps as never)
       await flushAsyncTicks(20)
-      await new Promise((resolve) => setTimeout(resolve, 70))
+      await vi.advanceTimersByTimeAsync(70)
 
       const reattachArgs = transport.connect.mock.calls.find(
         ([args]) => args.sessionId === 'lost-pty'
@@ -188,6 +189,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
     })
 
     it('clears launch config when an agent startup spawn produces no PTY', async () => {
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
       const { connectPanePty } = await import('./pty-connection')
       const transport = createMockTransport()
       transportFactoryQueue.push(transport)
@@ -221,7 +223,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
       )
       try {
         await flushAsyncTicks(20)
-        await new Promise((resolve) => setTimeout(resolve, 70))
+        await vi.advanceTimersByTimeAsync(70)
 
         expect(mockStoreState.registerAgentLaunchConfig).toHaveBeenCalledWith(
           paneKey,
@@ -246,6 +248,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
     })
 
     it('prefers live-entry launch config for pane cold restore when status survived PTY loss', async () => {
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
       const { connectPanePty } = await import('./pty-connection')
       const transport = createMockTransport('fresh-pty')
       transport.connect.mockImplementation(async ({ sessionId }: { sessionId?: string }) => {
@@ -298,7 +301,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
 
       connectPanePty(pane as never, manager as never, deps as never)
       await flushAsyncTicks(20)
-      await new Promise((resolve) => setTimeout(resolve, 70))
+      await vi.advanceTimersByTimeAsync(70)
 
       expect(transport.sendInput).not.toHaveBeenCalled()
       expect(transport.connect).toHaveBeenCalledWith(
@@ -322,6 +325,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
     it.each(['ordinary', 'settled-worker'])(
       'restores %s through main with one resume command',
       async (kind) => {
+        vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
         const { connectPanePty } = await import('./pty-connection')
         const retainedPtyId = 'wt-1@@lost-pty'
         const transport = createMockTransport()
@@ -380,7 +384,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
           }) as never
         )
         await flushAsyncTicks(20)
-        await new Promise((resolve) => setTimeout(resolve, 70))
+        await vi.advanceTimersByTimeAsync(70)
 
         expect(transport.connect).toHaveBeenCalledTimes(1)
         expect(transport.attach).not.toHaveBeenCalled()
@@ -396,6 +400,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
     )
 
     it('ignores stale live launch config when cold restore identity lookup rejects it', async () => {
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
       const { connectPanePty } = await import('./pty-connection')
       const transport = createMockTransport('fresh-pty')
       transport.connect.mockImplementation(async ({ sessionId }: { sessionId?: string }) => {
@@ -467,7 +472,7 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
 
       connectPanePty(pane as never, manager as never, deps as never)
       await flushAsyncTicks(20)
-      await new Promise((resolve) => setTimeout(resolve, 70))
+      await vi.advanceTimersByTimeAsync(70)
 
       expect(mockStoreState.getAgentLaunchConfigForStatusEntry).toHaveBeenCalledWith(
         expect.objectContaining({ paneKey, agentType: 'codex' })
@@ -475,13 +480,14 @@ export function registerPtyConnectionAgentSessionResumeTests(): void {
       expect(transport.connect).toHaveBeenCalledWith(
         expect.objectContaining({
           sessionId: 'lost-pty',
-          command: "codex '--model' 'current' 'resume' 'codex-session-1'"
+          // Neither stale recipe applies, and settings defaults never stand in for a recorded one.
+          command: "codex 'resume' 'codex-session-1'"
         })
       )
       expect(mockStoreState.registerAgentLaunchConfig).toHaveBeenCalledWith(
         paneKey,
         expect.objectContaining({
-          agentArgs: '--model current'
+          agentArgs: ''
         }),
         expect.objectContaining({
           agentType: 'codex',

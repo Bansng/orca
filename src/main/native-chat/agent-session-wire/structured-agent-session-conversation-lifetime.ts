@@ -21,12 +21,21 @@ import {
   type StructuredAgentSessionLifetimeContext,
   type StructuredAgentSessionStopEnding
 } from './structured-agent-session-host-lifetime'
-import type { StructuredAgentSessionHostSession } from './structured-agent-session-host-types'
+import type {
+  StructuredAgentSessionHostSession,
+  StructuredAgentSessionProviderChildIdentity
+} from './structured-agent-session-host-types'
 import { StructuredAgentSessionIdleSweep } from './structured-agent-session-idle-sweep'
 import { AGENT_SESSION_NOT_ATTACHED } from './structured-agent-session-mutation-admission'
 import { deferredStructuredAgentSessionLogger } from './structured-agent-session-logger'
 import { sameProviderChild } from './structured-agent-session-provider-child'
 import type { StructuredAgentSessionExpiredStartup } from './structured-agent-session-startup-attempt'
+import {
+  providerStartupFailureFact,
+  structuredAgentSessionStartFailure
+} from './structured-agent-session-failure-text'
+import { recordStructuredAgentSessionStartFailure } from './structured-agent-session-start-failure-row'
+import { structuredAgentSessionFailureWordsContext } from './structured-agent-session-send-preparation'
 
 export type StructuredAgentSessionConversationLifetime = ReturnType<
   typeof createStructuredAgentSessionConversationLifetime
@@ -71,9 +80,6 @@ export function createStructuredAgentSessionConversationLifetime(host: {
       sessionId,
       atRest
     )
-    if (closed) {
-      host.context().runtimeState.optionRevisions.forget(sessionId)
-    }
     return closed
   }
 
@@ -111,35 +117,74 @@ export function createStructuredAgentSessionConversationLifetime(host: {
     ...deps().idleSweep
   })
 
+  const stopStartingChild = (
+    sessionId: string,
+    expired: StructuredAgentSessionProviderChildIdentity | null
+  ): void => {
+    void serialize(sessionId, async () => {
+      const child = sessions.get(sessionId)?.child
+      if (!expired || !child || child.phase !== 'starting' || !sameProviderChild(child, expired)) {
+        return
+      }
+      await stopStructuredAgentSessionAgentUnderSerialize(host.context(), sessionId, {
+        cause: 'host-stop'
+      })
+    }).catch((error: unknown) =>
+      deps().logger.warn('stopping an agent that could not finish starting failed', {
+        scope: 'startup-limit',
+        sessionId,
+        error
+      })
+    )
+  }
   return {
     idleSweep,
     stopAgent,
     /** A host stop of the child the expired attempt published, if it is still that one and still
      *  starting: its end fails what is queued, as the idle sweep's stop of a start does. */
-    expireStartup: ({ sessionId, child: expired }: StructuredAgentSessionExpiredStartup): void => {
-      void serialize(sessionId, async () => {
-        const child = sessions.get(sessionId)?.child
-        if (
-          !expired ||
-          !child ||
-          child.phase !== 'starting' ||
-          !sameProviderChild(child, expired)
-        ) {
+    expireStartup: ({ sessionId, child }: StructuredAgentSessionExpiredStartup): void =>
+      stopStartingChild(sessionId, child),
+    /** A start that cannot finish ends as one past its limit does, outside the caller's step. */
+    stopStartingChild,
+    failStartingChild: (
+      sessionId: string,
+      failed: StructuredAgentSessionProviderChildIdentity,
+      error: unknown
+    ): Promise<void> =>
+      serialize(sessionId, async () => {
+        const session = sessions.get(sessionId)
+        const child = session?.child
+        if (!session || !child || child.close || !sameProviderChild(child, failed)) {
           return
         }
-        await stopStructuredAgentSessionAgentUnderSerialize(host.context(), sessionId, {
-          cause: 'host-stop'
-        })
-      }).catch((error: unknown) =>
-        deps().logger.warn('stopping an agent past its startup limit failed', {
-          scope: 'startup-limit',
-          sessionId,
-          error
-        })
-      )
-    },
-    /** Runs `task` in the chat's lane, so no start interleaves with it, unless quit has begun or
-     *  the host holds a child, a delivery or a dispatch for the chat; null then. */
+        const failure = providerStartupFailureFact(error)
+        try {
+          await recordStructuredAgentSessionStartFailure(
+            { journal: session.journal, fence: child.fence },
+            {
+              startKey: child.generation,
+              ...structuredAgentSessionStartFailure(
+                { failure },
+                structuredAgentSessionFailureWordsContext(deps().store.getRecord(sessionId))
+              )
+            }
+          ).catch((writeError: unknown) =>
+            deps().logger.warn('recording a failed provider open failed', {
+              scope: 'provider-open-failure',
+              sessionId,
+              error: writeError
+            })
+          )
+          await stopAgent(sessionId, {
+            cause: 'host-stop',
+            reason: error instanceof Error ? error.message : String(error),
+            failure
+          })
+        } finally {
+          host.context().runtimeState.startupAttempts.childEnded(sessionId, child)
+        }
+      }),
+    /** Runs `task` in the chat's lane only when execution is idle. */
     runWhileExecutionIdle: <T>(sessionId: string, task: () => Promise<T>): Promise<T | null> =>
       serialize(sessionId, async () =>
         disposed ||

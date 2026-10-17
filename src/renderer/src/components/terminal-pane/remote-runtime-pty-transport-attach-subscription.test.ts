@@ -79,6 +79,7 @@ describe('createRemoteRuntimePtyTransport', () => {
         outputPause: 1,
         outputPauseDropNotice: 1,
         writeUnavailable: 1,
+        endpointLossNotice: 1,
         inputAck: 1
       })
     )

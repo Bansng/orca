@@ -26,6 +26,7 @@ import {
   createRuntime,
   store
 } from '../orca-runtime-test-fixtures.spec'
+import { normalizeRuntimePathSeparators } from '../../../shared/cross-platform-path'
 
 describe('OrcaRuntimeService', () => {
   it('adopts public clone repos into host-qualified project setup', async () => {
@@ -349,16 +350,22 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('preserves existing badgeColor on runtime cloneRepo folder->git dedupe upgrade', async () => {
+    const destination = await mkdtemp(join(tmpdir(), 'orca-runtime-folder-upgrade-'))
+    const clonePath = join(destination, 'repo-badge-color')
     const spawnSpy = vi.spyOn(gitRunner, 'gitSpawnAfterWindowsEnvironmentReady')
     spawnSpy.mockImplementation(() => {
       const proc = new EventEmitter() as EventEmitter & { stderr: EventEmitter }
       proc.stderr = new EventEmitter()
-      setImmediate(() => proc.emit('close', 0, null))
+      setImmediate(() => {
+        mkdirSync(clonePath, { recursive: true })
+        execFileSync('git', ['init'], { cwd: clonePath, stdio: 'ignore' })
+        proc.emit('close', 0, null)
+      })
       return proc as never
     })
     const existing = {
       id: 'runtime-folder-upgrade',
-      path: '/tmp/repo-badge-color',
+      path: clonePath,
       displayName: 'repo-badge-color',
       badgeColor: '#ec4899',
       addedAt: 1,
@@ -377,14 +384,20 @@ describe('OrcaRuntimeService', () => {
     const runtime = new OrcaRuntimeService(colorStore as never)
 
     try {
-      const repo = await runtime.cloneRepo('https://example.com/repo-badge-color.git', '/tmp')
-      expect(updates).toEqual([{ id: existing.id, updates: { kind: 'git' } }])
+      const repo = await runtime.cloneRepo('https://example.com/repo-badge-color.git', destination)
+      expect(updates).toEqual([
+        {
+          id: existing.id,
+          updates: { kind: 'git', folderUpgradeGitRootPath: normalizeRuntimePathSeparators(existing.path) }
+        }
+      ])
       expect(repo).toEqual(upgraded)
       expect(repo.badgeColor).toBe('#ec4899')
       expect(prepareLocalWorktreeRootForRepoMock).toHaveBeenCalledWith(colorStore, upgraded)
       expect(invalidateAuthorizedRootsCacheMock).toHaveBeenCalled()
     } finally {
       spawnSpy.mockRestore()
+      await rm(destination, { recursive: true, force: true })
     }
   })
 
@@ -414,7 +427,7 @@ describe('OrcaRuntimeService', () => {
     expect(invalidateAuthorizedRootsCacheMock).toHaveBeenCalled()
   })
 
-  it('prepares the runtime worktree root when repo-backed project host setup base path changes', () => {
+  it('prepares the runtime worktree root when repo-backed project host setup base path changes', async () => {
     const repo = {
       id: TEST_REPO_ID,
       path: TEST_REPO_PATH,
@@ -435,12 +448,12 @@ describe('OrcaRuntimeService', () => {
     }
     const runtime = new OrcaRuntimeService(runtimeStore as never)
 
-    expect(
+    await expect(
       runtime.updateProjectHostSetup({
         setupId: 'setup-1',
         updates: { worktreeBasePath: '../worktrees' }
       })
-    ).toBe(result)
+    ).resolves.toBe(result)
 
     expect(prepareLocalWorktreeRootForRepoMock).toHaveBeenCalledWith(runtimeStore, repo)
     expect(invalidateAuthorizedRootsCacheMock).toHaveBeenCalled()

@@ -8,9 +8,9 @@ export function structuredAgentSessionReadCoversSend(
 ): boolean {
   return Boolean(
     cursor &&
-      acknowledged &&
-      cursor.epoch === acknowledged.epoch &&
-      cursor.sequence >= acknowledged.sequence
+    acknowledged &&
+    cursor.epoch === acknowledged.epoch &&
+    cursor.sequence >= acknowledged.sequence
   )
 }
 

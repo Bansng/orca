@@ -23,8 +23,8 @@ type NativeChatSessionOptionRowsProps = {
   options: readonly SessionOptionDescriptor[]
   /** A reason already shown above the list, so a row does not repeat it. */
   shownReason: string | null
-  /** A write is in flight; the controls take nothing until it settles. */
-  busy: boolean
+  /** Each pending descriptor holds only its own controls. */
+  pendingIds: ReadonlySet<string>
   onSet: (descriptor: SessionOptionDescriptor, value: SessionOptionValue) => void
   /** A value-less action; it has nothing to show in place, so it closes the picker. */
   onAction: (descriptor: SessionOptionDescriptor) => void
@@ -161,7 +161,7 @@ function OptionRow(props: {
 export function NativeChatSessionOptionRows({
   options,
   shownReason,
-  busy,
+  pendingIds,
   onSet,
   onAction
 }: NativeChatSessionOptionRowsProps): React.JSX.Element {
@@ -197,24 +197,29 @@ export function NativeChatSessionOptionRows({
       <div ref={content}>
         {rows.length > 0 ? (
           <div className="border-t border-border p-1">
-            <NativeChatSessionOptionWriteGroup busy={busy} className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5">
               {rows.map((descriptor) => {
                 const reason = nativeChatSessionOptionDisabledReason(descriptor.disabledReason)
                 return (
-                  <div key={descriptor.id} data-option-id={descriptor.id}>
-                    <OptionRow
-                      descriptor={descriptor}
-                      gone={!options.some((option) => option.id === descriptor.id)}
-                      onSet={(value) => onSet(descriptor, value)}
-                      onAction={() => onAction(descriptor)}
-                    />
-                    {reason && !descriptor.settable && reason !== shownReason ? (
-                      <div className="px-2 pb-1 text-xs text-muted-foreground">{reason}</div>
-                    ) : null}
-                  </div>
+                  <NativeChatSessionOptionWriteGroup
+                    key={descriptor.id}
+                    busy={pendingIds.has(descriptor.id)}
+                  >
+                    <div data-option-id={descriptor.id}>
+                      <OptionRow
+                        descriptor={descriptor}
+                        gone={!options.some((option) => option.id === descriptor.id)}
+                        onSet={(value) => onSet(descriptor, value)}
+                        onAction={() => onAction(descriptor)}
+                      />
+                      {reason && !descriptor.settable && reason !== shownReason ? (
+                        <div className="px-2 pb-1 text-xs text-muted-foreground">{reason}</div>
+                      ) : null}
+                    </div>
+                  </NativeChatSessionOptionWriteGroup>
                 )
               })}
-            </NativeChatSessionOptionWriteGroup>
+            </div>
           </div>
         ) : null}
       </div>

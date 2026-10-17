@@ -40,6 +40,14 @@ const agentScript = (onPrompt: string): string => String.raw`
         send({ id: frame.id, result: { protocolVersion: 1, agentCapabilities: {} } })
       } else if (frame.method === 'session/new') {
         send({ id: frame.id, result: JSON.parse(process.env.ORCA_TEST_SESSION) })
+      } else if (frame.method === '_x.ai/subagent/cancel') {
+        send({ id: frame.id, error: {
+          code: -32602, message: 'Invalid params', data: 'invalid params: missing field \`subagentId\`'
+        } })
+      } else if (frame.method === '_x.ai/task/kill') {
+        send({ id: frame.id, error: {
+          code: -32602, message: 'Invalid params', data: 'invalid params: missing field \`sessionId\`'
+        } })
       } else if (frame.method === 'session/prompt') {
         const update = { sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: 'partial' } }
         send({

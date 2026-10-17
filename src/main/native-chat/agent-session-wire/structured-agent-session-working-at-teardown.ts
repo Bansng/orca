@@ -176,7 +176,7 @@ function liveTasks(
 type WorkingCandidateSession = {
   journal: AgentSessionJournal
   /** Only this host generation's own child counts. A restored-for-reading journal has none. */
-  child: { fence: number } | null
+  child: { fence: number; phase?: 'starting' | 'ready' } | null
 }
 
 /** The offer one session is owed, taken right before teardown stops its provider child; null when
@@ -202,7 +202,8 @@ export function structuredAgentSessionWorkingAtStop(input: {
   const current = agentSessionCurrentContextRows(snapshot.items, snapshot.submissions)
   // A queued message reached no agent, and one handed to a start that never answered ran nowhere:
   // neither is work to resume. The next open or the exit keeps it as unsent.
-  const unanswered = input.startAnswered?.(sessionId) === false
+  const unanswered =
+    session.child.phase === 'starting' || input.startAnswered?.(sessionId) === false
   const handedOver = current.submissions.filter(
     (submission) =>
       !isQueuedAgentJournalSubmission(submission) &&

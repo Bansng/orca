@@ -153,7 +153,9 @@ export class RemoteRuntimeTerminalMultiplexer extends RemoteRuntimeTerminalBinar
             outputPause: 1,
             outputPauseDropNotice: 1,
             writeUnavailable: 1,
-            ...(args.client.type === 'desktop' ? { desktopViewportClaims: 1 } : {}),
+            ...(args.client.type === 'desktop'
+              ? { desktopViewportClaims: 1, endpointLossNotice: 1 }
+              : {}),
             ...(args.inputSessionId ? { inputAck: 1 } : {})
           },
           ...(args.inputSessionId ? { inputSessionId: args.inputSessionId } : {})

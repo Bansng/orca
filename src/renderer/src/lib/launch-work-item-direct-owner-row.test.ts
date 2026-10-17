@@ -40,6 +40,12 @@ describe('launchWorkItemDirect owner row', () => {
     mocks.store = {
       repos: [],
       worktreesByRepo: {},
+      sshConnectionStates: new Map(),
+      sshStateByEnvironment: new Map(),
+      // Why: a launch stops before creating anything on a server that has not reported its OS.
+      runtimeStatusByEnvironmentId: new Map([
+        ['env-b', { checkedAt: 1, status: { hostPlatform: 'linux' } }]
+      ]),
       settings: {},
       ensureDetectedAgents: vi.fn().mockResolvedValue([]),
       ensureRemoteDetectedAgents: vi.fn().mockResolvedValue([]),

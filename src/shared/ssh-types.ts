@@ -70,13 +70,11 @@ export type SshTarget = {
    *  0 disables expiry. Default: 0 (until reset). Max: 604800 (7 days). */
   relayGracePeriodSeconds?: number
   /** Lets this host's `orca` CLI drive this desktop's Orca browser tabs in the host's own
-   *  workspaces (desktop browser bridge). Off by default: the host is a guest, not an owner. */
+   *  workspaces (desktop browser bridge) and its relay-era terminals' orchestration commands.
+   *  On unless explicitly `false`; read it through `isRemoteCliControlAllowed`. */
   allowRemoteCliControl?: boolean
-  /** Stamped when the switch is turned on with that meaning. A `true` without it was set while the
-   *  switch did nothing (1.4.225 onward), so load turns it off and asks for a fresh opt-in. */
+  /** Retired: written by earlier builds and ignored now. Kept so a downgrade still finds its stamp. */
   allowRemoteCliControlConsent?: 'desktop-browser-bridge'
-  /** Orca turned the switch off for that reason; settings say why until the switch is saved again. */
-  allowRemoteCliControlReset?: boolean
   /** Set to true after a successful connection that triggered a credential
    *  prompt (passphrase or password). Persisted so startup reconnect can
    *  partition targets into eager (no passphrase) vs deferred (passphrase)

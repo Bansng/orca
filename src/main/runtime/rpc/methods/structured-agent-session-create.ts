@@ -25,6 +25,8 @@ import {
   resolveUncommittedStructuredCreate,
   type StructuredCreateRefused
 } from './structured-agent-session-precommit-refusal'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../shared/layout-owner-switch'
+import { structuredAgentSessionClosedBeforeCreate } from './structured-agent-session-close-before-create'
 
 export type PreparedStructuredAgentSessionCreate = {
   host: StructuredAgentSessionHost
@@ -168,16 +170,20 @@ export async function commitStructuredAgentSessionCreate(args: {
         : {}),
       ...(tab
         ? {
+            // A chat closed while it was being made gets no tab to show before main closes it.
             publishTab: () =>
-              args.runtime.publishStructuredAgentSessionTab({
-                workspaceId: tab.workspaceId,
-                sessionId: prepared.attachParams.envelope.sessionId,
-                agent: tab.agent,
-                activate: args.activate,
-                ...(prepared.attachParams.surfaceTabId
-                  ? { tabId: prepared.attachParams.surfaceTabId }
-                  : {})
-              })
+              ORCA_LAYOUT_OWNER_IS_MAIN &&
+              structuredAgentSessionClosedBeforeCreate(prepared.attachParams.envelope.sessionId)
+                ? Promise.resolve()
+                : args.runtime.publishStructuredAgentSessionTab({
+                    workspaceId: tab.workspaceId,
+                    sessionId: prepared.attachParams.envelope.sessionId,
+                    agent: tab.agent,
+                    activate: args.activate,
+                    ...(prepared.attachParams.surfaceTabId
+                      ? { tabId: prepared.attachParams.surfaceTabId }
+                      : {})
+                  })
           }
         : {})
     })
@@ -188,6 +194,13 @@ export async function commitStructuredAgentSessionCreate(args: {
       })
     : await prepared.host.attach(args.caller, prepared.attachParams)
   if (!result.ok || !prepared.tab) {
+    return result
+  }
+  // A chat closed while it was being made gets no tab to show before main closes it.
+  if (
+    ORCA_LAYOUT_OWNER_IS_MAIN &&
+    structuredAgentSessionClosedBeforeCreate(result.value.sessionId)
+  ) {
     return result
   }
   const surfaceTabId = prepared.attachParams.surfaceTabId

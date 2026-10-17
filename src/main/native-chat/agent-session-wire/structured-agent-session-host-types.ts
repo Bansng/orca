@@ -57,6 +57,7 @@ export type StructuredAgentSessionChildClose = {
   /** Asked for by quit, whose leftovers the next open settles as a crash's. */
   readonly quit?: true
   readonly reason: string | null
+  readonly failure?: SubmissionRejectionFact
   /** The Stop event that stop wrote, folded before the work it ends is settled, with the settle a
    *  person's close that named no turn opens; a repeated ask reopens it. */
   recorded: Promise<JournalStopSettle | null>
@@ -68,8 +69,8 @@ export type StructuredAgentSessionChildClose = {
 /** The provider process behind a conversation. Written only in
  *  `structured-agent-session-provider-child`. */
 export type StructuredAgentSessionProviderChild = StructuredAgentSessionProviderChildIdentity & {
-  /** A publish-first acquire is `starting` until the adapter's `started` event; only then are its
-   *  reported options fact. */
+  /** A starting acquisition stays `starting` until the host settles its `started` event; only then is
+   *  it handed input and are its reported options fact. */
   phase: StructuredAgentSessionProviderChildPhase
   /** The queued message whose delivery started this child, fixed when the start is made; absent
    *  for any other start. In memory only: it tells a restart offer its own start from another. */

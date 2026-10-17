@@ -43,6 +43,7 @@ import { readWindowsClipboardImageFileAsPng } from './clipboard-windows-image-fi
 import { readClipboardImageSource } from './clipboard-image-source'
 import { readClipboardCopiedFilePaths } from './clipboard-copied-file-paths'
 import { buildClipboardImageThumbnail } from './clipboard-image-thumbnail'
+import { readClipboardNativeImage } from './clipboard-native-image'
 import { publishClipboardText } from './clipboard-text-publisher'
 import { isDashboardPopoutRenderer } from './dashboard-popout-window'
 import { restoreNativeChatPastes, sweepExpiredNativeChatPastes } from './native-chat-paste-files'
@@ -124,7 +125,12 @@ export function registerClipboardHandlers(store: Store): void {
   // the clipboard in memory before the (slower) save lands.
   ipcMain.handle('clipboard:readImageThumbnail', (event): ClipboardImageThumbnail | null => {
     assertTrustedClipboardSender(event)
-    return buildClipboardImageThumbnail(clipboard.readImage())
+    try {
+      return buildClipboardImageThumbnail(readClipboardNativeImage())
+    } catch {
+      // The save call reports rejected source data; the preview is best effort.
+      return null
+    }
   })
   ipcMain.handle('clipboard:hasImage', (event): boolean => {
     assertTrustedClipboardSender(event)
@@ -146,7 +152,7 @@ export function registerClipboardHandlers(store: Store): void {
       if (!source) {
         return null
       }
-      const image = clipboard.readImage()
+      const image = readClipboardNativeImage()
       if (image.isEmpty()) {
         if (!source.windowsFileFormats) {
           return null

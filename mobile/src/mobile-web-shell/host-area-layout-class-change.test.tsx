@@ -88,7 +88,6 @@ const store: GenerationStore = {
   abortStagedGeneration: async () => undefined,
   sweepStagedGenerations: async () => undefined,
   deleteHostCache: async () => undefined,
-  persistActiveManifest: async () => 'persisted',
   recordUpdateFailure: async () => undefined,
   readUpdateFailures: async () => [],
   forgetHostUpdateFailures: async () => undefined

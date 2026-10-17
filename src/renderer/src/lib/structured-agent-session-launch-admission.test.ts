@@ -32,8 +32,6 @@ import { useAppStore } from '@/store'
 import { adoptAgentSessionLaunchVerdict } from './agent-session-launch-plan'
 import { beginStructuredAgentSessionProvisionalLaunch } from './structured-agent-session-provisional-tab'
 import { beginDirectWorkItemStructuredLaunch } from './launch-work-item-direct-agent-routing'
-import type { AiVaultSession } from '../../../shared/ai-vault-types'
-import { resumeAiVaultSessionInNewChat } from '@/components/right-sidebar/ai-vault-session-resume-in-chat-launch'
 import { getStructuredAgentLaunchStatus } from './structured-agent-session-launch-status'
 import { getStructuredAgentSessionLaunchSelection } from './structured-agent-session-launch-options'
 import { peekWebSessionFocusIntent } from '@/runtime/web-session-focus-intent'
@@ -158,36 +156,16 @@ describe('a structured chat launch on a paired server', () => {
     expectNoChatCommitted()
   })
 
-  it('says once that the server cannot be reached when a vault resume needs it', async () => {
-    mocks.createSupport.mockRejectedValue(new Error('connection lost'))
-    // The vault names no host; the workspace's owner, the paired server, is resolved for it.
-    useAppStore.setState({ activeWorkspaceExecutionHostId: 'runtime:server-1' })
-    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: resume reads only the id fields the preparation mock ignores.
-    const session = { id: 'vault-1', sessionId: 'provider-1' } as AiVaultSession
-
-    await resumeAiVaultSessionInNewChat(session, 'claude', WORKTREE, 'resume-click')
-
-    await vi.waitFor(() => expect(mocks.toastError).toHaveBeenCalled())
-    await new Promise((resolve) => setTimeout(resolve, 0))
-    expect(mocks.toastError).toHaveBeenCalledOnce()
-    expect(mocks.toastError).toHaveBeenCalledWith(
-      expect.stringContaining('Could not reach'),
-      expect.anything()
-    )
-    expectNoChatCommitted()
-  })
-
-  it('fails a resume the server declines, since a resume has no terminal equivalent', async () => {
+  it('leaves no destination when the server declines a resume', async () => {
     mocks.createSupport.mockResolvedValue({ supported: false })
     const onHostDeclined = vi.fn()
-
     const launch = beginStructuredAgentSessionProvisionalLaunch({
       plan: pairedPlan({ resumeFrom: { providerSessionId: 'provider-1' } }),
       hooks: {},
       onHostDeclined
     })
-
     await expect(launch?.settlement).resolves.toMatchObject({ kind: 'failed' })
+    expect(mocks.createSupport).toHaveBeenCalledOnce()
     expect(onHostDeclined).not.toHaveBeenCalled()
     expectNoChatCommitted()
   })

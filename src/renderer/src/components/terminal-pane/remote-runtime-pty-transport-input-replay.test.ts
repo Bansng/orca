@@ -171,6 +171,51 @@ describe('remote pane input across a silent outage', () => {
     resetRemoteRuntimeTransport()
   })
 
+  it('reports undelivered input on an endpoint-loss frame only when the pane held some', async () => {
+    let undelivered: boolean | undefined
+    const { transport, streamId } = await connectPane(
+      { inputAck: 1, writeUnavailable: 1, endpointLossNotice: 1 },
+      { onWriteUnavailable: () => (undelivered = transport.hasUndeliveredInput?.()) }
+    )
+    const endpointLost = (): void =>
+      subscriptionCallbacks?.onBinary?.(
+        encodeTerminalStreamFrame({
+          opcode: TerminalStreamOpcode.WriteUnavailable,
+          streamId,
+          seq: 1,
+          payload: new Uint8Array()
+        })
+      )
+
+    // An idle pane: the host dropped it unprompted, and nothing typed is at stake.
+    endpointLost()
+    expect(undelivered).toBe(false)
+
+    transport.sendInput('echo alive\r', 'driving')
+    endpointLost()
+    // Why revert-sensitive: the remount discards this, and saying nothing is the silent loss.
+    expect(undelivered).toBe(true)
+    transport.destroy?.()
+  })
+
+  it('treats the frame as refused input on a stream without acks', async () => {
+    let undelivered: boolean | undefined
+    const { transport, streamId } = await connectPane(
+      { writeUnavailable: 1 },
+      { onWriteUnavailable: () => (undelivered = transport.hasUndeliveredInput?.()) }
+    )
+    subscriptionCallbacks?.onBinary?.(
+      encodeTerminalStreamFrame({
+        opcode: TerminalStreamOpcode.WriteUnavailable,
+        streamId,
+        seq: 1,
+        payload: new Uint8Array()
+      })
+    )
+    expect(undelivered).toBe(true)
+    transport.destroy?.()
+  })
+
   it('names an input session and negotiates acks on subscribe', async () => {
     const { transport } = await connectPane({ inputAck: 1 })
     const payload = latestSubscribePayload()

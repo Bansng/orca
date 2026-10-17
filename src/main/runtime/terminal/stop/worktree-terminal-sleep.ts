@@ -1,4 +1,4 @@
-import { OrcaRuntimeWithStopTerminalsForWorktree } from './worktree-terminal-stop'
+import { OrcaRuntimeWithWorktreeSleepResumeRecording } from './worktree-sleep-resume-recording'
 import type { ResolvedWorktree } from '../../runtime-worktree-path-identity'
 import type { RuntimeWorktreeTerminalSleepResult } from '../../../../shared/runtime-types'
 import { WORKTREE_TERMINAL_SLEEP_TIMEOUT_MS } from '../../orca-runtime-postlude'
@@ -8,7 +8,7 @@ import {
 } from '../../runtime-worktree-path-identity'
 import { teardownRpcDeadline } from '../../worktree-teardown'
 
-export abstract class OrcaRuntimeWithSleepResolvedWorktreeTerminals extends OrcaRuntimeWithStopTerminalsForWorktree {
+export abstract class OrcaRuntimeWithSleepResolvedWorktreeTerminals extends OrcaRuntimeWithWorktreeSleepResumeRecording {
   protected async sleepResolvedWorktreeTerminals(
     worktree: ResolvedWorktree
   ): Promise<RuntimeWorktreeTerminalSleepResult> {
@@ -140,6 +140,8 @@ export abstract class OrcaRuntimeWithSleepResolvedWorktreeTerminals extends Orca
           postStopVerified: true
         }
       }
+      // Why before the stop: a PTY's exit clears its hook rows, and with them the session ids.
+      const resumeCapture = await this.sleepResumeRecords.capture(worktree.id, livePtyIds)
       const ptyController = this.ptyController
       if (!ptyController?.stopAndWait) {
         throw new Error('terminal_worktree_sleep_unavailable')
@@ -189,6 +191,8 @@ export abstract class OrcaRuntimeWithSleepResolvedWorktreeTerminals extends Orca
           committedPtyIds,
           terminalHandlesByPtyId
         })
+        // Why: the stops were acknowledged and their hook rows are gone; a retry has nothing to capture.
+        await this.sleepResumeRecords.persist(worktree.id, resumeCapture, successfulStopPtyIds)
         if (failedStopIndex !== -1) {
           const failedStop = stopResults[failedStopIndex]
           throw Object.assign(new Error('terminal_worktree_sleep_failed'), {
@@ -216,6 +220,7 @@ export abstract class OrcaRuntimeWithSleepResolvedWorktreeTerminals extends Orca
         committedPtyIds,
         terminalHandlesByPtyId
       })
+      await this.sleepResumeRecords.persist(worktree.id, resumeCapture, provenStoppedPtyIds)
       if (failedStopIndex !== -1 && remainingLivePtyIds.size > 0) {
         const failedStop = stopResults[failedStopIndex]
         console.error('[runtime] worktree terminal sleep physical stop failed', {

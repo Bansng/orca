@@ -5,10 +5,11 @@
 
 import type { BrowserWorkspace } from '../../../../../shared/browser-workspace-types'
 import { recordLayoutApply, type sendLayoutApply } from '@/runtime/layout-apply-send'
+import { newGroupSplitOf } from '@/runtime/layout-owner-new-group-split'
 import type { AppState } from '../../types'
 
 type BrowserCommandState = Parameters<typeof sendLayoutApply>[0] &
-  Pick<AppState, 'unifiedTabsByWorktree' | 'groupsByWorktree'>
+  Pick<AppState, 'unifiedTabsByWorktree' | 'groupsByWorktree' | 'layoutByWorktree'>
 
 /** The open of a browser tab the window just drew, placed where the window drew it. */
 export function recordBrowserTabOpen(state: BrowserCommandState, tab: BrowserWorkspace): void {
@@ -30,7 +31,9 @@ export function recordBrowserTabOpen(state: BrowserCommandState, tab: BrowserWor
     profileId: tab.sessionProfileId ?? null,
     sessionPartition: tab.sessionPartition ?? null,
     groupId: entry.groupId,
-    ...(afterTabId ? { afterTabId } : position === 0 ? { index: 0 } : {})
+    ...(afterTabId ? { afterTabId } : position === 0 ? { index: 0 } : {}),
+    // Open to the side: main makes the window's new split with the tab.
+    ...newGroupSplitOf(state, tab.worktreeId, entry.groupId, entry.id)
   })
 }
 

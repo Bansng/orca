@@ -177,6 +177,32 @@ describe.each(targets)('runtime layout client over the %s transport', (_name, ta
     expect(stream.unsubscribed).toBe(false)
   })
 
+  it('reports every frame’s position, an unreadable frame’s and a throwing reader’s too', async () => {
+    const positions: number[] = []
+    let throwOnFrame = false
+    subscribeRuntimeLayout(
+      target,
+      {},
+      () => {
+        if (throwOnFrame) {
+          throw new Error('reader failed')
+        }
+      },
+      () => {},
+      (seq) => positions.push(seq)
+    )
+    const stream = await opened(1)
+    stream.send({ ...snapshot(), seq: 3 })
+    stream.send({ type: 'navigate', request: {}, seq: 4 })
+    stream.send({ type: 'workspace', key: 'a', layout: { worktreeId: 'a' }, seq: 5 })
+    throwOnFrame = true
+    expect(() => stream.send({ type: 'removed', key: 'a', seq: 6 })).toThrow('reader failed')
+    // A frame with no position, as an older host sends, reports none.
+    throwOnFrame = false
+    stream.send({ type: 'removed', key: 'a' })
+    expect(positions).toEqual([3, 4, 5, 6])
+  })
+
   it('after a lost stream, keeps the last state and never reopens it', async () => {
     subscribe()
     const first = await opened(1)

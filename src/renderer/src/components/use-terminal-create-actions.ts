@@ -48,7 +48,7 @@ export function useTerminalCreateActions(controller: TerminalColdActivationContr
           worktreeId: activeWorktreeId,
           environmentId: runtimeEnvironmentId,
           targetGroupId,
-          command: shellOverride,
+          shell: shellOverride,
           activate: true
         })
         return

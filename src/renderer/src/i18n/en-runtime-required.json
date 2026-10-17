@@ -1544,19 +1544,29 @@
           "typographyAdvanced": "Typography"
         },
         "TerminalPane": {
+          "003df129fe": "Split Horizontally",
           "05efc0bada": "true",
+          "1158f8fd55": "New Tab",
           "219aaa59f4": "WSL Distribution",
+          "21f8da2078": "Workspace Setup Script",
           "2503f1e86b": "Used for new WSL terminal panes and local agent detection when the active workspace is not already inside WSL.",
           "29154326bb": "on",
+          "332e8a2872": "Split Vertically",
           "348246b06f": "false",
+          "34a0dfa06e": "Where the repository setup script runs when a new workspace is created.",
           "5936387ddd": "auto",
           "5fe79a5e56": "Choose which WSL distribution new WSL terminals and local agent scans use.",
+          "623e62df99": "Split horizontally",
+          "691ce810e0": "Split vertically",
+          "6c6a054a1c": "Run in a new tab",
+          "a9d47451d1": "\"New Tab\" opens the setup command in a background tab titled \"Setup\" without stealing focus.",
           "ab20575a8a": "off",
           "ab3a1f9068": "wsl.exe",
           "adbafefe56": "custom",
           "ask_before_closing_running_terminals_description": "Show a confirmation before closing a terminal that has a running command or agent.",
           "ask_before_closing_running_terminals_title": "Ask Before Closing Running Terminals",
           "cc8c5ca224": "Windows default",
+          "d23b43c5be": "Setup Script Location",
           "d78fc4fdef": "Loading distributions"
         },
         "TerminalSettingsPreview": {
@@ -1829,6 +1839,18 @@
           }
         },
         "terminal": {
+          "search": {
+            "2610ee3b56": "Where the repository setup script runs when a new workspace is created: a vertical split (default), a horizontal split, or a background tab titled 'Setup'.",
+            "4529806908": "setup",
+            "5be2d67678": "Setup Script Location",
+            "6b659fff2a": "script",
+            "7a48c7715b": "workspace",
+            "b872de3926": "location",
+            "c047f398cc": "launch",
+            "de7bc1d5f5": "split",
+            "f44643328e": "tab",
+            "fd6c24313d": "new"
+          },
           "windows": {
             "search": {
               "02c772582a": "linux",
@@ -2418,6 +2440,9 @@
             "96354ed249": "Split Up",
             "966feb9ad5": "Split Right"
           },
+          "EditorFileTabCloseButton": {
+            "a768f428f1": "Close tab"
+          },
           "EditorFileTabContextMenu": {
             "1d04b1630b": "Split Down",
             "6b3efb106e": "Split Up",
@@ -2684,7 +2709,9 @@
         },
         "space": {
           "WorkspaceSpacePage": {
-            "8d0048e1cb": "Workspace disk usage and reclaimable worktree storage."
+            "45f6302dbc": "Space",
+            "8d0048e1cb": "Workspace disk usage and reclaimable worktree storage.",
+            "e8d6ba11ab": "Beta"
           }
         }
       }
