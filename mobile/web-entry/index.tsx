@@ -1,6 +1,5 @@
 // Route A web entry: mounts the phone's h/[hostId] route tree on react-native-web.
-// Built by `build:mobile-web` into the packaged bundle dir; mounted only by a build with
-// `EXPO_PUBLIC_MOBILE_SHELL=ota`.
+// Built by `build:mobile-web` into the packaged bundle dir; mounted by the app's shell.
 import { useEffect, type PropsWithChildren } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ExpoRoot } from 'expo-router'

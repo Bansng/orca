@@ -57,8 +57,9 @@ export const ORCAD_INSTALL_MODEL: RemoteInstallModel = {
   nativeDepsPackageName: 'orca-orcad',
   versionFilename: ORCAD_VERSION_FILENAME,
   installCompleteFilename: ORCAD_INSTALL_COMPLETE_FILENAME,
-  // libc changes no file name, so `<os>-<arch>` names every slot file.
-  requiredArtifacts: (host) => orcadArtifactFilenames(`${host.os}-${host.arch}`)
+  // libc changes no file name, so `<os>-<arch>` names every slot file. The page's hashed assets
+  // are named only by its manifest, required here; the sentinel follows the whole-tree upload.
+  requiredArtifacts: (host) => orcadArtifactFilenames(`${host.os}-${host.arch}`, [])
 }
 
 export const REMOTE_INSTALL_MODELS: readonly RemoteInstallModel[] = [

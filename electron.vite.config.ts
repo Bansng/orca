@@ -20,6 +20,7 @@ const BUNDLED_MAIN_DEPENDENCIES = new Set([
   '@xterm/addon-serialize',
   'tldts',
   'smol-toml',
+  'fflate',
   // Why: Windows NSIS deploys app.asar before external resources; bootstrap must
   // not race the later resources/node_modules copy.
   'zod'
@@ -54,24 +55,20 @@ const ORCA_DIAGNOSTICS_TOKEN_URL_LITERAL =
     ? JSON.stringify(orcaDiagnosticsTokenUrl)
     : 'null'
 
-const layoutOwnerBuild: {
-  LAYOUT_OWNER_MARKER_FILENAME: string
-  LAYOUT_OWNER_MARKER_TEXT: string
-  isLayoutOwnerBuild: () => boolean
-  layoutOwnerDefine: () => string
-} = createRequire(import.meta.url)('./config/layout-owner-build.cjs')
-const ORCA_LAYOUT_OWNER_LITERAL = layoutOwnerBuild.layoutOwnerDefine()
+const darkBuildSwitches: {
+  darkBuildDefines: () => Record<string, string>
+  darkBuildMarkers: () => { fileName: string; text: string }[]
+} = createRequire(import.meta.url)('./config/dark-build-switches.cjs')
+const DARK_BUILD_DEFINES = darkBuildSwitches.darkBuildDefines()
 
-/** Marks a dark layout-owner main build so packaging refuses it. */
-function createLayoutOwnerMarkerPlugin(): Plugin {
+/** Marks a dark switched-on main build so packaging refuses it. */
+function createDarkBuildMarkerPlugin(): Plugin {
   return {
-    name: 'orca-layout-owner-marker',
+    name: 'orca-dark-build-marker',
     generateBundle() {
-      this.emitFile({
-        type: 'asset',
-        fileName: layoutOwnerBuild.LAYOUT_OWNER_MARKER_FILENAME,
-        source: layoutOwnerBuild.LAYOUT_OWNER_MARKER_TEXT
-      })
+      for (const marker of darkBuildSwitches.darkBuildMarkers()) {
+        this.emitFile({ type: 'asset', fileName: marker.fileName, source: marker.text })
+      }
     }
   }
 }
@@ -260,7 +257,7 @@ export const electronViteConfig: UserConfig = {
           createMainBootstrapPlugin(),
           createPlainNodeEntryGuardPlugin(),
           createProcessHostDevRebuildPlugin(),
-          ...(layoutOwnerBuild.isLayoutOwnerBuild() ? [createLayoutOwnerMarkerPlugin()] : [])
+          createDarkBuildMarkerPlugin()
         ]
       }
     },
@@ -271,7 +268,7 @@ export const electronViteConfig: UserConfig = {
       ORCA_POSTHOG_WRITE_KEY: ORCA_POSTHOG_WRITE_KEY_LITERAL,
       ORCA_DIAGNOSTICS_TOKEN_URL: ORCA_DIAGNOSTICS_TOKEN_URL_LITERAL,
       ORCA_BUILD_COMMIT: ORCA_BUILD_COMMIT_LITERAL,
-      ORCA_LAYOUT_OWNER: ORCA_LAYOUT_OWNER_LITERAL
+      ...DARK_BUILD_DEFINES
     },
     // Why: @xterm/headless declares "exports": null in package.json, which
     // prevents Vite's default resolver from finding the CJS entry. Point
@@ -297,7 +294,7 @@ export const electronViteConfig: UserConfig = {
     cacheDir: resolve('.cache/vite/renderer'),
     define: {
       ORCA_BUILD_COMMIT: ORCA_BUILD_COMMIT_LITERAL,
-      ORCA_LAYOUT_OWNER: ORCA_LAYOUT_OWNER_LITERAL
+      ...DARK_BUILD_DEFINES
     },
     resolve: {
       alias: {

@@ -93,6 +93,21 @@ describe('applyWindowLayoutCommand', () => {
     expect(applyLayoutCommand).toHaveBeenCalledWith(ratios, ['ssh:target-1'])
   })
 
+  it('renames editor files in the workspace’s routed partition, an SSH one too', async () => {
+    const { store, applyLayoutCommand } = storeWith()
+    const hostIdsFor = vi.fn(() => ['ssh:target-1' as const])
+    const rename: WindowLayoutCommand = {
+      type: 'renameEditorFiles',
+      workspace: 'wt-1',
+      renames: [{ fileId: '/a.ts', newFileId: '/b.ts' }]
+    }
+
+    await applyWindowLayoutCommand(store, hostIdsFor, rename)
+
+    expect(hostIdsFor).toHaveBeenCalledWith('wt-1', null)
+    expect(applyLayoutCommand).toHaveBeenCalledWith(rename, ['ssh:target-1'])
+  })
+
   it('records the window’s tab close in every holder, forced, stopping no terminal', async () => {
     const { store, applyLayoutCommand } = storeWith()
     const close: WindowLayoutCommand = {

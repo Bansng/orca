@@ -8,6 +8,15 @@ import {
 import type { Tab } from '../../../../../shared/tab-types'
 import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../../shared/layout-owner-switch'
 import { recordPromotedEditorTabsInLayoutOwner } from '../editor/tabs/editor-tab-layout-owner'
+import { withPreviewEnded } from './tab-preview-flag'
+
+/** Activation ends a preview unless it preserves it. */
+function withPreviewOnActivation(tab: Tab, preservePreview: boolean): Tab {
+  if (!ORCA_LAYOUT_OWNER_IS_MAIN) {
+    return { ...tab, isPreview: preservePreview ? tab.isPreview : false }
+  }
+  return preservePreview ? tab : withPreviewEnded(tab)
+}
 
 export function createTabsFocusActions(
   _set: TabsSliceSet,
@@ -69,8 +78,7 @@ export function createTabsFocusActions(
             [worktreeId]: (state.unifiedTabsByWorktree[worktreeId] ?? []).map((item) =>
               item.id === tabId
                 ? {
-                    ...item,
-                    isPreview: opts?.preservePreview ? item.isPreview : false,
+                    ...withPreviewOnActivation(item, opts?.preservePreview === true),
                     ...(opts?.recordFocus === false ? {} : { lastFocusedAt: Date.now() })
                   }
                 : item

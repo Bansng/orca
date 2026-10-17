@@ -6,9 +6,7 @@ import { basename, dirname, join } from 'node:path'
 import { ORCAD_SERVER_ENTRY_FILENAME } from '../../src/shared/orcad-artifacts.ts'
 
 const root = join(import.meta.dirname, '..', '..')
-const { isLayoutOwnerBuild, layoutOwnerDefine } = createRequire(import.meta.url)(
-  '../layout-owner-build.cjs'
-)
+const { turnedOnDarkBuildDefines } = createRequire(import.meta.url)('../dark-build-switches.cjs')
 
 export const ORCAD_ENTRY_POINT = 'src/main/orcad/main.ts'
 export const ORCAD_LAUNCHER_ENTRY_POINT = 'src/main/orcad/launcher.ts'
@@ -40,7 +38,7 @@ export const ORCAD_COMMONJS_MODULE_OPTIONS = {
   define: {
     'import.meta.url': '__orcadModuleUrl',
     // Why only when on: an undeclared switch already reads as off, so other builds keep their bytes.
-    ...(isLayoutOwnerBuild() ? { ORCA_LAYOUT_OWNER: layoutOwnerDefine() } : {})
+    ...turnedOnDarkBuildDefines()
   },
   logOverride: { 'empty-import-meta': 'error' }
 }

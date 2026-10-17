@@ -414,9 +414,7 @@
       },
       "pairingSecurity": {
         "hide": "Ocultar",
-        "storedCodeInsecureOrigin": "Este navegador guarda un código de emparejamiento reutilizable porque esta página usa http sin cifrar en otro equipo. Cualquiera que pueda leer el almacenamiento de este navegador podría usarlo. Para un emparejamiento más seguro, abre Orca por https, en localhost en este equipo o a través de un túnel SSH, y vuelve a emparejar.",
         "storedCodeNoEd25519": "Este navegador guarda un código de emparejamiento reutilizable porque no puede crear claves de inicio de sesión seguras (Ed25519). Usa un navegador actual y vuelve a emparejar para un emparejamiento más seguro.",
-        "sessionInsecureOrigin": "Este emparejamiento solo dura mientras esta pestaña esté abierta, porque esta página usa http sin cifrar en otro equipo. Para un emparejamiento que este navegador recuerde, abre Orca por https, en localhost en este equipo o a través de un túnel SSH.",
         "sessionNoEd25519": "Este emparejamiento solo dura mientras esta pestaña esté abierta, porque este navegador no puede crear claves de inicio de sesión seguras (Ed25519). Usa un navegador actual para un emparejamiento que recuerde."
       },
       "runtimeAuth": {
@@ -5990,8 +5988,7 @@
                   "7edb8ebe24": "Clonar desde URL",
                   "a6c20dca96": "Abrir un proyecto desde un destino SSH",
                   "serverSshTitle": "Proyecto en un host SSH de este servidor",
-                  "serverSshDescription": "Abre una carpeta de proyecto de un host SSH al que se conecta este servidor",
-                  "serverSshUpdate": "Actualiza este servidor para añadir proyectos en sus hosts SSH",
+                  "serverSshAddOnThisComputer": "No disponible desde un servidor. Añade el host SSH en este ordenador para abrir sus proyectos.",
                   "fb4fc5380e": "Proyecto local, repositorio de Git o carpeta con muchos repositorios",
                   "2281fdc8c7": "Explorar carpeta",
                   "runtimeBrowseDescription": "Repositorio Git o carpeta existente en este host"
@@ -8719,7 +8716,7 @@
           "addDescription": "Agrega una máquina persistente en la que puedas iniciar sesión por SSH.",
           "editingPrefix": "Editando",
           "allowRemoteCliControl": "Permitir que la orca CLI de este host controle Orca",
-          "allowRemoteCliControlHelp": "Activado de forma predeterminada. Permite que los comandos orca ejecutados en este host abran y controlen pestañas del navegador de Orca en este escritorio, solo en los espacios de trabajo de este host y solo mientras esté conectado, y que las terminales iniciadas por una versión anterior de Orca en este host ejecuten comandos de orquestación (check, inbox, send, ask, reply) para su propio trabajo supervisado. No pueden leer tus archivos, tu portapapeles ni tus cookies. Cuando está desactivado, solo llegan al propio servidor de Orca de este host."
+          "allowRemoteCliControlHelp": "Activado de forma predeterminada en los hosts nuevos. Permite que los comandos orca ejecutados en este host abran y controlen pestañas del navegador de Orca en este escritorio, solo en los espacios de trabajo de este host y solo mientras esté conectado, y que las terminales iniciadas por una versión anterior de Orca en este host ejecuten comandos de orquestación (check, inbox, send, ask, reply) para su propio trabajo supervisado. No pueden leer tus archivos, tu portapapeles ni tus cookies. Cuando está desactivado, solo llegan al propio servidor de Orca de este host."
         },
         "TasksPane": {
           "f71d8a9dd3": "Proveedores de tareas",
@@ -12416,9 +12413,6 @@
           "devChannelUnsupported": "Las versiones de {{value0}} solo están disponibles para {{value1}}. En Linux solo se ofrecen Stable y RC.",
           "downloadInstaller": "Descargar instalador",
           "manualInstallHint": "Las versiones de {{value0}} no están firmadas en Windows, por lo que el actualizador de la aplicación no puede instalarlas sobre una versión firmada. Ejecuta una vez el instalador descargado; Windows mostrará una advertencia de editor desconocido. Después podrás cambiar de versión desde aquí, incluso para volver a Stable."
-        },
-        "NativeChatSupportedAgents": {
-          "label": "Agentes apoyados:"
         },
         "TerminalRenderingSection": {
           "6d4c55bacc": "Imágenes en línea",
@@ -17981,11 +17975,18 @@
         "title": "No se pudo contactar con tu host de Orca",
         "description": "No se perdió nada. Orca se recargará cuando el host responda y no guardará cambios hasta entonces.",
         "retry": "Reintentar ahora"
+      },
+      "webPairingRefused": {
+        "title": "Orca rechazó este navegador",
+        "retry": "Intentar de nuevo"
       }
     }
   },
   "components": {
     "native-chat": {
+      "install": {
+        "checking": "Comprobando si {{agent}} está listo en este host…"
+      },
       "reasoning": "Razonamiento",
       "contextMenu": {
         "copyOrcaSessionId": "Copiar ID de sesión de Orca",
@@ -18512,6 +18513,9 @@
         "editFailed": "Este mensaje no se puede editar.",
         "editGone": "Este mensaje ya se envió o se eliminó. Tu edición está en el cuadro de chat.",
         "editGonePrompt": "Este mensaje ya se envió o se eliminó. Tu edición estará en el cuadro de chat cuando respondas al agente.",
+        "imageCount": "{{count}} imágenes",
+        "imageCount_one": "{{count}} imagen",
+        "imageCount_other": "{{count}} imágenes",
         "collapse": "Contraer",
         "expand": "Expandir",
         "queued": "En cola",
@@ -19160,6 +19164,30 @@
       "keywordJira": "jira",
       "keywordDefaultProject": "proyecto predeterminado",
       "keywordIssuePicker": "selector de incidencias"
+    },
+    "managed-runtime": {
+      "cancel": "Cancelar instalación",
+      "cancelled": "Instalación cancelada.",
+      "cancelling": "Cancelando…",
+      "chatTitle": "Instala {{agent}} para empezar a chatear.",
+      "damaged": "Esta copia de {{agent}} está dañada.",
+      "downloading": "Descargando {{done}} MB.",
+      "downloadingOf": "Descargando {{done}} MB de {{total}} MB.",
+      "external": "Usa la copia de {{agent}} encontrada en este host.",
+      "extracting": "Extrayendo {{agent}}.",
+      "failed": "La instalación falló. Inténtalo de nuevo.",
+      "cancelFailed": "No se pudo cancelar la instalación. Inténtalo de nuevo.",
+      "install": "Instalar {{agent}}",
+      "installManaged": "Instalar la copia de Orca",
+      "installed": "Instalado.",
+      "notInstalled": "No instalado.",
+      "progress": "Descarga de {{agent}}",
+      "readFailed": "No se pudo comprobar {{agent}} en este host. Reintentando.",
+      "reinstall": "Reinstalar {{agent}}",
+      "retry": "Reintentar instalación",
+      "unavailable": "{{agent}} no está disponible en este host.",
+      "update": "Actualizar {{agent}}",
+      "verifying": "Comprobando el entorno descargado."
     }
   },
   "dashboardPopout": {

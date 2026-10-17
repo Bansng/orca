@@ -38,6 +38,8 @@ export type LayoutCommand =
       title?: string
       color?: string
       viewMode?: 'terminal' | 'chat'
+      /** When the window drew the tab, so a later save of it matches main's copy. */
+      createdAt?: number
       creation?: Partial<LayoutTerminalCreation>
       initial?: InitialSurfaceReason
       split?: NewGroupSplit
@@ -98,6 +100,8 @@ export type LayoutCommand =
       color?: string | null
       isPinned?: boolean
       viewMode?: 'terminal' | 'chat'
+      /** The tab's agent launched and ended: a restore must not launch it again. */
+      clearLaunchAgent?: true
     })
   | (On & { type: 'setChatPane'; tabId: string; leafId: string | null })
   | (On & {
@@ -115,9 +119,23 @@ export type LayoutCommand =
       preview?: boolean
       /** Editor tabs whose view reported an unsaved draft: a preview among them is not replaced. */
       dirtyTabIds?: string[]
+      /** When the window drew the tab, so a later save of it matches main's copy. */
+      createdAt?: number
       split?: NewGroupSplit
     })
   | (On & { type: 'promotePreviewTab'; tabId: string })
+  | (On & {
+      type: 'openSimulatorTab'
+      /** The window's id for the tab it drew; also the tab's entity. */
+      tabId: string
+      groupId?: string
+      /** Placement in the group: after this tab, else at this index, else at its end. */
+      afterTabId?: string
+      index?: number
+      /** When the window drew the tab, so a later save of it matches main's copy. */
+      createdAt?: number
+      split?: NewGroupSplit
+    })
   | (On & {
       type: 'moveTabToWorkspace'
       /** The workspace that owns the tabs' file, as the window resolved it; same partition. */
@@ -127,6 +145,11 @@ export type LayoutCommand =
       groupId: string
       /** The moved edit-mode file's record in its new workspace. */
       file?: LayoutEditorFile
+    })
+  | (On & {
+      type: 'renameEditorFiles'
+      /** Under the window's ids; one workspace's files only. */
+      renames: EditorFileRename[]
     })
   | (On & {
       type: 'openBrowserTab'
@@ -141,6 +164,9 @@ export type LayoutCommand =
       /** The window's own ids for a tab it drew: its tab-bar entry and its browser record. */
       tabId?: string
       browserTabId?: string
+      /** When the window drew the tab-bar entry and the browser record, so its later save matches. */
+      createdAt?: number
+      browserCreatedAt?: number
       split?: NewGroupSplit
     })
   | (On & { type: 'openBrowserPage'; browserTabId: string; pageId: string })
@@ -160,12 +186,25 @@ export type LayoutCommand =
       sessionId: string
       agent: AgentType
       groupId?: string
+      /** Placement in the group: after this tab, else at this index, else at its end. */
+      afterTabId?: string
+      index?: number
+      /** When the window drew the tab, so a later save of it matches main's copy. */
+      createdAt?: number
       initial?: InitialSurfaceReason
+      split?: NewGroupSplit
     })
   | (On & { type: 'startPane'; paneKey: string })
   | (On & { type: 'restartPane'; paneKey: string })
-  | (On & { type: 'sleep'; paneKeys?: string[]; records: SleepingAgentSessionRecord[] })
-  | (On & { type: 'wake'; paneKeys?: string[] })
+  | (On & {
+      type: 'sleep'
+      paneKeys?: string[]
+      records: SleepingAgentSessionRecord[]
+      /** Records how each agent resumes and stops nothing: the window's live and quit captures. */
+      recordOnly?: true
+    })
+  /** `recordOnly`: drops the records and starts nothing. */
+  | (On & { type: 'wake'; paneKeys?: string[]; recordOnly?: true })
 
 /**
  * Why a workspace's first surface is asked for: `restore` at relaunch, `activation` when a user
@@ -175,13 +214,26 @@ export type InitialSurfaceReason = 'restore' | 'activation'
 
 export type CommandOf<T extends LayoutCommand['type']> = Extract<LayoutCommand, { type: T }>
 
+/** One open file the window renamed or moved; `record` when it is an edit-mode file. */
+export type EditorFileRename = {
+  fileId: string
+  newFileId: string
+  record?: { fromFilePath: string; file: LayoutEditorFile }
+}
+
 export type GroupSide = 'left' | 'right' | 'up' | 'down'
 
 /**
  * An open into a new group, named by the command's `groupId`, split off `besideGroupId`: the
- * group and its first tab are made in one step, so no empty group is ever stored.
+ * group and its first tab are made in one step, so no empty group is ever stored. With
+ * `besideLastGroupId`, the split is off the branch from `besideGroupId` to it (its first and last
+ * groups), as when a group the window kept empty sits beside a branch split since.
  */
-export type NewGroupSplit = { besideGroupId: string; direction: GroupSide }
+export type NewGroupSplit = {
+  besideGroupId: string
+  besideLastGroupId?: string
+  direction: GroupSide
+}
 
 export type TabTitle =
   | { kind: 'custom' | 'generated'; title: string | null }

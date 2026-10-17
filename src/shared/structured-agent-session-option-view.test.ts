@@ -28,10 +28,12 @@ const withHostList = (state = fresh(), catalog: AgentSessionModelCatalogResult =
   applyStructuredAgentSessionModelCatalog(state, CLAUDE_SESSION_OPTION_CATALOG, catalog, {
     newLaunch: true
   })
-// A stopped chat's own answer lists the host's rows plus its own model, named by its id.
-const stopped = (model: string, rows = [OPUS]) =>
+// A chat's own answer lists its listing's rows plus its own model, named by its id; `listed` are
+// the ids its listing names (none from an older host).
+const stopped = (model: string, rows = [OPUS], listed = rows.map((row) => row.id)) =>
   applyStructuredAgentSessionOptions(fresh(), CLAUDE_SESSION_OPTION_CATALOG, {
     models: [...rows, { id: model, label: model, isDefault: false, efforts: [] }],
+    listedModelIds: listed,
     current: { model, effort: 'high' }
   })
 
@@ -80,8 +82,8 @@ describe('a Claude model the verified list no longer offers', () => {
     })
   })
 
-  it('moves a model only the session itself lists, as the listing does not name it', () => {
-    const live = withHostList(stopped('sonnet', [OPUS, SONNET]))
+  it('moves a model only the session itself lists, as its listing does not name it', () => {
+    const live = stopped('sonnet', [OPUS, SONNET], ['opus[1m]'])
     expect(structuredAgentSessionListedPicks(live, undefined, {})).toEqual({
       model: 'opus[1m]',
       effort: 'xhigh'
@@ -100,13 +102,6 @@ describe('a Claude model the verified list no longer offers', () => {
   ])('keeps the model while the list is %s', (_name, catalog) => {
     const state = withHostList(fresh(), catalog)
     expect(structuredAgentSessionListedPicks(state, remembered, {})).toBeNull()
-    expect(
-      structuredAgentSessionListedPicks(
-        withHostList(stopped('claude-gone'), catalog),
-        undefined,
-        {}
-      )
-    ).toBeNull()
   })
 
   it('takes no row the finished listing does not name, as from a built-in fallback list', () => {
@@ -132,15 +127,17 @@ describe('a Claude model the verified list no longer offers', () => {
     ['a row with no efforts', [{ id: 'opus[1m]', label: 'Opus', isDefault: false }]],
     ['no rows', []]
   ])('keeps the model when the host answer has %s', (_name, models) => {
-    const live = stopped('claude-gone')
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: a malformed host answer is the case under test.
     const answer = { origin: 'probe', fetchedAt: 1, models } as AgentSessionModelCatalogResult
-    expect(structuredAgentSessionListedPicks(withHostList(live, answer), undefined, {})).toBeNull()
+    const state = withHostList(stopped('claude-gone', [OPUS], []), answer)
+    expect(structuredAgentSessionListedPicks(state, undefined, {})).toBeNull()
   })
 
-  it('keeps the model before any host answer', () => {
+  it('keeps the model before any host answer, and on an answer that verifies no row', () => {
     expect(structuredAgentSessionListedPicks(fresh(), remembered, {})).toBeNull()
-    expect(structuredAgentSessionListedPicks(stopped('claude-gone'), undefined, {})).toBeNull()
+    // An older host's answer names no listed ids.
+    const unverified = withHostList(stopped('claude-gone', [OPUS], []))
+    expect(structuredAgentSessionListedPicks(unverified, undefined, {})).toBeNull()
   })
 })
 
@@ -171,10 +168,26 @@ describe('what a send carries', () => {
     const named = { ...SONNET, isDefault: true }
     const listing = { ...LISTED, models: [OPUS, named], listingNamesConfiguredModel: true }
     expect(carried(withHostList(fresh(), listing))).toEqual({ model: 'sonnet' })
-    const listing2: AgentSessionModelCatalogResult = { ...LISTED, listingInProgress: true }
-    expect(carried(withHostList(stopped('claude-gone'), listing2))).toEqual({
-      model: 'claude-gone'
-    })
+    expect(carried(stopped('claude-gone', [OPUS], []))).toEqual({ model: 'claude-gone' })
+  })
+
+  it("keeps a model the chat's own listing names, whichever CLI version wrote the host's", () => {
+    // Claude Code 2.1.280 lists opus[1m] as its default and no plain opus; 2.1.302 the reverse.
+    const row = (id: string, isDefault = false) => ({ ...SONNET, id, label: id, isDefault })
+    const cli280 = [row('opus[1m]', true), row('sonnet'), row('sonnet[1m]'), row('haiku')]
+    const cli302 = [row('opus', true), row('sonnet'), row('haiku')]
+    const sent = (child: typeof cli280, model: string, host: typeof cli280) =>
+      carried(withHostList(stopped(model, child), { ...LISTED, models: host }))?.model
+    expect(sent(cli280, 'opus[1m]', cli302)).toBe('opus[1m]')
+    expect(sent(cli302, 'opus', cli280)).toBe('opus')
+    // A model the chat's own CLI no longer lists still moves to that CLI's default.
+    expect(sent(cli302, 'opus[1m]', cli280)).toBe('opus')
+    // An older host names no listed ids: only the chat's own default, where the host lists it.
+    const older = (child: typeof cli280, model: string, host: typeof cli280) =>
+      carried(withHostList(stopped(model, child, []), { ...LISTED, models: host }))?.model
+    expect(older(cli280, 'opus[1m]', cli302)).toBe('opus[1m]')
+    expect(older(cli302, 'opus', cli280)).toBe('opus')
+    expect(older(cli302, 'opus[1m]', cli302)).toBe('opus')
   })
 
   it('resolves a pick on its way as the picker shows it, a gone model it names included', () => {

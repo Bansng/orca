@@ -300,10 +300,11 @@
 4 src/renderer/src/lib/activate-ai-vault-structured-session.ts
 1 src/renderer/src/lib/active-agent-note-send.ts
 1 src/renderer/src/lib/active-agent-note-target.ts
+1 src/renderer/src/lib/agent-account-restart-startup.ts
 1 src/renderer/src/lib/agent-background-session-launch-host.ts
 1 src/renderer/src/lib/agent-detection-target-inventory.ts
 1 src/renderer/src/lib/agent-hibernation-coordinator-test-fixture.ts
-3 src/renderer/src/lib/agent-hibernation-coordinator.ts
+1 src/renderer/src/lib/agent-hibernation-coordinator.ts
 2 src/renderer/src/lib/agent-launch-route-input.ts
 1 src/renderer/src/lib/agent-message-send.ts
 1 src/renderer/src/lib/ai-vault-resume-platform.ts
@@ -311,7 +312,6 @@
 2 src/renderer/src/lib/ai-vault-tab-title-sync-inputs.ts
 1 src/renderer/src/lib/client-creation-action-error.ts
 3 src/renderer/src/lib/client-creation-action-policy.ts
-1 src/renderer/src/lib/codex-account-restart-startup.ts
 1 src/renderer/src/lib/default-creation-host.ts # the sanctioned reader of the default host
 1 src/renderer/src/lib/doc-preview-grants.ts
 1 src/renderer/src/lib/empty-workspace-default-agent-chat.ts
@@ -361,7 +361,7 @@
 1 src/renderer/src/lib/worktree-jump-navigation.ts
 2 src/renderer/src/lib/worktree-operation-route.ts
 1 src/renderer/src/lib/worktree-row-open-in-owner.ts
-5 src/renderer/src/lib/worktree-runtime-owner.ts
+6 src/renderer/src/lib/worktree-runtime-owner.ts # typed owner resolver plus its null-collapsing wrapper; callers net -3
 1 src/renderer/src/lib/worktree-sort-order-host-split.ts
 1 src/renderer/src/runtime/close-mirrored-editor-tab.ts
 1 src/renderer/src/runtime/local-structured-session-tabs-sync/snapshot-apply.ts
@@ -421,7 +421,6 @@
 1 src/renderer/src/store/slices/editor/actions/open-file-action.ts
 1 src/renderer/src/store/slices/editor/actions/open-file-apply.ts
 1 src/renderer/src/store/slices/editor/create-editor-slice.ts
-1 src/renderer/src/store/slices/github-cache-key.ts
 1 src/renderer/src/store/slices/hosted-review-cache-identity.ts
 5 src/renderer/src/store/slices/jira-collection-read-actions.ts
 31 src/renderer/src/store/slices/jira-connection-actions.ts
@@ -480,7 +479,6 @@
 1 src/renderer/src/store/terminals/terminal-shutdown.ts
 1 src/renderer/src/store/terminals/terminal-tab-appearance.ts
 1 src/renderer/src/store/terminals/terminal-tab-close-providers.ts
-1 src/renderer/src/store/terminals/terminal-workspace-routing.ts
 1 src/renderer/src/web/preload-api/web-app-api.ts
 3 src/renderer/src/web/preload-api/web-preference-normalization.ts
 22 src/renderer/src/web/preload-api/web-preferences-store.ts

@@ -136,7 +136,8 @@ describe('structured option state from the host model catalog', () => {
       // The host list stays; the answer only says it is no longer a finished listing.
       expect(applyStructuredAgentSessionModelCatalog(hosted, SEED, answer, LAUNCH)).toEqual({
         ...hosted,
-        verifiedModelIds: undefined
+        verifiedModelIds: undefined,
+        hostListedModelIds: undefined
       })
     }
   })
@@ -151,9 +152,10 @@ describe('structured option state from the host model catalog', () => {
       }
     )
     expect(live.catalogSource).toBe('live')
+    // The host's ids are kept apart: they never verify the live answer's rows.
     expect(applyStructuredAgentSessionModelCatalog(live, SEED, HOST_CATALOG, LAUNCH)).toEqual({
       ...live,
-      verifiedModelIds: ['gpt-hosted']
+      hostListedModelIds: ['gpt-hosted']
     })
     const snapshot = structuredAgentSessionOptionSnapshot(live)
     const model = snapshot.find((descriptor) => descriptor.id === 'model')!

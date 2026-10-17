@@ -17,6 +17,10 @@ import {
   type SmartClass,
   type WorktreeAttention
 } from '../../smart-attention'
+import {
+  ranksFollowPersistedOrder,
+  smartSortPhase
+} from '../../../../../../shared/sidebar-list/smart-sort-phase'
 import { useReusedArrayIdentity } from './use-reused-array-identity'
 
 function trackSmartClassDistribution(attention: ReadonlyMap<string, WorktreeAttention>): void {
@@ -63,10 +67,11 @@ export function useSidebarWorktreeSortOrder(args: {
   // Why a latching ref: a live signal makes Smart authoritative for the session, even after that activity ends.
   const sessionHasHadLiveSmartSignal = useRef(false)
   // Why: cold Smart and Manual fallback rows rank by sortOrder and never persist it, so they can follow another client's save without looping.
-  const persistedRankTrigger =
-    sortBy === 'manual' || (sortBy === 'smart' && !sessionHasHadLiveSmartSignal.current)
-      ? sortOrderEpoch
-      : 0
+  const followsPersistedRanks = ranksFollowPersistedOrder(
+    sortBy,
+    sessionHasHadLiveSmartSignal.current
+  )
+  const persistedRankTrigger = followsPersistedRanks ? sortOrderEpoch : 0
 
   const recomputedSort = useMemo(() => {
     const state = useAppStore.getState()
@@ -79,7 +84,7 @@ export function useSidebarWorktreeSortOrder(args: {
     let detectedLiveSmartSignal = false
 
     // Why cold-start detection: agent-status hydrates async, so the warm comparator would collapse all to Class 4; keep the persisted order until a live signal appears.
-    if (sortBy === 'smart' && !sessionHasHadLiveSmartSignal.current) {
+    if (smartSortPhase(sortBy, sessionHasHadLiveSmartSignal.current) === 'cold') {
       // Why tabHasLivePty over tab.ptyId: slept terminals keep tab.ptyId as a wake hint, so it'd falsely keep cold-start ordering off.
       const hasAnyLivePty = Object.values(state.tabsByWorktree).some((tabs) =>
         tabs.some((tab) => tabHasLivePty(state.ptyIdsByTabId, tab.id))
@@ -189,7 +194,10 @@ export function useSidebarWorktreeSortOrder(args: {
 
   // Why: only persist during live sessions so cold start reads the persisted order instead of overwriting it.
   useEffect(() => {
-    if (sortBy !== 'smart' || sortedIds.length === 0 || !sessionHasHadLiveSmartSignal.current) {
+    if (
+      sortedIds.length === 0 ||
+      smartSortPhase(sortBy, sessionHasHadLiveSmartSignal.current) !== 'live'
+    ) {
       return
     }
     // Why: sortOrder lives in each host's worktreeMeta, so persist each host's ids on that host.

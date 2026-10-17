@@ -5,7 +5,7 @@ const CHAT_DEFAULT_ON = { experimentalNativeChat: true }
 
 function harness(options: { startupTerminal?: Record<string, unknown> | null } = {}) {
   const runtime = {
-    getClientSettings: () => CHAT_DEFAULT_ON,
+    requireStore: () => ({ getSettings: () => CHAT_DEFAULT_ON }),
     getStructuredAgentSessionCreateSupport: vi.fn(async () => ({ supported: true })),
     createManagedWorktree: vi.fn(async (_args: Record<string, unknown>) => ({
       worktree: { id: 'repo-1::/wt/auto', displayName: 'auto-nightly' },

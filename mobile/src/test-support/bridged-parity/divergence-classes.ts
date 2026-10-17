@@ -177,7 +177,7 @@ export const BRIDGED_PARITY_EXCLUSIONS: Readonly<Partial<Record<BridgedParityCla
  * same story — both numbers move, and both moves are edits here rather than a quiet pass.
  */
 export const BRIDGED_PARITY_BASELINE: Readonly<Record<BridgedParityClass | 'identical', number>> = {
-  identical: 401,
+  identical: 400,
   // Closed by the `_meta` widening: the page's reader is `isRpcResponse` itself.
   'reply-meta-required': 0,
   // Settling a refused reply moved three goldens here out of `write-ordinal`: a rejection that

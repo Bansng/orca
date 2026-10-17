@@ -134,6 +134,10 @@ jobs:
             echo 'available=false' >> "$GITHUB_OUTPUT"
           fi
 
+      # The orcad builds downstream refuse to run without the page; older refs predate the action.
+      - uses: ./.github/actions/build-mobile-web-bundle
+        if: hashFiles('.github/actions/build-mobile-web-bundle/action.yml') != ''
+
       # Only the completed output upload overlaps the change from Node to Electron ABI.
       - name: Upload E2E build output
         id: e2e-build-upload
@@ -519,6 +523,7 @@ jobs:
       - uses: ./.github/actions/prepare-windows-cli-launcher
         with:
           arches: x64
+      - uses: ./.github/actions/build-mobile-web-bundle
       - name: Build the e2e app, CLI, orcad slot and template
         shell: bash
         env:

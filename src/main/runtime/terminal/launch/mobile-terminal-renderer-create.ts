@@ -1,9 +1,8 @@
 import { applyClaudeTerminalImageViewerEnv } from '../../terminal-image-viewer-env'
 import type { MobileTerminalCommandOptions, MobileTerminalCommand } from './mobile-terminal-startup'
-import type { OwnedMobileTerminalCreateOptions } from './mobile-terminal-owned-create'
 import type { RuntimePtyWorktreeRecord } from '../../runtime-terminal-state-records'
 import type { TerminalWorkspaceLaunchScope } from '../../runtime-legacy-worker-terminal-recovery-types'
-import { OrcaRuntimeWithCreateMobileSessionTerminal } from './mobile-terminal-create'
+import { OrcaRuntimeWithMobileChatForkCreate } from './mobile-terminal-chat-fork-create'
 import type { WorktreeStartupLaunch } from '../../../../shared/worktree/launch-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import type { SleepingAgentLaunchConfig } from '../../../../shared/agent-session-resume'
@@ -23,6 +22,7 @@ import { assertMobileTerminalShellSupported } from './mobile-terminal-shell-refu
 export type MobileTerminalCreateOptions = {
   terminalImageViewerSupported?: boolean
   afterTabId?: string
+  sourceChatFork?: { sessionId: string }
   targetGroupId?: string
   command?: string
   shellOverride?: string
@@ -42,22 +42,11 @@ export type MobileTerminalCreateOptions = {
   signal?: AbortSignal
 }
 
-export abstract class OrcaRuntimeWithRunCreateMobileSessionTerminal extends OrcaRuntimeWithCreateMobileSessionTerminal {
-  protected abstract captureReadyGraphEpoch(): number
-
+export abstract class OrcaRuntimeWithRunCreateMobileSessionTerminal extends OrcaRuntimeWithMobileChatForkCreate {
   protected abstract resolveMobileSessionTerminalCommand(
     workspace: TerminalWorkspaceLaunchScope,
     opts: MobileTerminalCommandOptions
   ): Promise<MobileTerminalCommand>
-
-  protected abstract assertStableReadyGraph(expectedGraphEpoch: number): void
-
-  protected abstract createRuntimeOwnedMobileSessionTerminal(
-    worktreeId: string,
-    activate: boolean,
-    afterTabId?: string,
-    opts?: OwnedMobileTerminalCreateOptions
-  ): Promise<RuntimeMobileSessionCreateTerminalResult>
 
   protected abstract ensurePtyBackedMobileSurfaceForRendererTab(
     worktreeId: string,
@@ -110,6 +99,15 @@ export abstract class OrcaRuntimeWithRunCreateMobileSessionTerminal extends Orca
       opts.clientNavigationId && opts.supportsSplitGroupPlacement === false
         ? undefined
         : requestedAfterTabId
+    if (opts.sourceChatFork) {
+      return this.createMobileChatForkTerminal({
+        workspace,
+        worktreeId,
+        opts,
+        afterTabId,
+        graphEpoch
+      })
+    }
     let afterDesktopTabId: string | undefined
     if (requestedAfterTabId) {
       const snapshot = this.mobileSessionTabsByWorktree.get(worktreeId)

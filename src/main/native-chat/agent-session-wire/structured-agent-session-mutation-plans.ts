@@ -281,6 +281,7 @@ export function cancelPlan(params: {
   /** The session's child records, which name the tasks a background Stop reaches. */
   childWork?: () => readonly AgentChildWorkView[] | undefined
   acknowledgeStops?: (evidence: AgentChildWorkEvidence[]) => void
+  captureStops?: StructuredAgentSessionBackgroundStopInput['captureStops']
   unlisted?: StructuredAgentSessionBackgroundStopInput['unlisted']
 }): MutationPlan<AgentSessionCancelResult> {
   const named = params.turnId !== undefined ? { turnId: params.turnId } : {}

@@ -1,7 +1,7 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { QuickLaunchAgentMenuItems, shouldShowLaunchWatchdogTimeout } from './QuickLaunchButton'
+import { QuickLaunchAgentMenuItems } from './QuickLaunchButton'
 
 const {
   shortcutLabelMock,
@@ -219,23 +219,5 @@ describe('QuickLaunchAgentMenuItems', () => {
 
     storeState.settings.defaultTuiAgent = 'blank'
     expect(renderAgentMenuItems()).not.toContain('data-dropdown-shortcut="true"')
-  })
-})
-
-describe('shouldShowLaunchWatchdogTimeout', () => {
-  it('does not report slow agent readiness once a PTY exists', () => {
-    expect(
-      shouldShowLaunchWatchdogTimeout({
-        hasPty: true
-      })
-    ).toBe(false)
-  })
-
-  it('reports launches where no PTY appeared', () => {
-    expect(
-      shouldShowLaunchWatchdogTimeout({
-        hasPty: false
-      })
-    ).toBe(true)
   })
 })

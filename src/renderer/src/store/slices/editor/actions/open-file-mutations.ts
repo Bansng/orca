@@ -1,9 +1,9 @@
 import type { EditorGet, EditorSet } from '../types/editor-set-get'
 import type { EditorSlice } from '../types/editor-slice'
-import type { OpenFile } from '../types/open-file'
 import { isEditorTabContentType } from '../tabs/editor-tab-content-type'
 import type { Tab } from '../../../../../../shared/tab-types'
 import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../../../shared/layout-owner-switch'
+import { withPreviewEnded } from '../../tabs/tab-preview-flag'
 import {
   previewEditorTabsOf,
   recordPromotedEditorTabsInLayoutOwner
@@ -15,7 +15,6 @@ export function createOpenFileMutations(
 ): Pick<
   EditorSlice,
   | 'setActiveFile'
-  | 'reorderFiles'
   | 'markFileDirty'
   | 'setExternalMutation'
   | 'setLastKnownDiskSignature'
@@ -66,24 +65,6 @@ export function createOpenFileMutations(
       }
     },
 
-    reorderFiles: (fileIds) =>
-      set((s) => {
-        const reorderedSet = new Set(fileIds)
-        const byId = new Map(s.openFiles.map((f) => [f.id, f]))
-        const reordered = fileIds.map((id) => byId.get(id)).filter(Boolean) as OpenFile[]
-        // Replace the reordered subset in-place: keep other-worktree files at their positions
-        const result: OpenFile[] = []
-        let ri = 0
-        for (const f of s.openFiles) {
-          if (reorderedSet.has(f.id)) {
-            result.push(reordered[ri++])
-          } else {
-            result.push(f)
-          }
-        }
-        return { openFiles: result }
-      }),
-
     markFileDirty: (fileId, dirty) => {
       const promoted: Tab[] = []
       set((s) => {
@@ -117,7 +98,7 @@ export function createOpenFileMutations(
                     worktreeId,
                     tabs.map((tab) =>
                       tab.entityId === fileId && isEditorTabContentType(tab.contentType)
-                        ? { ...tab, isPreview: false }
+                        ? withPreviewEnded(tab)
                         : tab
                     )
                   ])

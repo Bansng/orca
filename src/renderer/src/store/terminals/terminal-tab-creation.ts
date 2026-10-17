@@ -25,7 +25,8 @@ import type { TerminalSlice, TerminalStoreGet, TerminalStoreSet } from './termin
 import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../shared/layout-owner-switch'
 import {
   recordCreatedTerminalTabInLayoutOwner,
-  terminalTabCreateCommand
+  terminalTabCreateCommand,
+  withMainTerminalFacts
 } from './terminal-tab-create-through-layout-owner'
 import {
   getRemoteConnectionIdForWorktree,
@@ -136,6 +137,10 @@ export function createTerminalTabCreationActions(
           ...(options?.agentLaunchPane ? { agentLaunchPane: options.agentLaunchPane } : {}),
           // Why: mark click-caused (not work-caused) spawns so updateTabPtyId skips the activity/sortEpoch bump that would reorder Recent/Smart on click.
           ...(options?.pendingActivationSpawn ? { pendingActivationSpawn: true } : {})
+        }
+        // Switch point: a tab main already made is drawn with main's creation facts.
+        if (ORCA_LAYOUT_OWNER_IS_MAIN) {
+          tab = withMainTerminalFacts(tab)
         }
         if (options?.launchAgent === 'zcode') {
           // Why here: this is where a ZCode launch is first known, and it runs before the

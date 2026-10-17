@@ -13,6 +13,7 @@ type AdmittedSpawnArgs = Parameters<Spawn>[0] & {
   leafId: string
   /** The group a new tab joins; a split stays in its parent's. */
   groupId?: string
+  afterTabId?: string
 }
 
 /** The pane its placement names: a new tab, or a split beside its parent pane. */
@@ -36,9 +37,20 @@ function admissionFor(args: AdmittedSpawnArgs): TerminalPaneAdmission {
     tabId,
     leafId,
     ...(args.groupId ? { groupId: args.groupId } : {}),
+    ...(args.afterTabId ? { afterTabId: args.afterTabId } : {}),
     ...(row?.viewMode ? { viewMode: row.viewMode } : {}),
     ...(row?.customTitle ? { title: row.customTitle } : {}),
-    ...(args.cwd ? { creation: { startupCwd: args.cwd } } : {})
+    ...(args.cwd || args.launchAgent || args.launchRuntime?.pty.shellOverride
+      ? {
+          creation: {
+            ...(args.cwd ? { startupCwd: args.cwd } : {}),
+            ...(args.launchAgent ? { launchAgent: args.launchAgent } : {}),
+            ...(args.launchRuntime?.pty.shellOverride
+              ? { shellOverride: args.launchRuntime.pty.shellOverride }
+              : {})
+          }
+        }
+      : {})
   }
 }
 
@@ -107,7 +119,7 @@ export async function spawnInAdmittedPane(
   controller: Pick<RuntimePtyController, 'spawn'>,
   args: AdmittedSpawnArgs
 ): ReturnType<Spawn> {
-  const { groupId: _groupId, ...spawnArgs } = args
+  const { groupId: _groupId, afterTabId: _afterTabId, ...spawnArgs } = args
   const { outcome, result } = await startInAdmittedPane(
     store,
     admissionFor(args),

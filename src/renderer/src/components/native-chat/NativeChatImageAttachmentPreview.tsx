@@ -207,20 +207,23 @@ function NativeChatImageThumbnail({
               alt={label}
               className={`size-full object-cover${isPending ? ' opacity-50' : ''}`}
             />
-          ) : attachment.pendingName ? (
-            <span className="flex max-w-full flex-col items-center gap-0.5 px-1">
-              <KindIcon className="size-5 shrink-0 text-muted-foreground" />
-              <span className="max-w-full truncate text-xs text-muted-foreground">
-                {attachment.pendingName}
-              </span>
+          ) : isPending ? (
+            // Why: a chip still on its way shows only that it is loading and what it is.
+            <span className="flex max-w-full flex-col items-center gap-1 px-1">
+              <LoadingSpinner className="size-4 shrink-0 text-muted-foreground" />
+              {attachment.pendingName ? (
+                <span className="max-w-full truncate text-xs text-muted-foreground">
+                  {attachment.pendingName}
+                </span>
+              ) : null}
             </span>
           ) : (
             <KindIcon className="size-5 text-muted-foreground" />
           )}
         </button>
-        {isPending ? (
-          <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-chat-canvas/50">
-            <LoadingSpinner className="size-4 text-muted-foreground" />
+        {isPending && thumbnailSrc ? (
+          <span className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center rounded-b-md bg-chat-canvas/90 py-0.5">
+            <LoadingSpinner className="size-3 text-muted-foreground" />
           </span>
         ) : null}
         <RemoveAttachmentButton onRemove={() => onRemove(attachment.id)} />

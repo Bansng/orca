@@ -12,6 +12,8 @@ import {
   recentActivityWithCreateGrace,
   type WorkspaceSortBy
 } from '../../../../shared/workspace-view/workspace-row-sort'
+import { compareCodePoints, compareSidebarText } from '../../../../shared/sidebar-list/text-order'
+import { getWorktreeHostIdentity } from '../../../../shared/worktree/host-qualified-identity'
 import {
   IDLE,
   buildAttentionByWorktree,
@@ -28,7 +30,7 @@ export function effectiveRecentActivity(worktree: Worktree, now: number): number
   return recentActivityWithCreateGrace(worktree.lastActivityAt, worktree.createdAt, now)
 }
 
-export type WorktreeSortLabelInput = Pick<Worktree, 'displayName' | 'path' | 'id'>
+export type WorktreeSortLabelInput = Pick<Worktree, 'displayName' | 'path' | 'id' | 'hostId'>
 
 export function getWorktreeSortLabel(worktree: WorktreeSortLabelInput): string {
   const displayName = typeof worktree.displayName === 'string' ? worktree.displayName.trim() : ''
@@ -67,8 +69,11 @@ export function compareWorktreeSortLabel(
   b: WorktreeSortLabelInput,
   labels?: WorktreeSortLabels
 ): number {
-  return (labels?.get(a) ?? getWorktreeSortLabel(a)).localeCompare(
-    labels?.get(b) ?? getWorktreeSortLabel(b)
+  return (
+    compareSidebarText(
+      labels?.get(a) ?? getWorktreeSortLabel(a),
+      labels?.get(b) ?? getWorktreeSortLabel(b)
+    ) || compareCodePoints(getWorktreeHostIdentity(a), getWorktreeHostIdentity(b))
   )
 }
 
@@ -92,6 +97,7 @@ export function buildWorktreeComparator(
     labels?.get(worktree) ?? getWorktreeSortLabel(worktree)
   return buildWorkspaceRowComparator<Worktree>(sortBy, {
     label,
+    identity: getWorktreeHostIdentity,
     repoLabel: (worktree) => repoMap.get(worktree.repoId)?.displayName ?? '',
     recentActivity: (worktree) => effectiveRecentActivity(worktree, now),
     // Why fallback to sortOrder: existing users have a persisted smart-sort snapshot but no

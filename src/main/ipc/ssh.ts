@@ -1,6 +1,7 @@
 import { ipcMain, type BrowserWindow } from 'electron'
 import type { Store } from '../persistence'
 import { SshConnectionStore } from '../ssh/ssh-connection-store'
+import { awaitSignInForCredentialHosts } from './ssh-sign-in-requirement'
 import { SshConnectionManager } from '../ssh/ssh-connection-manager'
 import { SshPortForwardManager } from '../ssh/ssh-port-forward'
 import { quitTeardownStartGate } from '../quit-teardown-start-gate'
@@ -107,6 +108,8 @@ export function registerSshHandlers(
     connectionManager.setCallbacks(callbacks)
   } else {
     setConnectionManager(new SshConnectionManager(callbacks))
+    // Why only here: a window re-registration must not re-gate a host the user already signed in to.
+    awaitSignInForCredentialHosts(getSshTargetRegistryStore()!)
   }
   setPortForwardManager(portForwardManager ?? new SshPortForwardManager())
   portForwardManager!.setCallbacks({

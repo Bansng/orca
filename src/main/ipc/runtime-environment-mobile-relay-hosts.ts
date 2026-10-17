@@ -10,12 +10,23 @@ import {
   runtimeEnvironmentStatusFromSnapshot,
   type RuntimeEnvironmentStatus
 } from '../../shared/runtime-host-status'
-import type { MobileDesktopRelayHosts } from '../runtime/mobile-desktop-relay/mobile-desktop-relay-hosts'
+import type {
+  MobileDesktopRelayHosts,
+  MobileDesktopRelayHostWatch
+} from '../runtime/mobile-desktop-relay/mobile-desktop-relay-hosts'
 import { resolveManagedRuntimeEnvironment } from './runtime-environment-managed-tunnel'
 import type { SshConnectionState } from '../../shared/ssh-types'
 import { getRegisteredSshState, listRegisteredSshTargets } from '../ssh/ssh-target-registry'
 import { getRuntimeEnvironmentStatusSnapshots } from './runtime-environment-request-connections'
-import { callRuntimeEnvironment } from './runtime-environment-transport-routing'
+import {
+  callRuntimeEnvironment,
+  subscribeRuntimeEnvironment
+} from './runtime-environment-transport-routing'
+import type { RemoteRuntimeSubscription } from '../../shared/remote-runtime-client'
+import { isRuntimeSubscriptionReplayResponse } from '../../shared/runtime-subscription-replay'
+import { isRuntimeEnvironmentManuallyDisconnected } from './runtime-environment-manual-disconnect'
+import { onRuntimeEnvironmentStatusPublished } from './runtime-environment-status-owner'
+import { getRuntimeEnvironmentTransportGeneration } from './runtime-environment-transport-generation'
 
 const retirementListeners = new Set<(environmentId: string) => void>()
 
@@ -110,8 +121,85 @@ export function createRuntimeEnvironmentMobileRelayHosts(): MobileDesktopRelayHo
     onEnvironmentRetired: (listener) => {
       retirementListeners.add(listener)
       return () => retirementListeners.delete(listener)
+    },
+    onStatusChanged: onRuntimeEnvironmentStatusPublished,
+    watchChanges: (host, expected, callbacks) =>
+      watchRuntimeEnvironmentChanges(userDataPath, host.environmentId, expected, callbacks)
+  }
+}
+
+/** Main's own client-event stream to one server, bound to the transport and pairing it opened on. */
+function watchRuntimeEnvironmentChanges(
+  userDataPath: string,
+  environmentId: string,
+  expected: { pairingRevision: number; runtimeId: string | null },
+  callbacks: { onChange: () => void; onClose: () => void }
+): MobileDesktopRelayHostWatch {
+  const controller = new AbortController()
+  let subscription: RemoteRuntimeSubscription | null = null
+  const generation = getRuntimeEnvironmentTransportGeneration(environmentId)
+  const current = (): boolean =>
+    !controller.signal.aborted &&
+    getRuntimeEnvironmentTransportGeneration(environmentId) === generation
+  const close = (): void => {
+    controller.abort()
+    subscription?.close()
+  }
+  const end = (): void => {
+    if (!controller.signal.aborted) {
+      close()
+      callbacks.onClose()
     }
   }
+  const environment = listRelayableEnvironments(userDataPath).find(
+    (entry) => entry.id === environmentId
+  )
+  if (
+    !environment ||
+    isRuntimeEnvironmentManuallyDisconnected(environmentId) ||
+    pairingRevision(environment) !== expected.pairingRevision ||
+    environment.runtimeId !== expected.runtimeId
+  ) {
+    queueMicrotask(end)
+    return { close, current }
+  }
+  subscribeRuntimeEnvironment(
+    userDataPath,
+    environmentId,
+    'runtime.clientEvents.subscribe',
+    undefined,
+    15_000,
+    {
+      onEvent: (payload) => {
+        if (payload.type === 'response' && payload.response.ok && current()) {
+          const { response } = payload
+          if (isRuntimeSubscriptionReplayResponse(response) || isWorkspaceChange(response.result)) {
+            callbacks.onChange()
+          }
+        }
+      },
+      onClose: end
+    },
+    current,
+    controller.signal
+  ).then((opened) => {
+    subscription = opened
+    if (controller.signal.aborted) {
+      opened.close()
+    }
+  }, end)
+  return { close, current }
+}
+
+function isWorkspaceChange(message: unknown): boolean {
+  if (typeof message !== 'object' || message === null || !('type' in message)) {
+    return false
+  }
+  return (
+    message.type === 'ready' ||
+    message.type === 'worktreesChanged' ||
+    message.type === 'reposChanged'
+  )
 }
 
 function pairingRevision(environment: KnownRuntimeEnvironment): number {

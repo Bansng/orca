@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => {
     current: { getConnectGeneration: () => 1 }
   }
   const environments: { current: string[] } = { current: ['env-1'] }
-  return { read: vi.fn(), publish: vi.fn(), os, connection, status, environments }
+  return { read: vi.fn(), publish: vi.fn(), clear: vi.fn(), os, connection, status, environments }
 })
 
 vi.mock('../../shared/app-environment', () => ({
@@ -29,7 +29,10 @@ vi.mock('../ssh/ssh-host-server-status', () => ({
 vi.mock('./ssh-ipc-context', () => ({
   connectionManager: { getConnection: () => mocks.connection.current }
 }))
-vi.mock('./runtime-environment-managed-tunnel', () => ({ publishHostServerStatus: mocks.publish }))
+vi.mock('./runtime-environment-managed-tunnel', () => ({
+  publishHostServerStatus: mocks.publish,
+  clearLaunchSessionNote: mocks.clear
+}))
 
 const { forgetLaunchSessionVerdict, noteEndedLaunchSshSession } =
   await import('./ssh-host-launch-session-note')
@@ -127,6 +130,56 @@ describe('noteEndedLaunchSshSession', () => {
     clock = 11 * 60_000
     await noteEndedLaunchSshSession('ssh-1', 'env-1', () => clock)
     expect(mocks.read).toHaveBeenCalledTimes(2)
+  })
+
+  it('clears the warning once a later probe finds the launching session live', async () => {
+    let clock = 0
+    await noteEndedLaunchSshSession('ssh-1', 'env-1', () => clock)
+    mocks.status.current = { kind: 'managed', environmentId: 'env-1', launchSessionEnded: true }
+    // Another desktop restarted the server under a session that is still open.
+    mocks.read.mockResolvedValue('live')
+    clock = 11 * 60_000
+    await noteEndedLaunchSshSession('ssh-1', 'env-1', () => clock)
+    expect(mocks.read).toHaveBeenCalledTimes(2)
+    expect(mocks.clear).toHaveBeenCalledWith('ssh-1', 'env-1')
+  })
+
+  it.each([
+    ['cannot ask', () => mocks.read.mockResolvedValue('unverifiable')],
+    ['finds no record', () => mocks.read.mockResolvedValue('not-recorded')],
+    ['fails', () => mocks.read.mockRejectedValue(new Error('ssh down'))]
+  ])('keeps a proven ended verdict when the later probe %s', async (_name, unanswered) => {
+    let clock = 0
+    await noteEndedLaunchSshSession('ssh-1', 'env-1', () => clock)
+    unanswered()
+    clock = 11 * 60_000
+    // A connect replaced the status before the recheck, which republishes the warning.
+    mocks.status.current = { kind: 'managed', environmentId: 'env-1' }
+    await noteEndedLaunchSshSession('ssh-1', 'env-1', () => clock)
+    expect(mocks.clear).not.toHaveBeenCalled()
+    expect(mocks.publish).toHaveBeenCalledTimes(2)
+    // A status a later connect replaced still gets the warning back.
+    mocks.status.current = { kind: 'managed', environmentId: 'env-1' }
+    await noteEndedLaunchSshSession('ssh-1', 'env-1', () => clock)
+    expect(mocks.read).toHaveBeenCalledTimes(2)
+    expect(mocks.publish).toHaveBeenLastCalledWith('ssh-1', {
+      kind: 'managed',
+      environmentId: 'env-1',
+      launchSessionEnded: true
+    })
+  })
+
+  it('never restores the warning for a host disconnected while its recheck failed', async () => {
+    let clock = 0
+    await noteEndedLaunchSshSession('ssh-1', 'env-1', () => clock)
+    mocks.status.current = undefined
+    mocks.read.mockImplementationOnce(async () => {
+      mocks.connection.current = { getConnectGeneration: () => 1 }
+      throw new Error('ssh closed')
+    })
+    clock = 11 * 60_000
+    await noteEndedLaunchSshSession('ssh-1', 'env-1', () => clock)
+    expect(mocks.publish).toHaveBeenCalledOnce()
   })
 
   it('drops an answer whose server was unlinked or whose connection changed meanwhile', async () => {

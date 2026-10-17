@@ -46,10 +46,10 @@ const {
   orcadMachineIdentity,
   orcadMachineOwnershipUnresolvedMessage,
   parseOrcadMachineHomeProbe,
-  ORCAD_MACHINE_CLAIM_ARBITER_DIRNAME,
   ORCAD_MACHINE_CLAIM_FILENAME,
   ORCAD_MACHINE_HOMES_DIRNAME
 } = await import('./orcad-machine-home')
+const { ORCAD_MACHINE_CLAIM_ARBITER_DIRNAME } = await import('./orcad-machine-claim-command')
 const { computeRemoteInstallDir } = await import('./remote-versioned-install')
 const { ORCAD_INSTALL_MODEL } = await import('./remote-install-model')
 const { orcadLivenessProbeCommand, ORCAD_PID_FILENAME } = await import('./orcad-remote-launch')
@@ -263,6 +263,28 @@ describe.runIf(POSIX)('resolveOrcadMachineHome on a home several machines share'
     expect(await resolveOrcadMachineHome(a, true)).toEqual(loginHomeResult())
   })
 
+  it('never lets another Mac claim a live install whose owner recorded no machine identity', async () => {
+    const nfs = { homeSource: 'filer:/export/home' }
+    const b = machine('node-b', 'node-b', nfs)
+    mkdirSync(join(home, '.orca-remote', 'orcad-0.1.0+abc'), { recursive: true })
+    writeFileSync(join(home, '.orca-remote', 'orcad-active.json'), '{"schemaVersion":1}')
+    // node-a's older orcad is running: its owner names only node-a's hostname.
+    legacyOwner('node-a', null)
+
+    await expect(resolveOrcadMachineHome(b, true)).rejects.toThrow(
+      /recorded only a hostname[\s\S]*If node-b set it up/
+    )
+    expect(existsSync(claimPath())).toBe(false)
+    // The same Mac under a drifted hostname is just as unprovable, so it is not claimed either.
+    await expect(
+      resolveOrcadMachineHome(machine('node-a', 'cafe-wifi', nfs), true)
+    ).rejects.toThrow(/recorded only a hostname/)
+    // node-a, still under the name its owner recorded, keeps its own install.
+    expect(await resolveOrcadMachineHome(machine('node-a', 'node-a', nfs), true)).toEqual(
+      loginHomeResult()
+    )
+  })
+
   it('lets exactly one machine claim a home on a filesystem without hard links', async () => {
     const a = machine('node-a', 'node-a', { noHardLinks: true, claimWriteDelay: 0 })
     const b = machine('node-b', 'node-b', { noHardLinks: true, claimWriteDelay: 0.5 })
@@ -441,6 +463,24 @@ describe('decideOrcadMachineHome', () => {
       dataRootOwners: [{ host: 'node-b', machineIdentity: null }]
     })
     expect(decideOrcadMachineHome(unrecorded, linux).kind).toBe('machine-home')
+  })
+
+  it('claims no install whose owner names neither its machine nor a matching hostname', () => {
+    const uuid = '12345678-1234-1234-1234-123456789abc'
+    const mac = orcadMachineIdentity(darwin, `"IOPlatformUUID" = "${uuid}"`, 'mac-b')
+    const otherMac = { host: 'mac-a', machineIdentity: null }
+    expect(
+      decideOrcadMachineHome(probe(darwin, { identity: mac, dataRootOwners: [otherMac] }), darwin)
+    ).toEqual({ kind: 'unresolved', machineKey: mac?.key, cause: 'unattributed-owner' })
+    // A local disk cannot be another machine's.
+    expect(
+      decideOrcadMachineHome(
+        probe(darwin, { identity: mac, dataRootOwners: [otherMac], homeOnLocalDisk: true }),
+        darwin
+      ).kind
+    ).toBe('claim')
+    const nameless = probe(linux, { dataRootOwners: [{ host: null, machineIdentity: null }] })
+    expect(decideOrcadMachineHome(nameless, linux).kind).toBe('unresolved')
   })
 
   it('reads a Linux home’s filesystem type before its df source', () => {

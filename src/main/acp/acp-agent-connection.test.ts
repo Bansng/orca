@@ -10,6 +10,7 @@ import {
   type AcpAgentConnection,
   type AcpAgentConnectionOptions
 } from './acp-agent-connection'
+import { AcpAuthRequiredError } from './acp-errors'
 import { AcpScriptedAgent, deferred, tick } from './acp-scripted-agent.test-support'
 
 const teardown = vi.hoisted(() =>
@@ -131,6 +132,38 @@ describe('ACP process-owning connection', () => {
     connection.onExit(late)
     expect(late).toHaveBeenCalledOnce()
     await expect(connection.close()).resolves.toBe(true)
+  })
+
+  it('ends a turn signed out at a sign-in prompt line and never retains its URL', async () => {
+    const said: string[] = []
+    const onExit = vi.fn((error: Error) => said.push(error.message))
+    const { connection, child } = fixture({
+      onExit,
+      onDiagnostic: (message) => said.push(message),
+      signInPrompt: (line) => line.startsWith('Open the following link to authenticate')
+    })
+    await connection.start(start)
+    const turn = connection.prompt([...prompt]).catch((error: unknown) => error)
+    child.stderr.write(
+      `warming up\nOpen the following link to authenticate the ACP server: https://accounts.example/auth?state=${'x'.repeat(8192)}`
+    )
+    child.stderr.write('s3cret\n')
+    const error = await turn
+    expect(error).toBeInstanceOf(AcpAuthRequiredError)
+    await vi.waitFor(() => expect(onExit).toHaveBeenCalledOnce())
+    said.push(String(error), connection.stderrTail())
+    expect(connection.stderrTail()).toBe('warming up')
+    expect(said.join('\n')).not.toMatch(/s3cret|accounts\.example/)
+  })
+
+  it('drops an overlong stderr line it could not classify instead of keeping its prefix', async () => {
+    const { connection, child } = fixture({ signInPrompt: (line) => line.endsWith('authenticate') })
+    await connection.start(start)
+    const link = `https://accounts.example/auth?state=${'x'.repeat(9000)}`
+    child.stderr.write(`warming up\nplease visit ${link}`)
+    child.stderr.write('s3cret\nready\n')
+    await vi.waitFor(() => expect(connection.stderrTail()).toContain('ready'))
+    expect(connection.stderrTail()).toBe('warming up\nready')
   })
 
   it('keeps cancel writable after stdout EOF and waits for process exit evidence', async () => {

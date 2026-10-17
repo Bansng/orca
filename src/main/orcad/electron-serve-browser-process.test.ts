@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 import type * as RunProcessModule from '@orca/process-host'
 import type * as FsPromisesModule from 'node:fs/promises'
 import type { RuntimeBrowserCommandHost } from '../runtime/browser/browser-command-contracts'
@@ -449,6 +450,27 @@ describe('ElectronServeBrowserProcess command routing', () => {
     await expect(commands.browserTabCurrent({ worktree: 'wt-a' })).rejects.toMatchObject({
       code: 'browser_no_tab'
     })
+  })
+
+  it('scopes a folder workspace through the browser-workspace resolver', async () => {
+    // The git-only selector cannot name a folder workspace; only the browser resolver can.
+    const folderHost: RuntimeBrowserCommandHost = {
+      ...host,
+      resolveWorktreeSelector: async () => {
+        throw new Error('selector_not_found')
+      },
+      resolveBrowserWorkspace: async () => ({ id: 'folder:docs' })
+    }
+    const commands = (await startProvider()).createCommands(folderHost)
+
+    const created = z
+      .object({ browserPageId: z.string() })
+      .parse(await commands.browserTabCreate({ worktree: 'id:folder:docs' }))
+    await commands.browserGoto({ worktree: 'id:folder:docs', url: 'https://example.test/' })
+
+    const request = (await browserRequests()).at(-1)
+    expect(request?.method).toBe('browser.goto')
+    expect(request?.params.page).toBe(created.browserPageId)
   })
 
   // Why this matters: the runtime advertises browser.tabCreate.known-id.v1

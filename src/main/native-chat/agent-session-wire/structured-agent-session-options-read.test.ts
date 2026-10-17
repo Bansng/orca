@@ -9,6 +9,10 @@ import {
 } from '../agent-model-catalog/agent-model-catalog-store'
 import type { StructuredAgentSessionMutationContext } from './structured-agent-session-host-mutations'
 import { readStructuredAgentSessionOptions } from './structured-agent-session-options-read'
+import { AcpStructuredOptions } from '../../acp/acp-structured-options'
+import { GROK_CONFIG_OPTIONS } from '../../acp/acp-structured-adapter.test-support'
+import { SessionConfigOptionSchema } from '../../acp/generated/acp-protocol.generated'
+import { withLiveCatalogListing } from '../agent-model-catalog/agent-model-catalog-entry'
 import { StructuredAgentSessionTaskQueue } from './structured-agent-session-task-queue'
 import { NO_STRUCTURED_AGENTS } from './structured-agent-session-adapter-router-test-support'
 
@@ -70,7 +74,7 @@ describe('options at rest', () => {
   })
 
   it.each(['codex', 'omp', 'grok', 'opencode'] as const)(
-    'omits an unknown model for %s while the catalog is unavailable',
+    '%s keeps an unknown model and learns menus from later options',
     async (provider) => {
       const record = { ...restingRecord(), provider }
       const probe = vi.fn(() => new Promise<AgentModelCatalogSuccess>(() => {}))
@@ -81,40 +85,60 @@ describe('options at rest', () => {
         resolveAccountHome: async () => ({ variable: 'CODEX_HOME', path: '/homes/a' }),
         probes: { codex: probe }
       })
+      let live = false
+      const reader = new AcpStructuredOptions()
+      const configOptions = SessionConfigOptionSchema.array().parse(GROK_CONFIG_OPTIONS)
       const resting = {
         child: null,
         params: { provider: 'codex' },
         journal: { threadGoal: () => null, context: { floor: () => null } }
       }
-      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the resting read touches only these members.
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: options reads touch only these context members.
       const context = {
         deps: {
-          adapter: {},
+          adapter: { readOptions: async () => withLiveCatalogListing(reader.read()) },
           agents: NO_STRUCTURED_AGENTS,
           store: { getRecord: () => record },
           modelCatalog
         },
         serialize: (_sessionId: string, task: () => Promise<unknown>) => task(),
-        openConversation: async () => resting,
+        openConversation: async () => (live ? { ...resting, child: { fence: 7 } } : resting),
         conversation: async () => resting
       } as unknown as StructuredAgentSessionMutationContext
 
-      const result = await readStructuredAgentSessionOptions(context, SESSION, {
-        readsWithoutModel: true
-      })
+      const read = () =>
+        readStructuredAgentSessionOptions(context, SESSION, { readsWithoutModel: true })
+      const result = await read()
       expect(probe).not.toHaveBeenCalled()
       expect(result.models).toEqual([])
       expect(result.current).not.toHaveProperty('model')
       record.options = { model: 'later-model', effort: 'off' }
       // Only Codex is registered here, and a mode is stated only for a registered agent's chat.
-      expect(
-        (await readStructuredAgentSessionOptions(context, SESSION, { readsWithoutModel: true }))
-          .current
-      ).toEqual({
+      expect((await read()).current).toEqual({
         model: 'later-model',
         effort: 'off',
         ...(provider === 'codex' ? { permissionMode: 'ask' } : {})
       })
+      for (const emptyStart of [false, true]) {
+        modelCatalog.recordLiveListing(SESSION, {
+          models: [{ id: 'old', label: 'Old', isDefault: true, efforts: [] }]
+        })
+        reader.adoptSession(emptyStart ? {} : { configOptions })
+        modelCatalog.recordLiveListing(SESSION, reader.startListing())
+        reader.adoptConfigOptions(
+          configOptions.map((option) =>
+            option.type === 'select' && option.category === 'model'
+              ? { ...option, currentValue: 'grok-4.6' }
+              : option
+          )
+        )
+        record.options = { model: 'grok-4.6', effort: 'high' }
+        live = true
+        await read()
+        live = false
+        const answer = await read()
+        expect(answer.models).toEqual(reader.read().models)
+      }
     }
   )
 })

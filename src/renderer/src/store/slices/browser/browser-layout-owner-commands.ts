@@ -32,6 +32,8 @@ export function recordBrowserTabOpen(state: BrowserCommandState, tab: BrowserWor
     sessionPartition: tab.sessionPartition ?? null,
     groupId: entry.groupId,
     ...(afterTabId ? { afterTabId } : position === 0 ? { index: 0 } : {}),
+    createdAt: entry.createdAt,
+    browserCreatedAt: tab.createdAt,
     // Open to the side: main makes the window's new split with the tab.
     ...newGroupSplitOf(state, tab.worktreeId, entry.groupId, entry.id)
   })

@@ -4,11 +4,13 @@
 // preview by the same shared rule the window used. Main's copy reaches the window through frames.
 
 import type { Tab } from '../../../../../../shared/tab-types'
+import type { EditorFileRename } from '../../../../../../shared/workspace-layout/workspace-layout-command-types'
 import type { LayoutEditorFile } from '../../../../../../shared/workspace-layout/workspace-layout-model'
 import { recordLayoutApply } from '@/runtime/layout-apply-send'
 import { newGroupSplitOf } from '@/runtime/layout-owner-new-group-split'
 import type { AppState } from '../../../types'
 import type { OpenFile } from '../types/open-file'
+import type { OpenFilePathRekey } from '../types/open-file-path-rekey'
 import type { RestoredEditorOwnerResult } from '../types/restored-editor-owner'
 import { isEditorTabContentType } from './editor-tab-content-type'
 
@@ -32,6 +34,7 @@ export function recordOpenedEditorTabInLayoutOwner(state: EditorOwnerState, tab:
     // Open to the side: main makes the window's new split with the tab.
     ...newGroupSplitOf(state, tab.worktreeId, tab.groupId, tab.id),
     ...(tab.isPreview ? { preview: true } : {}),
+    createdAt: tab.createdAt,
     // Only edit-mode files are restored after restart; the window saves no other.
     ...(file?.mode === 'edit' ? { file: restorableEditorFile(file) } : {})
   })
@@ -74,30 +77,22 @@ export function recordClosedEditorTabInLayoutOwner(
   }
 }
 
-/** Where a reopened editor tab ended up once the window restored its old position. */
-export function recordReopenedEditorTabPositionInLayoutOwner(
+/** Editor tabs of a workspace whose file record the window just dropped without closing them. */
+export function recordDroppedEditorFilesInLayoutOwner(
   state: EditorOwnerState,
-  worktreeId: string,
-  fileId: string,
-  groupId: string | undefined
+  filesBefore: readonly OpenFile[],
+  worktreeId: string
 ): void {
-  const tab = (state.unifiedTabsByWorktree[worktreeId] ?? []).find(
-    (candidate) =>
-      candidate.entityId === fileId &&
-      isEditorTabContentType(candidate.contentType) &&
-      (groupId === undefined || candidate.groupId === groupId)
+  const kept = new Set(state.openFiles.map((file) => file.id))
+  const dropped = new Set(
+    filesBefore.flatMap((file) =>
+      file.worktreeId === worktreeId && !kept.has(file.id) ? [file.id] : []
+    )
   )
-  const group = tab
-    ? (state.groupsByWorktree[worktreeId] ?? []).find((candidate) => candidate.id === tab.groupId)
-    : undefined
-  const index = tab && group ? group.tabOrder.indexOf(tab.id) : -1
-  if (tab && group && index !== -1) {
-    recordLayoutApply(state, worktreeId, {
-      type: 'moveTab',
-      tabId: tab.id,
-      toGroupId: group.id,
-      index
-    })
+  for (const tab of state.unifiedTabsByWorktree[worktreeId] ?? []) {
+    if (dropped.has(tab.entityId)) {
+      recordClosedEditorTabInLayoutOwner(state, tab)
+    }
   }
 }
 
@@ -147,6 +142,37 @@ export function recordRestoredEditorMoveInLayoutOwner(
     groupId,
     ...(file.mode === 'edit' ? { file: restorableEditorFile(file) } : {})
   })
+}
+
+/** Open files the window just rekeyed for a rename or move on disk, one command per workspace. */
+export function recordRenamedEditorFilesInLayoutOwner(
+  state: EditorOwnerState,
+  filesBefore: readonly OpenFile[],
+  rekeys: readonly OpenFilePathRekey[]
+): void {
+  const before = new Map(filesBefore.map((file) => [file.id, file]))
+  const after = new Map(state.openFiles.map((file) => [file.id, file]))
+  const renamesByWorktree = new Map<string, EditorFileRename[]>()
+  for (const { oldFileId, newFileId } of rekeys) {
+    const old = before.get(oldFileId)
+    const renamed = after.get(newFileId)
+    if (!old || !renamed) {
+      continue
+    }
+    const renames = renamesByWorktree.get(old.worktreeId) ?? []
+    renamesByWorktree.set(old.worktreeId, renames)
+    renames.push({
+      fileId: oldFileId,
+      newFileId,
+      // Main keeps only edit-mode files' records, by path.
+      ...(old.mode === 'edit'
+        ? { record: { fromFilePath: old.filePath, file: restorableEditorFile(renamed) } }
+        : {})
+    })
+  }
+  for (const [worktreeId, renames] of renamesByWorktree) {
+    recordLayoutApply(state, worktreeId, { type: 'renameEditorFiles', renames })
+  }
 }
 
 /** The fields the window's session save keeps for an edit-mode file. */

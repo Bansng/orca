@@ -9,18 +9,27 @@ import type { Repo } from '../../../../../../shared/repo-types'
 import type { WorkspaceStatusDefinition, Worktree } from '../../../../../../shared/worktree/types'
 import type { WorktreeLineage } from '../../../../../../shared/worktree/lineage-types'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host'
-import { folderWorkspaceKey } from '../../../../../../shared/workspace-scope'
-import { getFolderWorkspaceHostIdentity } from '../../../../../../shared/folder-workspace-worktree'
 import { getHostDisplayLabelOverrides } from '../../../../../../shared/host-setting-overrides'
-import { buildSidebarRowPlan } from '../grouping/build-rows'
+import { planSidebarRows } from '../../../../../../shared/sidebar-list/sidebar-row-plan'
+import { createSidebarPRGroupReader } from '../grouping/pr-group-key'
 import { useEffectiveCollapsedGroups } from './use-collapsed-groups'
 import type { ProjectGroupingModel } from '../../../../../../shared/project-section-grouping'
-import type { PinnedWorktreeDisplayPolicy, Row, WorktreeGroupBy } from '../grouping/row-types'
+import type {
+  ImportedWorktreesCardCandidate,
+  NewExternalWorktreesInboxCandidate,
+  PinnedWorktreeDisplayPolicy,
+  Row,
+  WorktreeGroupBy
+} from '../../../../../../shared/sidebar-list/row-types'
 import { getLogicalRepoOrderRankById } from '../../../../../../shared/project-section-order'
-import { getEmptyProjectPlaceholderRepoIds } from '../../empty-project-placeholder-repos'
-import { deferHostSectionCollapse, scopeHostSectionCollapse } from '../../host-section-collapse'
-import { addHostSectionRows } from '../../host-section-rows'
-import { orderHostSectionOptions } from '../../host-section-order'
+import { getEmptyProjectPlaceholderRepoIds } from '../../../../../../shared/sidebar-list/empty-project-placeholder-repos'
+import {
+  deferHostSectionCollapse,
+  scopeHostSectionCollapse
+} from '../../../../../../shared/sidebar-list/host-section-collapse'
+import { addHostSectionRows } from '../../../../../../shared/sidebar-list/host-section-rows'
+import { collectRenderedSidebarRowKeys } from './rendered-row-keys'
+import { orderHostSectionOptions } from '../../../../../../shared/sidebar-list/host-section-order'
 import { buildSidebarHostOptions } from '../../sidebar-host-options'
 import { selectPendingWorktreeCreationKeys } from './pending-worktree-creation-keys'
 
@@ -43,32 +52,11 @@ type SectionRowsArgs = {
   visibleReposForRows: readonly Repo[]
   visibleProjectGroupsForRows: readonly ProjectGroup[]
   visibleFolderWorkspacesForRows: readonly FolderWorkspace[]
-  importedWorktreesByRepo: Parameters<typeof buildSidebarRowPlan>[14]
-  newExternalWorktreesInboxByRepo: Parameters<typeof buildSidebarRowPlan>[15]
+  importedWorktreesByRepo: ReadonlyMap<string, ImportedWorktreesCardCandidate>
+  newExternalWorktreesInboxByRepo: ReadonlyMap<string, NewExternalWorktreesInboxCandidate>
   filterRepoIds: readonly string[]
   visibleWorkspaceHostIds: readonly ExecutionHostId[] | null
   workspaceHostScope: AppState['workspaceHostScope']
-}
-
-function collectRenderedSidebarRowKeys(sectionRows: ReturnType<typeof addHostSectionRows>) {
-  const keys = new Set<string>()
-  for (const row of sectionRows) {
-    if (row.type === 'header') {
-      keys.add(row.key)
-    } else if (row.type === 'item') {
-      keys.add(row.rowKey)
-    } else if (row.type === 'folder-workspace') {
-      keys.add(getFolderWorkspaceHostIdentity(row.folderWorkspace))
-      keys.add(folderWorkspaceKey(row.folderWorkspace.id))
-    } else if (row.type === 'pending-creation') {
-      keys.add(`pending:${row.creationId}`)
-    } else if (row.type === 'imported-worktrees-card') {
-      keys.add(row.key)
-    } else if (row.type === 'new-external-worktrees-inbox') {
-      keys.add(row.key)
-    }
-  }
-  return keys
 }
 
 // Builds the full sidebar row model: grouped worktree rows first, then the host-section
@@ -157,31 +145,29 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
     args.workspaceHostScope !== 'all' || args.visibleWorkspaceHostIds !== null
   const rowPlan = useMemo(
     () =>
-      buildSidebarRowPlan(
-        args.groupBy,
+      planSidebarRows({
+        groupBy: args.groupBy,
         worktrees,
         repoMap,
-        args.prCache,
-        new Set(),
+        prGroupOf: createSidebarPRGroupReader(repoMap, args.prCache),
         repoOrder,
-        args.workspaceStatuses,
-        args.projectOrderBy,
-        args.worktreeLineageById,
-        args.worktreeMap,
-        true,
-        args.settings,
-        args.visibleProjectGroupsForRows,
+        workspaceStatuses: args.workspaceStatuses,
+        projectOrderBy: args.projectOrderBy,
+        lineageById: args.worktreeLineageById,
+        worktreeMap: args.worktreeMap,
+        nestLineage: true,
+        projectGroups: args.visibleProjectGroupsForRows,
         placeholderRepoIds,
-        args.importedWorktreesByRepo,
-        args.newExternalWorktreesInboxByRepo,
+        importedWorktreesByRepo: args.importedWorktreesByRepo,
+        newExternalWorktreesInboxByRepo: args.newExternalWorktreesInboxByRepo,
         pendingCreations,
-        args.projectGrouping,
-        args.visibleFolderWorkspacesForRows,
+        projectGrouping: args.projectGrouping,
+        folderWorkspaces: args.visibleFolderWorkspacesForRows,
         hostLabelById,
         defaultHostId,
-        args.pinnedDisplayPolicy,
-        args.filterRepoIds
-      ),
+        pinnedDisplayPolicy: args.pinnedDisplayPolicy,
+        filterRepoIds: args.filterRepoIds
+      }),
     [
       args.groupBy,
       worktrees,
@@ -193,7 +179,6 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
       args.projectOrderBy,
       args.worktreeLineageById,
       args.worktreeMap,
-      args.settings,
       args.projectGrouping,
       args.visibleProjectGroupsForRows,
       args.visibleFolderWorkspacesForRows,
@@ -221,7 +206,6 @@ export function useSidebarSectionRows(args: SectionRowsArgs) {
     worktreeLineageById: args.worktreeLineageById,
     prCache: args.prCache,
     workspaceStatuses: args.workspaceStatuses,
-    settings: args.settings,
     projectGroups: args.visibleProjectGroupsForRows,
     projectGrouping: args.projectGrouping,
     folderWorkspaces: args.visibleFolderWorkspacesForRows,

@@ -103,25 +103,27 @@ describe('accept', () => {
     expect(await drafts()).toHaveLength(1)
   })
 
-  it('routes an image send to the immediate path even while working (text-only v1)', async () => {
-    await workingSend()
-    const body = {
-      kind: 'message' as const,
-      role: 'user' as const,
-      blocks: [{ type: 'image-ref' as const, path: '/tmp/shot.png' }]
+  it('queues an image message in line behind text, and hands it over with its image', async () => {
+    const working = await workingSend()
+    const text = await send('text first', 'queue-if-active').result
+    const body = hostTestMessage('and look at this')
+    body.blocks.push({ type: 'image-ref', path: '/tmp/shot.png' })
+    const fields = { body, delivery: 'queue-if-active' as const }
+    const envelopeFields = rig.envelope(fields, 'agentSession.send', hostTestOperationId())
+    const image = await host.send(CALLER, { envelope: envelopeFields, ...fields, userSend: true })
+    if (!text.ok || !('queued' in text.value) || !image.ok || !('queued' in image.value)) {
+      throw new Error('expected queued receipts')
     }
-    const clientOperationId = hostTestOperationId()
-    const result = await host.send(CALLER, {
-      envelope: rig.envelope(
-        { body, delivery: 'queue-if-active' },
-        'agentSession.send',
-        clientOperationId
-      ),
-      body,
-      delivery: 'queue-if-active'
+    const [textId, imageId] = [text.value.queued.messageId, image.value.queued.messageId]
+    await settleAccepted(working, 'a')
+    await eventually(async () => expect(await rig.handoff(textId)).toBeDefined())
+    expect(await rig.handoff(imageId)).toBeUndefined()
+    await settleAccepted(await rig.handoffId(textId), 'b')
+    await eventually(async () => {
+      const handedOver = await rig.handoffId(imageId)
+      const sent = dispatch.mock.calls.find(([input]) => input.clientMessageId === handedOver)
+      expect(sent?.[0].body.blocks).toEqual(body.blocks)
     })
-    expect(result).toMatchObject({ ok: true, value: { submission: expect.anything() } })
-    expect(await drafts()).toHaveLength(0)
   })
 
   it('a send without the delivery field never queues, whatever the session is doing', async () => {

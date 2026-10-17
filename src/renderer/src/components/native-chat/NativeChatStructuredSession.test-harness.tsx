@@ -248,6 +248,8 @@ export function createStructuredSessionMocks() {
               steer: mocks.queuedSteer,
               remove: mocks.queuedRemove,
               edit: mocks.queuedEdit,
+              busy: () => false,
+              queueBusy: false,
               steerNewest: mocks.queuedSteerNewest
             },
             threadGoal: mocks.threadGoal,

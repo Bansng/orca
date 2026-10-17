@@ -38,6 +38,7 @@ import { throwIfAiVaultScanCancelled } from './ai-vault-scan-cancellation'
 import { noteAiVaultScanFilesRead, noteAiVaultScanReading } from './ai-vault-scan-progress'
 import { DEFAULT_AI_VAULT_SCAN_LIMIT } from '../../shared/ai-vault-session-depth'
 import { withDevinSessionsDbScan } from './session-scanner-devin-db'
+import { isConversationNameRequestSession } from './conversation-name-request-sessions'
 import { withOpenCodeSqliteScanScope } from './session-scanner-opencode-sqlite-scan-scope'
 
 const SESSION_PARSE_CONCURRENCY = 8
@@ -256,7 +257,7 @@ async function parseSessionCandidates(args: {
       if (result.issue) {
         recordSessionScanIssue(args.issues, result.issue)
       }
-      if (result.session) {
+      if (result.session && !isConversationNameRequestSession(result.session)) {
         sessions.add(result.session)
       }
     }

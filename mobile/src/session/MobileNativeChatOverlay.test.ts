@@ -11,13 +11,14 @@ vi.mock('react-native', () => ({
 }))
 
 vi.mock('./MobileNativeChatView', () => ({ MobileNativeChatView: 'ChatView' }))
+vi.mock('../platform/use-reduced-motion', () => ({ useReducedMotionEnabled: () => null }))
 vi.mock('./MobileNativeChatQueuedMessages', () => ({ MobileNativeChatQueuedMessages: 'Queued' }))
 vi.mock('./MobileNativeChatBackgroundTasks', () => ({
   MobileNativeChatBackgroundTasks: 'BackgroundTasks'
 }))
 vi.mock('./MobileNativeChatVisual', () => ({ useMobileNativeChatVisualRenderer: () => null }))
-vi.mock('./MobileNativeChatImageViewer', () => ({
-  MobileNativeChatImageViewerHost: 'View'
+vi.mock('./MobileNativeChatRowOverlaysHost', () => ({
+  MobileNativeChatRowOverlaysHost: 'View'
 }))
 
 function assistantTurn(id: string, text: string): NativeChatMessage {

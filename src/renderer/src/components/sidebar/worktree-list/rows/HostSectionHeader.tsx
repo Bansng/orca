@@ -3,7 +3,7 @@ import { AlertTriangle, ChevronDown, Loader2, Server, ServerOff } from 'lucide-r
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { translate } from '@/i18n/i18n'
-import type { HostHeaderRow } from '../../host-section-rows'
+import type { HostHeaderRow } from '../../../../../../shared/sidebar-list/host-section-rows'
 import { HostSectionHeaderMenu } from '../../HostSectionHeaderMenu'
 
 function formatSectionActivityLabel(count: number, label: string): string {

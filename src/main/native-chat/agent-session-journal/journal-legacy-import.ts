@@ -10,6 +10,7 @@
 // never be spliced into a sequence space that a structured session is also
 // writing; a later structured resume rolls the epoch again and rebuilds.
 
+import { adoptedTranscriptSourceObserver, validateAdoptedOpenCodeSource, type AdoptedTranscriptSource } from './adopted-transcript-source'
 import { createReadStream } from 'node:fs'
 import type { AgentType } from '../../../shared/agent-status-types'
 import type {
@@ -31,6 +32,7 @@ import { readOpenCodeNativeChatTranscriptFull } from '../transcript-opencode'
 import { boundSubagentEntryId } from '../subagent-entry-id-bounds'
 import { createLegacyIdentityTracker } from './journal-legacy-identity'
 import { createPiTranscriptCollector } from './journal-pi-active-branch'
+import { createNewestItemWindow } from './journal-newest-item-window'
 import type { JournalReplacementItem } from './journal-epoch-replacement'
 import {
   boundInlineText,
@@ -43,6 +45,7 @@ import type { AgentSessionJournal } from './journal-store'
 export type LegacyImportOptions = ResolveSessionFileOptions & {
   /** Resolve directly to this file, skipping path discovery. */
   filePath?: string
+  source?: AdoptedTranscriptSource
   limits?: JournalPayloadLimits
   decodedMessageIdentities?: true
 }
@@ -118,6 +121,7 @@ export async function prepareLegacyTranscriptImport(input: {
       transcriptAgent,
       agent: input.agent,
       sessionId: input.sessionId,
+      source: options.source,
       decodedMessageIdentities: options.decodedMessageIdentities,
       limits
     })
@@ -136,6 +140,16 @@ async function prepareOpenCodeImport(input: {
   limits: JournalPayloadLimits
 }): Promise<PreparedLegacyImport> {
   const dbPath = input.options?.filePath
+  if (input.options?.source) {
+    if (!dbPath) {
+      return { ok: false, error: 'The conversation database is unavailable.' }
+    }
+    try {
+      await validateAdoptedOpenCodeSource(dbPath, input.options.source)
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
   const read = await readOpenCodeNativeChatTranscriptFull(
     input.sessionId,
     dbPath ? { resolveDbPath: async () => dbPath } : {}
@@ -198,8 +212,13 @@ async function decodeReplacementItems(input: {
   agent: AgentType
   sessionId: string
   decodedMessageIdentities?: true
+  source?: AdoptedTranscriptSource
   limits: JournalPayloadLimits
 }): Promise<{ items: JournalReplacementItem[]; consumedBytes: number }> {
+  const source = input.source ? adoptedTranscriptSourceObserver({
+    agent: input.agent, filePath: input.filePath, source: input.source,
+    maxSourceBytes: MAX_LEGACY_IMPORT_RECORD_BYTES
+  }) : null
   const tracker = createLegacyIdentityTracker({
     transcriptAgent: input.transcriptAgent,
     agent: input.agent,
@@ -220,6 +239,7 @@ async function decodeReplacementItems(input: {
       input.filePath,
       0,
       (line, fallbackId) => {
+        source?.observe(line)
         const currentLineIndex = lineIndex
         lineIndex += 1
         if (pi) {
@@ -247,40 +267,15 @@ async function decodeReplacementItems(input: {
       true,
       MAX_LEGACY_IMPORT_RECORD_BYTES
     )
+    if (consumedBytes > 0) {
+      await source?.validate()
+    }
     if (pi) {
       await pi.project(retained.push)
     }
     return { items: retained.items(), consumedBytes }
   } finally {
     pi?.close()
-  }
-}
-
-/** The newest complete items that fit `maxBytes`; the latest item is always kept. */
-function createNewestItemWindow(maxBytes: number): {
-  push(item: JournalReplacementItem): void
-  items(): JournalReplacementItem[]
-} {
-  let entries: ({ item: JournalReplacementItem; bytes: number } | undefined)[] = []
-  let head = 0
-  let bytes = 0
-  return {
-    push(item) {
-      const itemBytes = Buffer.byteLength(JSON.stringify(item), 'utf8')
-      entries.push({ item, bytes: itemBytes })
-      bytes += itemBytes
-      while (bytes > maxBytes && head < entries.length - 1) {
-        bytes -= entries[head]?.bytes ?? 0
-        entries[head] = undefined
-        head += 1
-      }
-      // Drop evicted entries in batches so a long source stays linear.
-      if (head > 1024 && head * 2 > entries.length) {
-        entries = entries.slice(head)
-        head = 0
-      }
-    },
-    items: () => entries.slice(head).flatMap((entry) => (entry ? [entry.item] : []))
   }
 }
 

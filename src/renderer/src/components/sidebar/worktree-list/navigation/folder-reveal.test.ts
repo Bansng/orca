@@ -8,7 +8,7 @@ import {
   getKnownSidebarWorktreeById,
   sidebarWorkspaceStillExists
 } from './folder-reveal'
-import { getProjectGroupHeaderKey } from '../grouping/group-keys'
+import { getProjectGroupHeaderKey } from '../../../../../../shared/sidebar-list/group-keys'
 
 function makeFolderWorkspace(overrides: Partial<FolderWorkspace> = {}): FolderWorkspace {
   return {

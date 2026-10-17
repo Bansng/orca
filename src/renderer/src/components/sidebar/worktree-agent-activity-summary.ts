@@ -5,7 +5,7 @@ import {
   mergeAgentStatusOrchestration,
   parseAgentStatusPaneIdentity,
   resolveAgentStatusWorktreeId
-} from '@/lib/agent-status-worktree-attribution'
+} from '../../../../shared/agent-status-worktree-attribution'
 import {
   AGENT_STATUS_STALE_AFTER_MS,
   type AgentStatusOrchestrationContext

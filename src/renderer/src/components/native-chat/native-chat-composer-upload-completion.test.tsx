@@ -3,7 +3,10 @@ import { createRef } from 'react'
 import { act, cleanup, render, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { useNativeChatComposerAttachments } from './use-native-chat-composer-attachments'
-import { attachNativeChatSessionAttachmentPaths } from './native-chat-session-attachment-drop'
+import {
+  attachNativeChatSessionAttachmentPaths,
+  reserveNativeChatAttachmentChips
+} from './native-chat-session-attachment-drop'
 import { NativeChatPromptEditor } from './NativeChatPromptEditor'
 import type { NativeChatComposerInput } from './native-chat-composer-input'
 import {
@@ -116,7 +119,7 @@ async function uploadFixture(
   let uploaded = Promise.resolve()
   act(() => {
     uploaded = attachNativeChatSessionAttachmentPaths({
-      paths: [sourcePath],
+      pending: reserveNativeChatAttachmentChips(view.result.current.pendingChips, [sourcePath]),
       owner: {
         kind: 'runtime-session',
         environmentId: 'paired',

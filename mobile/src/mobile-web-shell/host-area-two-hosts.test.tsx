@@ -84,11 +84,7 @@ vi.mock('../navigation/host-stack', async () => {
     HostStack: () =>
       stack.hosts.map((hostId, index) => (
         <stack.Focused.Provider key={hostId} value={index === stack.hosts.length - 1}>
-          <MobileWebShellScreen
-            hostId={hostId}
-            route={{ pathname: `/h/${hostId}` }}
-            fallback={null}
-          />
+          <MobileWebShellScreen hostId={hostId} route={{ pathname: `/h/${hostId}` }} />
         </stack.Focused.Provider>
       ))
   }

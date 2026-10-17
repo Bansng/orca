@@ -35,6 +35,7 @@ import { useNativeChatInterruptedContinuation } from './NativeChatInterruptedCon
 import { NativeChatOrcaStopContext } from './native-chat-orca-stop-context'
 import { structuredSessionNotices } from './native-chat-structured-session-notices'
 import { NativeChatPromptSlotNotices } from './NativeChatComposerNotices'
+import { NativeChatInstallSlot, useNativeChatInstallSlot } from './NativeChatInstallSlot'
 import { useNativeChatComposerError } from './use-native-chat-composer-notice'
 import { useNativeChatProvisionalLaunch } from './use-native-chat-provisional-launch'
 import { useStructuredAgentSessionHostExecution } from './StructuredAgentSessionStatusBridge'
@@ -125,7 +126,6 @@ export function NativeChatStructuredSession(
   const hostPermission = useNativeChatHostPermissionGate(props.target, props.agent, agentLabel)
   const hostHeld = hostPermission.sendBlockedReason !== null
   const submits = useStructuredNativeChatSubmitReveal(controller, provisionalLaunch.retry, hostHeld)
-  const { revealLatest } = submits
   const promptResponse = useStructuredPromptResponseHold(submits.respond)
   const continuation = useNativeChatInterruptedContinuation({
     target: props.target,
@@ -199,6 +199,9 @@ export function NativeChatStructuredSession(
   // cancel then works.
   const promptsUnanswerable = pendingPromptsAllUnanswerableHere(controller.prompts)
   const composerShown = (prompt === null || promptsUnanswerable) && !readFailedFinally
+  // An owned prompt keeps its card; otherwise a missing program takes the composer's place.
+  const install = useNativeChatInstallSlot(props.target, props.agent, props.isVisible, agentLabel)
+  const composerOpen = composerShown && install.slot.kind !== 'install'
   const approval = prompt?.body.kind === 'approval' ? chatApprovalFromJournal(prompt.body) : null
   const cancelPrompt = () => {
     if (prompt && (controller.turnId || props.agent === 'pi')) {
@@ -215,7 +218,7 @@ export function NativeChatStructuredSession(
     questionAnswerInputRef,
     isVisible: props.isVisible,
     isFocusedGroup: props.isFocusedGroup,
-    composerReady: composerShown
+    composerReady: composerOpen
   })
   const questionBody = prompt?.body.kind === 'question' ? prompt.body : null
   const questions = questionBody ? agentSessionPromptQuestions(questionBody) : []
@@ -228,8 +231,8 @@ export function NativeChatStructuredSession(
     optionPickerRequest,
     setOptionPickerRequest,
     onError: reportComposerError,
-    onSubmitted: revealLatest,
-    sendBlockedReason: hostPermission.sendBlockedReason
+    onSubmitted: submits.revealLatest,
+    sendBlockedReason: hostPermission.sendBlockedReason ?? install.sendBlockedReason
   })
 
   // Said once: on the pane when the failure took it, else in the composer's notices.
@@ -251,8 +254,9 @@ export function NativeChatStructuredSession(
     failure: provisionalLaunch.failure,
     failureRows: startFailures.filter((fact) => isClaudeSignInFailureKind(fact.kind)).length
   })
+  // While Install shows, it says what to do; a start failure's "send again" or Retry can't help.
   const notices = structuredSessionNotices({
-    launch,
+    launch: install.slot.kind === 'install' ? { ...launch, lifecycle: null } : launch,
     agentLabel,
     sessionError,
     composerError: composerError ?? continuation.continueError,
@@ -361,7 +365,7 @@ export function NativeChatStructuredSession(
             />
           )}
           {/* Prompt cards take the composer's slot, below the background-task dock. */}
-          {composerShown ? null : <NativeChatPromptSlotNotices notices={notices} />}
+          {composerOpen ? null : <NativeChatPromptSlotNotices notices={notices} />}
           {prompt && approval ? (
             <NativeChatApprovalCard
               key={`${prompt.itemId}:${prompt.revision}`}
@@ -387,7 +391,8 @@ export function NativeChatStructuredSession(
               answerInputRef={questionAnswerInputRef}
             />
           ) : null}
-          {composerShown ? (
+          {composerShown && <NativeChatInstallSlot slot={install.slot} agentLabel={agentLabel} />}
+          {composerOpen ? (
             <NativeChatComposer
               ref={composerRef}
               terminalTabId={props.tabId}

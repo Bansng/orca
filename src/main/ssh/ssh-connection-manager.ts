@@ -47,7 +47,7 @@ export class SshConnectionManager {
     // Why: background dials (managed tunnel, host status, census) would retry a cancelled sign-in
     // every few seconds; refuse them as an auth failure, without touching the network.
     if (isSshCredentialDeclined(target.id)) {
-      throw createSshCredentialDeclinedError(target.label)
+      throw createSshCredentialDeclinedError(target.id, target.label)
     }
 
     // Why: replacing a connection whose own reconnect is asking the user would close that dialog
@@ -63,6 +63,11 @@ export class SshConnectionManager {
       if (existing) {
         this.retainSignIn(target.id, existing)
         await existing.disconnect()
+        // Why: a Disconnect or Remove while the old transport closed cancels this attempt;
+        // registering now would revive the host the user just let go.
+        if (this.connectingTargets.get(target.id) !== attempt) {
+          throw new Error(`Connection to ${target.label} was cancelled`)
+        }
       }
 
       const conn = new SshConnection(target, this.callbacks, this.takeRetainedSignIn(target))

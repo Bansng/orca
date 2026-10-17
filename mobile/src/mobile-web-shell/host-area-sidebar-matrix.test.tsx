@@ -118,7 +118,7 @@ vi.mock('../navigation/host-stack', async () => {
       return (
         <serving.HostAreaServingContext.Provider value={recorded}>
           {env.hostSession === null ? null : (
-            <MobileWebShellScreen hostId="host-1" route={{ pathname: HOST }} fallback={null} />
+            <MobileWebShellScreen hostId="host-1" route={{ pathname: HOST }} />
           )}
         </serving.HostAreaServingContext.Provider>
       )

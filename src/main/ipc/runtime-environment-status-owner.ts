@@ -23,6 +23,14 @@ import { isRuntimeEnvironmentManuallyDisconnected } from './runtime-environment-
 import { runtimeEnvironmentChangedFailure } from './runtime-environment-revision-guard'
 import { resolveManagedRuntimeEnvironment } from './runtime-environment-managed-tunnel'
 
+const statusListeners = new Set<() => void>()
+
+/** Main's own readers of server status, alongside the windows it is sent to. */
+export function onRuntimeEnvironmentStatusPublished(listener: () => void): () => void {
+  statusListeners.add(listener)
+  return () => statusListeners.delete(listener)
+}
+
 export function createRuntimeEnvironmentStatusOwner(
   userDataPath: string,
   environment: KnownRuntimeEnvironment,
@@ -97,6 +105,9 @@ export function createRuntimeEnvironmentStatusOwner(
         } catch {
           /* A renderer can close during publication. */
         }
+      }
+      for (const listener of statusListeners) {
+        listener()
       }
     }
   })

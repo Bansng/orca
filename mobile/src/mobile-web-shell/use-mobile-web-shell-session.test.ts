@@ -593,8 +593,11 @@ describe('the wait for the page to speak', () => {
     })
     await flush()
     // Pinned, not merely "moved on": `/h/host-1/tasks` is not the route the bundle lists, so a
-    // re-armed session settles on the native screen. A failure would also leave `checking`.
-    expect(seen.at(-1)?.kind).toBe('native-route')
+    // re-armed session settles on the desktop wall. A failure would also leave `checking`.
+    expect(seen.at(-1)).toEqual({
+      kind: 'wall',
+      verdict: { kind: 'blocked', reason: 'page-route-unlisted' }
+    })
     await act(async () => {
       tree.unmount()
     })

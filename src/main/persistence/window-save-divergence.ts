@@ -16,6 +16,7 @@ import type {
   WorkspaceLayout,
   WorkspaceLayoutModel
 } from '../../shared/workspace-layout/workspace-layout-model'
+import type { TabGroupLayoutNode } from '../../shared/tab-types'
 import type { WorkspaceSessionState } from '../../shared/workspace-session-state-types'
 
 /** Set by evidence runs: each divergence is appended there as one JSON line. */
@@ -116,6 +117,14 @@ function reboundLeaves(
   return { rebound, was, now }
 }
 
+/** A lone group with no stored tree is that group's leaf, as main's own save writes it. */
+function groupTreeOf(workspace: WorkspaceLayout): TabGroupLayoutNode | null {
+  const [only, ...rest] = workspace.groups
+  return (
+    workspace.groupLayout ?? (only && rest.length === 0 ? { type: 'leaf', groupId: only.id } : null)
+  )
+}
+
 /** What a save changed in one workspace of main's model; empty paths and no rebound when nothing. */
 export function diffWorkspaceLayouts(
   before: WorkspaceLayout | undefined,
@@ -157,7 +166,7 @@ export function diffWorkspaceLayouts(
     ),
     ...diffKeyed('leaf', leaves.was, leaves.now)
   ]
-  if (stableJson(before.groupLayout ?? null) !== stableJson(after.groupLayout ?? null)) {
+  if (stableJson(groupTreeOf(before)) !== stableJson(groupTreeOf(after))) {
     paths.push('group layout changed')
   }
   return { paths, rebound: leaves.rebound.size }

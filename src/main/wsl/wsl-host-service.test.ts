@@ -352,6 +352,26 @@ describe('WslHostService', () => {
     expect(listEnvironments(userDataPath)).toEqual([])
   })
 
+  it('keeps a host whose removal failed usable and removable again', async () => {
+    const connector = makeConnector([UBUNTU])
+    const service = makeService(connector)
+    await service.add({ distro: 'Ubuntu' })
+    service.setVisibleWork(['wsl:ubuntu'])
+    connector.releaseHolder.mockRejectedValueOnce(
+      Object.assign(new Error('EBUSY: resource busy or locked'), { code: 'EBUSY' })
+    )
+
+    await expect(service.remove('wsl:ubuntu')).rejects.toThrow('EBUSY')
+
+    expect(listEnvironments(userDataPath)).toHaveLength(1)
+    expect(removed).not.toHaveBeenCalled()
+    await expect(service.ensureForRuntimeCall('wsl:ubuntu')).resolves.toBeUndefined()
+    await expect(service.connect('wsl:ubuntu')).resolves.toBeUndefined()
+    await expect(service.remove('wsl:ubuntu')).resolves.toEqual({ stopped: true })
+    expect(listEnvironments(userDataPath)).toEqual([])
+    expect(removed).toHaveBeenCalledWith('wsl:ubuntu')
+  })
+
   it('turning the experiment off closes every connection and releases holders; on resumes lazily', async () => {
     const connector = makeConnector([UBUNTU])
     const service = makeService(connector)

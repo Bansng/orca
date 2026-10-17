@@ -117,22 +117,13 @@ describe('NativeChatImageAttachmentPreview', () => {
     )
   })
 
-  it('shows a dropped file by name and kind while it uploads', () => {
+  it('shows a dropped file by name beside its spinner, with no kind icon, while it waits', () => {
     mocks.useLocalImageSrc.mockReturnValue(undefined)
     renderPreview({ id: 'a1', path: '', pending: true, pendingName: 'report.pdf' })
 
     expect(screen.getByRole('button', { name: 'Uploading report.pdf…' })).toBeTruthy()
     expect(screen.getByText('report.pdf')).toBeTruthy()
-    expect(document.querySelector('.lucide-file-text')).toBeTruthy()
-    expect(document.querySelector('.lucide-image')).toBeFalsy()
-  })
-
-  it('shows a dropped image as an image while it uploads', () => {
-    mocks.useLocalImageSrc.mockReturnValue(undefined)
-    renderPreview({ id: 'a1', path: '', pending: true, pendingName: 'shot.png' })
-
-    expect(screen.getByText('shot.png')).toBeTruthy()
-    expect(document.querySelector('.lucide-image')).toBeTruthy()
+    expect(document.querySelector('.lucide-file-text, .lucide-image')).toBeFalsy()
   })
 
   it('offers the full-size file, not the clipboard thumbnail, to the chat copy menu', () => {

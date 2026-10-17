@@ -65,7 +65,9 @@ function pruneLayoutNodeForGroups(
 /** Tabs come from the tab bar alone; terminal rows it lacks are adopted later by reconciliation. */
 export function buildHydratedTabState(
   session: WorkspaceSessionState,
-  validWorktreeIds: Set<string>
+  validWorktreeIds: Set<string>,
+  /** A diff, conflict or check tab whose record the caller still holds, as a frame rebuild does. */
+  keepsTransientTab: (worktreeId: string, entityId: string) => boolean = () => false
 ): HydratedTabState {
   const tabsByWorktree: Record<string, Tab[]> = {}
   const groupsByWorktree: Record<string, TabGroup[]> = {}
@@ -139,7 +141,7 @@ export function buildHydratedTabState(
         // Why: restore skips backing editor state for transient diff/conflict
         // items. Hydration must drop their tab chrome too or the split group
         // comes back pointing at a document that no longer exists.
-        return persistedEditFileIds.has(tab.entityId)
+        return persistedEditFileIds.has(tab.entityId) || keepsTransientTab(worktreeId, tab.entityId)
       })
       .sort((a, b) => a.sortOrder - b.sortOrder || a.createdAt - b.createdAt)
     // Why after the sort: the surviving record is the one the strip renders first.

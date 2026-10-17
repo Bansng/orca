@@ -69,6 +69,8 @@ export function sendStructuredAgentSessionTurn(
     body: AgentJournalMessageItem
     retryUnknown?: true
     delivery?: 'queue-if-active'
+    /** Host-local: whether the sending client can manage an image card. */
+    queuedImageCards?: boolean
     options?: Readonly<Record<string, string>>
     /** Host-local, set only by the client-facing `agentSession.send` RPC (the
      *  renderer's launch prompt included): recorded as the submission's `client`
@@ -127,6 +129,11 @@ export function cancelStructuredAgentSessionTurn(
         ...params,
         childWork: () => context.readChildWork(sessionId),
         acknowledgeStops: (evidence) => context.publishChildWork(sessionId, evidence),
+        captureStops: (targets) =>
+          context.captureChildWorkStops(
+            sessionId,
+            targets.map((target) => target.providerId)
+          ),
         // Untargeted, with work no record lists: the idle sweep's stop ends it with the agent.
         ...(params.taskId === undefined
           ? {

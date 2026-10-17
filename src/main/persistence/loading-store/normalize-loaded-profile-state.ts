@@ -11,6 +11,7 @@ import {
   normalizeSshRemotePtyLease,
   normalizeSshTarget
 } from '../leasing-ssh-ptys/ssh-normalization'
+import { migrateExistingHostsRemoteCliControl } from '../leasing-ssh-ptys/ssh-remote-cli-control-migration'
 import {
   normalizeLegacyPaneKeyAliasEntries,
   normalizeMigrationUnsupportedPtyEntries
@@ -89,7 +90,11 @@ export function normalizeLoadedProfileState(
       workspaceSession,
       markNeedsSave
     ),
-    sshTargets: (parsed.sshTargets ?? []).map(normalizeSshTarget),
+    sshTargets: migrateExistingHostsRemoteCliControl(
+      (parsed.sshTargets ?? []).map(normalizeSshTarget),
+      parsed.settings?.sshRemoteCliControlExistingHostsMigrated === true,
+      markNeedsSave
+    ),
     deletedSshConfigAliases: Array.isArray(parsed.deletedSshConfigAliases)
       ? parsed.deletedSshConfigAliases.filter((alias): alias is string => typeof alias === 'string')
       : [],

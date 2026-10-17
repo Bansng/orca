@@ -43,6 +43,7 @@ export async function rewindStructuredAgentSession(
   const { sessionId, clientOperationId } = params.envelope
   const {
     readChildWork,
+    childWorkOpen,
     deps: { store }
   } = context
   const fields = { itemId: params.itemId, expectedEpoch: params.expectedEpoch }
@@ -96,7 +97,8 @@ export async function rewindStructuredAgentSession(
           if (rewindInDoubt(record)) {
             return rewindRefusal('outcome-unknown')
           }
-          if (conversationCommandBlocked(ctx, record, readChildWork(sessionId), 'handover')) {
+          const childWork = { views: readChildWork(sessionId), open: childWorkOpen(sessionId) }
+          if (conversationCommandBlocked(ctx, record, childWork, 'handover')) {
             return rewindRefusal('busy')
           }
           const snapshot = ctx.journal.snapshot()

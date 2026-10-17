@@ -4,6 +4,7 @@ import {
   AGENT_SESSION_PROMPT_CANCEL_RUNTIME_CAPABILITY,
   AGENT_SESSION_QUESTION_ANSWERS_RUNTIME_CAPABILITY,
   AGENT_SESSION_QUEUED_COMMANDS_RUNTIME_CAPABILITY,
+  AGENT_SESSION_QUEUED_MESSAGE_EDIT_RUNTIME_CAPABILITY,
   AGENT_SESSION_QUEUED_MESSAGES_RUNTIME_CAPABILITY,
   AGENT_SESSION_STATUS_FEED_RUNTIME_CAPABILITY,
   AGENT_SESSION_REPEATED_STOP_RUNTIME_CAPABILITY
@@ -19,6 +20,7 @@ describe('structuredAgentSessionHostSupport', () => {
       questionAnswers: false,
       queuedMessages: false,
       queuedCommands: false,
+      queuedMessageEdit: false,
       quietRepeatedStop: false,
       statusFeed: false,
       sendOptions: false,
@@ -38,6 +40,9 @@ describe('structuredAgentSessionHostSupport', () => {
     expect(
       structuredAgentSessionHostSupport([AGENT_SESSION_QUEUED_COMMANDS_RUNTIME_CAPABILITY])
     ).toEqual({ ...none, queuedCommands: true })
+    expect(
+      structuredAgentSessionHostSupport([AGENT_SESSION_QUEUED_MESSAGE_EDIT_RUNTIME_CAPABILITY])
+    ).toEqual({ ...none, queuedMessageEdit: true })
     expect(
       structuredAgentSessionHostSupport([AGENT_SESSION_REPEATED_STOP_RUNTIME_CAPABILITY])
     ).toEqual({ ...none, quietRepeatedStop: true })

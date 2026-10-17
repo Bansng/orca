@@ -4,7 +4,8 @@ import {
   getExplicitRuntimeEnvironmentIdForWorktree,
   getExecutionHostIdForWorktree,
   getKnownExecutionHostIdForWorktree,
-  getRuntimeEnvironmentIdForWorktree
+  getRuntimeEnvironmentIdForWorktree,
+  resolveRuntimeOwnerForWorktree
 } from './worktree-runtime-owner'
 import { getRuntimeSessionMirrorEnvironmentIds } from './runtime-session-mirror-owners'
 import type { WorktreeRuntimeOwnerState } from './worktree-runtime-owner-state'
@@ -153,6 +154,33 @@ describe('getRuntimeEnvironmentIdForWorktree', () => {
     expect(getExecutionHostIdForWorktree(staleFolderConnectionState, 'folder:runtime-folder')).toBe(
       'runtime:folder-env'
     )
+  })
+})
+
+describe('resolveRuntimeOwnerForWorktree', () => {
+  it('names the runtime owner, a non-runtime owner, and keeps a twin ambiguous', () => {
+    const twinState: WorktreeRuntimeOwnerState = {
+      ...state,
+      worktreesByRepo: {
+        ...state.worktreesByRepo,
+        'twin-repo': [
+          { id: 'twin-repo::wt', repoId: 'twin-repo', hostId: 'ssh:ssh-1' },
+          { id: 'twin-repo::wt', repoId: 'twin-repo', runtimeOwnerEnvironmentId: 'env-1' }
+        ]
+      }
+    }
+    expect(resolveRuntimeOwnerForWorktree(twinState, 'runtime-repo::wt-b')).toEqual({
+      kind: 'runtime',
+      environmentId: 'owner-env'
+    })
+    expect(resolveRuntimeOwnerForWorktree(twinState, 'local-repo::wt-a')).toEqual({
+      kind: 'non-runtime'
+    })
+    expect(resolveRuntimeOwnerForWorktree(twinState, 'twin-repo::wt')).toEqual({
+      kind: 'ambiguous'
+    })
+    // Why: read-only callers keep the old collapse to "local".
+    expect(getRuntimeEnvironmentIdForWorktree(twinState, 'twin-repo::wt')).toBeNull()
   })
 })
 

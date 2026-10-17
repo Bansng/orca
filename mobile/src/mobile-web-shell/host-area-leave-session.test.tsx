@@ -89,8 +89,7 @@ async function hopFromSession(viewport: { width: number; height: number }, href:
     mounted.tree = create(
       createElement(MobileWebShellScreen, {
         hostId: 'host-1',
-        route: { pathname: DETAIL },
-        fallback: null
+        route: { pathname: DETAIL }
       })
     )
   })

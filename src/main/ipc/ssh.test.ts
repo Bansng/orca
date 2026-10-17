@@ -92,7 +92,7 @@ describe('SSH IPC handlers', () => {
   })
 
   it('holds a raw connected the server decision causes', async () => {
-    const conn = {}
+    const conn = { hasCachedCredential: () => false }
     mockSshStore.getTarget.mockReturnValue(target)
     mockConnectionManager.getConnection.mockReturnValue(conn)
     let broadcastsDuringDecision: unknown[] = []

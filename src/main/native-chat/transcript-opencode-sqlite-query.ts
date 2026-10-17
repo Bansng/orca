@@ -7,7 +7,8 @@ import {
 } from './transcript-opencode2-sqlite'
 import type { NativeChatMessage } from '../../shared/native-chat-types'
 import { openCodeTranscriptPageLimit } from '../../shared/opencode-transcript-page-limit'
-import { extractString, parseJsonObject } from '../ai-vault/session-scanner-values'
+import { columnExists, tableExists } from '../opencode-usage/schema-helpers'
+import { asRecord, extractString, parseJsonObject } from '../ai-vault/session-scanner-values'
 import type SyncDatabase from '../sqlite/sync-database'
 
 type BindValue = SyncDatabase.BindValue
@@ -31,6 +32,7 @@ export type OpenCodeTranscriptPage = {
 }
 
 export type OpenCodeTranscriptSignal = {
+  cwd?: string | null
   messageCount: number
   partCount: number
   maxMessageRowId: number
@@ -40,10 +42,10 @@ export type OpenCodeTranscriptSignal = {
 const PART_ID_BATCH = 100
 
 function sessionExists(db: SyncDatabase, sessionId: string): boolean {
-  const table = rowsOf<{ name: string }>(
-    db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'session'")
+  return (
+    tableExists(db, 'session') &&
+    db.prepare('SELECT 1 FROM session WHERE id = ?').get(sessionId) != null
   )
-  return table.length > 0 && db.prepare('SELECT 1 FROM session WHERE id = ?').get(sessionId) != null
 }
 
 function rowsOf<T>(statement: SqliteStatement, ...params: BindValue[]): T[] {
@@ -113,6 +115,11 @@ export function readOpenCodeTranscriptSignal(
       ...(agent === 'zcode' ? [sessionId] : [])
     )
     return {
+      cwd: columnExists(db, 'session', 'directory')
+        ? extractString(
+            asRecord(db.prepare('SELECT directory FROM session WHERE id = ?').get(sessionId))?.directory
+          )
+        : null,
       messageCount: messageRow?.message_count ?? 0,
       partCount: partRow?.part_count ?? 0,
       maxMessageRowId: messageRow?.max_message_rowid ?? 0,
@@ -296,10 +303,11 @@ function mapMessageRows(
         ? [{ message_id: row.id, time_updated: row.time_updated, data: null }]
         : partList
     )
+    const updated = partList.reduce((max, row) => (row.time_updated > max ? row.time_updated : max), 0)
     for (const message of messages.toReversed()) {
       items.push({
         rowid: row.message_rowid,
-        fingerprint: `${row.time_updated}:${partList.length}:${maxPartTimeUpdated(partList)}`,
+        fingerprint: `${row.time_updated}:${partList.length}:${updated}`,
         message: {
           ...message,
           transcriptOffset: row.message_rowid,
@@ -309,14 +317,4 @@ function mapMessageRows(
     }
   }
   return items
-}
-
-function maxPartTimeUpdated(partRows: PartRow[]): number {
-  let max = 0
-  for (const partRow of partRows) {
-    if (partRow.time_updated > max) {
-      max = partRow.time_updated
-    }
-  }
-  return max
 }

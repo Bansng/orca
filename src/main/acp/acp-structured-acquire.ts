@@ -63,6 +63,7 @@ export async function acquireAcpStructuredSession(input: {
 }): Promise<{ acquisition: AgentSessionAcquisition; session: AcpStructuredSession }> {
   const { acquire, deps, generation } = input
   const { spec } = deps
+  const agentName = acpAgentName(spec.agent)
   const sessionId = acquire.identity.sessionId
   const now = deps.now ?? Date.now
   const events = acquire.events
@@ -72,9 +73,7 @@ export async function acquireAcpStructuredSession(input: {
   }
   const closedBeforeSpawn = () => {
     if (input.abandoned()) {
-      throw new AgentSessionPreSpawnError(
-        new Error(`${acpAgentName(spec.agent)} was closed before it started`)
-      )
+      throw new AgentSessionPreSpawnError(new Error(`${agentName} was closed before it started`))
     }
   }
   closedBeforeSpawn()
@@ -119,14 +118,16 @@ export async function acquireAcpStructuredSession(input: {
     {
       clientInfo: { name: 'orca', version: '1' },
       ...(acquire.onOutput ? { onOutput: acquire.onOutput } : {}),
+      ...(spec.signInPrompt ? { signInPrompt: spec.signInPrompt } : {}),
       onPermission: (request, context) => {
         if (!session?.turns.acceptsRequests) {
           // No prompt of Orca's runs (a turn the agent began itself included), or a Stop or steer
           // is cutting it short: nobody is there to ask.
           return { outcome: { outcome: 'cancelled' } }
         }
-        // A request the dialect claims is a question for the person, which full access never answers.
-        if (launch.fullAccess && !spec.dialect.request?.('session/request_permission', request)) {
+        // Full access never answers a dialect's question, nor an agent that enforces the mode itself.
+        const claimed = spec.dialect.request?.('session/request_permission', request)
+        if (launch.fullAccess && !spec.permissionModeConfig && !claimed) {
           // Full access: Orca answers yes for the person, as the agent's own bypass flag would.
           const allow = request.options.find((option) => option.kind === 'allow_once')
           if (allow) {
@@ -184,7 +185,7 @@ export async function acquireAcpStructuredSession(input: {
       sink,
       sessionId,
       agent: spec.agent,
-      agentName: acpAgentName(spec.agent),
+      agentName,
       generation,
       providerSessionId,
       dialect: spec.dialect,
@@ -213,7 +214,6 @@ export async function acquireAcpStructuredSession(input: {
     )
   }
   await identity.onSpawned(pid)
-  const agentName = acpAgentName(spec.agent)
   try {
     const initialized = await connection.initialize()
     // Chosen here, on the machine Grok runs on, from the environment it was launched with.
@@ -258,6 +258,18 @@ export async function acquireAcpStructuredSession(input: {
     options.adoptSession(started.response, started.kind === 'new' ? 'new' : 'loaded')
     liveLane.apply(liveLane.translator.contextModels(started.response.models, now()))
     const restoreSkipped = await restoreAcpSessionOptions(connection, options, acquire.options)
+    const mode = spec.permissionModeConfig
+    if (mode) {
+      // Unlike a saved pick, a refusal fails the start: the session would run another posture.
+      // A start the host names no mode for asks, never more access than the chat chose.
+      const requested = mode.values[acquire.permissionMode ?? 'ask'] ?? mode.values.ask
+      const configId = options.modeConfigId()
+      const { configOptions } = await connection.setConfigOption(configId, requested)
+      if (configOptions.find((option) => option.id === configId)?.currentValue !== requested) {
+        throw new Error('Permission mode could not be confirmed')
+      }
+      options.adoptConfigOptions(configOptions)
+    }
     const process = await identity.read(pid)
     const link: AgentSessionProviderHandleLink = {
       linkId:

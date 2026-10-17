@@ -106,9 +106,11 @@ jobs:
           persist-credentials: false
           # Keep complete server/test trees; missing future imports fail the unchanged builds.
           # All of src: the orcad-convert cell builds the full e2e app and the bundled CLI.
+          # mobile: the template ships the mobile web page, which builds from mobile/.
           sparse-checkout: |
             .github
             config
+            mobile
             native
             resources
             tests
@@ -159,6 +161,7 @@ jobs:
       - uses: ./.github/actions/prepare-windows-cli-launcher
         with:
           arches: ${{ matrix.arch }}
+      - uses: ./.github/actions/build-mobile-web-bundle
       - name: Build the win32 template
         shell: bash
         env:

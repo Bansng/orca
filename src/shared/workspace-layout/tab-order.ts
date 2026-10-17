@@ -78,3 +78,38 @@ export function canReplacePreviewContentType(
   }
   return existingContentType === incomingContentType
 }
+
+export type TabOrderMove = { tabId: string; index: number }
+
+const sameOrder = (a: readonly string[], b: readonly string[]): boolean =>
+  a.length === b.length && a.every((id, index) => id === b[index])
+
+/**
+ * `moveTab` steps (take the tab out, put it back at `index`) that turn `from` into `to`: one when a
+ * single tab moved, else one per misplaced slot. None when the two orders hold different tabs.
+ */
+export function tabOrderMoves(from: readonly string[], to: readonly string[]): TabOrderMove[] {
+  const held = new Set(from)
+  if (held.size !== from.length || !sameOrder([...held].sort(), [...to].sort())) {
+    return []
+  }
+  if (sameOrder(from, to)) {
+    return []
+  }
+  for (const [index, tabId] of to.entries()) {
+    const others = (order: readonly string[]) => order.filter((id) => id !== tabId)
+    if (sameOrder(others(from), others(to))) {
+      return [{ tabId, index }]
+    }
+  }
+  const current = [...from]
+  const moves: TabOrderMove[] = []
+  for (const [index, tabId] of to.entries()) {
+    if (current[index] !== tabId) {
+      current.splice(current.indexOf(tabId), 1)
+      current.splice(index, 0, tabId)
+      moves.push({ tabId, index })
+    }
+  }
+  return moves
+}

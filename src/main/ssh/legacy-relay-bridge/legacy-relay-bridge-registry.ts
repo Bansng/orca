@@ -255,7 +255,10 @@ function stillLeased(targetId: string, panes: LegacyRelayBridgedPane[]): LegacyR
   return panes.filter((pane) => leased.has(parseAppSshPtyId(pane.ptyId)?.relayPtyId ?? ''))
 }
 
-export async function attachLegacyRelayPane(ptyId: string): Promise<LegacyRelayBridgeAttachResult> {
+export async function attachLegacyRelayPane(
+  ptyId: string,
+  replayInStream = false
+): Promise<LegacyRelayBridgeAttachResult> {
   const targetId = parseAppSshPtyId(ptyId)?.connectionId
   if (!targetId || !host || !hasBridgeableLeases(targetId)) {
     return { status: 'not-bridged' }
@@ -269,7 +272,16 @@ export async function attachLegacyRelayPane(ptyId: string): Promise<LegacyRelayB
     void bridge.refresh()
     return { status: 'unverifiable' }
   }
-  return bridge.attach(ptyId, () => hiddenOutput?.screenSent(ptyId))
+  const result = await bridge.attach(ptyId, (replay) => {
+    hiddenOutput?.screenSent(ptyId)
+    // In output order, so a reattach's clear never erases what the relay printed after this screen.
+    if (replayInStream) {
+      host?.onReplay(ptyId, replay)
+    }
+  })
+  return replayInStream && result.status === 'attached'
+    ? { status: 'attached', replay: '' }
+    : result
 }
 
 /** Re-reads a live pane's screen through the same attach a reconnect uses. */

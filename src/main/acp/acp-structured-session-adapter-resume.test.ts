@@ -13,6 +13,7 @@ import { testEventSinkLogging } from '../native-chat/agent-session-wire/structur
 import type { AcpScriptedAgent } from './acp-scripted-agent.test-support'
 import { ACP_REOPEN_FAILED } from './acp-session-reopen-failure'
 import {
+  GROK,
   GROK_CONFIG_OPTIONS,
   openAcpAdapterRig,
   PROVIDER_SESSION,
@@ -176,6 +177,42 @@ describe('the context meter across a reopen', () => {
       used: { usage: { inputTokens: 4_000 } }
     })
   })
+})
+
+it("starts in the chat's own permission mode, asks when none is named, and fails an unconfirmed one", async () => {
+  const values = { ask: 'default', 'accept-edits': 'auto_edit' }
+  const modes = [
+    {
+      id: 'approval_mode',
+      name: 'Mode',
+      category: 'mode',
+      type: 'select',
+      currentValue: 'auto_edit',
+      options: [
+        { value: 'default', name: 'Default' },
+        { value: 'auto_edit', name: 'Auto edit' }
+      ]
+    }
+  ]
+  const configOptions = [...GROK_CONFIG_OPTIONS, ...modes]
+  const open = () =>
+    openAcpAdapterRig({
+      spec: { ...GROK, permissionModeConfig: { values } },
+      script: (agent) => {
+        agent.on('session/new', (frame) =>
+          agent.reply(frame, { sessionId: PROVIDER_SESSION, configOptions })
+        )
+        agent.on('session/set_config_option', (frame) => agent.reply(frame, { configOptions }))
+      }
+    })
+  const [chosen, unnamed] = [await open(), await open()]
+  await chosen.acquire({ permissionMode: 'accept-edits' })
+  await expect(unnamed.acquire()).rejects.toThrow('Permission mode could not be confirmed')
+  const sent = [chosen, unnamed].map((rig) => rig.sent('session/set_config_option')[0]?.params)
+  expect(sent).toMatchObject([
+    { configId: 'approval_mode', value: 'auto_edit' },
+    { configId: 'approval_mode', value: 'default' }
+  ])
 })
 
 describe('reattaching a Grok chat the journal holds', () => {

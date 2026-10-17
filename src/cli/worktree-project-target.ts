@@ -109,13 +109,10 @@ export async function resolveProjectCreateTarget(
   }
 }
 
-function getRepoSelectorFromWorktreeSelector(selector: string | undefined): string | undefined {
-  if (!selector?.startsWith('id:')) {
-    return undefined
-  }
-  const worktreeId = selector.slice('id:'.length)
-  const separatorIndex = worktreeId.indexOf('::')
-  if (separatorIndex <= 0) {
+// Why the worktree id, not the selector: a host-scoped `identity:` selector carries no repo id.
+function getRepoSelectorFromWorktreeId(worktreeId: string | undefined): string | undefined {
+  const separatorIndex = worktreeId?.indexOf('::') ?? -1
+  if (!worktreeId || separatorIndex <= 0) {
     return undefined
   }
   return `id:${worktreeId.slice(0, separatorIndex)}`
@@ -123,7 +120,7 @@ function getRepoSelectorFromWorktreeSelector(selector: string | undefined): stri
 
 export async function getCreateRepoSelector(
   flags: Map<string, string | boolean>,
-  cwdParentWorktree: string | undefined,
+  cwdParentWorktree: { worktreeId: string } | undefined,
   client: RuntimeClient
 ): Promise<string> {
   const projectRepoSelector = await resolveProjectCreateRepoSelector(flags, client)
@@ -134,7 +131,7 @@ export async function getCreateRepoSelector(
   if (explicitRepo) {
     return explicitRepo
   }
-  const inferredRepo = getRepoSelectorFromWorktreeSelector(cwdParentWorktree)
+  const inferredRepo = getRepoSelectorFromWorktreeId(cwdParentWorktree?.worktreeId)
   if (inferredRepo) {
     return inferredRepo
   }

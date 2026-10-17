@@ -115,7 +115,10 @@ export const BLANK_BROWSER_TAB_STATE: BrowserTabLiveState = {
   loadError: null
 }
 
-/** The row's last terminal is not a fact here: the Serializer derives it from the pane bindings. */
+/**
+ * The row's last terminal is not a fact here: the Serializer derives it from the pane bindings.
+ * `generation` is the window's: its pane renderer's remount key, bumped only by the window.
+ */
 export type TerminalRowFacts = Pick<TerminalTab, 'title' | 'generation'>
 
 export type PaneScrollback = { buffer?: string; scrollbackRef?: string }

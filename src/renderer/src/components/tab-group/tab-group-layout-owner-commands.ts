@@ -56,7 +56,8 @@ function commandFor(worktreeId: string, drop: TabDrop): WindowLayoutCommand | nu
     return { type: 'splitGroup', tabId, besideGroupId: groupId, direction: drop.direction }
   }
   const group = groups.find((candidate) => candidate.id === groupId)
-  if (!group) {
+  // Why: a move into the tab's own group moves nothing today (a paired client can send one).
+  if (!group || (drop.kind === 'move' && group.tabOrder.includes(tabId))) {
     return null
   }
   const index =
@@ -71,7 +72,8 @@ function moveAsToday(worktreeId: string, drop: TabDrop, newGroupId?: string): bo
   const state = useAppStore.getState()
   const { tabId, groupId: targetGroupId } = drop
   if (drop.kind === 'reorder') {
-    state.reorderUnifiedTabs(targetGroupId, drop.tabOrder)
+    // Why handled: main already moved the tab, or cannot.
+    state.reorderUnifiedTabs(targetGroupId, drop.tabOrder, { layoutOwnerHandled: true })
     mirrorWebRuntimeTabMove({
       kind: 'reorder',
       worktreeId,

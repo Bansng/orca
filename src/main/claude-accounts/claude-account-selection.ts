@@ -117,7 +117,7 @@ export class ClaudeAccountSelection {
     }
     // Why: an account System default is signed in to runs there until it signs in on its own.
     return this.runtimeAuth.router.coveredBySystemDefault(account.id)
-      ? summary
+      ? { ...summary, runsOnSystemDefault: true }
       : { ...summary, needsSignIn: true }
   }
 

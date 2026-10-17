@@ -133,9 +133,9 @@ describe('ClaudeAccountService', () => {
   it('asks no sign-in of an account System default runs, and lets it be selected', async () => {
     const f = fixture()
     f.covered.add('b')
-    expect(f.service.listAccounts().accounts.find((row) => row.id === 'b')?.needsSignIn).toBe(
-      undefined
-    )
+    const row = f.service.listAccounts().accounts.find((candidate) => candidate.id === 'b')
+    expect(row?.needsSignIn).toBeUndefined()
+    expect(row?.runsOnSystemDefault).toBe(true)
     await expect(f.service.selectAccount('b')).resolves.toMatchObject({ activeAccountId: 'b' })
   })
 

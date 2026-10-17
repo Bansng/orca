@@ -57,6 +57,7 @@ function listInput(query: string, overrides: Partial<ListInput> = {}): ListInput
     recentTabShortcutIndexById: new Map(),
     digitShortcutModifiers: [],
     paletteSections: {
+      hasExactEntityDestination: false,
       visibleWorktreeItems: [],
       worktreeOverflowCount: 0,
       visibleProjectTargetItems: [],
@@ -191,47 +192,57 @@ describe('Cmd+J website selection', () => {
     }
   )
 
-  it.each(['worktree', 'workspace-tab', 'browser-page'] as const)(
-    'keeps an exact %s name selected ahead of website creation',
-    async (type) => {
-      if (type === 'worktree') {
-        useAppStore.setState({
-          worktreesByRepo: {
-            'repo-1': [
-              makeWorktree('wt-alpha', 'Alpha workspace'),
-              makeWorktree('wt-beta', 'project.dev')
-            ]
+  describe.each(['worktree', 'workspace-tab', 'browser-page'] as const)(
+    '%s name priority',
+    (type) => {
+      it.each(['project.dev', 'project.dev server'])(
+        'gives only a full name match priority over website creation (%s)',
+        async (name) => {
+          if (type === 'worktree') {
+            useAppStore.setState({
+              worktreesByRepo: {
+                'repo-1': [
+                  makeWorktree('wt-alpha', 'Alpha workspace'),
+                  makeWorktree('wt-beta', name)
+                ]
+              }
+            })
+          } else if (type === 'workspace-tab') {
+            const state = useAppStore.getState()
+            useAppStore.setState({
+              tabsByWorktree: {
+                ...state.tabsByWorktree,
+                'wt-beta': [makeTerminalTab('term-beta', 'wt-beta', name)]
+              },
+              unifiedTabsByWorktree: {
+                ...state.unifiedTabsByWorktree,
+                'wt-beta': [makeUnifiedTab('tab-beta', 'wt-beta', 'term-beta', name)]
+              }
+            })
+          } else {
+            useAppStore.getState().createBrowserTab('wt-beta', 'https://example.com/', {
+              title: name
+            })
           }
-        })
-      } else if (type === 'workspace-tab') {
-        const state = useAppStore.getState()
-        useAppStore.setState({
-          tabsByWorktree: {
-            ...state.tabsByWorktree,
-            'wt-beta': [makeTerminalTab('term-beta', 'wt-beta', 'project.dev')]
-          },
-          unifiedTabsByWorktree: {
-            ...state.unifiedTabsByWorktree,
-            'wt-beta': [makeUnifiedTab('tab-beta', 'wt-beta', 'term-beta', 'project.dev')]
+          const { result } = renderHook(usePalette)
+
+          await act(async () => result.current.handleQueryChange('project.dev'))
+
+          const selected = result.current.selectableItems.find(
+            (item) => item.id === result.current.commandSelectedItemId
+          )
+          expect(selected?.type).toBe(name === 'project.dev' ? type : 'quick-action')
+          if (name !== 'project.dev') {
+            expect(selected?.id).toBe('quick-action:navigate-to-url')
           }
-        })
-      } else {
-        useAppStore.getState().createBrowserTab('wt-beta', 'https://project.dev/', {
-          title: 'project.dev'
-        })
-      }
-      const { result } = renderHook(usePalette)
-
-      await act(async () => result.current.handleQueryChange('project.dev'))
-
-      const selected = result.current.selectableItems.find(
-        (item) => item.id === result.current.commandSelectedItemId
+          expect(result.current.middleLeadsSections).toBe(false)
+          expect(
+            result.current.selectableItems.filter(
+              (item) => item.id === 'quick-action:navigate-to-url'
+            )
+          ).toHaveLength(1)
+        }
       )
-      expect(selected?.type).toBe(type)
-      expect(result.current.middleLeadsSections).toBe(false)
-      expect(
-        result.current.selectableItems.filter((item) => item.id === 'quick-action:navigate-to-url')
-      ).toHaveLength(1)
     }
   )
 

@@ -9,7 +9,11 @@ import {
   agentModelCatalogFingerprint,
   agentModelCatalogFingerprintForRecord
 } from './agent-model-catalog-fingerprint'
-import type { AgentModelCatalogConfiguredChoice } from './agent-model-catalog-entry'
+import {
+  agentModelCatalogResultFromEntry,
+  retainedAgentModelCatalogModels,
+  type AgentModelCatalogConfiguredChoice
+} from './agent-model-catalog-entry'
 import type {
   AgentModelCatalogEntry,
   AgentModelCatalogLiveListing,
@@ -62,7 +66,9 @@ export type AgentModelCatalogService = {
     /** Answer only from the saved entry and held reason; start, join or re-check no listing. */
     savedOnly?: boolean
   }) => Promise<AgentSessionModelCatalogResult>
-  /** Saves what a running session listed as its account's catalog, so the next chat starts warm. */
+  /** Incoming listing ids, checking only a launch-added row against the pinned account. */
+  retainedLiveModelIds: (sessionId: string, listing: AgentModelCatalogLiveListing) => string[]
+  /** Saves a session's listing and newly learned menus so the next chat starts warm. */
   recordLiveListing: (sessionId: string, listing: AgentModelCatalogLiveListing) => void
   /** Lists, in the background, every agent the user has used here (a saved catalog or a chat)
    *  whose catalog for the account a new chat would pin is missing or old, so a picker never meets
@@ -78,25 +84,6 @@ export type AgentModelCatalogService = {
 
 // At most this many agents list at once: each listing spawns that agent's CLI.
 const PREWARM_CONCURRENCY = 2
-
-function resultFromEntry(
-  entry: AgentModelCatalogEntry,
-  namesDefault: boolean,
-  listingNamesConfiguredModel: boolean
-): Exclude<AgentSessionModelCatalogResult, { origin: 'unknown' }> {
-  // A CLI-resolved default names the configured model even where the listing names none.
-  const namesConfigured = listingNamesConfiguredModel || entry.configured !== null
-  return {
-    origin: entry.origin,
-    // Without a default the picker names nothing until the chat reports its model.
-    models: entry.models.map((model) =>
-      namesDefault ? { ...model } : { ...model, isDefault: false }
-    ),
-    ...(entry.fastModeSupport ? { fastModeSupport: entry.fastModeSupport } : {}),
-    fetchedAt: entry.fetchedAt,
-    listingNamesConfiguredModel: namesDefault && namesConfigured
-  }
-}
 
 /** A named workspace keeps the listed default only when none of its own config can replace it. */
 async function workspaceKeepsListedDefault(
@@ -258,7 +245,7 @@ export function createAgentModelCatalogService(
       ): Promise<AgentSessionModelCatalogResult> => {
         const unavailable = deps.store.failure(fingerprint)?.unavailable
         const result = listed
-          ? resultFromEntry(
+          ? agentModelCatalogResultFromEntry(
               listed,
               await workspaceKeepsListedDefault(deps, params.agent, workspacePath, accountHomePath),
               deps.listingNamesConfiguredModel?.has(params.agent) === true
@@ -313,6 +300,14 @@ export function createAgentModelCatalogService(
         entry = deps.store.get(fingerprint) ?? listed
       }
       return answer(entry)
+    },
+    retainedLiveModelIds(sessionId, listing) {
+      const record = deps.getRecord(sessionId)
+      const entry =
+        record && deps.drivesRecord(record)
+          ? deps.store.get(agentModelCatalogFingerprintForRecord(record))
+          : undefined
+      return retainedAgentModelCatalogModels(entry, listing).map((model) => model.id)
     },
     recordLiveListing(sessionId, listing) {
       const record = deps.getRecord(sessionId)

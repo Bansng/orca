@@ -16,7 +16,7 @@ import { displayNameUpdatePinsLabel } from '../../../../../../shared/worktree/di
 import { parseWorkspaceKey } from '../../../../../../shared/workspace-scope'
 import { applyWorktreeUpdates, getRepoIdFromWorktreeId } from '../../worktree-helpers'
 import { getHostedReviewCacheKey } from '../../hosted-review-cache-identity'
-import { getGitHubPRCacheKey, getLegacyGitHubPRCacheKey } from '../../github-cache-key'
+import { getGitHubPRCacheKeyCandidates } from '../../../../../../shared/github/github-cache-key'
 import {
   applyDetectedWorktreeUpdates,
   findKnownWorktreeById,
@@ -201,26 +201,9 @@ export function createUpdateWorktreeMeta(
               true
             )
           : null
-      const prCacheKey =
-        reviewRepo && reviewBranch
-          ? getGitHubPRCacheKey(
-              reviewRepo.path,
-              reviewRepo.id,
-              reviewBranch,
-              s.settings,
-              reviewRepo.connectionId,
-              reviewRepo.executionHostId,
-              true
-            )
-          : null
       const prCacheKeys =
-        reviewRepo && reviewBranch
-          ? [
-              prCacheKey,
-              getLegacyGitHubPRCacheKey(reviewRepo.path, reviewRepo.id, reviewBranch),
-              getLegacyGitHubPRCacheKey(reviewRepo.path, undefined, reviewBranch)
-            ].filter((key): key is string => Boolean(key))
-          : []
+        reviewRepo && reviewBranch ? getGitHubPRCacheKeyCandidates(reviewRepo, reviewBranch) : []
+      const prCacheKey = prCacheKeys[0] ?? null
       const hostedReviewCache = s.hostedReviewCache ?? {}
       const prCache = s.prCache ?? {}
       if (

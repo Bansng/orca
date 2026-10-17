@@ -67,7 +67,7 @@
 13 src/renderer/src/store/slices/editor/actions/open-conflict-file.ts
 14 src/renderer/src/store/slices/editor/actions/open-conflict-review.ts
 4 src/renderer/src/store/slices/editor/actions/open-file-apply.ts
-5 src/renderer/src/store/slices/editor/actions/open-file-mutations.ts
+4 src/renderer/src/store/slices/editor/actions/open-file-mutations.ts
 7 src/renderer/src/store/slices/editor/actions/open-file-state.ts
 26 src/renderer/src/store/slices/editor/actions/open-history-diff.ts
 1 src/renderer/src/store/slices/editor/actions/open-unstaged-diff.ts

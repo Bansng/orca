@@ -1,4 +1,5 @@
 // Sole entry for old-client compatibility; enforced by config/scripts/check-compat-boundary-imports.mjs.
+export { resolveSessionTabRow } from './old-client-session-tab-rows'
 export {
   translateCreateTerminalTab,
   translateSessionTabClose,

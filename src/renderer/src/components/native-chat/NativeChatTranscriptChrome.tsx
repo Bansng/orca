@@ -18,6 +18,7 @@ import {
 import type { RuntimeFileOperationArgs } from '@/runtime/runtime-file-client-types'
 import { copyableNativeChatImageSrc, keepPreviewOpenForChatMenu } from './native-chat-image-copy'
 import { isNativeChatPastedImagePath } from './native-chat-image-paste'
+import { nativeChatImageLabel } from './native-chat-image-label'
 import { chatImageAccess } from '@/lib/local-file-access'
 
 type VisibilityListener = (isVisible: boolean) => void
@@ -125,13 +126,7 @@ function TranscriptImagePreview({
   )
   const displaySrc = external && leaseActive ? source : localSrc
   const copySrc = copyableNativeChatImageSrc(displaySrc)
-  const label =
-    block.alt?.trim() ||
-    (block.path && isNativeChatPastedImagePath(block.path)
-      ? translate('components.native-chat.composer.pastedImageLabel', 'Pasted image')
-      : block.path
-        ? basename(block.path)
-        : 'Image')
+  const label = nativeChatImageLabel(block)
   const viewImageLabel = translate('components.native-chat.composer.viewAttachment', 'View image')
   const fallback = (
     <div

@@ -8,8 +8,10 @@ import { isTestOnlySourcePath } from './test-only-source-path.mjs'
 // `index` and only from the listed importers, so deleting the folder plus those import lines
 // removes the path.
 export const COMPAT_FOLDERS = [
-  // The RPC handler wiring joins in PR 6 step 6c.
-  { folder: 'src/shared/workspace-layout/old-client', importers: [] },
+  {
+    folder: 'src/shared/workspace-layout/old-client',
+    importers: ['src/main/runtime/terminal/launch/mobile-terminal-chat-fork-create.ts']
+  },
   {
     folder: 'src/main/remote-layout-snapshot',
     importers: [

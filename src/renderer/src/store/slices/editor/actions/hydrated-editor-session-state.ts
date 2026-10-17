@@ -45,6 +45,15 @@ export function buildHydratedEditorSessionState(
   const usedOpenFileIds = new Set<string>()
   const legacyFileIndex = new LegacyHydratedEditorFileIndex()
   const editorFileIdMigrationsByWorktree: Record<string, Map<string, string>> = {}
+  const tabEntityIdsByWorktree = new Map<string, ReadonlySet<string>>()
+  const savedTabEntityIds = (worktreeId: string): ReadonlySet<string> => {
+    let ids = tabEntityIdsByWorktree.get(worktreeId)
+    if (!ids) {
+      ids = new Set((session.unifiedTabs?.[worktreeId] ?? []).map((tab) => tab.entityId))
+      tabEntityIdsByWorktree.set(worktreeId, ids)
+    }
+    return ids
+  }
   for (const [worktreeId, files] of Object.entries(openFilesByWorktree)) {
     if (!validWorktreeIds.has(worktreeId)) {
       continue
@@ -59,7 +68,9 @@ export function buildHydratedEditorSessionState(
       const ownedId = buildOwnedEditorFileId(pf.filePath, worktreeId, pf.runtimeEnvironmentId)
       const id =
         shouldHydrateWithOwnedEditorFileId(worktreeId, pf.runtimeEnvironmentId) ||
-        usedOpenFileIds.has(pf.filePath)
+        usedOpenFileIds.has(pf.filePath) ||
+        // Why: a tab Orca moved to the workspace owning its file names it by its owned id (F42).
+        savedTabEntityIds(worktreeId).has(ownedId)
           ? ownedId
           : pf.filePath
       // Why: the persisted schema allows repeated (path, worktree, runtime) tuples, and an owned id repeats verbatim — restoring both would put two files under one id.

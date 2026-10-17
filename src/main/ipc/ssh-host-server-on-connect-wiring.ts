@@ -15,6 +15,7 @@ import { verifyOrcadManagedServing } from '../ssh/orcad-managed-serving-verify'
 import { convertSshTargetToManagedOrcad } from '../ssh/orcad-runtime-conversion'
 import {
   orcadMigrationDestinationFor,
+  orcadServerFolderCatalogFor,
   orcadServerRepositoriesFor
 } from '../ssh/orcad-runtime-conversion-wiring'
 import { createManagedOrcadEnvironment } from '../ssh/orcad-runtime-deployment'
@@ -106,7 +107,8 @@ export function hostServerOnConnectDeps(userDataPath: string): HostServerOnConne
           hostProof ? Promise.resolve(hostProof) : censusHostRelayTerminalsFor(host)(),
         // Why no releaseDirectSession: a disconnect here would cancel the connect that asked for it.
         destinationFor: orcadMigrationDestinationFor,
-        serverRepositoriesFor: orcadServerRepositoriesFor
+        serverRepositoriesFor: orcadServerRepositoriesFor,
+        serverFolderCatalogFor: orcadServerFolderCatalogFor
       })
       if (converted.outcome === 'converted' || converted.outcome === 'refused') {
         // "Move anyway" covers one attempt; a later move, or a later delta, asks again.

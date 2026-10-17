@@ -209,7 +209,11 @@ export class LegacyRelayTargetBridge {
       }
     }
     const next = new Map<string, Pane>()
-    for (const [relayPtyId, lease] of leases) {
+    // Why re-read: a lease retired while the relays were asked (an exit) must not come back live.
+    const current = [...bridgeableLeasesByRelayId(this.deps.leases())].filter(([id]) =>
+      leases.has(id)
+    )
+    for (const [relayPtyId, lease] of current) {
       const ptyId = toAppSshPtyId(this.deps.targetId, relayPtyId)
       const listed = listedBy.get(relayPtyId)
       if (listed) {
@@ -235,11 +239,7 @@ export class LegacyRelayTargetBridge {
 
   /** The relay's PTYs, an empty list for a relay proven gone, or null when it can't be asked. */
   private async listEndpoint(endpoint: LegacyRelayEndpoint): Promise<LegacyRelayPty[] | null> {
-    const state = this.endpoints.get(endpoint.endpoint) ?? {
-      endpoint,
-      client: null,
-      claim: null
-    }
+    const state = this.endpoints.get(endpoint.endpoint) ?? { endpoint, client: null, claim: null }
     this.endpoints.set(endpoint.endpoint, state)
     if (!state.client || state.client.closed) {
       state.client = null

@@ -154,6 +154,17 @@ describe('dropTabThroughLayoutOwner', () => {
     expect(groupOf('c')).toBe(right)
   })
 
+  it('leaves a move into the tab’s own group to today’s no-op, sending nothing', () => {
+    const { left } = seeded()
+    const before = orderOf(left)
+
+    expect(
+      dropTabThroughLayoutOwner(WT, { kind: 'move', tabId: 'a', groupId: left, index: 1 })
+    ).toBe(false)
+    expect(mocks.send).not.toHaveBeenCalled()
+    expect(orderOf(left)).toEqual(before)
+  })
+
   it('reorders within a group at the index main got', () => {
     const { left } = seeded()
 

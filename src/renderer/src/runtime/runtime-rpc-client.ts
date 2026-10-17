@@ -38,6 +38,7 @@ export async function callRuntimeRpc<TResult>(
     signal?: AbortSignal
     expectedEnvironmentPairingRevision?: number
     expectedEnvironmentRuntimeId?: string
+    beforeSend?: () => void
   } = {}
 ): Promise<TResult> {
   if (options.signal?.aborted) {
@@ -69,6 +70,7 @@ export async function callRuntimeRpc<TResult>(
   const nextParams = options.suppressFeatureInteraction
     ? withBrowserPaneUiRuntimeRpcSource(params)
     : params
+  options.beforeSend?.()
   const response =
     target.kind === 'local'
       ? await window.api.runtime.call({ method, params: nextParams })

@@ -51,13 +51,6 @@ vi.mock('lucide-react-native', () => ({
   ChevronRight: 'ChevronRight'
 }))
 vi.mock('../components/MobileMarkdown', () => ({ MobileMarkdown: () => null }))
-vi.mock('../components/MobileSelectableText', async () => {
-  const React = await import('react')
-  return {
-    MobileSelectableText: ({ children }: { children?: React.ReactNode }) =>
-      React.createElement('Text', null, children)
-  }
-})
 vi.mock('./MobileNativeChatMessageActionsSheet', () => ({
   MobileNativeChatMessageActionsSheet: () => null
 }))

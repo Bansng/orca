@@ -204,6 +204,18 @@
         "saveFailed": "Could not save chat name settings.",
         "searchAgent": "agent",
         "searchTemplate": "command template"
+      },
+      "providers": {
+        "title": "Providers",
+        "description": "Choose which agents open as a chat. Turned off, an installed agent opens in a terminal.",
+        "searchAgents": "agents",
+        "searchCli": "CLI",
+        "searchTerminal": "terminal",
+        "agentDisabled": "Turned off in Agent settings",
+        "installed": "Installed",
+        "notInstalled": "Not installed",
+        "install": "Install",
+        "toggleLabel": "Open {{value0}} as a chat"
       }
     },
     "terminal": {
@@ -585,9 +597,7 @@
       },
       "pairingSecurity": {
         "hide": "Hide",
-        "storedCodeInsecureOrigin": "This browser keeps a reusable pairing code, because this page is plain http on another machine. Anyone who can read this browser’s storage could use it. For a safer pairing, open Orca over https, at localhost on this computer, or through an SSH tunnel, and pair again.",
         "storedCodeNoEd25519": "This browser keeps a reusable pairing code, because it cannot create secure sign-in keys (Ed25519). Use a current browser and pair again for a safer pairing.",
-        "sessionInsecureOrigin": "This pairing lasts only while this tab is open, because this page is plain http on another machine. For a pairing this browser remembers, open Orca over https, at localhost on this computer, or through an SSH tunnel.",
         "sessionNoEd25519": "This pairing lasts only while this tab is open, because this browser cannot create secure sign-in keys (Ed25519). Use a current browser for a pairing it remembers."
       },
       "runtimeAuth": {
@@ -647,7 +657,8 @@
             "hostUnresolved": "Orca cannot tell which host owns this workspace. Refresh projects and review it again.",
             "gitStatusUnavailable": "Orca couldn't check this workspace's git status. Try again, or delete it from its host-specific sidebar or project list.",
             "gitStatusUnavailableOlderPeer": "Orca couldn't match this git-status failure to a host. Update the older connected peer, or delete the workspace from its host-specific sidebar or project list.",
-            "forceNeedsApproval": "Review and confirm this workspace before force deleting it."
+            "forceNeedsApproval": "Review and confirm this workspace before force deleting it.",
+            "agentStartedSinceConfirmation": "An agent is running in this workspace. Delete it again to review stopping the agent."
           }
         },
         "worktrees": {
@@ -6227,8 +6238,7 @@
                   "7edb8ebe24": "Clone from URL",
                   "a6c20dca96": "Open a project from an SSH target",
                   "serverSshTitle": "Project on this server's SSH host",
-                  "serverSshDescription": "Open a project folder from an SSH host this server connects to",
-                  "serverSshUpdate": "Update this server to add projects on its SSH hosts",
+                  "serverSshAddOnThisComputer": "Not available from a server. Add the SSH host on this computer to open its projects.",
                   "fb4fc5380e": "Local project, Git repo, or folder with many repos",
                   "2281fdc8c7": "Browse folder",
                   "runtimeBrowseDescription": "Existing Git repository or folder on this host"
@@ -8996,7 +9006,7 @@
           "8c922dffba": "Reuse SSH connection for faster setup",
           "53e9aabfc0": "Uses OpenSSH multiplexing when available. Turn off for hosts with custom SSH restrictions.",
           "allowRemoteCliControl": "Allow this host's orca CLI to control Orca",
-          "allowRemoteCliControlHelp": "On by default. Lets orca commands run on this host open and drive Orca browser tabs on this desktop, only in this host's workspaces and only while it is connected, and lets terminals started by an older Orca on this host run orchestration commands (check, inbox, send, ask, reply) for their own supervised work. They cannot read your files, clipboard or cookies. When off, they reach only this host's own Orca server.",
+          "allowRemoteCliControlHelp": "On by default for new hosts. Lets orca commands run on this host open and drive Orca browser tabs on this desktop, only in this host's workspaces and only while it is connected, and lets terminals started by an older Orca on this host run orchestration commands (check, inbox, send, ask, reply) for their own supervised work. They cannot read your files, clipboard or cookies. When off, they reach only this host's own Orca server.",
           "editTitle": "Edit SSH host",
           "addTitle": "Add SSH host",
           "editDescription": "Update connection details for this machine. Changes apply on next connect.",
@@ -12570,9 +12580,6 @@
         },
         "shortcutDefinitionCatalog": {
           "missionControlConflict": "Blocked by Mission Control. Remap here or change it in System Settings."
-        },
-        "NativeChatSupportedAgents": {
-          "label": "Supported agents:"
         },
         "contrast": {
           "title": "Color Contrast",
@@ -18183,6 +18190,10 @@
         "title": "Couldn't reach your Orca host",
         "description": "Nothing was lost. Orca will reload when the host answers, and won't save changes until then.",
         "retry": "Retry now"
+      },
+      "webPairingRefused": {
+        "title": "Orca refused this browser",
+        "retry": "Try again"
       }
     }
   },
@@ -18233,6 +18244,9 @@
       "empty": "No users found"
     },
     "native-chat": {
+      "install": {
+        "checking": "Checking whether {{agent}} is ready on this host…"
+      },
       "reasoning": "Reasoning",
       "failureWords": {
         "theAgent": "The agent",
@@ -18926,6 +18940,9 @@
         "editFailed": "This message can't be edited.",
         "editGone": "This message was already sent or removed. Your edit is in the chat box.",
         "editGonePrompt": "This message was already sent or removed. Your edit will be in the chat box after you answer the agent.",
+        "imageCount": "{{count}} images",
+        "imageCount_one": "{{count}} image",
+        "imageCount_other": "{{count}} images",
         "collapse": "Collapse",
         "expand": "Expand",
         "queued": "Queued",
@@ -19213,6 +19230,13 @@
           "label": "Host: {{value0}}",
           "unknown": "Unknown host",
           "candidateName": "{{value0}} on {{value1}}"
+        },
+        "stopAgents": {
+          "titleMany": "Stop these agents?",
+          "descriptionOne": "Deleting will stop the agent's current work.",
+          "descriptionMany": "Deleting will stop these agents' current work.",
+          "confirm": "Stop agents and delete",
+          "confirmOne": "Stop agent and delete"
         }
       },
       "creation": {
@@ -19368,6 +19392,30 @@
       "keywordJira": "jira",
       "keywordDefaultProject": "default project",
       "keywordIssuePicker": "issue picker"
+    },
+    "managed-runtime": {
+      "cancel": "Cancel installation",
+      "cancelled": "Installation cancelled.",
+      "cancelling": "Cancelling…",
+      "chatTitle": "Install {{agent}} to start chatting.",
+      "damaged": "This copy of {{agent}} is damaged.",
+      "downloading": "Downloading {{done}} MB.",
+      "downloadingOf": "Downloading {{done}} MB of {{total}} MB.",
+      "external": "Uses the copy of {{agent}} found on this host.",
+      "extracting": "Extracting {{agent}}.",
+      "failed": "Installation failed. Try again.",
+      "cancelFailed": "Couldn't cancel the installation. Try again.",
+      "install": "Install {{agent}}",
+      "installManaged": "Install Orca's copy",
+      "installed": "Installed.",
+      "notInstalled": "Not installed.",
+      "progress": "{{agent}} download",
+      "readFailed": "Could not check {{agent}} on this host. Retrying.",
+      "reinstall": "Reinstall {{agent}}",
+      "retry": "Retry installation",
+      "unavailable": "{{agent}} is not available on this host.",
+      "update": "Update {{agent}}",
+      "verifying": "Checking the downloaded runtime."
     }
   },
   "dashboardPopout": {
@@ -19900,7 +19948,7 @@
     "claude": {
       "added": "Account added. Select it to use it for the next Claude you start.",
       "nextLaunch": "{{value0}} → {{value1}}. The next Claude you start uses it. Running sessions keep their account.",
-      "profileSwitching": "Switching applies to the next Claude you start in any tab. Running sessions keep their account.",
+      "profileSwitching": "Switching applies to the next Claude you start in any tab.",
       "systemDefaultNamed": "System default: {{value0}}",
       "systemDefaultIsSaved": "System default is signed in as {{value0}}, which is also a saved account. An earlier Orca version may have copied that login there. If it is not your own login, select System default and run claude /login.",
       "systemDefaultIsSavedDismiss": "Dismiss",
@@ -19912,7 +19960,36 @@
       "moreSignInOptions": "More sign-in options",
       "copySignInLink": "Copy sign-in link instead",
       "signInLinkCopied": "Sign-in link copied. Open it in a private window to sign in with a different account.",
-      "signInLinkCopyFailed": "Could not copy the link."
+      "signInLinkCopyFailed": "Could not copy the link.",
+      "switchSessions": {
+        "title": "Switched to {{account}}",
+        "bodyOne": "1 Claude session is still running on {{previous}}. Restarting continues the conversation on {{next}}. Busy sessions wait for idle before restarting.",
+        "bodyOther": "{{count}} Claude sessions are still running on {{previous}}. Restarting continues each conversation on {{next}}. Busy sessions wait for idle before restarting.",
+        "dontAskAgain": "Don't ask again (restart automatically)",
+        "dontAskAgainHint": "You can turn this off in Settings → AI Provider Accounts.",
+        "keep": "Keep as is",
+        "restartOne": "Restart session",
+        "restartOther": "Restart {{count}} sessions",
+        "listLabel": "Claude sessions to restart",
+        "selectAll": "Select all",
+        "selectAllSessions": "Select all sessions",
+        "selectedCount": "{{selected}} of {{total}} selected",
+        "selectWorkspace": "Select all sessions in {{workspace}}",
+        "session": "Claude session",
+        "busy": "Working",
+        "idle": "Idle",
+        "settingTitle": "When you switch accounts while Claude is running",
+        "settingDescription": "Restarting continues each running conversation on the new account.",
+        "keyword": {
+          "restart": "restart",
+          "running": "running"
+        },
+        "settingAsk": "Ask",
+        "settingRestart": "Always restart",
+        "settingKeep": "Never restart",
+        "restartingOne": "Restarting 1 Claude session on {{account}}",
+        "restartingOther": "Restarting {{count}} Claude sessions on {{account}}"
+      }
     },
     "managedData": {
       "description": "Add accounts by running this command in a terminal on the Orca host. Selection applies to new explicit agent launches on that host; direct SSH relay and Windows-hosted WSL launches use their own credentials.",

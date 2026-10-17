@@ -1,3 +1,4 @@
+import { prepareAdoptedTranscript } from '../native-chat/agent-session-wire/structured-agent-session-adopted-import'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -103,7 +104,7 @@ describe('structured Codex folder trust', () => {
 })
 
 describe('structured agent-session create intent', () => {
-  it('returns the recorded owner before any new-launch support or account preparation', async () => {
+  it('returns the recorded owner before CLI source lookup, new-launch support or account preparation', async () => {
     const record = agentSessionRecordFixture()
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: early ownership admission only reads the host's record list.
     setStructuredAgentSessionHost({
@@ -113,12 +114,16 @@ describe('structured agent-session create intent', () => {
     const support = vi
       .spyOn(runtime, 'getStructuredAgentSessionCreateSupport')
       .mockRejectedValue(new Error('fresh launch is unavailable'))
+    const sourceRows = vi.spyOn(runtime, 'getAgentProviderSessionRows').mockImplementation(() => {
+      throw new Error('source is unavailable')
+    })
     await expect(
       runtime.resolveStructuredAgentSessionCreateIntent({
         envelope: { sessionId: 'new-chat', clientOperationId: 'operation-1' },
         worktree: 'id:another-workspace',
         agent: 'claude',
-        resumeFrom: { providerSessionId: 'provider-session-alpha-1' }
+        resumeFrom: { providerSessionId: 'provider-session-alpha-1',
+          cliSource: { workspaceId: 'another-workspace', paneKey: 'missing-pane' } }
       })
     ).rejects.toMatchObject({
       refusal: {
@@ -130,6 +135,7 @@ describe('structured agent-session create intent', () => {
       }
     })
     expect(support).not.toHaveBeenCalled()
+    expect(sourceRows).not.toHaveBeenCalled()
   })
 
   it('pins the selected Codex launch home after normal launch preparation', async () => {
@@ -489,18 +495,18 @@ describe('adopting a conversation recorded outside Orca', () => {
       expect(intent.accountHome).toEqual({ variable: 'PI_CODING_AGENT_DIR', path: accountHome })
       expect(intent.adopt).toEqual({
         providerHandle: { transport: 'jsonl-rpc', agent: 'pi', nativeId: file },
-        transcriptPath: file
+        transcriptPath: file,
+        source: { providerSessionId: '0198c2a4-7d1e-7c3a-9a4b-1f2e3d4c5b6a', workspaceCwd: '/repos/workspace-1' }
       })
 
       workspaceDirectory = '/different-folder'
-      await expect(
-        runtime.resolveStructuredAgentSessionCreateIntent({
+      const refused = await runtime.resolveStructuredAgentSessionCreateIntent({
           envelope: { sessionId: 'session-2', clientOperationId: 'operation-2' },
           worktree: 'id:workspace-1',
           agent: 'pi',
           resumeFrom: { providerSessionId: '0198c2a4-7d1e-7c3a-9a4b-1f2e3d4c5b6a' }
         })
-      ).rejects.toMatchObject({ refusal: { code: 'agent_session_identity_required' } })
+      expect(await prepareAdoptedTranscript(refused)).toMatchObject({ ok: false, refusal: { code: 'agent_session_identity_required' } })
     } finally {
       vi.unstubAllEnvs()
       await rm(accountHome, { recursive: true, force: true })

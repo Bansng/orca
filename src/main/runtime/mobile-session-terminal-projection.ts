@@ -70,6 +70,7 @@ export function buildHeadlessMobileSessionTerminalTabs(
             parentTabId: tab.id,
             leafId,
             title,
+            customTitle: tab.customTitle?.trim() || null,
             ...(ptyId ? { ptyId } : {}),
             ...(tab.startupCwd ? { startupCwd: tab.startupCwd } : {}),
             ...(tab.launchAgent ? { launchAgent: tab.launchAgent } : {}),

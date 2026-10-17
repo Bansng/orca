@@ -63,6 +63,9 @@ function assertCloneHostIsSupported(hostId: ExecutionHostId | null | undefined):
   )
 }
 
+export const SERVER_SSH_PROJECT_ADD_UNAVAILABLE_MESSAGE =
+  "This Orca server can't add projects on its SSH hosts. Add the SSH host on your computer to open its projects."
+
 function sshTargetNotServedError(connectionId: string): SshHostNotServedError {
   return new SshHostNotServedError(connectionId, sshTargetNotConnectedMessage(connectionId))
 }
@@ -124,12 +127,15 @@ export class RuntimeProjectHostSetupController {
     return this.completeSetup(args, repo, !knownRepoIds.has(repo.id))
   }
 
-  /** `repo.addRemote` stays registered for older clients; this process serves no SSH target. */
+  /**
+   * `repo.addRemote` stays registered for older clients, which still offer it; this process serves
+   * no SSH target, so the refusal says where such a project can be added instead.
+   */
   addSshRepo(args: { connectionId: string }): Promise<Repo> {
     if (!this.deps.getStore()) {
       throw new Error('runtime_unavailable')
     }
-    throw sshTargetNotServedError(args.connectionId)
+    throw new SshHostNotServedError(args.connectionId, SERVER_SSH_PROJECT_ADD_UNAVAILABLE_MESSAGE)
   }
 
   async setupClone(args: ProjectHostSetupCloneArgs): Promise<ProjectHostSetupResult> {

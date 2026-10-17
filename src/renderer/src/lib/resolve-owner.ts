@@ -9,7 +9,11 @@ import {
   type ExecutionHostId
 } from '../../../shared/execution-host'
 import { getRepoIdFromWorktreeId } from '@/store/slices/worktree-helpers'
-import { findIndexedRepoOwnerForHost } from './worktree-runtime-owner-index'
+import {
+  findIndexedRepoOwnerForHost,
+  resolveIndexedFolderWorkspaceOwner,
+  resolveIndexedProjectGroupOwner
+} from './worktree-runtime-owner-index'
 import {
   hostAuthorityFromOperationRoute,
   SELF_LOCAL_AUTHORITY,
@@ -44,6 +48,25 @@ function toOwnerMatch(
   return authority ? { kind: 'resolved', owner: authority } : { kind: 'missing' }
 }
 
+/**
+ * A folder workspace, or the project group an unstamped folder inherits its host from, that two
+ * hosts publish. The route resolvers read the first as missing and the second as local, because
+ * their unqualified lookups collapse a twin to "no row" before any host fallback runs.
+ */
+function isFolderTwin(state: WorktreeOperationRouteState, folderWorkspaceId: string): boolean {
+  const folder = resolveIndexedFolderWorkspaceOwner(state.folderWorkspaces, folderWorkspaceId)
+  if (folder.kind !== 'resolved') {
+    return folder.kind === 'ambiguous'
+  }
+  // Why: the folder's own host stamp or SSH connection names its owner; only an inherited host is moot.
+  return (
+    !folder.owner.executionHostId?.trim() &&
+    !folder.owner.connectionId?.trim() &&
+    resolveIndexedProjectGroupOwner(state.projectGroups, folder.owner.projectGroupId).kind ===
+      'ambiguous'
+  )
+}
+
 function resolveRoute(
   state: WorktreeOperationRouteState,
   ref: WorkspaceOwnerRef
@@ -54,6 +77,11 @@ function resolveRoute(
   const hostId =
     ref.hostId ??
     (state.activeWorktreeId === ref.workspaceId ? state.activeWorkspaceExecutionHostId : null)
+  const scope = parseWorkspaceKey(ref.workspaceId)
+  // Why: with no host named, nothing can pick a twin; refusing beats landing on the wrong machine.
+  if (!hostId && scope?.type === 'folder' && isFolderTwin(state, scope.folderWorkspaceId)) {
+    return { kind: 'ambiguous' }
+  }
   // Why strict: rival servers proxying the same `ssh:t` must not read as a directly dialed target.
   const match = toOwnerMatch(
     hostId

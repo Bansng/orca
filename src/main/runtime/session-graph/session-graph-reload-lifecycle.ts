@@ -1,11 +1,11 @@
 import type { OrcaRuntimeWithTransitionGraphReloadToTerminalState as TransitionGraphReloadToTerminalStateMethods } from './session-graph-authority'
 import type { OrcaRuntimeWithBindPtyIncarnationHandle as BindPtyIncarnationHandleMethods } from '../terminal/identity/terminal-handle-bindings'
 import type { OrcaRuntimeWithResolveWaiter as ResolveWaiterMethods } from '../orca-runtime-resolve-waiter'
-import { OrcaRuntimeWithStopExactTerminalsForWorktree } from '../terminal/stop/worktree-terminal-stop-targets'
+import { OrcaRuntimeWithStopTerminalsForProject } from '../terminal/stop/project-terminal-stop'
 import type { RuntimeRendererReloadFence } from '../orca-runtime-core'
 import { HEADLESS_RUNTIME_WINDOW_ID } from '../../../shared/runtime-types'
 
-export abstract class OrcaRuntimeWithHasTerminalsForWorktree extends OrcaRuntimeWithStopExactTerminalsForWorktree {
+export abstract class OrcaRuntimeWithHasTerminalsForWorktree extends OrcaRuntimeWithStopTerminalsForProject {
   protected abstract assertStableReadyGraph(
     ...args: Parameters<TransitionGraphReloadToTerminalStateMethods['assertStableReadyGraph']>
   ): ReturnType<TransitionGraphReloadToTerminalStateMethods['assertStableReadyGraph']>

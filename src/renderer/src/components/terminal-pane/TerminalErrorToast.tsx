@@ -14,6 +14,10 @@ import {
   localizeTerminalSpawnHints,
   withoutTerminalSpawnIssueRequest
 } from './terminal-spawn-error-display'
+import {
+  describeSshSignInRequiredTerminalError,
+  isSshSignInRequiredTerminalError
+} from './terminal-ssh-sign-in-error'
 
 const SSH_PREFIX = 'SSH connection is not active'
 // Produced by pty-connection.ts reportError() when a PTY reattach can't reach its SSH host.
@@ -129,8 +133,16 @@ function humanizeFolderWorkspacePathErrors(error: string): string {
   return error.split('\n').map(humanizeFolderWorkspacePathError).join('\n')
 }
 
+/** An SSH host state (reconnecting, or waiting for the user to sign in), not a bug to report. */
+function isSshHostStateTerminalError(error: string): boolean {
+  return isSshSignInRequiredTerminalError(error) || isSshReconnectOwnedTerminalError(error)
+}
+
 /** Swaps raw daemon-boundary codes for copy a user can act on. */
 export function humanizeTerminalError(error: string): string {
+  if (isSshSignInRequiredTerminalError(error)) {
+    return describeSshSignInRequiredTerminalError(error)
+  }
   let humanized = humanizeFolderWorkspacePathErrors(localizeTerminalSpawnHints(error))
   if (humanized.includes(PANE_OWNER_UNVERIFIED_MARKER)) {
     const explanation = isPaneOwnerUnverifiedError(humanized)
@@ -200,7 +212,7 @@ export function TerminalErrorToast({
   onRestartDaemon?: () => void
   onRetry?: () => Promise<boolean>
 }): React.JSX.Element {
-  const ssh = isSshReconnectOwnedTerminalError(error)
+  const ssh = isSshHostStateTerminalError(error)
   // Why: the client's OS and shell describe neither the host nor its shell, and the renderer knows neither.
   const showClientEnvironment = paneOnClient && !ssh
   const paneOwnerUnverified = isPaneOwnerUnverifiedError(error)

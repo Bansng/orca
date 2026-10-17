@@ -91,6 +91,8 @@ export type TerminalCreateOptions = {
   viewMode?: 'terminal' | 'chat'
   /** The tab group a background create joins; defaults to the first group. */
   targetGroupId?: string
+  /** Main-internal placement anchor; removed before PTY dispatch. */
+  afterTabId?: string
   startupCommandDelivery?: WorktreeStartupLaunch['startupCommandDelivery']
   telemetry?: WorktreeStartupLaunch['telemetry']
   /** The surface that asked for this `startupAgent` launch; the runtime attributes every one it

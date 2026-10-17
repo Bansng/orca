@@ -50,6 +50,7 @@ jobs:
       - uses: ./.github/actions/install-node-dependencies
         with:
           native-runtime: node
+      - uses: ./.github/actions/build-mobile-web-bundle
       - name: Build the template
         run: |
           pnpm build:orcad-prebuilds

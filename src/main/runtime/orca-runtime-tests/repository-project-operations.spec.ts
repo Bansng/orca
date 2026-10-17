@@ -635,7 +635,7 @@ describe('OrcaRuntimeService', () => {
         .catch((error: unknown) => error)
 
       expect(() => runtime.addSshRepo({ connectionId: 'openclaw' })).toThrow(
-        'SSH connection "openclaw" not found or not connected'
+        "This Orca server can't add projects on its SSH hosts."
       )
 
       // Why: the defect was a silent local clone/probe recorded as remote, not a bad message,

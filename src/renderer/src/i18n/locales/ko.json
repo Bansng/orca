@@ -414,9 +414,7 @@
       },
       "pairingSecurity": {
         "hide": "숨기기",
-        "storedCodeInsecureOrigin": "이 브라우저는 재사용 가능한 페어링 코드를 보관합니다. 이 페이지는 다른 컴퓨터에 있고 일반 http이기 때문입니다. 이 브라우저의 저장소를 읽을 수 있는 사람은 누구나 이 코드를 사용할 수 있습니다. 더 안전하게 페어링하려면 https로, 이 컴퓨터의 localhost에서, 또는 SSH 터널을 통해 Orca를 열고 다시 페어링하세요.",
         "storedCodeNoEd25519": "이 브라우저는 보안 로그인 키(Ed25519)를 만들 수 없기 때문에 재사용 가능한 페어링 코드를 보관합니다. 더 안전하게 페어링하려면 최신 브라우저를 사용하고 다시 페어링하세요.",
-        "sessionInsecureOrigin": "이 페어링은 이 탭이 열려 있는 동안에만 유지됩니다. 이 페이지는 다른 컴퓨터에 있고 일반 http이기 때문입니다. 이 브라우저가 기억하는 페어링을 원한다면 https로, 이 컴퓨터의 localhost에서, 또는 SSH 터널을 통해 Orca를 여세요.",
         "sessionNoEd25519": "이 페어링은 이 탭이 열려 있는 동안에만 유지됩니다. 이 브라우저는 보안 로그인 키(Ed25519)를 만들 수 없기 때문입니다. 브라우저가 기억하는 페어링을 원한다면 최신 브라우저를 사용하세요."
       },
       "runtimeAuth": {
@@ -475,6 +473,7 @@
             "gitStatusUnavailable": "Orca가 이 워크스페이스의 Git 상태를 확인할 수 없습니다. 다시 시도하거나 호스트별 사이드바 또는 프로젝트 목록에서 삭제하세요.",
             "gitStatusUnavailableOlderPeer": "Orca가 이 Git 상태 확인 실패를 호스트와 연결할 수 없습니다. 이전 연결 피어를 업데이트하거나 호스트별 사이드바 또는 프로젝트 목록에서 워크스페이스를 삭제하세요.",
             "forceNeedsApproval": "강제로 삭제하기 전에 이 워크스페이스를 검토하고 확인하세요.",
+            "agentStartedSinceConfirmation": "이 워크스페이스에서 agent가 실행 중입니다. agent 중지를 검토하려면 다시 삭제하세요.",
             "hostCollision": "오류: 이 워크스페이스는 동일한 경로의 여러 호스트에 존재합니다.",
             "hostUnresolved": "Orca는 어느 호스트가 이 워크스페이스를 소유하고 있는지 알 수 없습니다. 프로젝트를 새로고침하고 다시 검토하세요."
           }
@@ -5975,8 +5974,7 @@
                   "7edb8ebe24": "URL에서 복제",
                   "a6c20dca96": "SSH 대상에서 프로젝트 열기",
                   "serverSshTitle": "이 서버의 SSH 호스트에 있는 프로젝트",
-                  "serverSshDescription": "이 서버가 연결하는 SSH 호스트의 프로젝트 폴더를 엽니다",
-                  "serverSshUpdate": "SSH 호스트에 프로젝트를 추가하려면 이 서버를 업데이트하세요",
+                  "serverSshAddOnThisComputer": "서버에서는 사용할 수 없습니다. 프로젝트를 열려면 이 컴퓨터에 SSH 호스트를 추가하세요.",
                   "fb4fc5380e": "로컬 프로젝트, Git repo 또는 repos가 많은 폴더",
                   "2281fdc8c7": "폴더 찾아보기",
                   "runtimeBrowseDescription": "이 호스트의 기존 Git 리포지토리 또는 폴더"
@@ -8708,7 +8706,7 @@
           "addDescription": "SSH로 로그인할 수 있는 영구 머신을 추가합니다.",
           "editingPrefix": "편집 중",
           "allowRemoteCliControl": "이 호스트의 orca CLI가 Orca를 제어하도록 허용",
-          "allowRemoteCliControlHelp": "기본적으로 켜져 있습니다. 이 호스트에서 실행한 orca 명령이 이 호스트의 작업 공간에서만, 연결되어 있는 동안에만 이 데스크톱의 Orca 브라우저 탭을 열고 조작할 수 있게 하고, 이 호스트에서 이전 버전의 Orca가 시작한 터미널이 자신이 감독받는 작업에 대해 오케스트레이션 명령(check, inbox, send, ask, reply)을 실행할 수 있게 합니다. 파일, 클립보드, 쿠키는 읽을 수 없습니다. 끄면 이 호스트 자체의 Orca 서버에만 접근합니다."
+          "allowRemoteCliControlHelp": "새 호스트에서는 기본적으로 켜져 있습니다. 이 호스트에서 실행한 orca 명령이 이 호스트의 작업 공간에서만, 연결되어 있는 동안에만 이 데스크톱의 Orca 브라우저 탭을 열고 조작할 수 있게 하고, 이 호스트에서 이전 버전의 Orca가 시작한 터미널이 자신이 감독받는 작업에 대해 오케스트레이션 명령(check, inbox, send, ask, reply)을 실행할 수 있게 합니다. 파일, 클립보드, 쿠키는 읽을 수 없습니다. 끄면 이 호스트 자체의 Orca 서버에만 접근합니다."
         },
         "TasksPane": {
           "f71d8a9dd3": "작업 제공자",
@@ -12334,9 +12332,6 @@
           "cancel": "정리 계속",
           "stopping": "중지 중…",
           "confirm": "정리 중지"
-        },
-        "NativeChatSupportedAgents": {
-          "label": "지원되는 에이전트:"
         },
         "contrast": {
           "title": "색상 대비",
@@ -17985,6 +17980,10 @@
         "title": "Orca 호스트에 연결할 수 없습니다",
         "description": "손실된 내용은 없습니다. 호스트가 응답하면 Orca가 다시 로드되며, 그때까지 변경사항은 저장되지 않습니다.",
         "retry": "지금 다시 시도"
+      },
+      "webPairingRefused": {
+        "title": "Orca가 이 브라우저를 거부했습니다",
+        "retry": "다시 시도"
       }
     }
   },
@@ -18025,6 +18024,9 @@
       }
     },
     "native-chat": {
+      "install": {
+        "checking": "이 호스트에서 {{agent}}이(가) 준비되었는지 확인하는 중…"
+      },
       "reasoning": "추론",
       "contextMenu": {
         "copyOrcaSessionId": "Orca 세션 ID 복사",
@@ -18694,6 +18696,9 @@
         "editFailed": "이 메시지는 편집할 수 없습니다.",
         "editGone": "이 메시지는 이미 전송되었거나 삭제되었습니다. 편집한 내용은 채팅 입력란에 있습니다.",
         "editGonePrompt": "이 메시지는 이미 전송되었거나 삭제되었습니다. 에이전트에 답하면 편집한 내용이 채팅 입력란에 표시됩니다.",
+        "imageCount": "이미지 {{count}}개",
+        "imageCount_one": "이미지 {{count}}개",
+        "imageCount_other": "이미지 {{count}}개",
         "collapse": "접기",
         "expand": "펼치기",
         "queued": "대기 중",
@@ -18999,6 +19004,13 @@
           "label": "호스트: {{value0}}",
           "unknown": "알 수 없는 호스트",
           "candidateName": "{{value1}}의 {{value0}}"
+        },
+        "stopAgents": {
+          "titleMany": "이 agent들을 중지할까요?",
+          "descriptionOne": "삭제하면 agent의 현재 작업이 중지됩니다.",
+          "descriptionMany": "삭제하면 이 agent들의 현재 작업이 중지됩니다.",
+          "confirm": "agent 중지 후 삭제",
+          "confirmOne": "agent 중지 후 삭제"
         }
       },
       "creation": {
@@ -19164,6 +19176,30 @@
       "keywordJira": "Jira",
       "keywordDefaultProject": "기본 프로젝트",
       "keywordIssuePicker": "이슈 선택기"
+    },
+    "managed-runtime": {
+      "cancel": "설치 취소",
+      "cancelled": "설치가 취소되었습니다.",
+      "cancelling": "취소하는 중…",
+      "chatTitle": "채팅을 시작하려면 {{agent}}을(를) 설치하세요.",
+      "damaged": "이 {{agent}} 사본이 손상되었습니다.",
+      "downloading": "{{done}}MB 다운로드 중입니다.",
+      "downloadingOf": "{{total}}MB 중 {{done}}MB 다운로드 중입니다.",
+      "external": "이 호스트에서 찾은 {{agent}} 사본을 사용합니다.",
+      "extracting": "{{agent}} 압축을 푸는 중입니다.",
+      "failed": "설치하지 못했습니다. 다시 시도하세요.",
+      "cancelFailed": "설치를 취소하지 못했습니다. 다시 시도하세요.",
+      "install": "{{agent}} 설치",
+      "installManaged": "Orca 사본 설치",
+      "installed": "설치되었습니다.",
+      "notInstalled": "설치되지 않았습니다.",
+      "progress": "{{agent}} 다운로드",
+      "readFailed": "이 호스트에서 {{agent}}을(를) 확인할 수 없습니다. 다시 시도하는 중입니다.",
+      "reinstall": "{{agent}} 재설치",
+      "retry": "설치 다시 시도",
+      "unavailable": "{{agent}}은(는) 이 호스트에서 사용할 수 없습니다.",
+      "update": "{{agent}} 업데이트",
+      "verifying": "다운로드한 런타임을 확인하는 중입니다."
     }
   },
   "dashboardPopout": {
