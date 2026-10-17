@@ -221,6 +221,7 @@ describe('mobile structured send actions', () => {
                   { id: 'opus[1m]', label: 'Opus', isDefault: true, efforts },
                   { id: 'claude-gone', label: 'claude-gone', isDefault: false, efforts: [] }
                 ],
+                listedModelIds: ['opus[1m]'],
                 current: { model: 'claude-gone', effort: 'high' }
               })
             : ok({})

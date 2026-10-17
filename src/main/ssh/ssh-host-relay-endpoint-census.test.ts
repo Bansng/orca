@@ -205,8 +205,18 @@ describe('readRelayEndpointProbe', () => {
 
   it('reads a socket proven to have no holder as idle', () => {
     expect(
-      readRelayEndpointProbe(probed(['PRESENT=yes', 'LISTEN=refused', 'HOLDERS_SOURCE=lsof']))
+      readRelayEndpointProbe(
+        probed(['PRESENT=yes', 'LISTEN=refused', 'FS_TYPE=linux ef53 ef53', 'HOLDERS_SOURCE=lsof'])
+      )
     ).toBe('idle')
+  })
+
+  it('never reads a refused socket on a network home as idle: another machine may hold it', () => {
+    expect(
+      readRelayEndpointProbe(
+        probed(['PRESENT=yes', 'LISTEN=refused', 'FS_TYPE=linux 6969 ef53', 'HOLDERS_SOURCE=lsof'])
+      )
+    ).toBe('unverifiable')
   })
 
   it('never reads an unanswered endpoint as idle', () => {

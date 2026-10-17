@@ -91,7 +91,7 @@ export function useTabBarItemActions(source: TabBarItemActionSource): TabBarItem
       togglePinned: (item) => latest.current.togglePinned(item),
       toggleViewMode: (tabId) => latest.current.toggleTabViewMode(tabId)
     }
-    // Switch point: rename, color and pin go to main first.
+    // Switch point: pin goes to main first (rename, color and view do from their store actions).
     return ORCA_LAYOUT_OWNER_IS_MAIN
       ? { ...actions, ...withLayoutOwnerTabProps(actions, () => latest.current.props.worktreeId) }
       : actions

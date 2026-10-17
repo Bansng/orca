@@ -1,6 +1,7 @@
 import { normalizeNativeChatAppearanceSettings } from '../../../shared/native-chat-appearance-settings'
 import type { GlobalSettings } from '../../../shared/global-settings-types'
 import { normalizeDisabledTuiAgents } from '../../../shared/tui-agent-selection'
+import { normalizeNativeChatProviderChoices } from '../../../shared/native-chat-providers'
 import { resolveNestedWorkerMaxDepth } from '../../../shared/nested-worker-depth'
 import {
   normalizeTuiAgentArgsRecord,
@@ -91,6 +92,11 @@ export function updateSettings(
   }
   if ('disabledTuiAgents' in updates) {
     sanitizedUpdates.disabledTuiAgents = normalizeDisabledTuiAgents(updates.disabledTuiAgents)
+  }
+  if ('nativeChatProviders' in updates) {
+    sanitizedUpdates.nativeChatProviders = normalizeNativeChatProviderChoices(
+      updates.nativeChatProviders
+    )
   }
   if ('worktreeVisibilityDefaults' in updates) {
     sanitizedUpdates.worktreeVisibilityDefaults = {

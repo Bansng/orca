@@ -522,6 +522,13 @@ body:has(> [data-slot='dialog-overlay'], > [data-slot='sheet-overlay']) {
   gap: 6px;
 }
 
+/* Why: a folded back toast is squeezed to the front toast's height without clipping, so a taller
+   toast's content hangs below the stack; hovering it re-expands the stack in a loop. clip, not
+   hidden: hidden makes a scroll container that focusing a folded control would scroll. */
+[data-sonner-toaster] [data-sonner-toast][data-expanded='false'][data-front='false'] {
+  overflow: clip;
+}
+
 [data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-button] {
   /* Why: Sonner's native action slots otherwise share the copy row and squeeze
      long notices; indent the wrapped footer to align with text after the icon. */

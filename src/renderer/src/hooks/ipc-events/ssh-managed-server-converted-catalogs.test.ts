@@ -143,6 +143,20 @@ describe('a host that just moved to its managed server', () => {
     expect(state.folderWorkspaces.map((entry) => entry.executionHostId)).toEqual(['runtime:env-1'])
   })
 
+  it('carries the host’s visit recency to the server instead of leaving it for the next prune', async () => {
+    store.setState({
+      lastVisitedAtByWorktreeId: { [`ssh:ssh-1|${worktreeId}`]: 500, [`local|${worktreeId}`]: 7 }
+    })
+    applySshManagedServerTransition('ssh-1', undefined, { kind: 'managed', environmentId: 'env-7' })
+
+    await vi.waitFor(() =>
+      expect(store.getState().lastVisitedAtByWorktreeId).toEqual({
+        [`runtime:env-7|${worktreeId}`]: 500,
+        [`local|${worktreeId}`]: 7
+      })
+    )
+  })
+
   it('moves the open workspace onto the server so its panes stop dialing the stopped relay', async () => {
     store.setState({
       worktreesByRepo: {

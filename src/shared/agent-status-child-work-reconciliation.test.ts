@@ -526,6 +526,7 @@ describe('structured child-work reconciliation', () => {
         type: 'stop-acknowledged',
         observedAt,
         childWorkId: record.childWorkId,
+        handleId: id,
         invocation: record.invocation
       }
     }

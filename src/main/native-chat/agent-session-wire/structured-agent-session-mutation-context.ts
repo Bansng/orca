@@ -16,6 +16,7 @@ import type { MutationPlan } from './structured-agent-session-mutation-plans'
 import type { StructuredAgentSessionStopEnding } from './structured-agent-session-host-lifetime'
 import type { StructuredAgentSessionAcquireAborts } from './structured-agent-session-acquire-aborts'
 import type { StructuredAgentSessionDeliveryOrder } from './structured-agent-session-delivery-order'
+import type { CapturedChildWorkStops } from './structured-agent-session-status-ownership'
 import type { StructuredAgentSessionStartupAttempts } from './structured-agent-session-startup-attempt'
 import { hostStructuredAgentSessionCurrentWork } from './structured-agent-session-host-current-work'
 import type {
@@ -33,7 +34,12 @@ export type StructuredAgentSessionMutationContext = {
   /** The session's child records, as the strip reads them; what command admission decides on. */
   readChildWork: (sessionId: string) => AgentChildWorkView[] | undefined
   publishChildWork: (sessionId: string, evidence: AgentChildWorkEvidence[]) => void
+  captureChildWorkStops: (
+    sessionId: string,
+    handleIds: readonly string[]
+  ) => CapturedChildWorkStops
   /** Some of the session's running child work has no record. */
+  childWorkOpen: (sessionId: string) => boolean
   childWorkIncomplete: (sessionId: string) => boolean
   serialize: <T>(sessionId: string, task: () => Promise<T>) => Promise<T>
   /** The session's conversation, opened when closed; inside the caller's serialize. */

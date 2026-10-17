@@ -7,7 +7,9 @@ import {
   credentialRequestedForTarget,
   testingTargets
 } from './ssh-connect-attempt-registry'
-import { getCurrentMainWindow } from './ssh-ipc-context'
+import { connectionManager, getCurrentMainWindow } from './ssh-ipc-context'
+import { getSshTargetRegistryStore } from '../ssh/ssh-target-registry'
+import { recordSshSignInRequirement } from './ssh-sign-in-requirement'
 import { restoreManagedHostPortForwards } from './ssh-managed-port-forward-restore'
 import { requestCredential } from './ssh-passphrase'
 import { broadcastSshState } from './ssh-renderer-broadcast'
@@ -15,6 +17,7 @@ import { broadcastSshState } from './ssh-renderer-broadcast'
 export function handleSshConnectionStateChange(targetId: string, state: SshConnectionState): void {
   if (state.status === 'connected') {
     clearSshCredentialDeclined(targetId)
+    recordSshSignInRequirement(targetId, getSshTargetRegistryStore(), connectionManager)
   }
   if (testingTargets.has(targetId)) {
     return

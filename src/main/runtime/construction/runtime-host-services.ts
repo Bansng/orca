@@ -314,31 +314,28 @@ export abstract class OrcaRuntimeWithPreservedBranchCleanup extends OrcaRuntimeW
     }
   })
 
-  protected readonly nestedRepoImport = new RuntimeNestedRepoImport({
+  private readonly repositoryCatalogDeps = {
     getStore: () => this.store,
     invalidateResolvedWorktrees: () => this.invalidateResolvedWorktreeCache(),
-    invalidateWorktreeScan: (repoId) => this.invalidateWorktreeScanCacheForRepo(repoId),
+    invalidateWorktreeScan: (repoId: string) => this.invalidateWorktreeScanCacheForRepo(repoId),
     notifyReposChanged: () => this.notifyReposChanged()
-  })
+  }
 
-  protected readonly repositoryRegistrations = new RuntimeRepositoryRegistrationController({
-    getStore: () => this.store,
-    invalidateResolvedWorktrees: () => this.invalidateResolvedWorktreeCache(),
-    invalidateWorktreeScan: (repoId) => this.invalidateWorktreeScanCacheForRepo(repoId),
-    notifyReposChanged: () => this.notifyReposChanged()
-  })
+  protected readonly nestedRepoImport = new RuntimeNestedRepoImport(this.repositoryCatalogDeps)
 
-  protected readonly repositoryClones = new RuntimeRepositoryCloneController({
-    getStore: () => this.store,
-    invalidateResolvedWorktrees: () => this.invalidateResolvedWorktreeCache(),
-    invalidateWorktreeScan: (repoId) => this.invalidateWorktreeScanCacheForRepo(repoId),
-    notifyReposChanged: () => this.notifyReposChanged()
-  })
+  protected readonly repositoryRegistrations = new RuntimeRepositoryRegistrationController(
+    this.repositoryCatalogDeps
+  )
+
+  protected readonly repositoryClones = new RuntimeRepositoryCloneController(
+    this.repositoryCatalogDeps
+  )
 
   protected readonly repositorySettings = new RuntimeRepositorySettingsController({
     getStore: () => this.store,
     resolveRepo: (selector) => this.resolveRepoSelector(selector),
     forgetTerminalTopology: (repoId) => this.terminalTopologyRevisionByRepoId.delete(repoId),
+    stopProjectTerminals: (repo, deadline) => this.stopTerminalsForProject(repo, { deadline }),
     invalidateResolvedWorktrees: () => this.invalidateResolvedWorktreeCache(),
     invalidateWorktreeScan: (repoId) => this.invalidateWorktreeScanCacheForRepo(repoId),
     notifyReposChanged: () => this.notifyReposChanged()

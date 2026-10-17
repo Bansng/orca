@@ -10,6 +10,7 @@ vi.mock('react-native', () => ({
   ScrollView: 'ScrollView',
   StyleSheet: { create: (styles: unknown) => styles, hairlineWidth: 1 },
   Text: 'Text',
+  TextInput: 'TextInput',
   View: 'View'
 }))
 
@@ -79,6 +80,76 @@ describe('MobileNativeChatQueuedMessages', () => {
   function sheet(mounted: ReactTestRenderer) {
     return mounted.root.find((node) => String(node.type) === 'ActionSheetModal')
   }
+
+  it('edits inside the card with Save and Cancel while keeping another card visible', async () => {
+    const change = vi.fn()
+    const save = vi.fn(async () => true)
+    const cancel = vi.fn()
+    const mounted = await mount({
+      cards: [
+        card({
+          messageId: 'a',
+          attribution: 'From Alex',
+          caption: 'Returned',
+          needsAttention: true,
+          state: 'returned'
+        }),
+        card({ messageId: 'b' })
+      ],
+      editor: {
+        messageId: 'a',
+        text: 'edited text',
+        saving: false,
+        canSave: true,
+        change,
+        save,
+        cancel
+      }
+    })
+    const input = mounted.root.findByProps({ accessibilityLabel: 'Edit queued message' })
+    expect(input.props.value).toBe('edited text')
+    expect(texts(mounted)).toContain('From Alex')
+    expect(texts(mounted)).toContain('Returned')
+    expect(nodeTypes(mounted.root.findAllByProps({ testID: 'queued-card-row' })[0]!)).toContain(
+      'AlertCircle'
+    )
+    act(() => input.props.onChangeText('updated text'))
+    expect(change).toHaveBeenCalledWith('updated text')
+    await act(async () =>
+      mounted.root.findByProps({ accessibilityLabel: 'Save queued message' }).props.onPress()
+    )
+    expect(save).toHaveBeenCalledOnce()
+    act(() =>
+      mounted.root
+        .findByProps({ accessibilityLabel: 'Cancel editing queued message' })
+        .props.onPress()
+    )
+    expect(cancel).toHaveBeenCalledOnce()
+    expect(mounted.root.findAllByProps({ testID: 'queued-card-row' })).toHaveLength(2)
+    expect(mounted.root.findByProps({ accessibilityLabel: 'More actions' }).props.disabled).toBe(
+      true
+    )
+    await act(async () =>
+      mounted.update(
+        createElement(MobileNativeChatQueuedMessages, {
+          cards: [card({ messageId: 'a' })],
+          editor: {
+            messageId: 'a',
+            text: 'edited text',
+            saving: true,
+            canSave: true,
+            change,
+            save,
+            cancel
+          }
+        })
+      )
+    )
+    expect(
+      mounted.root.findByProps({ accessibilityLabel: 'Cancel editing queued message' }).props
+        .disabled
+    ).toBe(true)
+  })
 
   it('draws a plain waiting card as one compact row with no caption', async () => {
     const mounted = await mount({ cards: [card({ messageId: 'w', text: 'next' })] })

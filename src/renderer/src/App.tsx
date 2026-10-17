@@ -9,6 +9,7 @@ import { SkillFreshnessNudge } from './components/skills/SkillFreshnessNudge'
 import PinnedTabCloseDialog from './components/terminal-pane/PinnedTabCloseDialog'
 import RunningTerminalCloseDialog from './components/terminal-pane/RunningTerminalCloseDialog'
 import WorktreeBaseFallbackDialog from './components/WorktreeBaseFallbackDialog'
+import ClaudeAccountSwitchDialog from './components/ClaudeAccountSwitchDialog'
 import { useUnreadDockBadge } from './hooks/useUnreadDockBadge'
 import { AppBackgroundServices } from './app-shell/AppBackgroundServices'
 import { AppRootSurfaces } from './app-shell/AppRootSurfaces'
@@ -107,6 +108,7 @@ function App(): React.JSX.Element {
       </TooltipProvider>
       <SkillFreshnessNudge />
       <WorktreeBaseFallbackDialog />
+      <ClaudeAccountSwitchDialog />
       <PinnedTabCloseDialog />
       <RunningTerminalCloseDialog />
       {/* Why: Electron's drag-region hit-test is DOM-order-based (ignores z-index); render last so WindowControls stay clickable. */}

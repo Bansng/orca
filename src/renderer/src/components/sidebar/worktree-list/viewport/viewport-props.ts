@@ -17,13 +17,16 @@ import type {
   Worktree
 } from '../../../../../../shared/worktree/types'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host'
-import type { HostSectionRow } from '../../host-section-rows'
+import type { HostSectionRow } from '../../../../../../shared/sidebar-list/host-section-rows'
 import type { ImportedWorktreeCardActionState } from '../../imported-worktrees-card-actions'
 import type { NewExternalWorktreesInboxActionState } from '../../new-external-worktrees-inbox-actions'
 import type { WorktreeDragGroup } from '../../worktree-manual-order'
 import type { WorktreeStatusDropAtIndexArgs } from '../drag/drop-commit-context'
 import type { ProjectGroupingModel } from '../../../../../../shared/project-section-grouping'
-import type { PinnedWorktreeDisplayPolicy, WorktreeGroupBy } from '../grouping/row-types'
+import type {
+  PinnedWorktreeDisplayPolicy,
+  WorktreeGroupBy
+} from '../../../../../../shared/sidebar-list/row-types'
 
 export const EMPTY_PROJECT_GROUPS: readonly ProjectGroup[] = []
 export type VirtualizedWorktreeViewportProps = {

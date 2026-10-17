@@ -10,7 +10,7 @@
  * immutable install stays per machine: the runtime store's GC judges "in use" from processes it
  * can see, so a store shared across machines could be collected under another machine's server.
  */
-import { createHash, randomUUID } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import { shellEscape } from './ssh-connection-utils'
 import { RELAY_REMOTE_DIR } from './relay-protocol'
 import { ORCAD_ACTIVATION_FILENAME } from './orcad-activation-record'
@@ -27,8 +27,6 @@ export const ORCAD_MACHINE_CLAIM_FILENAME = 'orcad-machine.json'
 /** Under `~/.orca-remote`: one orcad home per other machine sharing this `$HOME`. */
 export const ORCAD_MACHINE_HOMES_DIRNAME = 'hosts'
 export const ORCAD_MACHINE_CLAIM_SCHEMA_VERSION = 1
-/** Under `~/.orca-remote`: decides the claim when hard links cannot (see the claim command). */
-export const ORCAD_MACHINE_CLAIM_ARBITER_DIRNAME = 'orcad-machine.arbiter'
 
 const SECTION = '__ORCA_MACHINE_HOME_SECTION__'
 const CLAIM_ABSENT = 'ABSENT'
@@ -92,8 +90,11 @@ export type OrcadMachineHomeDecision =
   | { kind: 'login-home' }
   | { kind: 'claim'; machineKey: string }
   | { kind: 'machine-home'; machineKey: string }
-  /** A stopped pre-claim install on a shared home: no record says which machine ran it. */
-  | { kind: 'unresolved'; machineKey: string }
+  /** A pre-claim install on a shared home that no record attributes to a machine. */
+  | { kind: 'unresolved'; machineKey: string; cause: OrcadMachineOwnershipUnresolvedCause }
+
+/** A stopped install left no owner; an older orcad's owner recorded no machine identity. */
+export type OrcadMachineOwnershipUnresolvedCause = 'stopped-install' | 'unattributed-owner'
 
 /**
  * Reads the login home, this machine's identity, the claim, and who holds the shared data root,
@@ -242,20 +243,24 @@ function parseOwnerLine(line: string): OrcadMachineHomeProbe['dataRootOwners'][n
   }
 }
 
-/** True when a data-root owner names a machine other than this one. */
-function isForeignOwner(
+/** Whether a data-root owner is this machine, another one, or cannot be told apart. */
+function ownerMachine(
   owner: OrcadMachineHomeProbe['dataRootOwners'][number],
   identity: OrcadMachineIdentity,
   host: RemoteHostPlatform
-): boolean {
+): 'this' | 'foreign' | 'unknown' {
   if (owner.machineIdentity) {
-    return owner.machineIdentity.toLowerCase() !== identity.machineIdentity
+    return owner.machineIdentity.toLowerCase() === identity.machineIdentity ? 'this' : 'foreign'
   }
-  // An owner too old to record its machine is judged by hostname, except on drifting macOS names.
-  return (
-    host.os !== 'darwin' &&
-    Boolean(owner.host && identity.hostname && owner.host !== identity.hostname)
-  )
+  // An owner too old to record its machine is judged by hostname.
+  if (!owner.host || !identity.hostname) {
+    return 'unknown'
+  }
+  if (owner.host === identity.hostname) {
+    return 'this'
+  }
+  // A macOS hostname follows the network, so a different one may still be this Mac.
+  return host.os === 'darwin' ? 'unknown' : 'foreign'
 }
 
 /**
@@ -263,8 +268,9 @@ function isForeignOwner(
  * data root: that one is the install's owner, and claiming it here would judge its PIDs on the
  * wrong machine. A machine that already has its own home keeps it, so a later claim cannot move
  * it off a server still running there. An unreadable claim throws: guessing can strand a server.
- * A cleanly stopped install leaves no owner, so on a home that may be shared its machine is
- * unknown: claiming it could hand one machine's pairing and projects to another.
+ * A cleanly stopped install leaves no owner, and an older orcad's owner may name no machine
+ * (macOS hostnames drift), so on a home that may be shared its machine is unknown: claiming it
+ * could hand one machine's pairing, projects and instance lock to another.
  */
 export function decideOrcadMachineHome(
   probe: OrcadMachineHomeProbe,
@@ -284,27 +290,37 @@ export function decideOrcadMachineHome(
       ? { kind: 'login-home' }
       : { kind: 'machine-home', machineKey: identity.key }
   }
-  if (
-    probe.machineHomeKeys.includes(identity.key) ||
-    probe.dataRootOwners.some((owner) => isForeignOwner(owner, identity, host))
-  ) {
+  const owners = probe.dataRootOwners.map((owner) => ownerMachine(owner, identity, host))
+  if (probe.machineHomeKeys.includes(identity.key) || owners.includes('foreign')) {
     return { kind: 'machine-home', machineKey: identity.key }
   }
-  return probe.loginHomeInstalled && probe.dataRootOwners.length === 0 && !probe.homeOnLocalDisk
-    ? { kind: 'unresolved', machineKey: identity.key }
+  if (probe.homeOnLocalDisk) {
+    return { kind: 'claim', machineKey: identity.key }
+  }
+  // Claiming another machine's install would judge its PIDs here and admit a second writer.
+  if (owners.includes('unknown')) {
+    return { kind: 'unresolved', machineKey: identity.key, cause: 'unattributed-owner' }
+  }
+  return probe.loginHomeInstalled && owners.length === 0
+    ? { kind: 'unresolved', machineKey: identity.key, cause: 'stopped-install' }
     : { kind: 'claim', machineKey: identity.key }
 }
 
 /** Names the one-line claim the user can run on the machine that set the server up. */
 export function orcadMachineOwnershipUnresolvedMessage(
   machineKey: string,
-  hostname: string | null
+  hostname: string | null,
+  cause: OrcadMachineOwnershipUnresolvedCause = 'stopped-install'
 ): string {
   const claim = JSON.stringify({ schemaVersion: ORCAD_MACHINE_CLAIM_SCHEMA_VERSION, machineKey })
   const path = `~/${RELAY_REMOTE_DIR}/${ORCAD_MACHINE_CLAIM_FILENAME}`
+  const why =
+    cause === 'stopped-install'
+      ? 'that stopped server left no record of its own'
+      : 'the older Orca server there recorded only a hostname, which does not identify its machine'
   return (
-    `Orca can't tell which machine set up the stopped Orca server in ~/${RELAY_REMOTE_DIR}: ` +
-    'this home may be shared by several machines, and that server left no record of its own. ' +
+    `Orca can't tell which machine set up the Orca server in ~/${RELAY_REMOTE_DIR}: ` +
+    `this home may be shared by several machines, and ${why}. ` +
     'If another machine set it up, connect to that one and run the command shown there. ' +
     `If ${hostname ?? 'this machine'} set it up, run this on it, then reconnect: ` +
     `mkdir -p ~/${RELAY_REMOTE_DIR} && printf '%s' '${claim}' > ${path}`
@@ -329,48 +345,4 @@ export function orcadMachineDataRoot(
   machineKey: string
 ): string {
   return joinRemotePath(host, loginHome, `.orca-${machineKey.slice(0, 8)}`)
-}
-
-/**
- * Publishes the claim exclusively and prints whichever claim won. Why a hard link: `ln` is atomic
- * and exclusive on NFS too, and a reader never sees a half-written claim. Where `ln` cannot decide
- * (no hard links, or an empty claim a full disk left), a directory rename picks the winner: it is
- * atomic everywhere, and the arbiter arrives already holding the winner's claim, so a crash leaves
- * no half-taken lock. Every machine then republishes that same claim, so concurrent writes agree.
- */
-export function orcadMachineClaimCommand(
-  host: RemoteHostPlatform,
-  loginHome: string,
-  machineKey: string
-): string {
-  const remoteDir = (...parts: string[]): string =>
-    shellEscape(joinRemotePath(host, loginHome, RELAY_REMOTE_DIR, ...parts))
-  const attempt = randomUUID()
-  const base = remoteDir()
-  const claim = remoteDir(ORCAD_MACHINE_CLAIM_FILENAME)
-  const partial = remoteDir(`${ORCAD_MACHINE_CLAIM_FILENAME}.partial.${attempt}`)
-  const stageName = `${ORCAD_MACHINE_CLAIM_ARBITER_DIRNAME}.partial.${attempt}`
-  const stage = remoteDir(stageName)
-  const stageClaim = remoteDir(stageName, ORCAD_MACHINE_CLAIM_FILENAME)
-  const arbiter = remoteDir(ORCAD_MACHINE_CLAIM_ARBITER_DIRNAME)
-  const arbiterClaim = remoteDir(ORCAD_MACHINE_CLAIM_ARBITER_DIRNAME, ORCAD_MACHINE_CLAIM_FILENAME)
-  // `mv` into an existing arbiter nests the stage inside it instead of replacing it.
-  const nestedStage = remoteDir(ORCAD_MACHINE_CLAIM_ARBITER_DIRNAME, stageName)
-  const body = shellEscape(
-    JSON.stringify({
-      schemaVersion: ORCAD_MACHINE_CLAIM_SCHEMA_VERSION,
-      machineKey
-    })
-  )
-  return [
-    `umask 077; mkdir -p ${base} || exit 65;`,
-    `printf %s ${body} > ${partial} || exit 65;`,
-    // Once an arbiter exists it decides any claim that later goes missing or empty.
-    `if { [ -d ${arbiter} ] || ! ln ${partial} ${claim} 2>/dev/null; } && [ ! -s ${claim} ]; then`,
-    `{ mkdir ${stage} && printf %s ${body} > ${stageClaim}; } || { rm -rf ${stage} ${partial}; exit 65; };`,
-    `mv ${stage} ${arbiter} 2>/dev/null; rm -rf ${stage} ${nestedStage};`,
-    `[ -s ${arbiterClaim} ] && cat ${arbiterClaim} > ${partial} || { rm -f ${partial}; exit 65; };`,
-    `[ -s ${claim} ] || mv -f ${partial} ${claim};`,
-    `fi; rm -f ${partial}; cat ${claim}`
-  ].join(' ')
 }

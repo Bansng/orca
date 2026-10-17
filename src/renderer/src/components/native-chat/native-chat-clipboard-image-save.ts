@@ -90,3 +90,29 @@ export async function saveNativeChatClipboardImage(
     return { status: 'failed' }
   }
 }
+
+/** A paste's save. Beside pasted text, a server too old to store the image drops only the image
+ *  rendition quietly, as an owner that takes no images does. */
+export function saveNativeChatPastedClipboardImage(
+  owner: NativeChatAttachmentOwner,
+  paste: {
+    besideText: boolean
+    canNotify: () => boolean
+    setNotice: (notice: string, errorText?: string) => void
+    ready?: () => void
+  }
+): ReturnType<typeof saveNativeChatClipboardImage> {
+  return saveNativeChatClipboardImage(owner, {
+    ready: paste.ready,
+    setNotice: (notice, cause, errorText) => {
+      if ((cause === 'serverTooOld' && paste.besideText) || !paste.canNotify()) {
+        return
+      }
+      if (errorText) {
+        paste.setNotice(notice, errorText)
+      } else {
+        paste.setNotice(notice)
+      }
+    }
+  })
+}

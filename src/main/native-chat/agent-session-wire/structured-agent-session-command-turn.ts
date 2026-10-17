@@ -146,8 +146,10 @@ export type StructuredAgentSessionCommandHandoverContext = {
   /** Who a failure the handover meets names, as the start's own row does. */
   failureTextContext?: AgentSessionFailureWordsContext
   record: () => AgentSessionRecord | null
-  /** The session's child records, the same read the strip and conversation-command admission use. */
+  /** The session's child records, the same read the strip uses; they word a refusal. */
   childWork: () => readonly AgentChildWorkView[] | undefined
+  /** Child work the provider reported running and not over: what refuses the command. */
+  childWorkOpen: () => boolean
   now: () => number
 }
 
@@ -328,7 +330,12 @@ function commandBlocked(
   if (!ctx.agents.capabilities(record.provider)?.compact) {
     return agentSessionFailureFact('commandRefused')
   }
-  const refusal = conversationCommandBlocked(ctx, record, ctx.childWork(), 'handover')
+  const refusal = conversationCommandBlocked(
+    ctx,
+    record,
+    { views: ctx.childWork(), open: ctx.childWorkOpen() },
+    'handover'
+  )
   return refusal
     ? agentSessionFailureFact('commandRefused', { refusal: agentSessionRefusalReference(refusal) })
     : null

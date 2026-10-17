@@ -96,7 +96,10 @@ describe('adopting live terminals in a layout-owner build', () => {
     reportWindowSessionWriteActivity(false)
     sync?.close()
     sync = null
-    provideLayoutFrameTerminalPanes(() => false)
+    provideLayoutFrameTerminalPanes({
+      holdsTerminalPane: () => false,
+      terminalTab: () => undefined
+    })
   })
 
   it('makes no tab or pane of its own while frames are held; the frame then draws the bound tab', async () => {
@@ -104,7 +107,7 @@ describe('adopting live terminals in a layout-owner build', () => {
     const store = createTestStore()
     await bootWindowFromPartitions(store, [{ hostId: 'local', session: windowSession }])
     sync = openWorkspaceLayoutFrameSync(store)
-    provideLayoutFrameTerminalPanes(sync.holdsTerminalPane)
+    provideLayoutFrameTerminalPanes(sync)
     sync.start()
     // The window owes main a save, so main's tree waits.
     reportWindowSessionWriteActivity(true)
@@ -153,7 +156,7 @@ describe('adopting live terminals in a layout-owner build', () => {
       const store = createTestStore()
       await bootWindowFromPartitions(store, [{ hostId: 'local', session: windowSession }])
       sync = openWorkspaceLayoutFrameSync(store)
-      provideLayoutFrameTerminalPanes(sync.holdsTerminalPane)
+      provideLayoutFrameTerminalPanes(sync)
       sync.start()
       reportWindowSessionWriteActivity(true)
       frames.onFrame!(snapshotOf(main))
@@ -170,7 +173,7 @@ describe('adopting live terminals in a layout-owner build', () => {
     const store = createTestStore()
     await bootWindowFromPartitions(store, [{ hostId: 'local', session: windowSession }])
     sync = openWorkspaceLayoutFrameSync(store)
-    provideLayoutFrameTerminalPanes(sync.holdsTerminalPane)
+    provideLayoutFrameTerminalPanes(sync)
     sync.start()
     frames.onFrame!(snapshotOf(windowSession))
     await flushMicrotasks()
@@ -192,7 +195,7 @@ describe('adopting live terminals in a layout-owner build', () => {
     const store = createTestStore()
     await bootWindowFromPartitions(store, [{ hostId: 'local', session: windowSession }])
     sync = openWorkspaceLayoutFrameSync(store)
-    provideLayoutFrameTerminalPanes(sync.holdsTerminalPane)
+    provideLayoutFrameTerminalPanes(sync)
     sync.start()
     const createTab = vi.spyOn(store.getState(), 'createTab')
     const readOwners = vi.fn(async () => owners)
@@ -217,7 +220,7 @@ describe('adopting live terminals in a layout-owner build', () => {
     const store = createTestStore()
     await bootWindowFromPartitions(store, [{ hostId: 'local', session: emptySession() }])
     sync = openWorkspaceLayoutFrameSync(store)
-    provideLayoutFrameTerminalPanes(sync.holdsTerminalPane)
+    provideLayoutFrameTerminalPanes(sync)
     sync.start()
     frames.onFrame!(snapshotOf(main))
     await flushMicrotasks()

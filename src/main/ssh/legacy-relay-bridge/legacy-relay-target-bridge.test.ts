@@ -442,6 +442,24 @@ describe('one target’s legacy relay bridge', () => {
     expect(relay.shutdowns).toEqual([])
   })
 
+  it('never republishes a pane that exited while a refresh was asking its relay', async () => {
+    const subject = bridge()
+    await subject.refresh()
+    await subject.attach(PTY)
+    const client = relay.clients[0]
+    let answer: (rows: { relayPtyId: string }[]) => void = () => {}
+    client.list = () => new Promise((resolve) => (answer = resolve))
+    const refreshing = subject.refresh()
+    await vi.advanceTimersByTimeAsync(0)
+    client.emitExit('pty-1', 0)
+    // The listing was read before the exit, so it still names the terminal.
+    answer([{ relayPtyId: 'pty-1' }])
+    await refreshing
+    expect(subject.snapshot()).toEqual([])
+    expect(subject.liveRoute(PTY)).toBeNull()
+    expect(events.exits).toEqual([PTY])
+  })
+
   it('hangs up every connection on dispose and leaves the relays to their own grace', async () => {
     const subject = bridge()
     await subject.refresh()

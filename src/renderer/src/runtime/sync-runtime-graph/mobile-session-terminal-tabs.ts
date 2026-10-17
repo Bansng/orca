@@ -105,6 +105,8 @@ export function buildMobileTerminalSurfaceTabs(
       type: 'terminal' as const,
       id: mobileTerminalSurfaceId(terminal.id, leafId),
       title,
+      // Why every surface: the name is tab-wide, and a paired desktop reads its active surface.
+      customTitle: terminal.customTitle?.trim() || null,
       ...(tabWideFallbackSafe && terminal.quickCommandLabel?.trim()
         ? { quickCommandLabel: terminal.quickCommandLabel.trim() }
         : {}),

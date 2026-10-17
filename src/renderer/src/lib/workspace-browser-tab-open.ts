@@ -294,6 +294,8 @@ export async function openWorkspaceBrowserTab(
       environmentId,
       url: request.url,
       targetGroupId: request.targetGroupId,
+      // Client placement survives older hosts publishing a page before the create response.
+      ...(request.targetGroupId ? { clientTargetGroupId: request.targetGroupId } : {}),
       ...(request.afterTabId ? { clientAfterTabId: request.afterTabId } : {}),
       // Owner-pinned links need the host tab published before client reconciliation.
       ...(expectedEnvironmentId !== null ? { waitForRegistration: true } : {}),

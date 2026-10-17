@@ -360,4 +360,31 @@ describe('useSidebarWorktreeSortOrder', () => {
       vi.unstubAllGlobals()
     }
   })
+
+  it('keeps Smart latched after its live signal ends, until the list unmounts', () => {
+    vi.stubGlobal('api', { worktrees: { persistSortOrder: vi.fn(async () => ({ updated: 0 })) } })
+    try {
+      seed(
+        [makeWorktree('a', 'A', { sortOrder: 2 }), makeWorktree('b', 'B', { sortOrder: 1 })],
+        'smart'
+      )
+      useAppStore.setState({
+        tabsByWorktree: { a: [makeTerminalTab({ id: 'tab-a', worktreeId: 'a' })] },
+        ptyIdsByTabId: { 'tab-a': ['pty-a'] }
+      })
+      const latched = renderSortOrder()
+      act(() => useAppStore.setState({ ptyIdsByTabId: {} }))
+      const before = latched.result.current
+      act(() => publishSortOrders({ a: 1, b: 2 }))
+      expect(latched.result.current).toBe(before)
+      latched.unmount()
+
+      const cold = renderSortOrder()
+      expect(cold.result.current).toEqual(['b', 'a'])
+      act(() => publishSortOrders({ a: 3 }))
+      expect(cold.result.current).toEqual(['a', 'b'])
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })

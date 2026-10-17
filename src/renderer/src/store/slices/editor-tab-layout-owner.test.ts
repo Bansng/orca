@@ -10,6 +10,12 @@ import { LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host'
 import { applyLayoutCommand } from '../../../../shared/workspace-layout/workspace-layout-commands'
 import type { LayoutCommand } from '../../../../shared/workspace-layout/workspace-layout-command-types'
 import type { WorkspaceLayoutModel } from '../../../../shared/workspace-layout/workspace-layout-model'
+import { saveWorkspaceLayout } from '../../../../shared/workspace-layout/workspace-layout-save'
+import { asLoaded } from '../../../../shared/workspace-layout/workspace-layout-command.test-fixture'
+import { buildPersistedUnifiedTabSessionData } from '@/lib/workspace-session-unified-tabs'
+import { loadWorkspaceLayoutWithoutReport } from '../../../../shared/workspace-layout/workspace-layout-load'
+import { nameBasedLoadContext } from '../../../../shared/workspace-layout/workspace-layout-minted-ids'
+import type { WorkspaceSessionState } from '../../../../shared/workspace-session-state-types'
 
 const mocks = vi.hoisted(() => ({
   layoutOwnerIsMain: true,
@@ -97,7 +103,12 @@ function windowView() {
     group: group.id,
     tabs: group.tabOrder.map((tabId) => {
       const tab = tabs.find((entry) => entry.id === tabId)!
-      return { id: tab.id, entity: tab.entityId, preview: tab.isPreview === true }
+      return {
+        id: tab.id,
+        entity: tab.entityId,
+        preview: tab.isPreview === true,
+        createdAt: tab.createdAt
+      }
     })
   }))
 }
@@ -108,9 +119,31 @@ function mainView() {
     group: group.id,
     tabs: group.tabOrder.map((tabId) => {
       const tab = workspace.tabs.find((entry) => entry.id === tabId)!
-      return { id: tab.id, entity: tab.entityId, preview: tab.isPreview === true }
+      return {
+        id: tab.id,
+        entity: tab.entityId,
+        preview: tab.isPreview === true,
+        createdAt: tab.createdAt
+      }
     })
   }))
+}
+
+/** Main's tabs by id as loaded from a save, as main's save-divergence check reads them. */
+function loadedTabs(session: WorkspaceSessionState) {
+  const { layout } = loadWorkspaceLayoutWithoutReport(
+    LOCAL_EXECUTION_HOST_ID,
+    session,
+    nameBasedLoadContext()
+  )
+  return Object.fromEntries((layout.workspaces[WT]?.tabs ?? []).map((tab) => [tab.id, tab]))
+}
+
+/** Main's tabs, then the same after the window's tab-bar save lands on main's session. */
+function tabsBeforeAndAfterWindowSave() {
+  const mains = saveWorkspaceLayout(asLoaded(main))
+  const windows = { ...mains, ...buildPersistedUnifiedTabSessionData(store.getState()) }
+  return [loadedTabs(mains), loadedTabs(windows)]
 }
 
 function openFile(path: string, options?: { preview?: boolean; targetGroupId?: string }): string {
@@ -147,6 +180,7 @@ describe('editor tabs in a layout-owner build', () => {
       contentType: 'editor',
       groupId: 'g1',
       preview: true,
+      createdAt: windowView()[0]!.tabs[0]!.createdAt,
       file: { filePath: '/a.ts', relativePath: 'a.ts', language: 'ts', runtimeEnvironmentId: null }
     })
     expect(mainView()).toEqual(windowView())
@@ -285,6 +319,42 @@ describe('editor tabs in a layout-owner build', () => {
     expect(
       tabIn('g3', store.getState().openFiles.find((file) => file.filePath === '/b.ts')!.id)
     ).toBe(command!.type === 'openEditorTab' ? command.tabId : undefined)
+  })
+
+  it('saves the tabs as main holds them, with no preview flag main does not store', () => {
+    openFile('/a.ts')
+    openFile('/b.ts', { targetGroupId: 'g2' })
+    applySent()
+    let [was, now] = tabsBeforeAndAfterWindowSave()
+    expect(now).toStrictEqual(was)
+
+    const c = openFile('/c.ts', { preview: true })
+    store.getState().markFileDirty(c, true)
+    const d = openFile('/d.ts', { preview: true, targetGroupId: 'g2' })
+    store.getState().makePreviewFilePermanent(d)
+    applySent()
+    ;[was, now] = tabsBeforeAndAfterWindowSave()
+    expect(now).toStrictEqual(was)
+  })
+
+  it('pins a preview tab without writing a preview flag', () => {
+    const a = openFile('/a.ts', { preview: true })
+    store.getState().pinTab(tabIn('g1', a))
+
+    const [tab] = store.getState().unifiedTabsByWorktree[WT]!
+    expect(tab?.isPinned).toBe(true)
+    expect(tab).not.toHaveProperty('isPreview')
+  })
+
+  it('keeps writing the preview flag as false with the switch off', () => {
+    mocks.layoutOwnerIsMain = false
+    const a = openFile('/a.ts')
+    const b = openFile('/b.ts', { preview: true })
+    store.getState().pinTab(tabIn('g1', b))
+
+    const tabs = store.getState().unifiedTabsByWorktree[WT]!
+    expect(tabs.find((tab) => tab.entityId === a)).toHaveProperty('isPreview', false)
+    expect(tabs.find((tab) => tab.entityId === b)).toHaveProperty('isPreview', false)
   })
 
   it("sends an edit-mode file's record exactly as the window's session save keeps it", () => {

@@ -59,7 +59,9 @@ describe('browser tabs in a layout-owner build', () => {
           profileId: 'p1',
           sessionPartition: null,
           groupId: firstEntry.groupId,
-          index: 0
+          index: 0,
+          createdAt: firstEntry.createdAt,
+          browserCreatedAt: first.createdAt
         }
       },
       {

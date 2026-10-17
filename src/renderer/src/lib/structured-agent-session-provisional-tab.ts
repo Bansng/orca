@@ -25,6 +25,8 @@ import {
 } from '@/runtime/structured-agent-session-owner'
 import type { RuntimeClientTarget } from '../../../shared/runtime-client-target'
 import type { NativeChatComposerFocusIntent } from '@/components/native-chat/use-native-chat-composer-reveal-focus'
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../shared/layout-owner-switch'
+import { recordOpenedAgentSessionTabInLayoutOwner } from '@/runtime/agent-session-tab-layout-owner'
 
 type LocalProvisionalLaunch = StructuredAgentLaunchHandle & { tab: Tab }
 
@@ -67,6 +69,10 @@ export function openStructuredAgentSessionProvisionalTab(args: {
     ...(args.targetGroupId ? { targetGroupId: args.targetGroupId } : {}),
     activate: args.activate !== false
   })
+  // Switch point: main records the chat tab the window just drew.
+  if (ORCA_LAYOUT_OWNER_IS_MAIN) {
+    recordOpenedAgentSessionTabInLayoutOwner(useAppStore.getState(), tab)
+  }
   if (args.activate !== false) {
     state.setActiveTabType('agent-session', args.worktreeId)
   }

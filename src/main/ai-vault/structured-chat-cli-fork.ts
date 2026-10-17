@@ -56,6 +56,20 @@ function assertNativeConversationContent(snapshot: AgentJournalSnapshot): void {
   }
 }
 
+/** A slow preparation must not launch from a chat that left this workspace. */
+export function isStructuredChatCliForkSourceCurrent(
+  sessionId: string,
+  workspaceId: string
+): boolean {
+  const record = getStructuredAgentSessionHost()?.deps.store.getRecord(sessionId)
+  return Boolean(
+    record &&
+    record.location.workspaceId === workspaceId &&
+    record.location.executionHostId === LOCAL_EXECUTION_HOST_ID &&
+    record.location.wslDistro === null
+  )
+}
+
 /** Prepares the record's current conversation on its execution host, without a History inventory. */
 export async function prepareStructuredChatCliFork(
   args: AiVaultPrepareChatForkArgs,
@@ -126,12 +140,10 @@ export async function prepareStructuredChatCliFork(
       throw new Error('The saved conversation does not match this chat.')
     }
   } else {
-    filePath = await importer.findTranscript({
-      providerSessionId,
-      accountHome: record.accountHome,
-      launchEnv,
-      workspaceCwd: cwd
-    })
+    const store = importer.conversationStore({ accountHome: record.accountHome, launchEnv })
+    filePath = store
+      ? await importer.findTranscript({ providerSessionId, store, launchEnv, workspaceCwd: cwd })
+      : null
   }
   if (!filePath || !isAbsolute(filePath) || isWslUncPath(filePath)) {
     throw new Error('This chat has no saved conversation to copy.')

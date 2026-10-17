@@ -414,9 +414,7 @@
       },
       "pairingSecurity": {
         "hide": "隐藏",
-        "storedCodeInsecureOrigin": "此浏览器会保存一个可重复使用的配对码，因为此页面是另一台机器上的纯 http 页面。任何能读取此浏览器存储的人都可以使用它。如需更安全的配对，请通过 https、本机的 localhost 或 SSH 隧道打开 Orca，然后重新配对。",
         "storedCodeNoEd25519": "此浏览器会保存一个可重复使用的配对码，因为它无法创建安全的登录密钥（Ed25519）。请使用最新版浏览器并重新配对，以获得更安全的配对。",
-        "sessionInsecureOrigin": "此配对仅在此标签页打开期间有效，因为此页面是另一台机器上的纯 http 页面。如需让此浏览器记住配对，请通过 https、本机的 localhost 或 SSH 隧道打开 Orca。",
         "sessionNoEd25519": "此配对仅在此标签页打开期间有效，因为此浏览器无法创建安全的登录密钥（Ed25519）。请使用最新版浏览器以获得此浏览器能记住的配对。"
       },
       "runtimeAuth": {
@@ -475,6 +473,7 @@
             "gitStatusUnavailable": "Orca 无法检查此工作区的 Git 状态。请重试，或从对应主机的侧边栏或项目列表中将其删除。",
             "gitStatusUnavailableOlderPeer": "Orca 无法将此 Git 状态检查失败与主机匹配。请更新较旧的已连接端，或从对应主机的侧边栏或项目列表中删除该工作区。",
             "forceNeedsApproval": "请先检查并确认此工作区，然后再强制删除。",
+            "agentStartedSinceConfirmation": "此工作区中有一个智能体正在运行。请再次删除以确认停止该智能体。",
             "hostCollision": "错误：此工作区存在于同一路径的多个主机上",
             "hostUnresolved": "Orca 无法判断哪个主机拥有此工作区。刷新项目并再次查看。"
           }
@@ -5975,8 +5974,7 @@
                   "7edb8ebe24": "从 URL 克隆",
                   "a6c20dca96": "从 SSH 目标打开项目",
                   "serverSshTitle": "此服务器 SSH 主机上的项目",
-                  "serverSshDescription": "从此服务器连接的 SSH 主机打开项目文件夹",
-                  "serverSshUpdate": "更新此服务器后才能在其 SSH 主机上添加项目",
+                  "serverSshAddOnThisComputer": "无法从服务器使用。请在此电脑上添加该 SSH 主机以打开其项目。",
                   "fb4fc5380e": "本地项目、Git 仓库或包含多个仓库的文件夹",
                   "2281fdc8c7": "浏览文件夹",
                   "runtimeBrowseDescription": "此主机上的现有 Git 仓库或文件夹"
@@ -8708,7 +8706,7 @@
           "addDescription": "添加一台可通过 SSH 登录的持久机器。",
           "editingPrefix": "正在编辑",
           "allowRemoteCliControl": "允许此主机的 orca CLI 控制 Orca",
-          "allowRemoteCliControlHelp": "默认开启。允许在此主机上运行的 orca 命令打开并操作此桌面上的 Orca 浏览器标签页，但仅限此主机的工作区，且仅在主机连接期间；并允许此主机上由旧版 Orca 启动的终端为其自身受监督的工作运行编排命令（check、inbox、send、ask、reply）。它们无法读取你的文件、剪贴板或 Cookie。关闭时，它们只能访问此主机自身的 Orca 服务器。"
+          "allowRemoteCliControlHelp": "新主机默认开启。允许在此主机上运行的 orca 命令打开并操作此桌面上的 Orca 浏览器标签页，但仅限此主机的工作区，且仅在主机连接期间；并允许此主机上由旧版 Orca 启动的终端为其自身受监督的工作运行编排命令（check、inbox、send、ask、reply）。它们无法读取你的文件、剪贴板或 Cookie。关闭时，它们只能访问此主机自身的 Orca 服务器。"
         },
         "TasksPane": {
           "f71d8a9dd3": "任务提供者",
@@ -12334,9 +12332,6 @@
           "cancel": "保持清洁",
           "stopping": "停止…",
           "confirm": "停止清理"
-        },
-        "NativeChatSupportedAgents": {
-          "label": "支持智能体："
         },
         "contrast": {
           "title": "色彩对比",
@@ -17985,11 +17980,18 @@
         "title": "无法连接到你的 Orca 主机",
         "description": "没有任何内容丢失。主机响应后 Orca 会重新加载，在此之前不会保存更改。",
         "retry": "立即重试"
+      },
+      "webPairingRefused": {
+        "title": "Orca 拒绝了此浏览器",
+        "retry": "重试"
       }
     }
   },
   "components": {
     "native-chat": {
+      "install": {
+        "checking": "正在检查 {{agent}} 是否已在此主机上就绪…"
+      },
       "reasoning": "推理",
       "contextMenu": {
         "copyOrcaSessionId": "复制 Orca 会话 ID",
@@ -18659,6 +18661,9 @@
         "editFailed": "此消息无法编辑。",
         "editGone": "此消息已发送或移除。你编辑的内容已放入聊天输入框。",
         "editGonePrompt": "此消息已发送或移除。回答智能体后，你编辑的内容会出现在聊天输入框中。",
+        "imageCount": "{{count}} 张图片",
+        "imageCount_one": "{{count}} 张图片",
+        "imageCount_other": "{{count}} 张图片",
         "collapse": "收起",
         "expand": "展开",
         "queued": "已排队",
@@ -18964,6 +18969,13 @@
           "label": "主持人：{{value0}}",
           "unknown": "未知主机",
           "candidateName": "{{value0}} 在 {{value1}} 上"
+        },
+        "stopAgents": {
+          "titleMany": "停止这些智能体？",
+          "descriptionOne": "删除将停止智能体当前任务。",
+          "descriptionMany": "删除将停止这些智能体当前任务。",
+          "confirm": "停止智能体并删除",
+          "confirmOne": "停止智能体并删除"
         }
       },
       "creation": {
@@ -19164,6 +19176,30 @@
       "keywordJira": "Jira",
       "keywordDefaultProject": "默认项目",
       "keywordIssuePicker": "议题选择器"
+    },
+    "managed-runtime": {
+      "cancel": "取消安装",
+      "cancelled": "已取消安装。",
+      "cancelling": "正在取消…",
+      "chatTitle": "安装 {{agent}} 即可开始聊天。",
+      "damaged": "此 {{agent}} 副本已损坏。",
+      "downloading": "正在下载 {{done}} MB。",
+      "downloadingOf": "正在下载 {{done}} MB / {{total}} MB。",
+      "external": "使用在此主机上找到的 {{agent}} 副本。",
+      "extracting": "正在解压 {{agent}}。",
+      "failed": "安装失败。请重试。",
+      "cancelFailed": "无法取消安装。请重试。",
+      "install": "安装 {{agent}}",
+      "installManaged": "安装 Orca 的副本",
+      "installed": "已安装。",
+      "notInstalled": "未安装。",
+      "progress": "{{agent}} 下载",
+      "readFailed": "无法检查此主机上的 {{agent}}。正在重试。",
+      "reinstall": "重新安装 {{agent}}",
+      "retry": "重试安装",
+      "unavailable": "{{agent}} 在此主机上不可用。",
+      "update": "更新 {{agent}}",
+      "verifying": "正在检查已下载的运行时。"
     }
   },
   "dashboardPopout": {

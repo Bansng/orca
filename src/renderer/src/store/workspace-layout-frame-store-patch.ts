@@ -6,6 +6,7 @@
 import { BROWSER_TAB_LAYOUT_FIELDS } from '../../../shared/workspace-layout/workspace-layout-beside'
 import { stableJson } from '../../../shared/workspace-layout/workspace-layout-load-report'
 import type { TerminalTab } from '../../../shared/terminal-tab-types'
+import { isEditorTabContentType } from './slices/editor/tabs/editor-tab-content-type'
 import type { AppState } from './types'
 import type { LayoutFrameSlices } from './workspace-layout-frame-slices'
 
@@ -206,10 +207,31 @@ export function buildLayoutFrameStorePatch(
 
   const keySet = new Set(keys)
   // An open file's editor state is this window's; a frame decides only which files are open.
+  // Frames carry only edit-mode files, so a diff, preview or conflict record goes with its last
+  // tab, and one no tab shows (a conflict review's selected file) stays.
   const builtFileIds = new Set(built.openFiles.map((file) => file.id))
   const heldFileIds = new Set(state.openFiles.map((file) => file.id))
+  const editorEntities = (tabs: AppState['unifiedTabsByWorktree']): Set<string> =>
+    new Set(
+      keys.flatMap((key) =>
+        (tabs[key] ?? []).flatMap((tab) =>
+          isEditorTabContentType(tab.contentType) ? [`${key}\0${tab.entityId}`] : []
+        )
+      )
+    )
+  const shown = editorEntities(state.unifiedTabsByWorktree)
+  const stillShown = editorEntities(built.unifiedTabsByWorktree)
+  const keeps = (file: AppState['openFiles'][number]): boolean => {
+    const entity = `${file.worktreeId}\0${file.id}`
+    return (
+      !keySet.has(file.worktreeId) ||
+      builtFileIds.has(file.id) ||
+      stillShown.has(entity) ||
+      !shown.has(entity)
+    )
+  }
   const files = [
-    ...state.openFiles.filter((file) => !keySet.has(file.worktreeId) || builtFileIds.has(file.id)),
+    ...state.openFiles.filter(keeps),
     ...built.openFiles.filter((file) => !heldFileIds.has(file.id))
   ]
   if (

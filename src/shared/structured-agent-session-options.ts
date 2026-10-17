@@ -52,9 +52,12 @@ export type StructuredAgentSessionOptionState = {
    *  built-in list before the host answered (shown as the quiet placeholder); `builtin` is the
    *  same list once the host said it has none, usable but naming nothing the host may replace. */
   catalogSource: 'seed' | 'builtin' | 'host' | 'live' | null
-  /** The models the host's latest answer names when it is a finished, well-formed listing: the
-   *  only rows that can stand in for a model it lacks, whatever list the picker shows. */
+  /** The rows of `catalog` its own finished listing names: the only ones that can stand in for a
+   *  model it lacks. Never another listing's, which may come from another CLI version. */
   verifiedModelIds?: readonly string[]
+  /** What the host's finished account list names, for a live answer from an older host that
+   *  names no listed ids of its own. */
+  hostListedModelIds?: readonly string[]
   record: NativeChatSessionOptionRecord
   /** The permission mode the host or launch last stated; null shows no picker. */
   permissionMode: string | null
@@ -81,17 +84,20 @@ export function createStructuredAgentSessionOptionState(
 export function settleStructuredAgentSessionBuiltinCatalog(
   state: StructuredAgentSessionOptionState
 ): StructuredAgentSessionOptionState {
-  const settled = withVerifiedModelIds(state, undefined)
+  const settled = withHostListedModelIds(state, undefined)
   return settled.catalogSource === 'seed' ? { ...settled, catalogSource: 'builtin' } : settled
 }
 
-function withVerifiedModelIds(
+/** The host list's ids, which verify the catalog only while the host's list is what it shows. */
+function withHostListedModelIds(
   state: StructuredAgentSessionOptionState,
   ids: readonly string[] | undefined
 ): StructuredAgentSessionOptionState {
-  return String(state.verifiedModelIds) === String(ids)
+  const verified = state.catalogSource === 'live' ? state.verifiedModelIds : ids
+  return String(state.hostListedModelIds) === String(ids) &&
+    String(state.verifiedModelIds) === String(verified)
     ? state
-    : { ...state, verifiedModelIds: ids }
+    : { ...state, verifiedModelIds: verified, hostListedModelIds: ids }
 }
 
 function isListedModelRow(row: unknown): row is { id: string } {
@@ -106,7 +112,7 @@ function isListedModelRow(row: unknown): row is { id: string } {
 }
 
 /** The ids a finished listing names; undefined for one still running, failed, empty or malformed. */
-function finishedListingIds(catalog: AgentSessionModelCatalogResult): string[] | undefined {
+export function finishedListingIds(catalog: AgentSessionModelCatalogResult): string[] | undefined {
   const rows: unknown = catalog.origin === 'unknown' ? null : catalog.models
   return Array.isArray(rows) &&
     rows.length > 0 &&
@@ -120,8 +126,8 @@ function finishedListingIds(catalog: AgentSessionModelCatalogResult): string[] |
 /**
  * Applies the host's stored model catalog: models only, no current selection
  * and no record writes, so nothing here reads as a committed value — the pick
- * stays provisional until a live options result confirms it. A live catalog
- * is never downgraded by this.
+ * stays provisional until a live options result confirms it. A live catalog,
+ * and the ids its own answer verified, are never replaced by this.
  */
 export function applyStructuredAgentSessionModelCatalog(
   state: StructuredAgentSessionOptionState,
@@ -129,9 +135,9 @@ export function applyStructuredAgentSessionModelCatalog(
   catalog: AgentSessionModelCatalogResult,
   options: { newLaunch: boolean }
 ): StructuredAgentSessionOptionState {
-  const verifiedModelIds = finishedListingIds(catalog)
+  const hostListedModelIds = finishedListingIds(catalog)
   if (state.catalogSource === 'live') {
-    return withVerifiedModelIds(state, verifiedModelIds)
+    return withHostListedModelIds(state, hostListedModelIds)
   }
   const models =
     catalog.origin === 'unknown'
@@ -157,7 +163,8 @@ export function applyStructuredAgentSessionModelCatalog(
       ...(namesDefault ? { defaultModelIsCliDefault: true } : {})
     },
     catalogSource: 'host',
-    verifiedModelIds
+    verifiedModelIds: hostListedModelIds,
+    hostListedModelIds
   }
 }
 
@@ -186,6 +193,7 @@ export function applyStructuredAgentSessionOptions(
     ...state,
     catalog: structuredAgentSessionOptionCatalog(seed, result),
     catalogSource: 'live',
+    verifiedModelIds: result.listedModelIds?.length ? result.listedModelIds : undefined,
     permissionMode: result.current.permissionMode ?? null
   }
 }

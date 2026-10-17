@@ -31,7 +31,10 @@ import {
 } from './structured-agent-session-status-journal-projection'
 import { structuredStatusSummariesEqual } from './structured-agent-session-status-summary-equality'
 import type { StructuredAgentSessionChildWorkProducer } from './structured-agent-session-subagent-rows'
-import { StructuredAgentSessionStatusOwnership } from './structured-agent-session-status-ownership'
+import {
+  StructuredAgentSessionStatusOwnership,
+  type CapturedChildWorkStops
+} from './structured-agent-session-status-ownership'
 
 export type { StructuredAgentSessionStatusSink } from './structured-agent-session-status-ownership'
 export type { StructuredAgentSessionStatusFeedDeps } from './structured-agent-session-status-feed-deps'
@@ -308,8 +311,23 @@ export class StructuredAgentSessionStatusFeed {
     }
   }
 
-  childWorkIncomplete = (sessionId: string): boolean =>
-    this.ownership.childWorkIncomplete(sessionId)
+  childWorkOpen = (sessionId: string): boolean => this.ownership.childWorkOpen(sessionId)
+
+  captureChildWorkStops = (
+    sessionId: string,
+    handleIds: readonly string[]
+  ): CapturedChildWorkStops =>
+    this.ownership.captureChildWorkStops(sessionId, handleIds)
+
+  /** Reads the store, so a failing read costs only the strip's note, as `readChildWork`'s does. */
+  childWorkIncomplete = (sessionId: string): boolean => {
+    try {
+      return this.ownership.childWorkIncomplete(sessionId)
+    } catch (error) {
+      this.logFailure('child-work-read', 'child work read failed', sessionId, error)
+      return false
+    }
+  }
 
   /** The records the views project. Read only from the child-work observer, which already
    *  reports a failure. */

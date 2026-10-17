@@ -1,5 +1,4 @@
 import { INLINE_TEXT_SELECTION } from './inline-text-selection'
-import { MobileSelectableText } from './MobileSelectableText'
 import { memo, useContext, useMemo, type ReactNode } from 'react'
 import { Text as NativeText, View } from 'react-native'
 import { MARKDOWN_TONES, scaledMarkdownText, styles } from './mobile-markdown-styles'
@@ -89,7 +88,7 @@ function MobileMarkdownInner(props: Props): React.JSX.Element | null {
   const androidTranscript = rangeSelectable && !INLINE_TEXT_SELECTION
   const setup = useMemo<MarkdownTextSetup>(
     () => ({
-      TextComponent: rangeSelectable && !androidTranscript ? MobileSelectableText : NativeText,
+      TextComponent: NativeText,
       androidTranscript,
       ...(onLongPress ? { onLongPress } : {})
     }),

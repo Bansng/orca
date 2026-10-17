@@ -51,6 +51,7 @@ import { SshConnectionManager } from './ssh-connection-manager'
 import {
   clearSshCredentialDeclined,
   recordSshCredentialDeclined,
+  recordSshSignInAwaited,
   resetSshCredentialDeclinesForTests
 } from './ssh-credential-decline'
 import { isAuthError } from './ssh-connection-utils'
@@ -169,6 +170,30 @@ describe('SshConnectionManager', () => {
     expect(manager.getConnection(target.id)).toBe(replacement)
   })
 
+  it('keeps a Disconnect that lands while a background connect closes the old transport', async () => {
+    const manager = new SshConnectionManager({ onStateChange: vi.fn() })
+    await manager.connect(target)
+    const old = mockState.instances[0]
+    // The pooled transport dropped, so a background dial (tunnel, census) replaces it.
+    old.status = 'disconnected'
+    let finishOldClose!: () => void
+    old.disconnect.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishOldClose = resolve
+        })
+    )
+
+    const background = manager.connect(target)
+    const rejected = expect(background).rejects.toThrow('cancelled')
+    await manager.disconnect(target.id)
+    finishOldClose()
+    await rejected
+
+    expect(mockState.instances).toHaveLength(1)
+    expect(manager.getConnection(target.id)).toBeUndefined()
+  })
+
   it('leaves a connection whose own reconnect is asking the user alone', async () => {
     const manager = new SshConnectionManager({ onStateChange: vi.fn() })
     const conn = await manager.connect(target)
@@ -220,6 +245,19 @@ describe('SshConnectionManager after a cancelled sign-in', () => {
     recordSshCredentialDeclined(target.id)
 
     await expect(manager.connect(target)).resolves.toBe(conn)
+  })
+
+  it('refuses a background dial to a host awaiting its first sign-in, saying so', async () => {
+    const manager = new SshConnectionManager({ onStateChange: vi.fn() })
+    recordSshSignInAwaited(target.id)
+
+    const error = await manager.connect(target).catch((err: unknown) => err)
+
+    expect(error instanceof Error && isAuthError(error)).toBe(true)
+    expect(error instanceof Error && error.message).toBe(
+      'Target 1 needs you to sign in. Reconnect to sign in.'
+    )
+    expect(mockState.instances).toHaveLength(0)
   })
 
   it('dials again once an explicit sign-in lifts the decline', async () => {

@@ -5,6 +5,7 @@ import {
 } from '../../../src/shared/native-chat-empty-state'
 import { isRootAgentJournalItem } from '../../../src/shared/agent-session-journal-producer'
 import { stripNoiseMessages } from '../../../src/shared/native-chat-noise'
+import { nativeChatStreamingMessage } from '../../../src/shared/native-chat-streaming'
 import { isWordlessProviderFrameMessage } from '../../../src/shared/native-chat-provider-frame-summary'
 import { foldToolMessages } from '../../../src/shared/native-chat-tool-fold'
 import { foldSubagentItems } from '../../../src/shared/native-chat-subagent-items'
@@ -28,11 +29,11 @@ export function mobileNativeChatEmptyState(
 ): NativeChatEmptyStateCopy | null {
   const agentLabel = agent ? formatAgentTypeLabel(agent) : 'the agent'
   switch (status) {
-    // A live agent with no transcript yet — an unwritten transcript file, or a
-    // loaded-but-empty one — is "start a chat"; invite the first message instead
-    // of implying the agent is still starting up.
+    // No conversation found yet: the agent has not reported one, or its file is unwritten. That is
+    // a new chat or one whose history the host cannot see, so it promises neither.
     case 'waiting-session':
     case 'awaiting-transcript':
+      return formatNativeChatEmptyStateCopy('notFound', agentLabel)
     case 'ready':
       return formatNativeChatEmptyStateCopy('empty', agentLabel)
     case 'error': {
@@ -54,6 +55,8 @@ export type MobileNativeChatPendingItem = {
    *  that row, so a send whose row never arrives stays where it was sent instead
    *  of trailing every turn that lands afterwards. */
   baselineTailMessageId?: string | null
+  /** When it was sent: the echo's time until the transcript row brings its own. */
+  sentAt?: number
 }
 
 export function foldMobileNativeChatMessages(
@@ -168,7 +171,7 @@ export function buildMobileNativeChatTransientData({
         ...(item.text ? [{ type: 'text' as const, text: item.text }] : []),
         ...(item.images ?? []).map((uri) => ({ type: 'image-ref' as const, url: uri }))
       ],
-      timestamp: null,
+      timestamp: item.sentAt ?? null,
       source: 'transcript'
     }
     // Tool/noise rows fold backward; image-source rows fold into their following prompt.
@@ -203,13 +206,7 @@ export function buildMobileNativeChatTransientData({
     }
   }
   if (streaming) {
-    data.push({
-      id: 'streaming',
-      role: 'assistant',
-      blocks: [{ type: 'text', text: streaming }],
-      timestamp: null,
-      source: 'hook'
-    })
+    data.push(nativeChatStreamingMessage(streaming))
   }
   data.push(...trailingPending)
   return { folded: renderedFolded, streaming, data }

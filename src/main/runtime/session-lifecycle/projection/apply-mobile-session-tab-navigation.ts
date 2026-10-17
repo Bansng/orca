@@ -22,6 +22,8 @@ import type {
   MobileTerminalResumeCommand,
   OrcaRuntimeWithResolveMobileSessionTerminalCommand as MobileTerminalStartup
 } from '../../terminal/launch/mobile-terminal-startup'
+import type { OrcaRuntimeWithStopTerminalsForWorktree as SessionEditHost } from '../../terminal/stop/worktree-terminal-stop'
+import { claimWindowWakeRecordForPane, isWindowWakeSleepRecord } from './window-wake-sleep-record'
 import { runtimeWorktreeIdsEqual } from '../../runtime-worktree-path-identity'
 import {
   buildHeadlessMobileSessionTabGroups,
@@ -38,6 +40,9 @@ export abstract class OrcaRuntimeWithApplyMobileSessionTabNavigation extends Orc
   protected abstract isHeadlessMobileSessionPublication(
     ...args: Parameters<MobileSessionPreservation['isHeadlessMobileSessionPublication']>
   ): ReturnType<MobileSessionPreservation['isHeadlessMobileSessionPublication']>
+  protected abstract commitWorkspaceSessionEdit(
+    ...args: Parameters<SessionEditHost['commitWorkspaceSessionEdit']>
+  ): ReturnType<SessionEditHost['commitWorkspaceSessionEdit']>
 
   protected applyMobileSessionTabNavigation(
     snapshot: RuntimeMobileSessionTabsResult,
@@ -147,20 +152,18 @@ export abstract class OrcaRuntimeWithApplyMobileSessionTabNavigation extends Orc
     }
     // Why: an originless record predates capture origins and carries no proof of which pane or
     // host wrote it, so it is left (record kept) for the window's legacy cleanup (#29303).
-    // A host that can never open a window (orcad, blocked serve) has no window wake, so the pane owns it.
+    // A host with no window right now has no window wake, so the pane owns the record and claims it.
     const paneOwned =
       record.origin === 'live' ||
       record.origin === 'quit' ||
       (record.origin === 'worktree-sleep' &&
-        (record.state === 'done' ||
-          (this.getDesktopWindowStatusFn() === 'blocked' &&
-            !this.getAvailableAuthoritativeWindow())))
+        (record.state === 'done' || !this.getAvailableAuthoritativeWindow()))
     return paneOwned ? record : null
   }
 
   /**
    * The pane's resume launch: undefined when it owns no record, `{}` (plain shell, record kept,
-   * as the window does) when the record cannot be resumed here.
+   * as the window does) when the record cannot be resumed here or the window will wake it.
    */
   protected async resolvePaneOwnedResumeStartup(
     worktreeId: string,
@@ -168,7 +171,9 @@ export abstract class OrcaRuntimeWithApplyMobileSessionTabNavigation extends Orc
   ): Promise<MobileTerminalResumeCommand | Record<string, never> | undefined> {
     const record = this.getPaneOwnedResumeRecord(worktreeId, tab)
     if (!record) {
-      return undefined
+      const unowned = this.getPaneSleepingAgentRecord(worktreeId, tab)
+      // Why: a fresh launch would drop the conversation and its recorded flags (#29672).
+      return unowned && isWindowWakeSleepRecord(unowned) ? {} : undefined
     }
     // Why: nothing here spends the record, so a session another pane also records could be
     // resumed twice (two writers on one transcript), as could one already live in another pane.
@@ -186,12 +191,24 @@ export abstract class OrcaRuntimeWithApplyMobileSessionTabNavigation extends Orc
     ) {
       return {}
     }
+    let resume: MobileTerminalResumeCommand | null
     try {
       const workspace = await this.resolveTerminalWorkspaceLaunchScope(`id:${worktreeId}`)
-      return this.resolveMobileSessionResumeCommand(workspace, record) ?? {}
+      resume = this.resolveMobileSessionResumeCommand(workspace, record)
     } catch {
       return {}
     }
+    if (!resume || !isWindowWakeSleepRecord(record)) {
+      return resume ?? {}
+    }
+    const hostId = this.getWorkspaceSessionHostIdForWorktree(worktreeId)
+    const claimed = await claimWindowWakeRecordForPane(
+      (edit) => this.commitWorkspaceSessionEdit(hostId, edit),
+      // Why: a window that attached during the awaits above now owns this record's wake.
+      () => Boolean(this.getAvailableAuthoritativeWindow()),
+      record
+    )
+    return claimed ? resume : {}
   }
 
   /** The host's hook store places this conversation in another pane not proven exited. */

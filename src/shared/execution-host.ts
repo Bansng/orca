@@ -206,6 +206,21 @@ export function getRepoExecutionHostId(repo: {
   return getConnectionExecutionHostId(normalizeHostPart(repo.connectionId))
 }
 
+/**
+ * Whether a row's files are on the machine whose catalog holds it. Strict: an unknown host id or a
+ * stale `connectionId` beside `local` reads as elsewhere, so it never matches a local checkout.
+ */
+export function isRepoOnCatalogHost(repo: {
+  connectionId?: string | null
+  executionHostId?: string | null
+}): boolean {
+  const executionHostId = normalizeHostPart(repo.executionHostId)
+  return (
+    (executionHostId === null || executionHostId === LOCAL_EXECUTION_HOST_ID) &&
+    normalizeHostPart(repo.connectionId) === null
+  )
+}
+
 export function getSshTargetIdForExecutionHost(
   executionHostId: string | null | undefined
 ): string | null {

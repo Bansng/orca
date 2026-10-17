@@ -3,6 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 import type { Page } from '@stablyai/playwright-test'
 import { test, expect } from './helpers/orca-app'
+import { expectNoSidebarShadowMismatches } from './helpers/sidebar-shadow'
 import { waitForSessionReady } from './helpers/store'
 import { runProcess } from '@orca/process-host'
 
@@ -186,4 +187,14 @@ test('keeps a collapsed group visible when an idle card below it grows', async (
   expect(after.collapsedGap).toBeCloseTo(before.collapsedGap, 0)
   expect(after.expandedGap).toBeCloseTo(before.expandedGap, 0)
   await expect(group).toHaveCount(1)
+  // A pin lands in main's metadata, which the desktop-facts shadow compares against the window.
+  await orcaPage.evaluate(async (worktreeId) => {
+    const result = await window.__store
+      ?.getState()
+      .updateWorktreeMeta(worktreeId, { isPinned: true })
+    if (!result?.ok) {
+      throw new Error(`pin failed: ${JSON.stringify(result)}`)
+    }
+  }, fixture.worktreeId)
+  await expectNoSidebarShadowMismatches(orcaPage)
 })

@@ -27,6 +27,7 @@ import {
 const PtyIdSchema = z.string().min(1).max(4096)
 const SizeSchema = z.number().int().positive().max(10_000)
 const PaneArgsSchema = z.object({ ptyId: PtyIdSchema })
+const AttachArgsSchema = z.object({ ptyId: PtyIdSchema, replayInStream: z.boolean().optional() })
 const WriteArgsSchema = z.object({ ptyId: PtyIdSchema, data: z.string() })
 const PausedArgsSchema = z.object({ ptyId: PtyIdSchema, paused: z.boolean() })
 const ResizeArgsSchema = z.object({ ptyId: PtyIdSchema, cols: SizeSchema, rows: SizeSchema })
@@ -86,8 +87,10 @@ export function registerLegacyRelayBridgeIpc(args: {
   }
   ipcMain.handle(CHANNELS.listPanes, () => legacyRelayBridgedPanes())
   ipcMain.handle(CHANNELS.attach, async (_event, payload: unknown) => {
-    const args = PaneArgsSchema.safeParse(payload)
-    return args.success ? attachLegacyRelayPane(args.data.ptyId) : { status: 'not-bridged' }
+    const args = AttachArgsSchema.safeParse(payload)
+    return args.success
+      ? attachLegacyRelayPane(args.data.ptyId, args.data.replayInStream === true)
+      : { status: 'not-bridged' }
   })
   ipcMain.handle(CHANNELS.close, async (_event, payload: unknown) => {
     const args = PaneArgsSchema.safeParse(payload)

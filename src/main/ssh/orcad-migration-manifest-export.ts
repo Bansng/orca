@@ -29,7 +29,10 @@ export type OrcadMigrationExportStore = Pick<
   | 'getFolderWorkspaces'
   | 'getProjectGroups'
   | 'getRepos'
->
+> & {
+  /** Groups the server's record wins for: still read for row ownership, never exported. */
+  serverOwnedProjectGroupIds?: ReadonlySet<string>
+}
 
 export type OrcadMigrationManifestExportOptions = {
   migrationId?: string
@@ -47,10 +50,17 @@ export function createOrcadMigrationManifest(
   options: OrcadMigrationManifestExportOptions = {}
 ): OrcadMigrationManifest {
   const rewrite = options.rewrite ?? IDENTITY_ORCAD_MIGRATION_PATH_REWRITER
-  const sourcePayload = restrictCatalog(
+  const collected = restrictCatalog(
     collectOrcadMigrationSourceCatalog(store, target),
     options.onlyCatalog
   )
+  const serverOwned = store.serverOwnedProjectGroupIds
+  const sourcePayload = serverOwned
+    ? {
+        ...collected,
+        projectGroups: collected.projectGroups.filter((group) => !serverOwned.has(group.id))
+      }
+    : collected
   const source = {
     sshTargetId: target.id,
     sshTargetGeneration: target.generation ?? null,

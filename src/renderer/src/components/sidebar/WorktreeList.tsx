@@ -14,7 +14,7 @@ import {
   getSettingsFocusedExecutionHostId
 } from '../../../../shared/execution-host'
 import { getActiveSidebarWorkspaceId } from '../../../../shared/workspace-scope'
-import { getPinnedWorktreeDisplayPolicy } from './worktree-list/grouping/row-types'
+import { getPinnedWorktreeDisplayPolicy } from '../../../../shared/sidebar-list/row-types'
 import { selectWorktreeListReviewCacheInputs } from './worktree-list/listing/review-cache-inputs'
 import type { VirtualizedScrollAnchor } from '@/hooks/useVirtualizedScrollAnchor'
 import { SidebarWorktreeListDialogs } from './worktree-list/rows/ProjectGroupDialogs'

@@ -1,5 +1,4 @@
-import type { NativeChatGlobalSettings } from './native-chat-appearance-settings'
-import type { WorktreeDeletionPreferences as DeletePrefs } from './worktree-deletion-preferences'
+import type { GlobalSettingsBase } from './global-settings-base'
 import type { ExecutionHostId } from './execution-host'
 import type { OrcaWorkspaceLayout } from './orca-workspace-layout'
 import type { GitHubProjectSettings } from './github/project-types'
@@ -48,8 +47,6 @@ export type { WorktreeVisibilityDefaults } from './repo-types'
 
 /** MiniMax account region used to select the quota endpoint. */
 export type MiniMaxEndpoint = 'overseas' | 'cn'
-
-type GlobalSettingsBase = NativeChatGlobalSettings & DeletePrefs
 
 export type GlobalSettings = GlobalSettingsBase & {
   workspaceDir: string
@@ -366,6 +363,8 @@ export type GlobalSettings = GlobalSettingsBase & {
   devPluginPaths: string[]
   /** One-shot guard: start Claude Agent Teams hidden for existing profiles without overriding later opt-ins. */
   claudeAgentTeamsDefaultDisabledMigrated?: boolean
+  /** One-shot guard: hosts saved before the remote CLI control default flip were pinned off. */
+  sshRemoteCliControlExistingHostsMigrated?: boolean
   /** Why: closing a terminal with child processes kills foreground work; keep this skip separate from other confirmations. */
   skipCloseTerminalWithRunningProcessConfirm: boolean
   /** Why: deleting an automation also deletes its run history; keep this skip separate from worktree deletion. */

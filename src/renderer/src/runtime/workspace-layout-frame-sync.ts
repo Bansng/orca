@@ -35,7 +35,10 @@ import {
   endLayoutFramePositions,
   noteLayoutFramePosition
 } from './layout-frame-position'
-import { provideLayoutFrameTerminalPanes } from './layout-frame-terminal-panes'
+import {
+  provideLayoutFrameTerminalPanes,
+  type LayoutFrameTerminalQueries
+} from './layout-frame-terminal-panes'
 import {
   isTabPaneTreeHeld,
   onTabPaneTreeRedraw,
@@ -48,16 +51,10 @@ type FrameSyncStore = {
   setState: (patch: Partial<AppState>) => void
 }
 
-export type WorkspaceLayoutFrameSync = {
+export type WorkspaceLayoutFrameSync = LayoutFrameTerminalQueries & {
   /** Shows every workspace the frames own once the snapshot is in, then keeps them current. */
   start: () => void
   close: () => void
-  /** Whether main's latest frames show this terminal in this pane, drawn yet or not. An unbound
-   *  pane does not count: nothing binds a frame-drawn pane to a live terminal later. */
-  holdsTerminalPane: (
-    worktreeId: string,
-    pane: { tabId: string; leafId: string; ptyId: string }
-  ) => boolean
 }
 
 /** A bucket, not a host: the view read-back routes the workspaces a rebuild skips here. */
@@ -145,10 +142,12 @@ export function openWorkspaceLayoutFrameSync(store: FrameSyncStore): WorkspaceLa
       own,
       nameBasedLoadContext()
     )
+    const heldFiles = new Set(state.openFiles.map((file) => `${file.worktreeId}\0${file.id}`))
     const built = buildLayoutFrameSlices({
       layouts: Object.fromEntries(keys.map((key) => [key, cache[key]!])),
       facts,
-      view: desktopView
+      view: desktopView,
+      holdsEditorFile: (worktreeId, fileId) => heldFiles.has(`${worktreeId}\0${fileId}`)
     })
     const patch = buildLayoutFrameStorePatch(
       state,
@@ -317,7 +316,12 @@ export function openWorkspaceLayoutFrameSync(store: FrameSyncStore): WorkspaceLa
           (tab.terminal?.panes.some((pane) => pane.leafId === leafId && pane.ptyId === ptyId) ??
             false)
       ) ??
-        false)
+        false),
+    // A closed stream's cache is frozen: main may have closed the tab since.
+    terminalTab: (worktreeId, tabId) =>
+      streamOpen
+        ? cache[worktreeId]?.tabs.find((tab) => tab.kind === 'terminal' && tab.entityId === tabId)
+        : undefined
   }
 }
 
@@ -328,7 +332,7 @@ export function showStartupLayoutFrames(): void {
   // Kept for the document's life: a local stream ends only with main, and a re-run boot reuses it.
   if (!startupFrames) {
     startupFrames = openWorkspaceLayoutFrameSync(useAppStore)
-    provideLayoutFrameTerminalPanes(startupFrames.holdsTerminalPane)
+    provideLayoutFrameTerminalPanes(startupFrames)
   }
   startupFrames.start()
 }

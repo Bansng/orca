@@ -9,7 +9,6 @@ import {
   AgentSessionRefusalError,
   agentSessionRefusalError
 } from '../../../shared/agent-session-wire-refusals'
-import type { AgentChildWorkView } from '../../../shared/agent-status-child-work-view'
 import { createJournalOpenReadRefusals } from '../agent-session-journal/journal-open-failure'
 import type { StructuredAgentSessionConversations } from './structured-agent-session-conversations'
 import { releaseLeaseOfEndedStructuredAgentSessionChild } from './structured-agent-session-child-close'
@@ -51,8 +50,8 @@ export function createStructuredAgentSessionConversationLifetime(host: {
   deliveryActive: (sessionId: string) => boolean
   /** The handle closed: `listed` keeps the chat's row in the agent-status store for its tab. */
   closeStatus: (sessionId: string, options: { listed: boolean }) => void
-  /** The session's child records, the host's one read of them. */
-  readChildWork: (sessionId: string) => readonly AgentChildWorkView[] | undefined
+  /** Child work the provider reported running and not over, recorded or not. */
+  childWorkOpen: (sessionId: string) => boolean
 }) {
   let disposed = false
   const { sessions, serialize } = host
@@ -96,7 +95,7 @@ export function createStructuredAgentSessionConversationLifetime(host: {
     now: () => host.context().now(),
     isDisposed: () => disposed,
     deliveryActive: host.deliveryActive,
-    childWork: host.readChildWork,
+    childWorkOpen: host.childWorkOpen,
     store: {
       getRecord: (sessionId) => deps().store.getRecord(sessionId),
       replacedRuntime: (sessionId) => deps().store.replacedRuntime(sessionId)

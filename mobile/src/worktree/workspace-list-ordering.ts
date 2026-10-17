@@ -4,6 +4,8 @@ import {
   buildWorkspaceRowComparator,
   recentActivityWithCreateGrace
 } from '../../../src/shared/workspace-view/workspace-row-sort'
+import { compareCodePoints, compareSidebarText } from '../../../src/shared/sidebar-list/text-order'
+import { getWorktreeRowIdentity } from './worktree-host-row-identity'
 
 function finiteOr(value: number | undefined, fallback: number): number {
   return value !== undefined && Number.isFinite(value) ? value : fallback
@@ -30,10 +32,13 @@ export function sortWorktrees(
       now
     )
   const compareRecent = (a: Worktree, b: Worktree): number =>
-    recentActivity(b) - recentActivity(a) || a.displayName.localeCompare(b.displayName)
+    recentActivity(b) - recentActivity(a) ||
+    compareSidebarText(a.displayName, b.displayName) ||
+    compareCodePoints(getWorktreeRowIdentity(a), getWorktreeRowIdentity(b))
   return [...worktrees].sort(
     buildWorkspaceRowComparator<Worktree>(mode, {
       label: (w) => w.displayName,
+      identity: getWorktreeRowIdentity,
       repoLabel: (w) => w.repo,
       recentActivity,
       manualRank: getManualSortRank,

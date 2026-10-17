@@ -139,19 +139,23 @@ export class WslHostService {
     }
     // First: nothing may reconnect it while it is being stopped (open work, liveness, calls).
     this.removing.add(environmentId)
-    this.visible.delete(environmentId)
     const connector = this.connector
     let serverStop: WslHostServerStop = { stopped: true }
-    if (connector) {
-      serverStop = await connector
-        .stopServer(record.distro, environmentId)
-        .catch((error: unknown) => ({ stopped: false, reason: errorMessage(error) }))
-      await connector.disconnect(record.distro)
-      // Without its holder the distro idles out.
-      await connector.releaseHolder(record.distro)
+    try {
+      if (connector) {
+        serverStop = await connector
+          .stopServer(record.distro, environmentId)
+          .catch((error: unknown) => ({ stopped: false, reason: errorMessage(error) }))
+        await connector.disconnect(record.distro)
+        // Without its holder the distro idles out.
+        await connector.releaseHolder(record.distro)
+      }
+      removeWslHostEnvironment(this.deps.userDataPath(), environmentId)
+      this.visible.delete(environmentId)
+    } finally {
+      // Why: a failed removal (e.g. EBUSY on Windows) must leave the host usable and removable.
+      this.removing.delete(environmentId)
     }
-    removeWslHostEnvironment(this.deps.userDataPath(), environmentId)
-    this.removing.delete(environmentId)
     this.statuses.delete(environmentId)
     await this.deps.removed(environmentId)
     return serverStop
@@ -236,7 +240,8 @@ export class WslHostService {
   hasUserVisibleWork(distro: string): boolean {
     const record = this.recordForDistro(distro)
     // Why the gate: liveness relaunches only for visible work, and none may run while off.
-    return record ? this.canRun() && this.visible.has(record.environmentId) : false
+    const id = record?.environmentId
+    return id ? this.canRun() && this.visible.has(id) && !this.removing.has(id) : false
   }
 
   /** Startup: keep the holders a previous run left, without booting anything. */

@@ -14,6 +14,7 @@ import { buildEditorActiveResult } from '../tabs/editor-open-target-group'
 import { openWorkspaceEditorItem } from '../tabs/workspace-editor-item'
 import type { Tab } from '../../../../../../shared/tab-types'
 import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../../../shared/layout-owner-switch'
+import { withPreviewEnded } from '../../tabs/tab-preview-flag'
 import {
   previewEditorTabsOf,
   recordPromotedEditorTabsInLayoutOwner
@@ -188,7 +189,7 @@ export function createMarkdownPreviewActions(
               return tab
             }
             changed = true
-            return { ...tab, isPreview: false }
+            return withPreviewEnded(tab)
           })
         }
         return changed ? { openFiles, unifiedTabsByWorktree } : s

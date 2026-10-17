@@ -23,6 +23,7 @@ import type {
   TerminalTabRetirementPlan
 } from '../slices/terminal-tab-retirement'
 import type {
+  AccountRestartAgent,
   AutomaticAgentResumeClaim,
   CodexRestartNotice,
   HydrateWorkspaceSessionOptions
@@ -163,8 +164,9 @@ export type TerminalActions = {
   suppressPtyExit: (ptyId: string) => void
   consumeSuppressedPtyExit: (ptyId: string) => boolean
   isPtyShutdownPending: (ptyId: string) => boolean
-  queueCodexPaneRestarts: (ptyIds: string[]) => void
-  consumePendingCodexPaneRestart: (ptyId: string) => boolean
+  /** Codex also marks its restart notices answered. */
+  queuePaneAccountRestarts: (ptyIds: string[], agent: AccountRestartAgent) => void
+  consumePendingPaneAccountRestart: (ptyId: string) => AccountRestartAgent | null
   markCodexRestartNotices: (
     notices: (Pick<CodexRestartNotice, 'previousAccountLabel' | 'nextAccountLabel'> &
       Partial<Pick<CodexRestartNotice, 'previousAccountId' | 'nextAccountId'>> & {

@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { expect, test } from './helpers/orca-app'
 import { NO_WORKSPACE_ROW_FILTERS } from '../../src/shared/workspace-view/workspace-row-filters'
 import { launchPhoneMirrorTopology } from './helpers/phone-mirror-topology'
+import { expectNoSidebarShadowMismatches } from './helpers/sidebar-shadow'
 import type { PairedMobileSocket } from './helpers/paired-mobile-client'
 import {
   filterWorktrees,
@@ -210,6 +211,7 @@ test("phone lists a server's workspaces exactly as the desktop sidebar filters t
     await expect.poll(desktopRowStatus, { timeout: 60_000 }).toBe('active')
     const awake = await expectPhoneMatchesSidebar(true)
     expect(awake.map((row) => path.basename(row))).toContain('from-desktop')
+    await expectNoSidebarShadowMismatches(desktop.page)
   } finally {
     await dispose()
   }

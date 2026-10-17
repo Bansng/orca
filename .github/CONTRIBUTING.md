@@ -135,7 +135,7 @@ All stable kinds (`patch`, `minor`, `major`) are computed off the latest _stable
 - If the latest RC tag exists but is still draft-only or missing its GitHub Release, the workflow resumes that tag only when it was built from the current release ref. Otherwise the next RC number is cut.
 - RC numbering also considers release commits on `main`, so deleting a stale tag does not let a later cut reuse the same RC number.
 - Off-main releases (when `ref` is not the tip of `main`) only push the tag. `main` is never mutated from a non-main ref, so you can safely release an older commit without polluting history.
-- When `ref` is the tip of `main`, the version-bump commit is fast-forwarded onto `main` so local `package.json` stays in sync with what's shipped.
+- When `ref` is the tip of `main`, the workflow tries to fast-forward the version-bump commit onto `main`. If main requires pull requests, it leaves main unchanged and pushes only the release tag. Other push errors still stop the cut.
 
 **Common scenarios:**
 

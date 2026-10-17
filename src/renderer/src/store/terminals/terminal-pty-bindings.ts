@@ -126,7 +126,7 @@ export function createTerminalPtyBindingActions(
           replacementPtyId ? [ptyId, replacementPtyId] : [ptyId]
         )
         const hasReplacementPendingRestart = replacementPtyId
-          ? replacementPtyId in s.pendingCodexPaneRestartIds
+          ? replacementPtyId in s.pendingPaneAccountRestarts
           : false
         const hasReplacementRestartNotice = replacementPtyId
           ? replacementPtyId in s.codexRestartNoticeByPtyId
@@ -134,9 +134,9 @@ export function createTerminalPtyBindingActions(
         const hasReplacementMigrationUnsupported = replacementPtyId
           ? replacementPtyId in s.migrationUnsupportedByPtyId
           : false
-        const nextPendingCodexPaneRestartIds = hasReplacementPendingRestart
-          ? { ...s.pendingCodexPaneRestartIds }
-          : s.pendingCodexPaneRestartIds
+        const nextPendingPaneAccountRestarts = hasReplacementPendingRestart
+          ? { ...s.pendingPaneAccountRestarts }
+          : s.pendingPaneAccountRestarts
         const nextCodexRestartNoticeByPtyId = hasReplacementRestartNotice
           ? { ...s.codexRestartNoticeByPtyId }
           : s.codexRestartNoticeByPtyId
@@ -145,8 +145,8 @@ export function createTerminalPtyBindingActions(
           : s.migrationUnsupportedByPtyId
         if (replacementPtyId) {
           if (hasReplacementPendingRestart) {
-            nextPendingCodexPaneRestartIds[ptyId] = true
-            delete nextPendingCodexPaneRestartIds[replacementPtyId]
+            nextPendingPaneAccountRestarts[ptyId] = nextPendingPaneAccountRestarts[replacementPtyId]
+            delete nextPendingPaneAccountRestarts[replacementPtyId]
           }
           if (hasReplacementRestartNotice) {
             const replacedNotice = nextCodexRestartNoticeByPtyId[replacementPtyId]
@@ -181,7 +181,7 @@ export function createTerminalPtyBindingActions(
             ? { disownedPtyIds: nextDisownedPtyIds }
             : {}),
           suppressedPtyExitIds: nextSuppressedPtyExitIds,
-          pendingCodexPaneRestartIds: nextPendingCodexPaneRestartIds,
+          pendingPaneAccountRestarts: nextPendingPaneAccountRestarts,
           codexRestartNoticeByPtyId: nextCodexRestartNoticeByPtyId,
           migrationUnsupportedByPtyId: nextMigrationUnsupportedByPtyId,
           ...(nextTerminalLayoutsByTabId !== s.terminalLayoutsByTabId

@@ -177,6 +177,30 @@ describe('the window drawn from layout frames', () => {
     sync.close()
   })
 
+  it('keeps the window’s pane remount generation through a structure frame: it is the window’s', async () => {
+    const { store, sync, layouts } = await bootWithFrames('local', localDesktopSession())
+    sync.start()
+    store.getState().remountTerminalTabForRecovery('tab-shell')
+    const renamed = structuredClone(layouts[GIT_KEY]!)
+    renamed.tabs.find((tab) => tab.id === 'tab-shell')!.customTitle = 'renamed'
+    stream.onFrame!({ type: 'workspace', key: GIT_KEY, layout: renamed })
+    await flushMicrotasks()
+    expect(
+      store.getState().tabsByWorktree[GIT_KEY]!.find((tab) => tab.id === 'tab-shell')
+    ).toMatchObject({ customTitle: 'renamed', generation: 1 })
+    sync.close()
+  })
+
+  it('answers main’s terminal tab by its terminal id, shown or not, until the stream ends', async () => {
+    const { sync, layouts } = await bootWithFrames('local', localDesktopSession())
+    const shell = layouts[GIT_KEY]!.tabs.find((tab) => tab.entityId === 'tab-shell')!
+    expect(sync.terminalTab(GIT_KEY, 'tab-shell')).toBe(shell)
+    expect(sync.terminalTab(GIT_KEY, 'missing')).toBeUndefined()
+    stream.onStatus!({ state: 'lost' })
+    expect(sync.terminalTab(GIT_KEY, 'tab-shell')).toBeUndefined()
+    sync.close()
+  })
+
   it('runs a reply waiting on a frame after the store shows it, and every waiter when the stream ends', async () => {
     const { store, sync, layouts } = await bootWithFrames('local', localDesktopSession())
     sync.start()

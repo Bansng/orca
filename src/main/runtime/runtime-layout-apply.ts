@@ -22,6 +22,8 @@ export type WindowLayoutCommand = LayoutCommand &
     // A browser tab's record lives in its workspace's partition, so it routes by workspace.
     | { browserTabId: string }
     | { type: 'moveTabToWorkspace' }
+    // Editor tabs live in their workspace's routed partition.
+    | { type: 'renameEditorFiles' }
   )
 
 /**

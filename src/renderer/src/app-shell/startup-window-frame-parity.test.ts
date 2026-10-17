@@ -27,6 +27,7 @@ import {
   GIT_KEY,
   leaf
 } from '../../../shared/workspace-layout/workspace-layout-session.test-fixture'
+import { buildOwnedEditorFileId } from '../store/slices/editor/file-ids/editor-file-ids'
 import { createStoreSessionMockApi } from '../store/slices/store-session-test-harness'
 import { createTestStore } from '../store/slices/store-test-helpers'
 import type { AppState } from '../store/types'
@@ -120,9 +121,34 @@ function groupsWithoutSelection(): WorkspaceSessionState {
   return session
 }
 
+/** An editor tab Orca moved to the workspace owning its file: saved under the file's owned id. */
+function movedEditorTab(): WorkspaceSessionState {
+  const filePath = '/Users/dev/orca/docs/readme.md'
+  const session = addWorkspace(emptySession(), GIT_KEY, [
+    {
+      id: 'group-m',
+      activeTabId: 'editor-moved',
+      tabs: [
+        {
+          id: 'editor-moved',
+          entityId: buildOwnedEditorFileId(filePath, GIT_KEY, null),
+          kind: 'editor'
+        }
+      ]
+    }
+  ])
+  session.openFilesByWorktree = {
+    [GIT_KEY]: [
+      { filePath, relativePath: 'docs/readme.md', worktreeId: GIT_KEY, language: 'markdown' }
+    ]
+  }
+  return session
+}
+
 const PROFILES: readonly WorkspaceLayoutProfile[] = [
   ...WORKSPACE_LAYOUT_PROFILES,
   ...LEGACY_WORKSPACE_LAYOUT_PROFILES,
+  { name: 'an editor tab moved to its file’s workspace', hostId: 'local', build: movedEditorTab },
   { name: 'editor files other hosts own', hostId: 'local', build: filesOfOtherHosts },
   { name: 'groups with no selected tab', hostId: 'local', build: groupsWithoutSelection }
 ]

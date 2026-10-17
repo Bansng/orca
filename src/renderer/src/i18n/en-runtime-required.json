@@ -1,4 +1,9 @@
 {
+  "accounts": {
+    "claude": {
+      "profileSwitching": "Switching applies to the next Claude you start in any tab."
+    }
+  },
   "agentsSidebarIntro": {
     "migrated": {
       "action": "Open Agents"
@@ -2989,6 +2994,10 @@
       },
       "question": {
         "other": "Other…"
+      },
+      "queuedMessages": {
+        "imageCount_one": "{{count}} image",
+        "imageCount_other": "{{count}} images"
       },
       "receipt": {
         "cancelled": "Cancelled",

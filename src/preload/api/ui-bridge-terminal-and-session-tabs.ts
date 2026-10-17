@@ -38,6 +38,9 @@ export const uiTerminalAndSessionTabsApi = {
       launchToken?: string
       launchAgent?: TuiAgent
       viewMode?: 'terminal' | 'chat'
+      targetGroupId?: string
+      afterTabId?: string
+      shellOverride?: string
       title?: string
       ptyId?: string
       activate?: boolean
@@ -65,6 +68,9 @@ export const uiTerminalAndSessionTabsApi = {
         launchToken?: string
         launchAgent?: TuiAgent
         viewMode?: 'terminal' | 'chat'
+        targetGroupId?: string
+        afterTabId?: string
+        shellOverride?: string
         title?: string
         ptyId?: string
         activate?: boolean

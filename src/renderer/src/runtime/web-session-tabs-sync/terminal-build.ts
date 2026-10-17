@@ -185,7 +185,12 @@ export function buildMirroredTerminalTabs(
         ...(existing?.recovery ? { recovery: existing.recovery } : {}),
         ...(quickCommandLabel ? { quickCommandLabel } : {}),
         ...(startupCwd ? { startupCwd } : {}),
-        customTitle: existing?.customTitle ?? null,
+        // Why: the host's manual name is the one the CLI and phones see; it must outrank this
+        // client's saved-session title (#29975). Older hosts omit it, so keep ours then.
+        customTitle:
+          activeSurface.customTitle !== undefined
+            ? activeSurface.customTitle
+            : (existing?.customTitle ?? null),
         color,
         isPinned,
         ...(viewMode ? { viewMode } : {}),

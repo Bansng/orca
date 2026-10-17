@@ -36,6 +36,8 @@ export type LayoutFrameSliceInput = {
   layouts: WorkspaceLayoutCache
   facts: LayoutContentFacts
   view: DesktopLayoutView
+  /** Whether this window holds an editor file's record: frames carry only edit-mode files'. */
+  holdsEditorFile?: (worktreeId: string, fileId: string) => boolean
 }
 
 export type LayoutFrameSlices = Pick<
@@ -127,7 +129,8 @@ function withShownTabs(
 export function buildLayoutFrameSlices({
   layouts,
   facts,
-  view
+  view,
+  holdsEditorFile
 }: LayoutFrameSliceInput): LayoutFrameSlices {
   const saved = saveWorkspaceLayout({
     layout: workspaceLayoutModelFromPublished(LOCAL_EXECUTION_HOST_ID, layouts),
@@ -163,7 +166,7 @@ export function buildLayoutFrameSlices({
       view.activeTabId && rows.validTabIds.has(view.activeTabId) ? view.activeTabId : null
   })
 
-  const tabs = buildHydratedTabState(session, workspaceKeys)
+  const tabs = buildHydratedTabState(session, workspaceKeys, holdsEditorFile)
   const editor = buildHydratedEditorSessionState(session, workspaceKeys, null)
   const browser = projectHydratedBrowserSession(
     {

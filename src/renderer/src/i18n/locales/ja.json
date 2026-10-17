@@ -414,9 +414,7 @@
       },
       "pairingSecurity": {
         "hide": "非表示",
-        "storedCodeInsecureOrigin": "このブラウザは再利用可能なペアリングコードを保持します。このページが別のマシン上の平文 http であるためです。このブラウザのストレージを読み取れる人は誰でもそれを使用できます。より安全にペアリングするには、https で、このコンピュータの localhost で、または SSH トンネル経由で Orca を開き、もう一度ペアリングしてください。",
         "storedCodeNoEd25519": "このブラウザは再利用可能なペアリングコードを保持します。安全なサインインキー (Ed25519) を作成できないためです。より安全にペアリングするには、最新のブラウザを使用してもう一度ペアリングしてください。",
-        "sessionInsecureOrigin": "このページが別のマシン上の平文 http であるため、このペアリングはこのタブを開いている間だけ有効です。このブラウザが記憶するペアリングを行うには、https で、このコンピュータの localhost で、または SSH トンネル経由で Orca を開いてください。",
         "sessionNoEd25519": "このブラウザは安全なサインインキー (Ed25519) を作成できないため、このペアリングはこのタブを開いている間だけ有効です。このブラウザが記憶するペアリングを行うには、最新のブラウザを使用してください。"
       },
       "runtimeAuth": {
@@ -476,7 +474,8 @@
             "hostUnresolved": "Orca は、どのホストがこのワークスペースを所有しているかを知ることができません。プロジェクトを更新して再度確認します。",
             "gitStatusUnavailable": "Orca はこのワークスペースの git ステータスを確認できませんでした。再試行するか、ホスト固有のサイドバーまたはプロジェクトリストから削除してください。",
             "gitStatusUnavailableOlderPeer": "Orca は、この git-status エラーをホストと照合できませんでした。古い接続ピアを更新するか、ホスト固有のサイドバーまたはプロジェクトリストからワークスペースを削除します。",
-            "forceNeedsApproval": "ワークスペースを強制的に削除する前に、このワークスペースを確認してください。"
+            "forceNeedsApproval": "ワークスペースを強制的に削除する前に、このワークスペースを確認してください。",
+            "agentStartedSinceConfirmation": "このワークスペースで Agent が実行中です。Agent の停止を確認するには、もう一度削除してください。"
           }
         },
         "worktrees": {
@@ -5975,8 +5974,7 @@
                   "7edb8ebe24": "URL からクローン",
                   "a6c20dca96": "SSH ターゲットからプロジェクトを開く",
                   "serverSshTitle": "このサーバーの SSH ホスト上のプロジェクト",
-                  "serverSshDescription": "このサーバーが接続する SSH ホストのプロジェクトフォルダーを開きます",
-                  "serverSshUpdate": "SSH ホストにプロジェクトを追加するには、このサーバーを更新してください",
+                  "serverSshAddOnThisComputer": "サーバーからは利用できません。プロジェクトを開くには、このコンピューターに SSH ホストを追加してください。",
                   "fb4fc5380e": "ローカルプロジェクト、Git リポジトリ、または多数のリポジトリを含むフォルダー",
                   "2281fdc8c7": "フォルダーを参照",
                   "runtimeBrowseDescription": "このホスト上の既存の Git リポジトリまたはフォルダー"
@@ -8745,7 +8743,7 @@
           "addDescription": "SSH でログインできる永続的なマシンを追加します。",
           "editingPrefix": "編集中",
           "allowRemoteCliControl": "このホストの orca CLI による Orca の操作を許可する",
-          "allowRemoteCliControlHelp": "デフォルトでオンです。このホストで実行される orca コマンドが、このホストのワークスペース内に限り、接続中のみ、このデスクトップの Orca ブラウザのタブを開いて操作できるようにし、このホストで古い Orca が起動したターミナルが自身の監督下の作業についてオーケストレーションコマンド（check、inbox、send、ask、reply）を実行できるようにします。ファイル、クリップボード、Cookie は読み取れません。オフの場合、このホスト自身の Orca サーバーにのみアクセスします。"
+          "allowRemoteCliControlHelp": "新しいホストではデフォルトでオンです。このホストで実行される orca コマンドが、このホストのワークスペース内に限り、接続中のみ、このデスクトップの Orca ブラウザのタブを開いて操作できるようにし、このホストで古い Orca が起動したターミナルが自身の監督下の作業についてオーケストレーションコマンド（check、inbox、send、ask、reply）を実行できるようにします。ファイル、クリップボード、Cookie は読み取れません。オフの場合、このホスト自身の Orca サーバーにのみアクセスします。"
         },
         "TasksPane": {
           "f71d8a9dd3": "タスクプロバイダー",
@@ -12334,9 +12332,6 @@
           "cancel": "クリーンアップを続ける",
           "stopping": "停止中…",
           "confirm": "クリーンアップを停止する"
-        },
-        "NativeChatSupportedAgents": {
-          "label": "サポートされている Agent:"
         },
         "contrast": {
           "title": "色のコントラスト",
@@ -17985,6 +17980,10 @@
         "title": "Orca ホストに接続できませんでした",
         "description": "失われたものはありません。ホストが応答すると Orca は再読み込みされます。それまで変更は保存されません。",
         "retry": "今すぐ再試行"
+      },
+      "webPairingRefused": {
+        "title": "Orca がこのブラウザを拒否しました",
+        "retry": "再試行"
       }
     }
   },
@@ -18025,6 +18024,9 @@
       }
     },
     "native-chat": {
+      "install": {
+        "checking": "このホストで {{agent}} の準備ができているか確認しています…"
+      },
       "reasoning": "推論",
       "contextMenu": {
         "copyOrcaSessionId": "Orca セッション ID をコピー",
@@ -18694,6 +18696,9 @@
         "editFailed": "このメッセージは編集できません。",
         "editGone": "このメッセージはすでに送信または削除されています。編集したテキストはチャット入力欄にあります。",
         "editGonePrompt": "このメッセージはすでに送信または削除されています。Agent に回答すると、編集したテキストがチャット入力欄に表示されます。",
+        "imageCount": "画像 {{count}} 枚",
+        "imageCount_one": "画像 {{count}} 枚",
+        "imageCount_other": "画像 {{count}} 枚",
         "collapse": "折りたたむ",
         "expand": "展開",
         "queued": "キュー待ち",
@@ -18999,6 +19004,13 @@
           "label": "ホスト: {{value0}}",
           "unknown": "不明なホスト",
           "candidateName": "{{value0}}、{{value1}}"
+        },
+        "stopAgents": {
+          "titleMany": "これらの Agent を停止しますか?",
+          "descriptionOne": "削除すると、Agent の現在の作業が停止します。",
+          "descriptionMany": "削除すると、これらの Agent の現在の作業が停止します。",
+          "confirm": "Agent を停止して削除",
+          "confirmOne": "Agent を停止して削除"
         }
       },
       "creation": {
@@ -19164,6 +19176,30 @@
       "keywordJira": "Jira",
       "keywordDefaultProject": "デフォルトプロジェクト",
       "keywordIssuePicker": "Issue ピッカー"
+    },
+    "managed-runtime": {
+      "cancel": "インストールをキャンセル",
+      "cancelled": "インストールをキャンセルしました。",
+      "cancelling": "キャンセルしています…",
+      "chatTitle": "チャットを始めるには {{agent}} をインストールしてください。",
+      "damaged": "この {{agent}} のコピーは破損しています。",
+      "downloading": "{{done}} MB をダウンロード中です。",
+      "downloadingOf": "{{total}} MB 中 {{done}} MB をダウンロード中です。",
+      "external": "このホストで見つかった {{agent}} のコピーを使用しています。",
+      "extracting": "{{agent}} を展開しています。",
+      "failed": "インストールに失敗しました。もう一度お試しください。",
+      "cancelFailed": "インストールをキャンセルできませんでした。もう一度お試しください。",
+      "install": "{{agent}} をインストール",
+      "installManaged": "Orca のコピーをインストール",
+      "installed": "インストール済みです。",
+      "notInstalled": "インストールされていません。",
+      "progress": "{{agent}} のダウンロード",
+      "readFailed": "このホストの {{agent}} を確認できませんでした。再試行しています。",
+      "reinstall": "{{agent}} を再インストール",
+      "retry": "インストールを再試行",
+      "unavailable": "{{agent}} はこのホストでは利用できません。",
+      "update": "{{agent}} を更新",
+      "verifying": "ダウンロードしたランタイムを確認しています。"
     }
   },
   "dashboardPopout": {

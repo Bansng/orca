@@ -12,8 +12,9 @@ it('reveals before launch Retry, but waits for a successful queue Resume', async
       clearCapable: true,
       cards: [],
       pause: null,
-      resuming: false,
       clear: vi.fn(async () => true),
+      queueBusy: false,
+      busy: () => false,
       resume: vi.fn(async () => {
         order.push('resume')
         return true
@@ -47,7 +48,8 @@ it('sends no queued card and retries no start on a host held for its permission 
     clearCapable: true,
     cards: [],
     pause: { reason: 'stopped' },
-    resuming: false,
+    queueBusy: false,
+    busy: () => false,
     clear: vi.fn(async () => true),
     resume: vi.fn(async () => true),
     steer: vi.fn(async () => {}),

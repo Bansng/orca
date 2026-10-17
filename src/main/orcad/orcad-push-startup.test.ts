@@ -130,6 +130,7 @@ vi.mock('../server/serve-readiness', () => ({
 }))
 vi.mock('../runtime/orca-runtime', () => ({
   OrcaRuntimeService: class {
+    readonly sidebarFacts = null
     getRuntimeId() {
       return 'headless-runtime'
     }

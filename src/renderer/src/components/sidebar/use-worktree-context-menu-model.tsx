@@ -5,7 +5,7 @@ import type { Worktree } from '../../../../shared/worktree/types'
 import {
   getCyclicProjectedWorktreeLineageIds,
   getLineageRenderInfo
-} from './worktree-lineage-projection'
+} from '../../../../shared/sidebar-list/worktree-lineage-projection'
 import { getWorkspaceStatus } from './workspace-status'
 import { getEligibleWorktreeParents } from './worktree-parent-candidates'
 import {

@@ -88,6 +88,11 @@ describe('wake through main in a layout-owner build', () => {
     const args = [createPane(2), createManager(1), deps] as unknown as Parameters<
       typeof connectPanePty
     >
+    // Main's real wake must find the pane still sleeping: the window's record drop follows it.
+    let recordHeldAtWake: boolean | undefined
+    mocks.wake.mockImplementation(() => {
+      recordHeldAtWake = paneKey in mockStoreState.sleepingAgentSessionsByPaneKey
+    })
     const binding = connectPanePty(...args)
     await flushAsyncTicks()
     const onPtyExit = createdTransportOptions[0]?.onPtyExit
@@ -106,5 +111,7 @@ describe('wake through main in a layout-owner build', () => {
     expect(resumeConnectOptions?.command).toContain('sess-shown')
     expect(mocks.wake).toHaveBeenCalledTimes(1)
     expect(mocks.wake).toHaveBeenCalledWith(expect.anything(), 'wt-1', paneKey)
+    expect(recordHeldAtWake).toBe(true)
+    expect(mockStoreState.sleepingAgentSessionsByPaneKey).not.toHaveProperty(paneKey)
   })
 })

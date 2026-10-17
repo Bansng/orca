@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LegacyRelayBridgedPane } from '../../../shared/legacy-relay-bridge-contract'
 import { toAppSshPtyId } from '../../../shared/ssh-pty-id'
 import type { SshRemotePtyLease } from '../../../shared/ssh-types'
+import type { SshConnection } from '../ssh-connection'
 import type { LegacyRelayTargetBridgeDeps } from './legacy-relay-target-bridge'
 
 const TARGET = 'ssh-box'
@@ -31,6 +32,10 @@ vi.mock('./legacy-relay-target-bridge', () => ({
         state: 'live' as const
       }))
       this.deps.onPanesChanged()
+    }
+    async attach(_ptyId: string, atSnapshot?: (replay: string) => void) {
+      atSnapshot?.('SCREEN')
+      return { status: 'attached' as const, replay: 'SCREEN' }
     }
     dispose(): void {
       this.listed = []
@@ -137,5 +142,33 @@ describe('a hung-up legacy relay bridge (loss of contact is not exit)', () => {
         boundPtyId: null
       })
     ).toBe(PTY)
+  })
+})
+
+describe('attaching a bridged pane', () => {
+  it('sends a reattach screen in output order and only once', async () => {
+    const replays: string[] = []
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the attach only checks a connection exists.
+    const connection = {} as SshConnection
+    registry.installLegacyRelayBridge({
+      leases: () => leases,
+      retireLease: vi.fn(),
+      connection: () => connection,
+      onPanesChanged: vi.fn(),
+      onData: vi.fn(),
+      onReplay: (_ptyId, replay) => replays.push(replay),
+      onExit: vi.fn(),
+      report: vi.fn()
+    })
+    await expect(registry.attachLegacyRelayPane(PTY)).resolves.toEqual({
+      status: 'attached',
+      replay: 'SCREEN'
+    })
+    expect(replays).toEqual([])
+    await expect(registry.attachLegacyRelayPane(PTY, true)).resolves.toEqual({
+      status: 'attached',
+      replay: ''
+    })
+    expect(replays).toEqual(['SCREEN'])
   })
 })

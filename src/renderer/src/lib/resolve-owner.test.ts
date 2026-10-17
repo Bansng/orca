@@ -204,6 +204,54 @@ const ROWS: Row[] = [
     savedServers: ['env-other']
   },
   {
+    name: 'folder twin: one id on two hosts, no host named',
+    rows: { folderWorkspaces: [folder('local'), folder(null, 't')] },
+    ref: { workspaceId: 'folder:f1' },
+    owner: ambiguous
+  },
+  {
+    name: 'folder twin, host named by the caller',
+    rows: { folderWorkspaces: [folder('local'), folder(null, 't')] },
+    ref: { workspaceId: 'folder:f1', hostId: 'ssh:t' },
+    owner: selfAt('ssh:t')
+  },
+  {
+    name: 'unstamped folder whose project group two hosts publish',
+    rows: {
+      folderWorkspaces: [folder(null)],
+      projectGroups: [
+        { id: 'g1', connectionId: null, executionHostId: 'local' },
+        { id: 'g1', connectionId: 't', executionHostId: 'runtime:env-a' }
+      ]
+    },
+    ref: { workspaceId: 'folder:f1' },
+    owner: ambiguous
+  },
+  {
+    name: 'legacy folder naming its own SSH connection, in a project group two hosts publish',
+    rows: {
+      folderWorkspaces: [folder(null, 't')],
+      projectGroups: [
+        { id: 'g1', connectionId: null, executionHostId: 'local' },
+        { id: 'g1', connectionId: 't', executionHostId: 'ssh:t' }
+      ]
+    },
+    ref: { workspaceId: 'folder:f1' },
+    owner: selfAt('ssh:t')
+  },
+  {
+    name: 'stamped folder in a project group two hosts publish',
+    rows: {
+      folderWorkspaces: [folder('runtime:env-a')],
+      projectGroups: [
+        { id: 'g1', connectionId: null, executionHostId: 'local' },
+        { id: 'g1', connectionId: null, executionHostId: 'runtime:env-a' }
+      ]
+    },
+    ref: { workspaceId: 'folder:f1' },
+    owner: envAt('env-a')
+  },
+  {
     name: 'unknown id',
     rows: {},
     ref: { workspaceId: WORKTREE_ID },

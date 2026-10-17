@@ -15,7 +15,7 @@ import {
 } from '@/store/worktree-repo-index'
 import { compareWorktreeDisplayName } from '@/lib/worktree-display-name-order'
 import { branchDisplayName } from '@/components/sidebar/WorktreeCardHelpers'
-import { getCyclicProjectedWorktreeLineageIds } from '@/components/sidebar/worktree-lineage-projection'
+import { getCyclicProjectedWorktreeLineageIds } from '../../../../shared/sidebar-list/worktree-lineage-projection'
 import {
   clampWorktreeParentPickerIndex,
   filterWorktreeParentCandidates

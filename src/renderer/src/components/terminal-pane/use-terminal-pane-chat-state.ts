@@ -31,7 +31,7 @@ export function useTerminalPaneChatState(controller: TerminalPaneTitleController
   } = controller
   const {
     clearCodexRestartNotice,
-    consumePendingCodexPaneRestart,
+    consumePendingPaneAccountRestart,
     setTabCanExpandPane,
     setTabLayout,
     setTabPaneExpanded,
@@ -39,7 +39,6 @@ export function useTerminalPaneChatState(controller: TerminalPaneTitleController
     suppressPtyExit,
     toggleTabViewMode
   } = useTerminalPaneStoreActions()
-  const pendingCodexPaneRestartIds = useAppStore((store) => store.pendingCodexPaneRestartIds)
   // Why one selector: five separate subscriptions each re-read the same unified
   // tab, so one publication paid the lookup five times per mounted tab.
   const { unifiedTabId, isChatViewMode, unifiedTabLabel, isTabPinned } = useAppStore(
@@ -253,8 +252,7 @@ export function useTerminalPaneChatState(controller: TerminalPaneTitleController
     setTabPaneExpanded,
     setTabCanExpandPane,
     suppressPtyExit,
-    pendingCodexPaneRestartIds,
-    consumePendingCodexPaneRestart,
+    consumePendingPaneAccountRestart,
     clearCodexRestartNotice,
     unifiedTabId,
     isChatViewMode,

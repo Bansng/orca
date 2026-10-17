@@ -64,44 +64,6 @@ function orderAgents(
   return [defaultAgent, ...inCatalogOrder.filter((id) => id !== defaultAgent)]
 }
 
-export function shouldShowLaunchWatchdogTimeout({ hasPty }: { hasPty: boolean }): boolean {
-  return !hasPty
-}
-
-function getLaunchWatchdogTimeoutMessage(label: string): string {
-  return `Couldn't launch ${label} — the terminal did not start.`
-}
-
-function getTerminalLaunchState(tabId: string): { stillOpen: boolean; hasPty: boolean } {
-  const state = useAppStore.getState()
-  const hasPtyBinding = (state.ptyIdsByTabId[tabId]?.length ?? 0) > 0
-  let stillOpen = false
-  let tabPtyId: string | null = null
-
-  for (const tabs of Object.values(state.tabsByWorktree)) {
-    const tab = tabs.find((t) => t.id === tabId)
-    if (tab) {
-      stillOpen = true
-      tabPtyId = tab.ptyId
-      break
-    }
-  }
-
-  return { stillOpen, hasPty: hasPtyBinding || tabPtyId !== null }
-}
-
-async function waitForTerminalPty(tabId: string, timeoutMs: number): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs
-  while (Date.now() < deadline) {
-    const launchState = getTerminalLaunchState(tabId)
-    if (launchState.hasPty) {
-      return true
-    }
-    await new Promise((resolve) => window.setTimeout(resolve, 100))
-  }
-  return getTerminalLaunchState(tabId).hasPty
-}
-
 function QuickLaunchAgentMenuItemsInner({
   worktreeId,
   groupId,
@@ -187,27 +149,6 @@ function QuickLaunchAgentMenuItemsInner({
         return
       }
       onFocusTerminal(result.surface.tabId)
-
-      // Why: launch success means the terminal session exists. Agent readiness
-      // can lag behind on slow machines, and prompt paste flows already own
-      // their own readiness timeout once a PTY exists.
-      const launchedTabId = result.surface.tabId
-      void waitForTerminalPty(launchedTabId, 5000).then((hasPty) => {
-        if (hasPty) {
-          return
-        }
-        const launchState = getTerminalLaunchState(launchedTabId)
-        if (!launchState.stillOpen) {
-          return
-        }
-        if (useAppStore.getState().activeWorktreeId !== worktreeId) {
-          return
-        }
-        if (!shouldShowLaunchWatchdogTimeout({ hasPty: launchState.hasPty })) {
-          return
-        }
-        toast.message(getLaunchWatchdogTimeoutMessage(label))
-      })
     },
     [
       worktreeId,

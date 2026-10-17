@@ -84,10 +84,13 @@ export function useMobileWebShellSession(args: {
   routePathname: string
   /** A wide layout; a change restarts the session only where it changes the answer. */
   wide?: boolean
+  /** False when this app has no screen of its own for the route. */
+  appNamesRoute?: boolean
   runtime?: MobileWebShellRuntime
 }): MobileWebShellSessionView {
   const { hostId, routePathname } = args
   const wide = args.wide === true
+  const appNamesRoute = args.appNamesRoute !== false
   const gates = useHostProtocolGates()
   const { client, state: connState } = useHostClient(hostId)
 
@@ -97,7 +100,7 @@ export function useMobileWebShellSession(args: {
   const storeRef = useRef<GenerationStore | null>(null)
   storeRef.current ??= runtime.createStore()
 
-  const sessionRef = useRef(createMobileWebShellSession(routePathname, wide))
+  const sessionRef = useRef(createMobileWebShellSession(routePathname, wide, appNamesRoute))
   const [state, setState] = useState(sessionRef.current.state)
   const [pageReady, setPageReady] = useState(sessionRef.current.pageReady)
   const [pageFrame, setPageFrame] = useState(() => shellPageFrame(sessionRef.current))
@@ -235,13 +238,13 @@ export function useMobileWebShellSession(args: {
     invalidate()
     hostIdRef.current = hostId
     logTraceRef.current = EMPTY_SHELL_LOG_TRACE
-    sessionRef.current = createMobileWebShellSession(routePathname, wide)
+    sessionRef.current = createMobileWebShellSession(routePathname, wide, appNamesRoute)
     startedAtRef.current = runtime.now()
     setState(sessionRef.current.state)
     setPageReady(sessionRef.current.pageReady)
     setPageFrame(shellPageFrame(sessionRef.current))
     return invalidate
-  }, [hostId, invalidate, routePathname, runtime])
+  }, [appNamesRoute, hostId, invalidate, routePathname, runtime])
 
   // Log-only: one warning per parked state object, cancelled by any state, paint, host or route change.
   // `CHECKING` is one shared object, so checking-to-checking steps keep the first open's timer.

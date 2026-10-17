@@ -108,7 +108,8 @@ export type TabsSlice = {
   reorderUnifiedTabs: (
     groupId: string,
     tabIds: string[],
-    opts?: { recordInteraction?: boolean }
+    /** `layoutOwnerHandled`: the caller already asked main for this order, or main cannot take it. */
+    opts?: { recordInteraction?: boolean; layoutOwnerHandled?: boolean }
   ) => void
   setTabLabel: (tabId: string, label: string) => void
   /** Set a tab's view mode (terminal vs native chat). Patches only that tab. */

@@ -60,11 +60,61 @@ describe('parseRelayEndpointIncumbentProbe', () => {
   it('reports exited only when the connect was refused AND nothing holds the socket', () => {
     const incumbent = parseRelayEndpointIncumbentProbe(
       SOCK,
-      probeOutput(['PRESENT=yes', 'LISTEN=refused', 'HOLDERS_SOURCE=lsof'])
+      probeOutput([
+        'PRESENT=yes',
+        'LISTEN=refused',
+        'FS_TYPE=linux ef53 ef53',
+        'HOLDERS_SOURCE=lsof'
+      ])
     )
     expect(incumbent.verdict).toBe('exited')
     expect(incumbent.evidence).toBe('no-holder')
     expect(incumbent.socketPresent).toBe(true)
+  })
+
+  it('reports exited for a refused socket on a macOS boot-volume filesystem or Linux tmpfs', () => {
+    for (const fsType of ['darwin 1a 1a', 'Linux 1021994 ef53', 'darwin-mount apfs']) {
+      const incumbent = parseRelayEndpointIncumbentProbe(
+        SOCK,
+        probeOutput(['PRESENT=yes', 'LISTEN=refused', `FS_TYPE=${fsType}`, 'HOLDERS_SOURCE=lsof'])
+      )
+      expect(incumbent.verdict).toBe('exited')
+    }
+  })
+
+  // A relay on node A of a round-robin alias sharing an NFS home: node B's kernel refuses the
+  // socket and B's lsof sees no holder, though A's relay still runs its terminals.
+  it('reports unverifiable for a refused socket that another machine may hold', () => {
+    for (const fsType of [
+      'linux 6969 ef53', // nfs
+      'linux ff534d42 ef53', // cifs
+      'linux 65735546 ef53', // fuse (sshfs)
+      'darwin 1c 1a', // macOS nfs/smbfs
+      'darwin-mount nfs',
+      'darwin-mount smbfs',
+      'darwin-mount ', // no mount line matched
+      'linux  ', // statfs unavailable
+      'freebsd 35 35'
+    ]) {
+      const incumbent = parseRelayEndpointIncumbentProbe(
+        SOCK,
+        probeOutput(['PRESENT=yes', 'LISTEN=refused', `FS_TYPE=${fsType}`, 'HOLDERS_SOURCE=lsof'])
+      )
+      expect(incumbent.verdict).toBe('unverifiable')
+    }
+    const withoutType = parseRelayEndpointIncumbentProbe(
+      SOCK,
+      probeOutput(['PRESENT=yes', 'LISTEN=refused', 'HOLDERS_SOURCE=lsof'])
+    )
+    expect(withoutType.verdict).toBe('unverifiable')
+  })
+
+  it('still reports exited for a socket path that no longer exists, on any filesystem', () => {
+    const incumbent = parseRelayEndpointIncumbentProbe(
+      SOCK,
+      probeOutput(['PRESENT=no', 'LISTEN=absent', 'FS_TYPE=linux 6969 ef53', 'HOLDERS_SOURCE=lsof'])
+    )
+    expect(incumbent.verdict).toBe('exited')
   })
 
   it('reports unverifiable when the host cannot enumerate socket holders', () => {
@@ -97,6 +147,7 @@ describe('parseRelayEndpointIncumbentProbe', () => {
       probeOutput([
         'PRESENT=yes',
         'LISTEN=refused',
+        'FS_TYPE=linux ef53 ef53',
         'HOLDERS_SOURCE=lsof',
         'HOLDER=- no unknown unknown'
       ])

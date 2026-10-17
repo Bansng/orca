@@ -1,4 +1,3 @@
-import { ALLOW_INSECURE_WEB_PAIRING_ENV } from '../../../shared/web-origin-security'
 import { AGENT_LAUNCH_RUNTIME_CAPABILITY } from '../../../shared/agent-launch-runtime-capability'
 import type { RuntimeTransportMetadata } from '../../../shared/runtime-bootstrap'
 import { watchRuntimeMetadataOwnership } from '../runtime-metadata-ownership-watch'
@@ -200,10 +199,7 @@ export class RuntimeRpcLifecycle extends RuntimeRpcWebSocketDispatch {
       fallbackLadder: wsFallbackPortLadder(this.wsPort)
     })
     const mobileSocketWiring = this.ensureMobileSocketWiring(deviceRegistry, e2eeKeypair)
-    this.detachWebSocketWiring = mobileSocketWiring.attachTransport(wsTransport, (ws) => ({
-      transport: 'direct',
-      ...wsTransport.webPageOf(ws)
-    }))
+    this.detachWebSocketWiring = mobileSocketWiring.attachTransport(wsTransport)
 
     try {
       await wsTransport.start()
@@ -282,7 +278,6 @@ export class RuntimeRpcLifecycle extends RuntimeRpcWebSocketDispatch {
           this.runtime.onClientDisconnected(socket.device.clientId)
         }
       },
-      allowInsecureWebPairing: () => process.env[ALLOW_INSECURE_WEB_PAIRING_ENV] === '1',
       // Why: relay attempts are authorized upstream; only direct failures should prompt local re-pairing.
       onUnpairedDeviceAuthFailure: (metadata) => {
         if (metadata.transport === 'direct') {

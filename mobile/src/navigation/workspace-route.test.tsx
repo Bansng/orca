@@ -45,11 +45,6 @@ vi.mock('../transport/host-descriptor-recorder', () => ({
   recordHostDescriptorFromStatus: () => {}
 }))
 vi.mock('./route-handoff', () => ({ useRouteHandoff: () => ({ replace: () => {} }) }))
-// The native switch always hands the page its route, so the census reads what the page is told.
-vi.mock('../mobile-web-shell/shell-switch-decision', () => ({
-  shellSwitchDecision: (shellRoute: unknown) =>
-    shellRoute ? { kind: 'shell', route: shellRoute } : { kind: 'native' }
-}))
 vi.mock('../mobile-web-shell/ShellSwitchPendingScreen', () => ({
   ShellSwitchPendingScreen: () => null
 }))

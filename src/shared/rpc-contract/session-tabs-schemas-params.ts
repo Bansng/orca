@@ -137,10 +137,16 @@ export const SetTabProps = WorktreeTabSelector.extend({
   color: z.string().max(64).nullable().optional(),
   isPinned: z.boolean().optional(),
   // undefined = leave unchanged; no "clear" semantic (absence means default 'terminal').
-  viewMode: z.enum(['terminal', 'chat']).optional()
+  viewMode: z.enum(['terminal', 'chat']).optional(),
+  // A terminal tab's manual name; null clears it. Older hosts strip it and change nothing.
+  customTitle: z.string().max(512).nullable().optional()
 })
 
 export const CreateTerminalTab = WorktreeTabSelector.extend({
+  sourceChatFork: z
+    .object({ sessionId: z.string().min(1) })
+    .strict()
+    .optional(),
   afterTabId: z.string().optional(),
   targetGroupId: z.string().optional(),
   command: z.string().optional(),
@@ -180,6 +186,37 @@ export const CreateTerminalTab = WorktreeTabSelector.extend({
   // returns the in-flight operation instead of spawning a duplicate terminal.
   clientMutationId: z.string().min(1).max(128).optional()
 }).superRefine((value, context) => {
+  if (value.sourceChatFork) {
+    if (!value.clientMutationId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['clientMutationId'],
+        message: 'A fork needs a mutation id'
+      })
+    }
+    for (const field of [
+      'command',
+      'shell',
+      'agent',
+      'agentPrompt',
+      'env',
+      'envToDelete',
+      'cwd',
+      'launchConfig',
+      'launchToken',
+      'launchAgent',
+      'startupCommandDelivery',
+      'viewMode'
+    ] as const) {
+      if (value[field] !== undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: [field],
+          message: 'A fork uses host launch settings'
+        })
+      }
+    }
+  }
   if (value.agentPrompt !== undefined && value.agent === undefined) {
     context.addIssue({
       code: 'custom',

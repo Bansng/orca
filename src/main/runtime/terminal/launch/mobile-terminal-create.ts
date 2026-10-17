@@ -30,6 +30,7 @@ export abstract class OrcaRuntimeWithCreateMobileSessionTerminal extends OrcaRun
     worktreeSelector: string,
     opts: {
       afterTabId?: string
+      sourceChatFork?: { sessionId: string }
       targetGroupId?: string
       command?: string
       shellOverride?: string

@@ -5,12 +5,15 @@ import { readManagedOrcadLaunchSshSession } from '../ssh/orcad-managed-launch-se
 import { knownSshHostPlatform } from '../ssh/ssh-host-platform-memo'
 import { getSshHostServerStatus } from '../ssh/ssh-host-server-status'
 import { connectionManager } from './ssh-ipc-context'
-import { publishHostServerStatus } from './runtime-environment-managed-tunnel'
+import {
+  clearLaunchSessionNote,
+  publishHostServerStatus
+} from './runtime-environment-managed-tunnel'
 
 // Once per SSH session: a restore runs on every runtime call, and the answer only changes when
 // a session ends, which the next session (a new connection or reconnect generation) checks.
-// The ended verdict is kept so a status a later connect replaces gets the warning back. Any
-// other verdict expires: another desktop's launching session can end while this one stays.
+// The ended verdict is reapplied so a status a later connect replaces gets the warning back.
+// Every verdict expires: another desktop can end its launching session, or restart the server.
 const checked = new WeakMap<object, { generation: number; ended: boolean; at: number }>()
 const RECHECK_MS = 10 * 60_000
 
@@ -30,7 +33,8 @@ export async function noteEndedLaunchSshSession(
   }
   const generation = connection.getConnectGeneration()
   const prior = checked.get(connection)
-  if (prior?.generation === generation && (prior.ended || now() - prior.at < RECHECK_MS)) {
+  const sameSession = prior?.generation === generation
+  if (sameSession && now() - prior.at < RECHECK_MS) {
     if (prior.ended) {
       flag(targetId, environmentId)
     }
@@ -38,17 +42,23 @@ export async function noteEndedLaunchSshSession(
   }
   const pending = { generation, ended: false, at: now() }
   checked.set(connection, pending)
+  // Only a live probe disproves a proven end; unanswered or unknown keeps it.
+  const provenEnded = sameSession && prior.ended
+  const markEnded = (): void => {
+    checked.set(connection, { generation, ended: true, at: now() })
+    flag(targetId, environmentId)
+  }
+  // Why: a disconnect, reconnect, unlink or relaunch during the probe makes its answer stale.
+  const stale = (): boolean =>
+    connectionManager?.getConnection(targetId) !== connection ||
+    connection.getConnectGeneration() !== generation ||
+    checked.get(connection) !== pending
   try {
     const session = await readManagedOrcadLaunchSshSession(
       getAppEnvironment().getPath('userData'),
       environmentId
     )
-    // Why: a disconnect, reconnect, unlink or relaunch during the probe makes its answer stale.
-    if (
-      connectionManager?.getConnection(targetId) !== connection ||
-      connection.getConnectGeneration() !== generation ||
-      checked.get(connection) !== pending
-    ) {
+    if (stale()) {
       return
     }
     const status = getSshHostServerStatus(targetId)
@@ -57,13 +67,26 @@ export async function noteEndedLaunchSshSession(
       checked.delete(connection)
       return
     }
-    if (session === 'exited') {
-      checked.set(connection, { generation, ended: true, at: now() })
-      flag(targetId, environmentId)
+    if (session === 'exited' || (session !== 'live' && provenEnded)) {
+      markEnded()
+    } else if (session === 'live' && launchSessionNoted(targetId, environmentId)) {
+      clearLaunchSessionNote(targetId, environmentId)
     }
   } catch (error) {
+    if (provenEnded && !stale()) {
+      markEnded()
+    }
     console.warn('[ssh] Could not check which SSH session started the managed server:', error)
   }
+}
+
+function launchSessionNoted(targetId: string, environmentId: string): boolean {
+  const status = getSshHostServerStatus(targetId)
+  return (
+    status?.kind === 'managed' &&
+    status.environmentId === environmentId &&
+    status.launchSessionEnded === true
+  )
 }
 
 /** A restored host may have no status yet; any other server decision is left alone. */

@@ -232,11 +232,15 @@ export function awaitStructuredRouteHostAnswer(
   waitMs: number
 ): Promise<void> | null {
   const input = buildAgentLaunchRouteInput(store, request)
-  const awaits = structuredRouteAwaits(input)
-  if (!awaits) {
+  if (!structuredRouteAwaits(input)) {
     return null
   }
   let stopCapabilitiesWait = (): void => {}
+  const timedOut = Symbol('host-answer-timeout')
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(timedOut), waitMs)
+  })
   const ask = async (): Promise<void> => {
     let capabilities = input.hostCapabilities
     // Either route may be missing this computer's capabilities: wait for the probe that lands
@@ -244,22 +248,23 @@ export function awaitStructuredRouteHostAnswer(
     if (capabilities === null && parseExecutionHostId(input.executionHostId)?.kind === 'local') {
       const wait = awaitLocalRuntimeCapabilities()
       stopCapabilitiesWait = wait.stop
-      capabilities = await wait.known
+      capabilities = await Promise.race([wait.known, deadline])
     }
-    await relearnHostStructuredAgents(
-      input.executionHostId,
-      capabilities,
-      store.runtimeStatusByEnvironmentId
-    )
+    await Promise.race([
+      relearnHostStructuredAgents(
+        input.executionHostId,
+        capabilities,
+        store.runtimeStatusByEnvironmentId
+      ),
+      deadline
+    ])
   }
-  let timer: ReturnType<typeof setTimeout> | undefined
   const answered = ask().catch((error: unknown) => {
-    console.warn('[agent-launch-route] could not ask the host', error)
+    if (error !== timedOut) {
+      console.warn('[agent-launch-route] could not ask the host', error)
+    }
   })
-  const deadline = new Promise<void>((resolve) => {
-    timer = setTimeout(resolve, waitMs)
-  })
-  return Promise.race([answered, deadline]).finally(() => {
+  return answered.finally(() => {
     clearTimeout(timer)
     stopCapabilitiesWait()
   })

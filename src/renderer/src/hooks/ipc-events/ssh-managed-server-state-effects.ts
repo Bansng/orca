@@ -9,6 +9,7 @@ import {
 import { translate } from '@/i18n/i18n'
 import { useAppStore } from '../../store'
 import { withoutConvertedSshHostRows } from '../../store/repos/converted-ssh-host-rows'
+import { rekeyWorktreeVisitHost } from '@/lib/worktree-visit-recency'
 import { preserveConvertedSshBrowserPages } from '../../store/repos/converted-ssh-browser-pages'
 
 type ManagedServerStatus = SshConnectionState['managedServer']
@@ -154,7 +155,20 @@ async function loadManagedServerCatalogs(targetId: string, load: CatalogLoad): P
   if (!isCurrent()) {
     return
   }
-  useAppStore.setState((state) => withoutConvertedSshHostRows(state, targetId))
+  useAppStore.setState((state) => {
+    // Why: the host's workspaces are the server's now; unmoved, the next prune drops their recency.
+    const lastVisitedAtByWorktreeId = rekeyWorktreeVisitHost(
+      state.lastVisitedAtByWorktreeId,
+      toSshExecutionHostId(targetId),
+      toRuntimeExecutionHostId(environmentId)
+    )
+    return {
+      ...withoutConvertedSshHostRows(state, targetId),
+      ...(lastVisitedAtByWorktreeId === state.lastVisitedAtByWorktreeId
+        ? {}
+        : { lastVisitedAtByWorktreeId })
+    }
+  })
   rehomeActiveWorkspace(targetId, environmentId)
   if (!useAppStore.getState().startupWorktreeRefreshCompleted) {
     rehomeAfterStartupScan(targetId, environmentId, isCurrent)

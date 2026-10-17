@@ -568,6 +568,7 @@ function makeRuntimeStoreWithWorkspaceSession(
   ownerHostId = 'local'
 ): {
   runtimeStore: typeof store & {
+    admitTerminalPane: ReturnType<typeof withRuntimePaneAdmission>['admitTerminalPane']
     getWorkspaceSession: (hostId?: string) => WorkspaceSessionState
     setWorkspaceSession: ReturnType<typeof vi.fn<Store['setWorkspaceSession']>>
     flushOrThrow: ReturnType<typeof vi.fn<() => void>>

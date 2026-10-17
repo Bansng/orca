@@ -12,6 +12,7 @@ import {
   type NativeChatTurnJournal
 } from '../../../src/shared/native-chat-turn-membership'
 import { nativeChatMessagesWaitingBehindLiveTurn } from '../../../src/shared/native-chat-messages-waiting-behind-live-turn'
+import { NATIVE_CHAT_STREAMING_ID } from '../../../src/shared/native-chat-streaming'
 import {
   nativeChatRowsInDrawOrder,
   nativeChatTurnBarRows
@@ -80,8 +81,8 @@ function useScopedOpenKeys(scopeKey: string): [ReadonlySet<string>, (key: string
 }
 
 /** Owns the transcript's per-turn status rows and their disclosure state, and
- *  resolves what one list row needs. Bridge-lane chats pass `enabled: false` and
- *  keep their single three-dot working indicator instead. */
+ *  resolves what one list row needs. Bridge-lane chats pass `enabled: false`: no turn
+ *  rows, but the same live "Working…" line while the agent works. */
 export function useMobileNativeChatTurnDisclosure({
   messages,
   enabled,
@@ -187,7 +188,7 @@ export function useMobileNativeChatTurnDisclosure({
   const line = useMemo(
     () =>
       nativeChatLiveLine({
-        draws: enabled && isWorking && !lineYields && active !== null,
+        draws: isWorking && !lineYields && (!enabled || active !== null),
         thinking: active?.thinking === true,
         stopping,
         activityText: activeActivityText,
@@ -233,8 +234,11 @@ export function useMobileNativeChatTurnDisclosure({
         // transcript, defeating the row's memo; caching one per turn would mean
         // writing a ref during render, which react-freeze can discard.
         turnKey: turnKey && turnStatus?.workedSeconds != null ? turnKey : undefined,
-        // With no user boundary at all, the session's working state stays authoritative.
-        activeTurnIsWorking: inLiveWorkingTurn(index),
+        // With no user boundary at all, the session's working state stays authoritative. The bridge
+        // lane has no turns: only its synthetic streaming row is known to be in the live one.
+        activeTurnIsWorking: enabled
+          ? inLiveWorkingTurn(index)
+          : isWorking && message.id === NATIVE_CHAT_STREAMING_ID,
         mayStillGrow: !lineYields && message.id === latestAssistantId,
         reasoningIsLive: message.id === liveReasoningId,
         reasoningExpanded:
@@ -266,6 +270,7 @@ export function useMobileNativeChatTurnDisclosure({
       toggleReasoning,
       openSubagentGroups,
       toggleSubagentGroup,
+      isWorking,
       openUserMessages,
       toggleUserMessage
     ]

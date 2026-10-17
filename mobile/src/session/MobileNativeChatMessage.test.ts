@@ -21,7 +21,7 @@ import { structuredQuestionTranscript } from '../../../src/shared/structured-age
 import type { NativeChatResolvedPrompt } from '../../../src/shared/native-chat-resolution-receipt'
 import { colors, typography } from '../theme/mobile-theme'
 import { ANSWERED_PROMPT_ITEMS } from './mobile-native-chat-answered-prompts.test-fixture'
-import { MobileNativeChatImageViewerContext } from './mobile-native-chat-image-viewer-context'
+import { MobileNativeChatRowOverlaysContext } from './mobile-native-chat-row-overlays'
 import { styles } from './mobile-native-chat-message-styles'
 
 vi.mock('react-native', async () => {
@@ -155,11 +155,14 @@ describe('MobileNativeChatMessage', () => {
       const receipt = receipts.get(message.id)
       return receipt ? [words(render(message, { receipt }).root).join('')] : []
     })
+    // Each ends with when it was answered, in the device's own clock.
     expect(drawn).toEqual([
       expect.stringMatching(
-        /^Bash\{[\s\S]*echo receipt-check[\s\S]*\}AllowResolved · Answered on desktop-renderer$/
+        /^Bash\{[\s\S]*echo receipt-check[\s\S]*\}AllowResolved · Answered on desktop-renderer\d{1,2}:\d{2}(\s[AP]M)?$/
       ),
-      'Asked: Do you prefer tea or coffee?CoffeeResolved · Answered on desktop-renderer'
+      expect.stringMatching(
+        /^Asked: Do you prefer tea or coffee\?CoffeeResolved · Answered on desktop-renderer\d{1,2}:\d{2}(\s[AP]M)?$/
+      )
     ])
   })
 
@@ -180,6 +183,10 @@ describe('MobileNativeChatMessage', () => {
     expect(tree.root.find((node) => String(node.type) === 'MessageSquareMore').props.size).toBe(
       15 * 1.5
     )
+    const time = tree.root.find(
+      (node) => String(node.type) === 'Text' && node.props.accessibilityLabel
+    )
+    expect(Object.assign({}, ...[time.props.style].flat()).fontSize).toBe(typography.metaSize * 1.5)
   })
 
   it("lists a group's questions once nobody can answer them here, as desktop does", () => {
@@ -240,6 +247,25 @@ describe('MobileNativeChatMessage', () => {
     expect(words(render(row, { receipt, awaiting: false }).root).join('')).toBe(
       'Asked: Do you prefer tea or coffee?'
     )
+  })
+
+  it('shows when your message and the reply were written, beside copy, zoomed with the chat, as desktop does', () => {
+    const at = new Date(2026, 9, 15, 15, 42).getTime()
+    const timeIn = (message: NativeChatMessage) =>
+      render(message, { fontScale: 1.5 })
+        .root.findAll((node) => String(node.type) === 'Text' && node.props.accessibilityLabel)
+        .map((node) => [
+          node.children.join(''),
+          Object.assign({}, ...[node.props.style].flat()).fontSize
+        ])
+    const shown = [[expect.stringMatching(/^(3:42\sPM|15:42)$/), typography.metaSize * 1.5]]
+    expect(timeIn({ ...userMessage([{ type: 'text', text: 'ship it' }]), timestamp: at })).toEqual(
+      shown
+    )
+    expect(timeIn({ ...toolMessage([{ type: 'text', text: 'Shipped.' }]), timestamp: at })).toEqual(
+      shown
+    )
+    expect(timeIn(userMessage([{ type: 'text', text: 'ship it' }]))).toEqual([])
   })
 
   it('draws a question call as the question awaited, then as asked, never as a raw tool line', () => {
@@ -470,8 +496,8 @@ describe('MobileNativeChatMessage', () => {
     act(() => {
       renderer = create(
         createElement(
-          MobileNativeChatImageViewerContext.Provider,
-          { value: openImage },
+          MobileNativeChatRowOverlaysContext.Provider,
+          { value: { openImage, openActions: vi.fn() } },
           createElement(MobileNativeChatMessage, {
             message: userMessage([{ type: 'image-ref', url: 'file:///a.jpg', alt: 'a photo' }])
           })

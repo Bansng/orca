@@ -522,6 +522,23 @@ describe('orcad migration catalog persistence', () => {
     expect(store.getFolderWorkspaces()).toEqual([])
   })
 
+  it.each([
+    ['a connection id', { connectionId: 'nested-target' }],
+    ['an SSH execution host', { executionHostId: 'ssh:nested-target' as const }],
+    ['a runtime execution host', { executionHostId: 'runtime:other-env' as const }]
+  ])('imports beside a same-path project on another machine (%s)', (_case, host) => {
+    const store = createStore()
+    store.addRepo(makeRepo({ id: 'nested', path: REPOSITORY.path, ...host }))
+
+    commitCatalog(store, manifest())
+    expect(
+      store
+        .getRepos()
+        .map((repo) => repo.id)
+        .sort()
+    ).toEqual(['nested', REPOSITORY.id].sort())
+  })
+
   it('validates all id conflicts before adding any manifest row', () => {
     const store = createStore()
     store.addRepo(makeRepo({ id: REPOSITORY.id, path: '/srv/different' }))

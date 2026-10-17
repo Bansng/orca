@@ -3,6 +3,7 @@ import type * as AgentStatusModule from '@/lib/agent-status'
 import { createTestStore, makeWorktree, seedStore } from './store-test-helpers'
 import { createStoreCascadesMockApi } from './store-cascades-test-harness'
 import { newGroupSplitOf } from '@/runtime/layout-owner-new-group-split'
+import { recordOpenedAgentSessionTabInLayoutOwner } from '@/runtime/agent-session-tab-layout-owner'
 import type { TabGroupLayoutNode } from '../../../../shared/tab-types'
 import { LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host'
 import { LayoutApplyParams } from '../../../../shared/rpc-contract/workspace-layout-params'
@@ -81,10 +82,17 @@ function applySent() {
   return commands
 }
 
+/** Groups by id: the detector matches them by id, and main appends a group the window kept. */
+function byId(groups: readonly { id: string; tabOrder: string[] }[]) {
+  return groups
+    .map(({ id, tabOrder }) => ({ id, tabOrder }))
+    .sort((left, right) => left.id.localeCompare(right.id))
+}
+
 function windowView() {
   const state = store.getState()
   return {
-    groups: (state.groupsByWorktree[WT] ?? []).map(({ id, tabOrder }) => ({ id, tabOrder })),
+    groups: byId(state.groupsByWorktree[WT] ?? []),
     tree: splitTree(state.layoutByWorktree[WT])
   }
 }
@@ -92,7 +100,7 @@ function windowView() {
 function mainView() {
   const workspace = main.workspaces[WT]!
   return {
-    groups: workspace.groups.map(({ id, tabOrder }) => ({ id, tabOrder })),
+    groups: byId(workspace.groups),
     tree: splitTree(workspace.groupLayout)
   }
 }
@@ -180,11 +188,72 @@ describe('open to the side in a layout-owner build', () => {
     applySent()
 
     // The window keeps its empty root beside it; main stores no empty group.
-    expect(windowView().groups).toEqual([
-      { id: ROOT, tabOrder: [] },
-      { id: editorGroup, tabOrder: [onlyTabOf(editorGroup)] }
-    ])
-    expect(mainView()).toEqual({ groups: [windowView().groups[1]], tree: null })
+    expect(windowView().groups).toEqual(
+      byId([
+        { id: ROOT, tabOrder: [] },
+        { id: editorGroup, tabOrder: [onlyTabOf(editorGroup)] }
+      ])
+    )
+    expect(mainView()).toEqual({
+      groups: [{ id: editorGroup, tabOrder: [onlyTabOf(editorGroup)] }],
+      tree: null
+    })
+  })
+
+  it.each([
+    ['terminal', () => store.getState().createTab(WT, ROOT)],
+    ['editor', () => openFile('/c.ts', { targetGroupId: ROOT })],
+    [
+      'browser',
+      () => store.getState().createBrowserTab(WT, 'about:blank', { targetGroupId: ROOT })
+    ],
+    [
+      'chat',
+      () => {
+        // As openStructuredAgentSessionProvisionalTab does, on this test's store.
+        const tab = store.getState().createUnifiedTab(WT, 'agent-session', {
+          entityId: 'chat-1',
+          agentSessionAgent: 'codex',
+          targetGroupId: ROOT
+        })
+        recordOpenedAgentSessionTabInLayoutOwner(store.getState(), tab)
+      }
+    ]
+  ])(
+    'records a %s tab opened into the emptied root after its neighbour split again',
+    (_kind, openIntoRoot) => {
+      // The window keeps its emptied root; the splits beside it hold tabs, so main has only those.
+      store.getState().createTab(WT, undefined, undefined, {
+        split: { sourceGroupId: ROOT, splitDirection: 'right' }
+      })
+      const right = store.getState().groupsByWorktree[WT]!.at(-1)!.id
+      store.getState().createTab(WT, undefined, undefined, {
+        split: { sourceGroupId: right, splitDirection: 'down' }
+      })
+      applySent()
+      expect(windowView().groups).toContainEqual({ id: ROOT, tabOrder: [] })
+
+      openIntoRoot()
+      applySent()
+      expect(mainView()).toEqual(windowView())
+    }
+  )
+
+  it('records opens into a split made off another empty split, beside the groups main holds', () => {
+    openFile('/a.ts')
+    const outer = store.getState().createEmptySplitGroup(WT, ROOT, 'right')!
+    const inner = store.getState().createEmptySplitGroup(WT, outer, 'down')!
+    applySent()
+
+    // The inner group's sibling is the outer one, which main lacks until its own first tab.
+    openFile('/b.ts', { targetGroupId: inner })
+    applySent()
+    store.getState().closeEmptyGroup(WT, outer)
+    expect(mainView()).toEqual(windowView())
+    const again = store.getState().createEmptySplitGroup(WT, inner, 'up')!
+    openFile('/c.ts', { targetGroupId: again })
+    applySent()
+    expect(mainView()).toEqual(windowView())
   })
 
   it('sends no split for a tab that joins a group holding others, or the only group', () => {
@@ -210,7 +279,7 @@ describe('open to the side in a layout-owner build', () => {
 })
 
 describe('newGroupSplitOf', () => {
-  it('finds no split beside a sibling that is itself split, so main gets none', () => {
+  it('names a sibling that is itself split by its first and last groups', () => {
     const group = (id: string, tabOrder: string[]) => ({
       id,
       worktreeId: WT,
@@ -234,6 +303,8 @@ describe('newGroupSplitOf', () => {
       }
     }
 
-    expect(newGroupSplitOf(state, WT, 'N', 'n')).toBeNull()
+    expect(newGroupSplitOf(state, WT, 'N', 'n')).toEqual({
+      split: { besideGroupId: 'A', besideLastGroupId: 'M', direction: 'right' }
+    })
   })
 })

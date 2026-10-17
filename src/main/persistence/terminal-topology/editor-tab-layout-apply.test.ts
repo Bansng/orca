@@ -84,6 +84,37 @@ describe.each([
     expect(session.openFilesByWorktree?.[worktreeId] ?? []).toEqual([])
     expect(session.tabsByWorktree[worktreeId]?.map((tab) => tab.id)).toEqual([TAB])
   })
+
+  it('saves an open file renamed on disk under its new id and path durably', async () => {
+    const { store, directory } = await storeWithTerminal(worktreeId)
+    await store.applyLayoutCommand({ ...editorOpen(worktreeId, 'e1', '/a.ts'), preview: undefined })
+
+    await expect(
+      store.applyLayoutCommand({
+        type: 'renameEditorFiles',
+        workspace: worktreeId,
+        renames: [
+          {
+            fileId: '/a.ts',
+            newFileId: '/src/b.ts',
+            record: {
+              fromFilePath: '/a.ts',
+              file: { filePath: '/src/b.ts', relativePath: 'src/b.ts', language: 'typescript' }
+            }
+          }
+        ]
+      })
+    ).resolves.toEqual({ ok: true, result: { renamedTabIds: {} } })
+
+    const session = (await reopenTopologyStore(store, directory)).getWorkspaceSession()
+    expect(session.tabGroups?.[worktreeId]?.[0]?.tabOrder).toEqual([TAB, 'e1'])
+    expect(session.unifiedTabs?.[worktreeId]?.find((tab) => tab.id === 'e1')).toMatchObject({
+      entityId: '/src/b.ts'
+    })
+    expect(session.openFilesByWorktree?.[worktreeId]).toEqual([
+      expect.objectContaining({ filePath: '/src/b.ts', relativePath: 'src/b.ts' })
+    ])
+  })
 })
 
 describe('Store.applyLayoutCommand moveTabToWorkspace', () => {

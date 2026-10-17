@@ -74,7 +74,7 @@ export const TERMINAL_HANDLERS: Record<string, CommandHandler> = {
         includeVisualLayouts: !json || flags.has('include-visual-layouts')
       }
     )
-    await annotateOmittedHostScope(client, result.result)
+    await annotateOmittedHostScope(result.result)
     printResult(result, json, formatTerminalList)
   },
   'terminal show': async ({ flags, client, cwd, json }) => {
