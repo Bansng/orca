@@ -232,6 +232,7 @@ it('pins every foreground and background step to its selected phase', () => {
       './.github/actions/install-mobile-dependencies',
       `${staticPhase} && needs.code_paths.outputs.mobile_dependencies == 'true'`
     ],
+    ['Verify locked audit tools', staticPhase],
     ['Enforce React Doctor on changed lines', staticPhase],
     ['Check Zustand selector fan-out budget', staticPhase],
     ['Check reliability gate manifest', staticPhase],
@@ -243,6 +244,10 @@ it('pins every foreground and background step to its selected phase', () => {
     ['Enforce focus-read ratchet', staticPhase],
     ['Enforce layout-writer ratchets', staticPhase],
     ['Enforce deprecated runtime-owner importer ratchet', staticPhase],
+    ['Enforce path-literal ratchet', staticPhase],
+    ['Enforce worktree-id composer ratchet', staticPhase],
+    ['Enforce e2e typecheck ratchet', staticPhase],
+    ['Enforce legacy relay fence ratchet', staticPhase],
     ['Check Node runtime pin', staticPhase],
     ['Decide whether the orcad terminal smoke runs', staticPhase],
     ['Verify the generated RPC params catalog', staticPhase],

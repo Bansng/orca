@@ -23,6 +23,17 @@ import type {
  * rather than freeze one.
  */
 
+/** orcad has no SSH stack yet still advertises ssh.target-management.v1 (D3), so clients show this. */
+export const SSH_TARGET_MANAGEMENT_UNSERVED_MESSAGE =
+  "This Orca server runs without the desktop app, so it can't manage SSH hosts yet."
+
+export class SshTargetManagementUnservedError extends Error {
+  constructor() {
+    super(SSH_TARGET_MANAGEMENT_UNSERVED_MESSAGE)
+    this.name = 'SshTargetManagementUnservedError'
+  }
+}
+
 let sshStore: SshConnectionStore | null = null
 type ConnectSshTarget = (
   targetId: string,
@@ -56,7 +67,7 @@ export async function connectRegisteredSshTarget(
   if (!registeredConnectSshTarget) {
     // Why this still throws: a headless host that never registered handlers must fail
     // loudly rather than report a target as unreachable, which would read as `exited`.
-    throw new Error('ssh_handlers_not_registered')
+    throw new SshTargetManagementUnservedError()
   }
   return registeredConnectSshTarget(targetId, options)
 }
@@ -90,7 +101,7 @@ export function setSshTargetMutations(mutations: SshTargetMutations | null): voi
 
 export function getRegisteredSshTargetMutations(): SshTargetMutations {
   if (!registeredSshTargetMutations) {
-    throw new Error('ssh_handlers_not_registered')
+    throw new SshTargetManagementUnservedError()
   }
   return registeredSshTargetMutations
 }

@@ -8,7 +8,11 @@ import { resolveHostRouteActionState } from '../host-route-action-state'
 import { useActiveWorktreeScroll } from '../hooks/use-active-worktree-scroll'
 import { useNow } from '../hooks/use-now'
 import { useResponsiveLayout } from '../layout/responsive-layout'
-import { useForgetHostClient, useForceReconnect, useHostClient } from '../transport/client-context'
+import {
+  useForgetHostClient,
+  useForceReconnect,
+  useHostClient
+} from '../transport/host-client-hooks'
 import {
   useLastConnectedAt,
   useReconnectAttempt,

@@ -1,6 +1,7 @@
 import type { SshConnectionManager } from './ssh-connection-manager'
 import type { SshExecOptions } from './ssh-connection-utils'
-import { powerShellCommand, powerShellLiteral } from './ssh-remote-powershell'
+import { powerShellCommand } from './ssh-remote-powershell'
+import { quotePowerShellLiteral as powerShellLiteral } from '../../shared/powershell-native-argument'
 import type { FilesystemPathFlavor } from '../../shared/filesystem-entry-types'
 import { sortDirEntries } from '../../shared/file-name-sort'
 import { buildPosixStdoutFence } from '../../shared/posix-stdout-fence'

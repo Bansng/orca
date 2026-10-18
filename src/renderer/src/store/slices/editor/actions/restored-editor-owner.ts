@@ -48,7 +48,7 @@ export function createRestoredEditorOwner(
         set((state) => projectReparent(state).patch)
       }
       if (ORCA_LAYOUT_OWNER_IS_MAIN && before && initialSource) {
-        recordRestoredEditorMoveInLayoutOwner(before, get(), initialSource.worktreeId, result)
+        recordRestoredEditorMoveInLayoutOwner(before, get(), initialSource, result)
       }
       return result
     }

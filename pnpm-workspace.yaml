@@ -106,18 +106,20 @@ allowBuilds:
   '@swc/core': false
   '@vscode/windows-process-tree': false
   agent-browser: false
+  bun: true
   cpu-features: true
   electron-winstaller: false
   esbuild: true
   msw: false
   node-pty: true
-  sherpa-onnx: true
   ssh2: false
   '@orca/windows-registry': false
   '@orca/windows-security': false
 
 overrides:
   monaco-editor>dompurify: 3.4.16
+  # Upstream markdown/math packages still require the vulnerable 0.16 line.
+  katex@>=0.11.0 <0.18.2: 0.18.10
 
 patchedDependencies:
   '@xterm/addon-image@0.10.0-beta.301': config/patches/@xterm__addon-image@0.10.0-beta.301.patch

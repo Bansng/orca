@@ -50,7 +50,7 @@ export class RuntimeSkillCommands
   }
   private requireCloud(): SkillCloudService {
     if (!this.skillCloudService) {
-      throw new Error('Skill Cloud service is unavailable.')
+      throw new Error("Skill sharing isn't available on this Orca server.")
     }
     return this.skillCloudService
   }

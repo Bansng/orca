@@ -14,7 +14,7 @@ import {
   stageRemoteOrcadMigrationCatalog,
   stageRemoteOrcadMigrationSnapshotChunk
 } from './orcad-migration-catalog-client'
-import { censusHostRelayTerminalsFor } from './ssh-host-relay-census-for-target'
+import { censusHostRelayTerminalsFor } from './legacy-relay/ssh-host-relay-census-for-target'
 import type { OrcadManagedConversionArgs } from './orcad-runtime-conversion'
 import type { OrcadServerRepository } from './orcad-migration-repository-link'
 import {

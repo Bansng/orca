@@ -8,10 +8,10 @@ import {
   requiredMigrationBlobCapabilities,
   type OrcadMigrationBlobDescriptor
 } from '../../shared/orcad-migration-blob-transfer'
-import {
-  ORCAD_MIGRATION_MANIFEST_VERSION,
-  type OrcadMigrationCatalogState,
-  type OrcadMigrationManifest
+import { ORCAD_MIGRATION_MANIFEST_VERSION } from '../../shared/orcad-migration-manifest-validation'
+import type {
+  OrcadMigrationCatalogState,
+  OrcadMigrationManifest
 } from '../../shared/orcad-migration-manifest'
 import { ORCAD_MIGRATION_BLOB_CHANNEL_RUNTIME_CAPABILITY } from '../../shared/orcad-runtime-capabilities'
 import {

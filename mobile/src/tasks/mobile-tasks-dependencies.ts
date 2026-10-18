@@ -55,7 +55,7 @@ export {
 } from 'lucide-react-native'
 export type { RpcClient } from '../transport/rpc-client'
 export type { RpcSuccess } from '../transport/types'
-export { useHostClient } from '../transport/client-context'
+export { useHostClient } from '../transport/host-client-hooks'
 export {
   useLastConnectedAt,
   useRelayRecoveryStatus,

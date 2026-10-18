@@ -137,6 +137,7 @@ export function bindCaptureTransportOutputCallbacks(session: ConnectPanePtySessi
   // Latest hidden-drop episode main reported, and the one a banner already disclosed:
   // main's drop latch outlives unhide, so an unservable gap re-marks on every reveal.
   session.hiddenOutputRestoreLatestDropEpisode = null
+  session.hiddenOutputRestoreUnhideSeq = null
   session.hiddenOutputRestoreDisclosedGap = null
   session.hiddenOutputSnapshotScrollRestore = null
   // Why: hidden recovery state belongs to one PTY stream. Reattach/restart

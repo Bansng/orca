@@ -3,14 +3,14 @@ import {
   parseOrcadActivationTransaction,
   planOrcadTransactionRecovery,
   serializeOrcadActivationTransaction
-} from './orcad-activation-transaction'
+} from '../managed-server/activation/orcad-activation-transaction'
 import {
   committedOrcadDecommissionRecord,
   createOrcadDecommissionTransaction,
   withOrcadDecommissionProcessExited,
   withOrcadDecommissionStopDispatched
 } from './orcad-decommission-transaction'
-import { FakeOrcadHost, NEW } from './orcad-activation-host-test-harness'
+import { FakeOrcadHost, NEW } from '../managed-server/activation/orcad-activation-host-test-harness'
 import type { OrcadManagedStopRequest } from '../../shared/orcad-stop-request'
 
 const T = new Date('2026-02-02T00:00:00.000Z')

@@ -684,7 +684,7 @@ describe('addHostSectionRows', () => {
     })
   })
 
-  it('passes host kind and blocked compatibility through to the header row', () => {
+  it('passes host kind, blocked compatibility and reason through to the header row', () => {
     const localOwned: Repo = { ...repo('local-project'), executionHostId: 'local' }
     const project = repo('runtime-project')
     const rows = [
@@ -716,7 +716,8 @@ describe('addHostSectionRows', () => {
             clientProtocolVersion: 5,
             serverProtocolVersion: 1,
             requiredServerProtocolVersion: 4
-          }
+          },
+          blockedReason: 'incompatible'
         }
       ],
       workspaceHostScope: 'all',
@@ -728,7 +729,8 @@ describe('addHostSectionRows', () => {
     ).toMatchObject({
       kind: 'runtime',
       health: 'blocked',
-      compatibility: { kind: 'blocked', reason: 'server-too-old' }
+      compatibility: { kind: 'blocked', reason: 'server-too-old' },
+      blockedReason: 'incompatible'
     })
   })
 

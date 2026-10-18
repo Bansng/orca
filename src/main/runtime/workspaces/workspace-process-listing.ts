@@ -4,6 +4,7 @@ import { collectRuntimeWorktreeAgentSources } from '../runtime-worktree-agent-so
 import { OrcaRuntimeWithWorktreePsDependencies } from './workspace-process-listing-dependencies'
 import { DEFAULT_WORKTREE_PS_LIMIT } from '../orca-runtime-postlude'
 import type { RuntimeWorktreePsResult } from '../../../shared/runtime-types'
+import type { ResolvedWorktreeSnapshot } from '../runtime-resolved-worktree-cache'
 import { buildRuntimeWorktreePsSummaries } from '../runtime-worktree-ps-summaries'
 import {
   buildRuntimeWorktreeSummaryPathIndex,
@@ -66,29 +67,12 @@ export abstract class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithWorktr
     if (!Number.isInteger(limit) || limit <= 0) {
       throw new Error('invalid_limit')
     }
-    const resolvedWorktreeSnapshot = await this.listResolvedWorktreeSnapshot()
-    const visibilitySettings = this.store?.getSettings()
-    const visibilitySourceMatchersByRepoId = this.buildRuntimeVisibilitySourceMatchersByRepoId(
-      resolvedWorktreeSnapshot.worktrees,
-      sourceDefaultsSupported,
-      visibilitySettings
+    const { worktrees: resolvedWorktrees, platformByRepoId } = this.visibleResolvedWorktreeSnapshot(
+      await this.listResolvedWorktreeSnapshot(),
+      sourceDefaultsSupported
     )
-    const hiddenRepos = runtimeHiddenRepos(this.store)
-    const resolvedWorktrees = resolvedWorktreeSnapshot.worktrees.filter(
-      (worktree) =>
-        !hiddenRepos.hasWorktree(worktree) &&
-        this.isRuntimeWorktreeVisible(
-          worktree,
-          visibilitySourceMatchersByRepoId.get(worktree.repoId),
-          sourceDefaultsSupported,
-          visibilitySettings
-        )
-    )
-    // Why: worktree.ps backs the mobile sidebar, so it must use the same
-    // host-owned imported-worktree visibility gate as worktree.list/desktop.
     const freshPtyLiveness = await this.refreshPtyWorktreeRecordsFromController(resolvedWorktrees)
     const repoById = new Map((this.store?.getRepos() ?? []).map((repo) => [repo.id, repo]))
-    const platformByRepoId = resolvedWorktreeSnapshot.platformByRepoId
     const summaries = buildRuntimeWorktreePsSummaries({
       store: this.store,
       resolvedWorktrees,
@@ -151,6 +135,34 @@ export abstract class OrcaRuntimeWithGetWorktreePs extends OrcaRuntimeWithWorktr
       limit,
       withoutHiddenHosts(this.listKnownExecutionHostIds(), runtimeHiddenHostIds(this.store))
     )
+  }
+
+  /** A resolved listing as clients see it: no hidden repo, and imported worktrees only where the
+   *  desktop shows them, through the same visibility gate as worktree.list. */
+  protected visibleResolvedWorktreeSnapshot(
+    snapshot: ResolvedWorktreeSnapshot,
+    sourceDefaultsSupported = true
+  ): ResolvedWorktreeSnapshot {
+    const visibilitySettings = this.store?.getSettings()
+    const visibilitySourceMatchersByRepoId = this.buildRuntimeVisibilitySourceMatchersByRepoId(
+      snapshot.worktrees,
+      sourceDefaultsSupported,
+      visibilitySettings
+    )
+    const hiddenRepos = runtimeHiddenRepos(this.store)
+    return {
+      ...snapshot,
+      worktrees: snapshot.worktrees.filter(
+        (worktree) =>
+          !hiddenRepos.hasWorktree(worktree) &&
+          this.isRuntimeWorktreeVisible(
+            worktree,
+            visibilitySourceMatchersByRepoId.get(worktree.repoId),
+            sourceDefaultsSupported,
+            visibilitySettings
+          )
+      )
+    }
   }
 
   /** The agent's configured env, with the account a desktop that owns this host's accounts chose

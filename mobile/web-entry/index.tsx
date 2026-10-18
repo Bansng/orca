@@ -3,6 +3,7 @@
 import { useEffect, type PropsWithChildren } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ExpoRoot } from 'expo-router'
+import { colors } from '../src/theme/mobile-theme'
 import type { BridgeRpcClient } from '../src/mobile-web-shell/bridge/bridge-rpc-client'
 import {
   bootstrapShellPage,
@@ -94,6 +95,8 @@ if (!container) {
   throw new Error('[orca-mobile-web-app] #root missing')
 }
 const target = document.documentElement
+target.style.setProperty('--muted-foreground', colors.textMuted)
+target.style.setProperty('--foreground', colors.textPrimary)
 stampPageMountState(target, 'started')
 
 bootstrapShellPage({

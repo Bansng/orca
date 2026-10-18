@@ -6,7 +6,7 @@ import { toRuntimeExecutionHostId, type ExecutionHostId } from '../../shared/exe
 import {
   forgetRemoteLayoutSnapshot,
   type RemoteLayoutSnapshotStore
-} from '../remote-layout-snapshot'
+} from '../remote-layout-snapshot/remote-layout-snapshot-recorder'
 
 /** What a removed server leaves in the profile. */
 export type RemovedServerStore = RemoteLayoutSnapshotStore & {

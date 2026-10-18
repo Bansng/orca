@@ -15,25 +15,6 @@ import type {
 } from './orcad-migration-scrollback'
 import type { OrcadMigrationBlobUploadState } from './orcad-migration-blob-transfer'
 
-export {
-  MAX_ORCAD_MIGRATION_FOLDER_WORKSPACES,
-  MAX_ORCAD_MIGRATION_IMPORT_RECEIPTS,
-  MAX_ORCAD_MIGRATION_MANIFEST_BYTES,
-  MAX_ORCAD_MIGRATION_PROJECT_GROUPS,
-  MAX_ORCAD_MIGRATION_REPOSITORIES,
-  normalizeOrcadMigrationImportReceipts,
-  ORCAD_MIGRATION_MANIFEST_VERSION,
-  parseOrcadMigrationManifest
-} from './orcad-migration-manifest-validation'
-export {
-  MAX_ORCAD_MIGRATION_DORMANT_NAMESPACES,
-  MAX_ORCAD_MIGRATION_DORMANT_ROWS,
-  ORCAD_MIGRATION_DORMANT_STATE_VERSION
-} from './orcad-migration-dormant-state-validation'
-export {
-  MAX_ORCAD_MIGRATION_STAGED_CATALOGS,
-  normalizeOrcadMigrationStagedCatalogs
-} from './orcad-migration-staged-catalog-validation'
 import { isRecord } from './orcad-migration-manifest-fields'
 
 /** The relay-era SSH source: on the wire it never carries `kind` (see orcad-migration-source-kind). */

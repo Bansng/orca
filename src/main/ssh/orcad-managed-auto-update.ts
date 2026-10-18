@@ -5,7 +5,7 @@
  * terminals, and a rejected candidate is restored through the activation journal, so the old
  * version keeps serving. A host a newer Orca activated is never downgraded.
  */
-import type { OrcadActivationRecord } from './orcad-activation-record'
+import type { OrcadActivationRecord } from '../managed-server/activation/orcad-activation-record'
 import {
   refuseOrcadHostDowngrade,
   type OrcadHostVersionRefusal
@@ -16,11 +16,11 @@ import {
   OrcadHostUnsupportedError
 } from '../orcad/orcad-host-unavailable'
 import { findIncompleteManagedOrcadMigration } from './orcad-managed-migration-status'
-import { ORCAD_ACTIVATION_FENCE_BUSY_CODE } from './orcad-activation-fence-hold'
+import { ORCAD_ACTIVATION_FENCE_BUSY_CODE } from '../managed-server/activation/orcad-activation-fence-hold'
 import { resolveLinkedOrcadContext } from './orcad-managed-runtime-context'
 import { runManagedOrcadUpdate, withManagedOrcadLifecycle } from './orcad-runtime-maintenance'
 import type { OrcadUpdateDeferCode } from './orcad-update-plan'
-import { readLocalFullVersion } from './remote-versioned-install'
+import { readLocalFullVersion } from '../managed-server/install/remote-versioned-install'
 
 export type ManagedOrcadAutoUpdateSkip =
   | 'current'
@@ -95,7 +95,8 @@ export function autoUpdateManagedOrcadEnvironment(
   args: {
     environmentId: string
     appVersion: string
-    failedBefore: boolean
+    /** Read under the host's lifecycle lock, so overlapping checks see an earlier attempt's result. */
+    failedBefore: () => boolean
     onUpdating: () => void
   }
 ): Promise<ManagedOrcadAutoUpdateOutcome> {
@@ -110,7 +111,7 @@ export function autoUpdateManagedOrcadEnvironment(
       record: context.activationRecord,
       candidateVersion,
       appVersion: args.appVersion,
-      failedBefore: args.failedBefore
+      failedBefore: args.failedBefore()
     })
     if (plan.action === 'skip') {
       return { outcome: 'skipped', reason: plan.reason }

@@ -15,7 +15,7 @@ import { browserNetworkExecutionHostKey } from '../../browser/browser-network-ex
 import type { ClientHostedBrowserRpcRoute } from '../runtime-browser-client-automation'
 import { routeRuntimeBrowserClientAutomation } from '../runtime-browser-client-automation'
 import { getRuntimeBrowserPageRegistry } from '../runtime-browser-page-registry'
-import { getBrowserHostLeaseRegistry } from '../browser-host-lease-registry-instance'
+import { getBrowserHostLeaseRegistry } from '../browser-host/browser-host-lease-registry-instance'
 import {
   routeDesktopBrowserBridgeRpc,
   type DesktopBrowserBridgeRoute

@@ -1,11 +1,11 @@
 import { OrcaRuntimeWithWorktreeSleepResumeRecording } from './worktree-sleep-resume-recording'
-import type { ResolvedWorktree } from '../../runtime-worktree-path-identity'
-import type { RuntimeWorktreeTerminalSleepResult } from '../../../../shared/runtime-types'
-import { WORKTREE_TERMINAL_SLEEP_TIMEOUT_MS } from '../../orca-runtime-postlude'
 import {
   includeTargetResolvedWorktree,
-  runtimeWorktreeIdentityKey
+  type ResolvedWorktree
 } from '../../runtime-worktree-path-identity'
+import { worktreeIdentityKey } from '../../../../shared/worktree/id'
+import type { RuntimeWorktreeTerminalSleepResult } from '../../../../shared/runtime-types'
+import { WORKTREE_TERMINAL_SLEEP_TIMEOUT_MS } from '../../orca-runtime-postlude'
 import { teardownRpcDeadline } from '../../worktree-teardown'
 
 export abstract class OrcaRuntimeWithSleepResolvedWorktreeTerminals extends OrcaRuntimeWithWorktreeSleepResumeRecording {
@@ -18,7 +18,7 @@ export abstract class OrcaRuntimeWithSleepResolvedWorktreeTerminals extends Orca
       'exclusive',
       sleepDeadline
     )
-    const key = runtimeWorktreeIdentityKey(worktree.id)
+    const key = worktreeIdentityKey(worktree.id)
     const existingSleepState = this.terminalSleepStateByWorktreeId.get(key)
     if (existingSleepState?.phase === 'sleeping') {
       try {

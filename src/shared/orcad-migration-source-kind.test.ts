@@ -4,7 +4,7 @@ import {
   ORCAD_MIGRATION_MANIFEST_VERSION,
   normalizeOrcadMigrationImportReceipts,
   parseOrcadMigrationManifest
-} from './orcad-migration-manifest'
+} from './orcad-migration-manifest-validation'
 import {
   ORCAD_MIGRATION_SOURCE_KIND_UNKNOWN,
   orcadMigrationManifestSourceKind,

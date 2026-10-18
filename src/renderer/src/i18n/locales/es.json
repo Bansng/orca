@@ -387,7 +387,8 @@
         "loopbackPairingBlocked": "Este enlace de acceso apunta de nuevo a este dispositivo.",
         "remotePairingUnreachable": "No se puede acceder a Orca en {{endpoint}}.",
         "remotePairingInvalidDetails": "Este enlace de acceso contiene datos de conexión no válidos.",
-        "remotePairingSaveFailed": "Orca verificó al anfitrión, pero no pudo guardarlo. Compruebe el almacenamiento del navegador e inténtelo de nuevo."
+        "remotePairingSaveFailed": "Orca verificó al anfitrión, pero no pudo guardarlo. Compruebe el almacenamiento del navegador e inténtelo de nuevo.",
+        "remotePairingRepairUnavailable": "Re-pairing is not available in the browser. Pair this browser with the server again."
       },
       "web": {
         "preload": {
@@ -4201,7 +4202,14 @@
             "runtime_unavailable_explanation": "Es posible que el host remoto todavía esté ejecutándose; sólo la conexión en tiempo de ejecución de Orca no está disponible.",
             "contact_note": "Es posible que el host todavía esté ejecutándose; sólo la conexión Orca no está disponible.",
             "last_connected": "Última conexión {{value0}}",
-            "reconnect_attempt": "Intento {{value0}}"
+            "reconnect_attempt": "Intento {{value0}}",
+            "access_revoked": "Access revoked",
+            "access_revoked_summary": "This server revoked access for this computer",
+            "access_revoked_explanation": "Re-pair with a new pairing link from the server to reconnect.",
+            "update_required": "Update required",
+            "update_required_summary": "Orca versions are not compatible",
+            "update_required_explanation": "Update Orca on this computer or on the server, then connect again.",
+            "repair": "Re-pair…"
           },
           "provider": {
             "extra": {
@@ -5418,6 +5426,12 @@
           "00c4235c10": "No hay coincidencias para '{{value0}}'",
           "largeInputNoMatches": "No hay coincidencias para esta entrada larga"
         },
+        "SleepTwinWorkspaceDialog": {
+          "title": "Sleep Workspace",
+          "alsoSleeps": "Also sleeps the copy on {{hosts}}",
+          "cancel": "Cancel",
+          "confirm": "Sleep"
+        },
         "RemoveFolderDialog": {
           "4dc5b5065b": "Quitar",
           "d36883e046": "Cancelar",
@@ -5860,7 +5874,8 @@
           "sidebarRowMissing": "El destino ya no existe",
           "failedUnnestWorkspace": "Error al expandir el espacio de trabajo",
           "groupRenameFailed": "No se pudo cambiar el nombre del grupo",
-          "groupRenameFailedDesc": "Orca no pudo confirmar el nuevo nombre con el anfitrión del grupo. Vuelva a verificar el grupo después de volver a conectarse."
+          "groupRenameFailedDesc": "Orca no pudo confirmar el nuevo nombre con el anfitrión del grupo. Vuelva a verificar el grupo después de volver a conectarse.",
+          "hostRepairRequired": "Re-pair required"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancelar",
@@ -6077,6 +6092,9 @@
               "legacy": {
                 "unverified": "The older host runtime could not confirm terminal shutdown. The workspace was kept open; update the host and try again."
               },
+              "twin": {
+                "unattributed": "Orca couldn't tell which host runs this workspace's terminals, so the workspace was kept open. Reconnect its hosts and try again."
+              },
               "host": {
                 "unverified": "The host could not confirm terminal shutdown. The workspace was kept open; check the connection and try again."
               },
@@ -6281,7 +6299,8 @@
           "59b553e2aa": "Desconectar",
           "2d3e4f5a6b": "Verificar conexión",
           "3c4d5e6f7a": "Administrar host…",
-          "6e7f8a9b0c": "Quitar host…"
+          "6e7f8a9b0c": "Quitar host…",
+          "repair": "Re-pair…"
         },
         "WorkspaceKanbanDrawer": {
           "1975a4e480": "Falló la sincronización del estado de la tarea",
@@ -6292,6 +6311,7 @@
           "f4a5b6c7d8": "No se pudo actualizar el issue {{value0}} de Linear.",
           "a5b6c7d8e9": "No se pudo sincronizar el issue {{value0}} de Linear.",
           "b6c7d8e9f0": "No se pudo completar la sincronización del estado de la tarea.",
+          "f0a1b2c3d4": "Se omitió la incidencia de Linear {{value0}}: este espacio de trabajo está en más de un host.",
           "c7d8e9f0a1": "{{value0}} actualizado",
           "d8e9f0a1b2": "{{value0}} omitido",
           "e9f0a1b2c3": "{{value0}} falló"
@@ -8373,7 +8393,11 @@
           "serverWorkspaceWindowClosed": "Ventana del espacio de trabajo cerrada",
           "serverRuntimeUnavailable": "Orca no disponible",
           "serverRuntimeUnavailableDescription": "El transporte SSH está conectado, pero el tiempo de ejecución de Orca no respondió. Es posible que el host todavía esté ejecutándose.",
-          "serverReconnecting": "Reconectando"
+          "serverReconnecting": "Reconectando",
+          "accessRevoked": "{{value0}} no longer accepts this computer. Re-pair it with a new access link.",
+          "repair": "Re-pair…",
+          "serverAccessRevoked": "Access revoked",
+          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)"
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "Copiar {{value0}}"
@@ -12064,7 +12088,9 @@
           "networkConnection": "Conexión de red",
           "notAttempted": "No se intentó",
           "saveFailed": "No se pudo guardar el host",
-          "saveFailedHelp": "El anfitrión fue verificado, pero Orca no pudo salvarlo. Verifique el nombre y el almacenamiento de la configuración local y vuelva a intentarlo."
+          "saveFailedHelp": "El anfitrión fue verificado, pero Orca no pudo salvarlo. Verifique el nombre y el almacenamiento de la configuración local y vuelva a intentarlo.",
+          "differentServer": "This link is for a different server",
+          "differentServerHelp": "This pairing link is for a different server. Create the link on the server you are re-pairing."
         },
         "CloudVmSetupGuide": {
           "title": "Crear una VM en la nube",
@@ -12634,6 +12660,13 @@
           "remove": "Quitar",
           "turnOn": "Activar en Experimental",
           "forceUpdate": "Forzar actualización"
+        },
+        "RuntimeRepairDialog": {
+          "title": "Re-pair {{name}}",
+          "description": "{{name}} no longer accepts this computer. On {{name}}, open Settings → Remote Orca Servers → Share this host, create a link for another Orca client, then paste it here.",
+          "submit": "Re-pair",
+          "success": "Re-paired with {{name}}",
+          "failed": "Re-pair failed"
         }
       },
       "right": {
@@ -18196,6 +18229,8 @@
         "removeImagesToSend": "No se pudieron recuperar algunas imágenes. Quítalas para enviar.",
         "imageAttachAgainLabel": "Adjuntar de nuevo",
         "pastedImageNotKeptLabel": "No se conservó",
+        "imageNumber": "Imagen #{{number}}",
+        "imageReferenceMissing": "Imagen quitada",
         "imagePasteFailed": "Error al pegar imagen.",
         "worktreeNotReady": "Worktree no está listo — intenta de nuevo en un momento.",
         "pasteUnavailable": "No se puede pegar — este chat no acepta entradas en este momento.",
@@ -19177,7 +19212,6 @@
       "cancel": "Cancelar instalación",
       "cancelled": "Instalación cancelada.",
       "cancelling": "Cancelando…",
-      "chatTitle": "Instala {{agent}} para empezar a chatear.",
       "damaged": "Esta copia de {{agent}} está dañada.",
       "downloadSize": "Descarga de {{size}} MB.",
       "downloading": "Descargando {{done}} MB.",
@@ -19196,7 +19230,28 @@
       "retry": "Reintentar instalación",
       "unavailable": "{{agent}} no está disponible en este host.",
       "update": "Actualizar {{agent}}",
-      "verifying": "Comprobando el entorno descargado."
+      "verifying": "Comprobando el entorno descargado.",
+      "installTitle": "Instala {{agent}} para empezar a chatear",
+      "continueTitle": "Instala {{agent}} para continuar",
+      "heroBody": "Descarga única de {{size}} MB. La comparten los chats de {{agent}} en el equipo que ejecuta este chat.",
+      "heroBodyNoSize": "Descarga única. La comparten los chats de {{agent}} en el equipo que ejecuta este chat.",
+      "stripSize": "Descarga de {{size}} MB en el equipo que ejecuta este chat",
+      "settingsHint": "También en Ajustes › Chat › Proveedores",
+      "installShort": "Instalar",
+      "tryAgain": "Reintentar",
+      "cancelShort": "Cancelar",
+      "failedTitle": "No se pudo instalar {{agent}}",
+      "cancelledTitle": "Instalación cancelada",
+      "cancelledBody": "No se instaló nada.",
+      "downloadingTitle": "Descargando {{agent}}",
+      "unpackingTitle": "Descomprimiendo {{agent}}",
+      "checkingTitle": "Comprobando la descarga",
+      "progressOf": "{{done}} de {{total}} MB",
+      "unpackingDetail": "Descomprimiendo el entorno de ejecución",
+      "checkingDetail": "Comprobando el entorno de ejecución descargado",
+      "stepDownload": "Descargar",
+      "stepUnpack": "Descomprimir",
+      "stepCheck": "Comprobar"
     }
   },
   "dashboardPopout": {

@@ -1,3 +1,4 @@
+import { ProducerRevision } from './producer-revision'
 import {
   AGENT_STATUS_STALE_AFTER_MS,
   isFreshNonDoneAgentStatus,
@@ -43,8 +44,7 @@ export class WorkspaceActivityFactsProducer {
   private readonly agentPanes = new Map<string, AgentPane>()
   private readonly agentPanesByWorktree = new Map<string, Map<string, AgentPane>>()
   private agentStore: AgentStatusStoreView | null = null
-  private readonly changeListeners = new Set<() => void>()
-  private revision = 0
+  readonly revision = new ProducerRevision()
   private expiryAt = Infinity
 
   constructor(
@@ -55,14 +55,8 @@ export class WorkspaceActivityFactsProducer {
     }
   ) {}
 
-  /** Told after every new revision. */
-  onChange(listener: () => void): () => void {
-    this.changeListeners.add(listener)
-    return () => this.changeListeners.delete(listener)
-  }
-
   snapshot(): WorkspaceActivityFactsSnapshot {
-    return { revision: this.revision, facts: Object.fromEntries(this.facts) }
+    return { revision: this.revision.value, facts: Object.fromEntries(this.facts) }
   }
 
   /** Re-reads the workspace's surfaces; the runtime calls this per publication. */
@@ -195,10 +189,7 @@ export class WorkspaceActivityFactsProducer {
       }
       this.facts.set(worktreeId, next)
     }
-    this.revision += 1
-    for (const listener of this.changeListeners) {
-      listener()
-    }
+    this.revision.bump()
   }
 
   // One deadline for the earliest lease; a renewed lease only moves later, so an early fire re-arms.

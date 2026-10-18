@@ -27,10 +27,10 @@ import {
   mergeFolderWorkspaceUpdateResponse
 } from './folder-workspace-routing'
 import {
-  getFolderWorkspaceHostId,
   getFolderWorkspaceUpdateIdentity,
   reconcileFailedFolderWorkspaceUpdate
 } from './folder-workspace-catalog'
+import { getFolderWorkspaceHostId } from '../../../../shared/folder-workspace-execution-host'
 import {
   captureWorkspaceChatDraftKeys,
   deleteWorkspaceChatDrafts

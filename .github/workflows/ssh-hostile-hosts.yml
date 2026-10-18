@@ -9,16 +9,16 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
     paths:
-      # The managed deploy still runs on these relay-named install and runtime primitives.
-      - 'src/main/ssh/ssh-relay-*'
+      # The managed deploy runs on these remote install and runtime primitives.
+      - 'src/main/ssh/remote-*'
       - 'src/main/ssh/*runtime*'
       - 'src/main/ssh/orcad-*'
+      - 'src/main/managed-server/**'
       - 'src/main/orcad/orcad-artifact-materializer.ts'
       - 'src/main/orcad/orcad-host-unavailable.ts'
       - 'src/main/node-runtime/**'
-      - 'src/main/ssh/remote-install-*'
       - 'src/main/ssh/ssh-remote-*'
-      - 'src/main/ssh/ssh-hostile-host-*'
+      - 'src/main/ssh/hostile-host-test-support/**'
       - 'src/main/ssh/sftp-*'
       - 'src/shared/node-runtime-pin.ts'
       - 'src/shared/orcad-artifacts.ts'
@@ -26,14 +26,16 @@ on:
       - 'config/scripts/orcad-prebuild-*.mjs'
       - 'config/scripts/verify-packaged-orcad-template.cjs'
       - 'config/patches/node-pty*'
+      # The deploy runs over this SSH transport.
+      - 'src/main/ssh/ssh-connection*'
       - '!src/**/*.test.ts'
-      - 'src/main/ssh/ssh-hostile-hosts.docker.test.ts'
+      - 'src/main/ssh/hostile-host-test-support/ssh-hostile-hosts.docker.test.ts'
       - '.github/workflows/ssh-hostile-hosts.yml'
       - '.github/actions/restore-pnpm-verification/**'
   workflow_dispatch:
     inputs:
       cells:
-        description: Comma-separated Docker cell ids from src/main/ssh/ssh-hostile-host-cells.ts; empty runs all. macOS cells always run on their own runners.
+        description: Comma-separated Docker cell ids from src/main/ssh/hostile-host-test-support/ssh-hostile-host-cells.ts; empty runs all. macOS cells always run on their own runners.
         required: false
         default: ''
 
@@ -201,7 +203,7 @@ jobs:
         env:
           ORCA_RUN_SSH_HOSTILE_HOSTS: '1'
           ORCA_SSH_HOSTILE_HOST_CELLS: ${{ github.event.inputs.cells || '' }}
-        run: pnpm test:node src/main/ssh/ssh-hostile-hosts.docker.test.ts
+        run: pnpm test:node src/main/ssh/hostile-host-test-support/ssh-hostile-hosts.docker.test.ts
 
   # macOS: the runner is the SSH host. A user-level sshd on a loopback port logs in
   # as the runner user with PATH cut to the toolchain shims and /usr/bin:/bin, so Homebrew's node
@@ -240,4 +242,4 @@ jobs:
         env:
           ORCA_RUN_SSH_HOSTILE_HOSTS: '1'
           ORCA_SSH_HOSTILE_HOST_CELLS: ${{ matrix.cell }}
-        run: pnpm test:node src/main/ssh/ssh-hostile-hosts.docker.test.ts
+        run: pnpm test:node src/main/ssh/hostile-host-test-support/ssh-hostile-hosts.docker.test.ts

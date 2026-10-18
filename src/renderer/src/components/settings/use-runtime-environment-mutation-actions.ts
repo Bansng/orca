@@ -5,7 +5,7 @@ import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { PublicKnownRuntimeEnvironment } from '../../../../shared/runtime-environments'
 import type { RuntimeStatus } from '../../../../shared/runtime-types'
 import { isRuntimeEnvironmentRemovalBlocked } from './runtime-environment-host-details'
-import type { RuntimeHostAccessFailure } from './RuntimeHostAccessForm'
+import type { RuntimeHostAccessFailure } from './RuntimeHostAccessFailureAlert'
 
 type RuntimeEnvironmentMutationActionParams = {
   environments: PublicKnownRuntimeEnvironment[]

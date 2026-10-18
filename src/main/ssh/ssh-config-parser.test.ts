@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { join } from 'node:path'
-import { parseSshConfig, sshConfigHostsToTargets, parseSshGOutput } from './ssh-config-parser'
+import { parseSshConfig, sshConfigHostsToTargets } from './ssh-config-parser'
+import { parseSshGOutput } from './ssh-g-config-resolution'
 import { searchSshConfigHosts } from './ssh-config-host-picker'
 
 const sshConfigHostsToSummaries = (

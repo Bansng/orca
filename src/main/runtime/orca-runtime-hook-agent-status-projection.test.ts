@@ -270,6 +270,69 @@ describe('headless hook agent-status projection (#11761)', () => {
     )
   })
 
+  // The restored row lives as long as hydration keeps it (7 days); the 30-minute live window
+  // must not turn an unverifiable turn into a synthetic `done`.
+  it('keeps a restored turn older than the live freshness window unverifiable', async () => {
+    const now = Date.UTC(2026, 9, 17, 12)
+    vi.useFakeTimers({ toFake: ['Date'], now })
+    try {
+      const receivedAt = now - AGENT_STATUS_STALE_AFTER_MS - 60_000
+      const agentStatus = await projectAgentStatus([
+        hookRow({
+          state: 'working',
+          prompt: 'refactor the parser',
+          toolName: undefined,
+          interactivePrompt: undefined,
+          receivedAt,
+          stateStartedAt: receivedAt,
+          restoredUnconfirmed: true
+        })
+      ])
+
+      expect(agentStatus).toEqual(
+        expect.objectContaining({
+          state: 'working',
+          restoredUnconfirmed: true,
+          updatedAt: receivedAt,
+          providerSession: PROVIDER_SESSION
+        })
+      )
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('lets a newer confirmed row supersede an old restored turn even once stale', async () => {
+    const now = Date.UTC(2026, 9, 17, 12)
+    vi.useFakeTimers({ toFake: ['Date'], now })
+    try {
+      const restoredAt = now - 2 * 60 * 60_000
+      const confirmedAt = now - 60 * 60_000
+      const agentStatus = await projectAgentStatus([
+        hookRow({
+          state: 'working',
+          toolName: undefined,
+          interactivePrompt: undefined,
+          receivedAt: restoredAt,
+          stateStartedAt: restoredAt,
+          restoredUnconfirmed: true
+        }),
+        hookRow({
+          state: 'done',
+          toolName: undefined,
+          interactivePrompt: undefined,
+          receivedAt: confirmedAt,
+          stateStartedAt: confirmedAt
+        })
+      ])
+
+      expect(agentStatus === undefined || agentStatus.state === 'done').toBe(true)
+      expect(agentStatus).not.toHaveProperty('restoredUnconfirmed')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('lets a shell title retire a restored turn as done', async () => {
     const agentStatus = await projectAgentStatus(
       [hookRow({ state: 'working', interactivePrompt: undefined, restoredUnconfirmed: true })],

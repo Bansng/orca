@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { toAppSshPtyId } from '../../../../shared/ssh-pty-id'
 import type { SshRemotePtyLease } from '../../../../shared/ssh-types'
-import { installLegacyRelayBridge } from '../../../ssh/legacy-relay-bridge/legacy-relay-bridge-registry'
+import { installLegacyRelayBridge } from '../../../ssh/legacy-relay/legacy-relay-bridge-registry'
 import type { PtyRuntimeControllerDeps } from './controller-deps'
 import { killPtyFromRuntimeController } from './kill'
 

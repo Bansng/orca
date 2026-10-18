@@ -12,7 +12,7 @@ import type { SshTarget } from '../../shared/ssh-types'
 import { orcadBoundPort } from './orcad-managed-bound-port'
 import { managedOrcadSlot } from './orcad-managed-runtime-context'
 import { wakeStoppedManagedOrcad } from './orcad-managed-wake'
-import { resolveOrcadRemoteContext } from './orcad-remote-context'
+import { resolveOrcadRemoteContext } from '../managed-server/install/orcad-remote-context'
 import type { OrcadHostTransport } from './orcad-host-transport'
 
 export type OrcadManagedServing =

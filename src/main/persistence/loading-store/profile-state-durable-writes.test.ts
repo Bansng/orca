@@ -7,6 +7,7 @@ import { registerPtyBindingCreatedSurfaceRollbackTests } from './pty-binding-cre
 import { registerPtyBindingRestartRetirementTests } from './pty-binding-restart-retirement.spec'
 import { registerPtyRetirementAsyncDurabilityTests } from './pty-retirement-async-durability.spec'
 import { registerWorkspaceSessionWriteListenersTests } from './workspace-session-write-listeners.spec'
+import { registerStateWriteListenersTests } from './state-write-listeners.spec'
 
 vi.mock('../../telemetry/client', () => ({ track: vi.fn() }))
 vi.mock('../../telemetry/cohort-classifier', () => ({
@@ -25,3 +26,4 @@ describe('pty-binding-created-surface-rollback', registerPtyBindingCreatedSurfac
 describe('pty-binding-restart-retirement', registerPtyBindingRestartRetirementTests)
 describe('pty-retirement-async-durability', registerPtyRetirementAsyncDurabilityTests)
 describe('workspace-session-write-listeners', registerWorkspaceSessionWriteListenersTests)
+describe('state-write-listeners', registerStateWriteListenersTests)

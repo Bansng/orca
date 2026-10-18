@@ -48,7 +48,7 @@ vi.mock('./orcad-managed-runtime-context', () => ({
   }),
   managedOrcadInstallDir: () => '/Users/dev/.orca-remote/orcad-1.0.0'
 }))
-vi.mock('./orcad-remote-context', () => ({
+vi.mock('../managed-server/install/orcad-remote-context', () => ({
   resolveOrcadRemoteContext: async () => ({
     host: mocks.host.current,
     connection: {},
@@ -58,11 +58,11 @@ vi.mock('./orcad-remote-context', () => ({
   })
 }))
 vi.mock('./orcad-ssh-host-transport', () => ({ sshOrcadHostTransport: (c: unknown) => c }))
-vi.mock('./orcad-activation-lock', () => ({
+vi.mock('../managed-server/activation/orcad-activation-lock', () => ({
   withOrcadActivationLock: (_slot: unknown, run: (lock: unknown) => Promise<unknown>) =>
     run({ retain: mocks.retain })
 }))
-vi.mock('./orcad-activation-record-store', () => ({
+vi.mock('../managed-server/activation/orcad-activation-record-store', () => ({
   readOrcadActivationRecord: async () => ({ active: mocks.active.current })
 }))
 vi.mock('./orcad-managed-remote-stop', () => ({
@@ -74,7 +74,9 @@ vi.mock('./orcad-rollback-terminal-barrier', () => ({
 vi.mock('./orcad-managed-wake', () => ({ wakeStoppedManagedOrcad: mocks.wake }))
 vi.mock('./orcad-managed-tunnel', () => ({ rebuildOrcadManagedTunnel: mocks.rebuild }))
 vi.mock('./orcad-terminal-census-client', () => ({ collectManagedTerminalCensus: mocks.census }))
-vi.mock('./orcad-remote-runtime-control', () => ({ execOrcadRemote: mocks.exec }))
+vi.mock('../managed-server/install/orcad-remote-runtime-control', () => ({
+  execOrcadRemote: mocks.exec
+}))
 
 const { readManagedOrcadLaunchSshSession, restartManagedOrcadEnvironment } =
   await import('./orcad-managed-launch-session')

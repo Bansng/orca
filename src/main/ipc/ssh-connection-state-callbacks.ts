@@ -1,4 +1,4 @@
-import type { SshConnectionCallbacks } from '../ssh/ssh-connection'
+import type { SshConnectionCallbacks } from '../ssh/ssh-connection-utils'
 import type { SshConnectionState } from '../../shared/ssh-types'
 import { isSshHostCensusInFlight } from '../ssh/ssh-connection-attribution'
 import { clearSshCredentialDeclined, isSshCredentialDeclined } from '../ssh/ssh-credential-decline'

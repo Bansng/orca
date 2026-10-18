@@ -4,7 +4,8 @@ import {
   getRegisteredSshTargetMutations,
   getSshConnectionManager,
   listRegisteredRemovedSshTargetLabels,
-  listRegisteredSshTargets
+  listRegisteredSshTargets,
+  SshTargetManagementUnservedError
 } from '../../../ssh/ssh-target-registry'
 import { isManagedOrcadSshTarget } from '../../../ssh/ssh-connection-store'
 import { browseSshDirectory } from '../../../ssh/ssh-remote-directory-browse'
@@ -178,7 +179,12 @@ export const SSH_METHODS = [
     name: 'ssh.browseDir',
     permission: 'workspace',
     params: SshBrowseDir,
-    handler: (params) =>
-      browseSshDirectory(getSshConnectionManager(), params.targetId, params.dirPath)
+    handler: (params) => {
+      const manager = getSshConnectionManager()
+      if (!manager) {
+        throw new SshTargetManagementUnservedError()
+      }
+      return browseSshDirectory(manager, params.targetId, params.dirPath)
+    }
   })
 ]

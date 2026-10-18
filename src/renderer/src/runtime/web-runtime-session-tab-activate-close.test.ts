@@ -652,6 +652,45 @@ describe('web runtime session tab actions', () => {
     ).toEqual([])
   })
 
+  // #30130 made a host's Disconnect answer calls locally; a tab closed then came back on reconnect.
+  it('holds a user close made while the host is disconnected', async () => {
+    const runtimeCall = vi
+      .fn()
+      .mockResolvedValueOnce({
+        id: 'runtime.manualDisconnect',
+        ok: false,
+        error: {
+          code: 'runtime_manually_disconnected',
+          message: 'Runtime environment is manually disconnected.'
+        }
+      })
+      .mockResolvedValue({ id: 'close', ok: true, result: { closed: true } })
+    stubRuntimeEnvironmentBridge({ call: runtimeCall })
+    const owner = { environmentId: ENVIRONMENT_ID }
+
+    await expect(
+      closeWebRuntimeSessionTab({
+        worktreeId: WORKTREE_ID,
+        tabId: 'local-browser-unified',
+        reason: 'user'
+      })
+    ).resolves.toBe('failed')
+
+    expect(
+      isWebSessionCloseIntentPending(
+        owner,
+        WORKTREE_ID,
+        'host-browser-unified',
+        Date.now() + 60_000
+      )
+    ).toBe(true)
+    expect(
+      takeDueWebSessionCloseReplays(owner, WORKTREE_ID, new Set(['host-browser-unified'])).map(
+        (replay) => replay.hostTabIds[0]
+      )
+    ).toEqual(['host-browser-unified'])
+  })
+
   it('re-lists the worktree after holding a close so an idle host still gets the first replay', async () => {
     vi.useFakeTimers()
     try {

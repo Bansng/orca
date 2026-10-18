@@ -116,7 +116,6 @@ describe('Session History scan progress, scanner child to window', () => {
     await scan
 
     expect(published.map((progress) => progress?.stage ?? null)).toEqual([
-      null,
       'finding',
       reports[0]!.stage,
       'finished'
@@ -131,18 +130,19 @@ describe('Session History scan progress, scanner child to window', () => {
   })
 
   it('keeps a replacement entry when the scan it replaced fails late', () => {
+    const earlier = startLocalAiVaultScanProgress('scope', 'earlier', () => 500)
+    earlier.finish(null)
     const old = startLocalAiVaultScanProgress('scope', 'old', () => 1_000)
-    old.sent()
     const replacement = startLocalAiVaultScanProgress('scope', 'replacement', () => 2_000)
     old.fail()
-    replacement.sent()
     expect(localAiVaultScanProgress('scope')).toMatchObject({ stage: 'finding', startedAt: 2_000 })
 
+    // A failed refresh puts back the last finished scan rather than leaving the key empty.
     replacement.fail()
-    expect(localAiVaultScanProgress('scope')).toBeNull()
+    expect(localAiVaultScanProgress('scope')).toMatchObject({ scanId: 'earlier', stage: 'finished' })
   })
 
-  it('clears the entry when an interactive timeout retires the shared scanner', async () => {
+  it('settles unfinished work when an interactive timeout retires the shared scanner', async () => {
     vi.useFakeTimers()
     const { child, client, scan } = startScan()
     const rejectedScan = scan.catch((error: Error) => error)
@@ -163,7 +163,16 @@ describe('Session History scan progress, scanner child to window', () => {
 
     expect(await rejectedInteractive).toBeInstanceOf(Error)
     expect(await rejectedScan).toBeInstanceOf(Error)
-    expect(localAiVaultScanProgress('')).toBeNull()
+    expect(localAiVaultScanProgress('')).toMatchObject({ stage: 'finding', settledAt: 5_000 })
+    const retry = startLocalAiVaultScanProgress('', 'retry', () => 6_000)
+    retry.work({ stage: 'reading', agents: [], read: { done: 1, total: 2 } })
+    retry.fail()
+    expect(localAiVaultScanProgress('')).toMatchObject({
+      scanId: 'retry',
+      stage: 'reading',
+      settledAt: 6_000,
+      read: { done: 1, total: 2 }
+    })
     client.dispose()
   })
 

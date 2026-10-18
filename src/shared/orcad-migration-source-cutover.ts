@@ -7,9 +7,9 @@ import {
   MAX_ORCAD_MIGRATION_FOLDER_WORKSPACES,
   MAX_ORCAD_MIGRATION_PROJECT_GROUPS,
   MAX_ORCAD_MIGRATION_REPOSITORIES,
-  parseOrcadMigrationManifest,
-  type OrcadMigrationManifest
-} from './orcad-migration-manifest'
+  parseOrcadMigrationManifest
+} from './orcad-migration-manifest-validation'
+import type { OrcadMigrationManifest } from './orcad-migration-manifest'
 import { isOrcadMigrationLocalWslSource } from './orcad-migration-source-kind'
 
 export const ORCAD_MIGRATION_SOURCE_CUTOVER_VERSION = 1

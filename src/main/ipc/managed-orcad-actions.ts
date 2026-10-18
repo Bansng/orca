@@ -2,12 +2,14 @@
 import {
   cancelManagedOrcadStop,
   forgetManagedOrcadEnvironment,
-  getManagedOrcadRuntimeStatus,
+  stopManagedOrcadEnvironment
+} from '../ssh/orcad-runtime-decommission'
+import { getManagedOrcadRuntimeStatus } from '../ssh/orcad-runtime-status'
+import {
   recoverManagedOrcadEnvironment,
   rollbackManagedOrcadEnvironment,
-  stopManagedOrcadEnvironment,
   updateManagedOrcadEnvironment
-} from '../ssh/orcad-runtime-lifecycle'
+} from '../ssh/orcad-runtime-maintenance'
 import { getOrcadSshDeployment } from '../../shared/runtime-environments'
 import { resolveEnvironment } from '../../shared/runtime-environment-store'
 import type { OrcadManagedRestartResult } from '../../shared/orcad-managed-runtime'

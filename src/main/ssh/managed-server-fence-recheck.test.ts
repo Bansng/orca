@@ -26,6 +26,7 @@ function hostDeps(states: ('fenced' | 'serving')[], update: 'fence-busy' | 'curr
         : { outcome: 'skipped' as const, reason: 'current' as const }
     ),
     recordedUpdateFailure: () => null,
+    failedThisLaunch: () => true,
     recordUpdateFailure: vi.fn(),
     clearUpdateFailure: vi.fn()
   }

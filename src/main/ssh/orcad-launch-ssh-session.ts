@@ -13,7 +13,7 @@
  */
 import { shellEscape } from './ssh-connection-utils'
 import { joinRemotePath, type RemoteHostPlatform } from './ssh-remote-platform'
-import { ORCAD_PID_FILENAME } from './orcad-remote-host-support'
+import { ORCAD_PID_FILENAME } from '../managed-server/install/orcad-remote-host-support'
 
 export const ORCAD_LAUNCH_SSH_SESSION_FILENAME = '.orcad-launch-ssh-session'
 

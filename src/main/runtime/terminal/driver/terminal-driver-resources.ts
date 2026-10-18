@@ -26,7 +26,7 @@ import type {
 
 import { RuntimeTerminalDriverController } from '../../runtime-terminal-driver-controller'
 import { RuntimeEdgeCommandController } from '../../runtime-edge-command-controller'
-import { getBrowserHostLeaseRegistry } from '../../browser-host-lease-registry-instance'
+import { getBrowserHostLeaseRegistry } from '../../browser-host/browser-host-lease-registry-instance'
 import { getRuntimeBrowserPageRegistry } from '../../runtime-browser-page-registry'
 
 import { RuntimeBrowserDriverController } from '../../runtime-browser-driver-controller'

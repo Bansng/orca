@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { shellEscape } from './ssh-connection-utils'
-import { RELAY_REMOTE_DIR } from './relay-protocol'
+import { RELAY_REMOTE_DIR } from './remote-frame-protocol'
 import {
   ORCAD_MACHINE_CLAIM_FILENAME,
   ORCAD_MACHINE_CLAIM_SCHEMA_VERSION

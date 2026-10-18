@@ -43,13 +43,8 @@ vi.mock('./system-ssh-operation-lifecycle', async (importActual) => {
 })
 
 import { uploadDirectoryViaSystemSsh } from './system-ssh-file-transfer'
-import {
-  uploadFileViaSystemSsh,
-  WINDOWS_STAGED_WRITE_SUFFIX,
-  WINDOWS_STDIN_WRITE_CHUNK_BYTES,
-  WINDOWS_STDIN_WRITE_TIMEOUT_MS,
-  writeBufferViaSystemSsh
-} from './system-ssh-file-binary-transfer'
+import { uploadFileViaSystemSsh, writeBufferViaSystemSsh } from './system-ssh-file-binary-transfer'
+import { WINDOWS_STAGED_WRITE_SUFFIX } from './system-ssh-windows-file-write'
 import { waitForChannelClose } from './system-ssh-operation-lifecycle'
 import * as windowsFileWrite from './system-ssh-windows-file-write'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
@@ -59,6 +54,8 @@ import {
 } from './system-ssh-windows-write-capabilities'
 import {
   explainWindowsPowerShellStdinFailure,
+  WINDOWS_STDIN_WRITE_CHUNK_BYTES,
+  WINDOWS_STDIN_WRITE_TIMEOUT_MS,
   writeWindowsRemoteFile
 } from './system-ssh-windows-write-strategy'
 import type { SshTarget } from '../../shared/ssh-types'

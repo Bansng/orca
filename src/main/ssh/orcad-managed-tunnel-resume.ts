@@ -8,7 +8,7 @@ import type { SshConnection } from './ssh-connection'
 import type { SshTarget } from '../../shared/ssh-types'
 import type { OrcadManagedServing } from './orcad-managed-serving'
 import type { SshConnectionManager } from './ssh-connection-manager'
-import type { SshPortForwardManager } from './ssh-port-forward'
+import type { SshPortForwardManager } from './port-forwarding/ssh-port-forward'
 import type { getSshTargetRegistryStore } from './ssh-target-registry'
 import {
   dropActiveOrcadTunnel,

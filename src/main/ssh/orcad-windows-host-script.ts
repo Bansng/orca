@@ -38,7 +38,7 @@ import {
   ORCAD_READINESS_FILENAME,
   ORCAD_READINESS_MAX_BYTES,
   ORCAD_WINDOWS_PROCESS_FILENAME
-} from './orcad-remote-host-support'
+} from '../managed-server/install/orcad-remote-host-support'
 
 export const ORCAD_RECORD_ABSENT_MARKER = '__ORCAD_RECORD_ABSENT__'
 export const ORCAD_RECORD_PRESENT_MARKER = '__ORCAD_RECORD_PRESENT__'

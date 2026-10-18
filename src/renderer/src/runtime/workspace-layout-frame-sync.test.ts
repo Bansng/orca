@@ -15,6 +15,7 @@ import {
 } from '../../../shared/workspace-layout/workspace-layout-published'
 import type { WorkspaceLayoutChangeFrame } from '../../../shared/workspace-layout/workspace-layout-stream-frames'
 import { GIT_KEY } from '../../../shared/workspace-layout/workspace-layout-session.test-fixture'
+import { buildOwnedEditorFileId } from '../store/slices/editor/file-ids/editor-file-ids'
 import { bootWindowFromPartitions } from '../app-shell/startup-window-view.test-fixture'
 import { reportWindowSessionWriteActivity } from '../lib/window-session-write-activity'
 import { createStoreSessionMockApi } from '../store/slices/store-session-test-harness'
@@ -389,6 +390,22 @@ describe('the window drawn from layout frames', () => {
     stream.onStatus!({ state: 'refused' })
     await flushMicrotasks()
     expect(SLICES.filter((slice) => store.getState()[slice] !== before[slice])).toEqual([])
+    sync.close()
+  })
+
+  it('gives a moved editor tab an older build saved under its old workspace the right id', async () => {
+    // Before #29930 a tab Orca moved to its file's workspace kept the source's worktree id.
+    const session = localDesktopSession()
+    const ownedId = buildOwnedEditorFileId('/Users/dev/orca/src/app.ts', GIT_KEY, null)
+    const entry = session.unifiedTabs![GIT_KEY]!.find((tab) => tab.contentType === 'editor')!
+    entry.entityId = ownedId
+    entry.worktreeId = 'repo-2::/Users/dev/other'
+    const { store, sync } = await bootWithFrames('local', session)
+    sync.start()
+    await flushMicrotasks()
+    const tabs = store.getState().unifiedTabsByWorktree[GIT_KEY]!
+    expect(tabs.find((tab) => tab.entityId === ownedId)).toMatchObject({ worktreeId: GIT_KEY })
+    expect(tabs.every((tab) => tab.worktreeId === GIT_KEY)).toBe(true)
     sync.close()
   })
 

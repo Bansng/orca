@@ -2,9 +2,15 @@ import { OrcaRuntimeWithWorkspaceReviewFacts } from './orca-runtime-workspace-re
 import type { OrcaRuntimeWithMigrationCatalog } from '../orca-runtime-migration-catalog'
 import { ORCA_SIDEBAR_INPUTS_IS_MAIN } from '../../../shared/sidebar-inputs-switch'
 import { DEFAULT_HIDE_SLEEPING_WORKSPACES } from '../../../shared/constants'
-import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host'
+import {
+  getRepoExecutionHostId,
+  isLocalExecutionHost,
+  LOCAL_EXECUTION_HOST_ID
+} from '../../../shared/execution-host'
 import { detectAgentStatusFromTitle } from '../../../shared/agent-detection'
 import type { SidebarTemporalSnapshot } from '../../../shared/sidebar-list/sidebar-temporal-snapshot'
+import type { Worktree } from '../../../shared/worktree/types'
+import type { Repo } from '../../../shared/repo-types'
 import { getMigrationUnsupportedPtySnapshot } from '../../agent-hooks/migration-unsupported-pty-state'
 import {
   SidebarTemporalOwner,
@@ -14,6 +20,12 @@ import {
 import { SmartSortAgentEntries } from './smart-sort-agent-entries'
 import { buildRuntimeSmartSortSources } from './runtime-smart-sort-sources'
 import type { AgentStatusStoreView } from './workspace-activity-facts-producer'
+import { SortStampsProducer } from './sort-stamps-producer'
+import { resolveAgentWorkspaceExecutionHostId } from '../../agent-hooks/restored-status-dead-terminal-sweep'
+import {
+  isWslMoveProjectBlocked,
+  wslMoveProjectRefForWorkspace
+} from '../../persistence/moving-wsl-projects/wsl-move-scope-guard'
 
 type Runtime = OrcaRuntimeWithWorkspaceReviewFacts
 
@@ -31,36 +43,39 @@ export abstract class OrcaRuntimeWithSidebarTemporal extends OrcaRuntimeWithWork
     readSortSample: () => this.readSidebarSortSample(),
     retentionCandidates: () => this.readSidebarRetentionCandidates()
   })
+  readonly sortStamps = new SortStampsProducer({
+    store: () => this.store,
+    isWriteFenced: (worktreeId) =>
+      isWslMoveProjectBlocked(this.store ?? undefined, wslMoveProjectRefForWorkspace(worktreeId)),
+    resolveTabWorktreeId: (tabId) => this.tabs.get(tabId)?.worktreeId,
+    subscribeToPtyExit: (ptyId, listener) => this.subscribeToPtyExit(ptyId, listener),
+    onClientEvent: (listener, options) => this.onClientEvent(listener, options),
+    now: Date.now
+  })
 
   constructor(...args: ConstructorParameters<typeof OrcaRuntimeWithWorkspaceReviewFacts>) {
     super(...args)
-    this.workspaceActivityFacts.onChange(() => this.sidebarTemporal.noteActivityChange())
+    this.workspaceActivityFacts.revision.onChange(() => this.sidebarTemporal.noteActivityChange())
     this.store?.onUIChanged?.(() => this.sidebarTemporal.noteViewChange())
     // Every catalog change, from IPC or the runtime, reaches clients through this one bus.
     this.clientEvents.on(
       (event) => {
-        if (event.type === 'worktreesChanged') {
-          this.noteSidebarRowsChange()
-        } else if (event.type === 'reposChanged') {
-          this.sidebarTemporal.noteRepoChange()
+        if (event.type === 'worktreesChanged' || event.type === 'reposChanged') {
+          this.noteSidebarCatalogChange(event.type)
         }
       },
       { consumesTerminalSideEffects: false }
     )
   }
 
-  // Whether rows came or went decides if the change settles at once, so count after it lands.
-  // The count can come from a listing cached just before the change; the change then settles late.
-  private noteSidebarRowsChange(): void {
+  // Listed after the change lands, as the window re-lists; only rows, the sort's sources wait.
+  private noteSidebarCatalogChange(type: 'worktreesChanged' | 'reposChanged'): void {
     if (!this.sidebarTemporal.running) {
       return
     }
-    void this.listResolvedWorktreeSnapshot().then(
-      ({ worktrees }) =>
-        this.sidebarTemporal.noteRowsChange(
-          worktrees.filter((worktree) => !worktree.isArchived).length
-        ),
-      (error: unknown) => console.warn('[sidebar-temporal] could not count rows', error)
+    void this.listSidebarRows().then(
+      (worktrees) => this.sidebarTemporal.noteCatalogListing(worktrees, type === 'reposChanged'),
+      (error: unknown) => console.warn('[sidebar-temporal] could not list rows', error)
     )
   }
 
@@ -68,18 +83,67 @@ export abstract class OrcaRuntimeWithSidebarTemporal extends OrcaRuntimeWithWork
     return this.sidebarTemporal.snapshot()
   }
 
+  onSidebarTemporalChange(listener: () => void): () => void {
+    return this.sidebarTemporal.revision.onChange(listener)
+  }
+
   beginSidebarListSession(sessionId: string): void {
     this.sidebarTemporal.beginSession(sessionId)
+  }
+
+  /** After a restart, once hook rows and the provider's PTYs settle: drop tiers nothing backs. */
+  async reconcileSortStampTiers(provider: {
+    probePtyLiveness?: (ptyId: string) => Promise<boolean | null>
+  }): Promise<void> {
+    const store = this.store
+    await this.sortStamps
+      .reconcileStoredTiers({
+        isLocalWorkspace: (worktreeId) =>
+          !!store &&
+          isLocalExecutionHost(
+            resolveAgentWorkspaceExecutionHostId(worktreeId, {
+              getRepo: (repoId) => store.getRepo(repoId),
+              getWorktreeMeta: (id) => store.getWorktreeMeta(id),
+              getFolderWorkspace: (id) => store.getFolderWorkspace?.(id),
+              getProjectGroups: () => store.getProjectGroups?.() ?? []
+            })
+          ),
+        terminalPtyIds: (worktreeId) => {
+          const session = store?.getWorkspaceSession?.(LOCAL_EXECUTION_HOST_ID)
+          const ptyIds = new Set<string>()
+          for (const tab of session?.tabsByWorktree?.[worktreeId] ?? []) {
+            if (tab.ptyId) {
+              ptyIds.add(tab.ptyId)
+            }
+            for (const ptyId of Object.values(
+              session?.terminalLayoutsByTabId?.[tab.id]?.ptyIdsByLeafId ?? {}
+            )) {
+              ptyIds.add(ptyId)
+            }
+          }
+          for (const pty of this.ptysById.values()) {
+            if (pty.worktreeId === worktreeId) {
+              ptyIds.add(pty.ptyId)
+            }
+          }
+          return [...ptyIds]
+        },
+        // A provider that cannot probe proves nothing absent.
+        probePtyLiveness: async (ptyId) => (await provider.probePtyLiveness?.(ptyId)) ?? null
+      })
+      .catch((error: unknown) => console.warn('[sidebar] sort tier reconcile failed:', error))
   }
 
   /** Attaches every sidebar producer that reads the hook server's store. */
   attachSidebarAgentStatusStore(store: AgentStatusStoreView): () => void {
     const detachActivity = this.workspaceActivityFacts.attachAgentStatusStore(store)
+    const detachStamps = this.sortStamps.attachAgentStatusStore(store)
     const detachEntries = this.smartSortAgentEntries.attach(store, () =>
       this.sidebarTemporal.noteSortInputChange()
     )
     return () => {
       detachActivity()
+      detachStamps()
       detachEntries()
       this.sidebarTemporal.dispose()
     }
@@ -125,17 +189,25 @@ export abstract class OrcaRuntimeWithSidebarTemporal extends OrcaRuntimeWithWork
     return causes
   }
 
-  private async readSidebarSortSample(): Promise<SidebarSortSample> {
+  // Ranks are host-qualified; a row without a stamped host belongs to its repo's host.
+  private async listSidebarRows(repoById = this.readSidebarRepoMap()): Promise<Worktree[]> {
     const { worktrees } = await this.listResolvedWorktreeSnapshot()
-    const repoMap = new Map((this.store?.getRepos() ?? []).map((repo) => [repo.id, repo]))
+    return worktrees.map((worktree) => {
+      const repo = repoById.get(worktree.repoId)
+      return worktree.hostId || !repo
+        ? worktree
+        : { ...worktree, hostId: getRepoExecutionHostId(repo) }
+    })
+  }
+
+  private readSidebarRepoMap(): Map<string, Repo> {
+    return new Map((this.store?.getRepos() ?? []).map((repo) => [repo.id, repo]))
+  }
+
+  private async readSidebarSortSample(): Promise<SidebarSortSample> {
+    const repoMap = this.readSidebarRepoMap()
     return {
-      // Ranks are host-qualified; a row without a stamped host belongs to its repo's host.
-      worktrees: worktrees.map((worktree) => {
-        const repo = repoMap.get(worktree.repoId)
-        return worktree.hostId || !repo
-          ? worktree
-          : { ...worktree, hostId: getRepoExecutionHostId(repo) }
-      }),
+      worktrees: await this.listSidebarRows(repoMap),
       repoMap,
       sources: buildRuntimeSmartSortSources({
         tabs: this.tabs.values(),

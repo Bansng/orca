@@ -1,4 +1,5 @@
 import {
+  AGENT_STATUS_HYDRATE_MAX_AGE_MS,
   AGENT_STATUS_STALE_AFTER_MS,
   agentStatusAuthorityObservedAt,
   pickParsedAgentStatusPayload,
@@ -120,7 +121,7 @@ export type RuntimeHookAgentRowLookup = {
   agentType: string | null
   agentIsLive: boolean
   live: HookLiveAgentRow | null
-  /** Latest fresh nonterminal row hydrated across a host restart: unverifiable, never live. */
+  /** Latest nonterminal row hydrated across a host restart: unverifiable, never live. */
   restored: HookLiveAgentRow | null
 }
 
@@ -132,7 +133,11 @@ export function selectRuntimeHookAgentRowForPane(
   let agent: AgentStatusIpcPayload | null = null
   let live: AgentStatusIpcPayload | null = null
   let restored: AgentStatusIpcPayload | null = null
-  const freshAfter = Date.now() - AGENT_STATUS_STALE_AFTER_MS
+  let confirmedReceivedAt = -Infinity
+  const now = Date.now()
+  const freshAfter = now - AGENT_STATUS_STALE_AFTER_MS
+  // Unverifiable lasts as long as hydration keeps the row; going quiet is not exit evidence.
+  const restoredAfter = now - AGENT_STATUS_HYDRATE_MAX_AGE_MS
   for (const entry of rows) {
     if (entry.providerSession && (!session || entry.receivedAt > session.receivedAt)) {
       session = entry
@@ -145,6 +150,9 @@ export function selectRuntimeHookAgentRowForPane(
       (!agent || entry.receivedAt > agent.receivedAt)
     ) {
       agent = entry
+    }
+    if (entry.providerSessionOnly !== true && entry.restoredUnconfirmed !== true) {
+      confirmedReceivedAt = Math.max(confirmedReceivedAt, entry.receivedAt)
     }
     if (
       entry.providerSessionOnly !== true &&
@@ -159,14 +167,14 @@ export function selectRuntimeHookAgentRowForPane(
       entry.providerSessionOnly !== true &&
       entry.restoredUnconfirmed === true &&
       entry.state !== 'done' &&
-      (entry.evidenceObservedAt ?? entry.receivedAt) >= freshAfter &&
+      (entry.evidenceObservedAt ?? entry.receivedAt) >= restoredAfter &&
       (!restored || entry.receivedAt > restored.receivedAt)
     ) {
       restored = entry
     }
   }
-  // A confirmed row at least as new as the restored one supersedes it.
-  if (restored && live && live.receivedAt >= restored.receivedAt) {
+  // A confirmed row at least as new as the restored one supersedes it, stale or not.
+  if (restored && confirmedReceivedAt >= restored.receivedAt) {
     restored = null
   }
   return {

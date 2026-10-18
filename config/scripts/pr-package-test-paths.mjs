@@ -75,5 +75,5 @@ export const WINDOWS_PACKAGE_TESTS = [
   'src/main/ipc/pty-spawn-env-codex-resume-provenance.test.ts',
   'src/main/ipc/preflight-provider-command-selection.test.ts',
   'src/main/ipc/preflight-runnable-local-cli.test.ts',
-  'src/main/ssh/remote-node-runtime-store-windows.test.ts'
+  'src/main/managed-server/install/remote-node-runtime-store-windows.test.ts'
 ]

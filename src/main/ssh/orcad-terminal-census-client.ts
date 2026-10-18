@@ -15,7 +15,7 @@ import {
   type OrcadTerminalCensus
 } from '../../shared/orcad-terminal-census'
 import { sendRemoteRuntimeRequestWithStatusPreflight } from '../../shared/remote-runtime-client'
-import type { OrcadActivationRecord } from './orcad-activation-record'
+import type { OrcadActivationRecord } from '../managed-server/activation/orcad-activation-record'
 import { ensureOrcadManagedTunnel } from './orcad-managed-tunnel'
 import { verifyOrcadManagedServing } from './orcad-managed-serving-verify'
 

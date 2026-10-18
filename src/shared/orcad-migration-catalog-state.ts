@@ -1,8 +1,8 @@
-import {
-  normalizeOrcadMigrationImportReceipts,
-  type OrcadMigrationCatalogAbortResult,
-  type OrcadMigrationCatalogState,
-  type OrcadMigrationManifest
+import { normalizeOrcadMigrationImportReceipts } from './orcad-migration-manifest-validation'
+import type {
+  OrcadMigrationCatalogAbortResult,
+  OrcadMigrationCatalogState,
+  OrcadMigrationManifest
 } from './orcad-migration-manifest'
 import { parseOrcadMigrationSnapshotUploadStates } from './orcad-migration-scrollback'
 import { parseOrcadMigrationBlobUploadStates } from './orcad-migration-blob-transfer'

@@ -387,7 +387,8 @@
         "loopbackPairingBlocked": "이 액세스 링크는 이 기기 자체를 가리킵니다.",
         "remotePairingUnreachable": "{{endpoint}}의 Orca에 연결할 수 없습니다.",
         "remotePairingInvalidDetails": "이 액세스 링크에 잘못된 연결 정보가 포함되어 있습니다.",
-        "remotePairingSaveFailed": "Orca가 호스트를 확인했지만 저장할 수 없습니다. 브라우저 저장 공간을 확인하고 다시 시도하세요."
+        "remotePairingSaveFailed": "Orca가 호스트를 확인했지만 저장할 수 없습니다. 브라우저 저장 공간을 확인하고 다시 시도하세요.",
+        "remotePairingRepairUnavailable": "Re-pairing is not available in the browser. Pair this browser with the server again."
       },
       "web": {
         "preload": {
@@ -4181,7 +4182,14 @@
             "runtime_unavailable_explanation": "원격 호스트가 아직 실행 중일 수 있습니다. Orca 런타임 연결만 사용할 수 없습니다.",
             "contact_note": "호스트가 아직 실행 중일 수 있습니다. Orca 연결만 사용할 수 없습니다.",
             "last_connected": "마지막 연결 {{value0}}",
-            "reconnect_attempt": "{{value0}} 시도"
+            "reconnect_attempt": "{{value0}} 시도",
+            "access_revoked": "Access revoked",
+            "access_revoked_summary": "This server revoked access for this computer",
+            "access_revoked_explanation": "Re-pair with a new pairing link from the server to reconnect.",
+            "update_required": "Update required",
+            "update_required_summary": "Orca versions are not compatible",
+            "update_required_explanation": "Update Orca on this computer or on the server, then connect again.",
+            "repair": "Re-pair…"
           },
           "NativeChatResumeStatusSegment": {
             "labelOne": "재개할 채팅 1개",
@@ -5404,6 +5412,12 @@
           "00c4235c10": "'{{value0}}'과(와) 일치하는 항목이 없습니다.",
           "largeInputNoMatches": "이 긴 입력과 일치하는 항목 없음"
         },
+        "SleepTwinWorkspaceDialog": {
+          "title": "Sleep Workspace",
+          "alsoSleeps": "Also sleeps the copy on {{hosts}}",
+          "cancel": "Cancel",
+          "confirm": "Sleep"
+        },
         "RemoveFolderDialog": {
           "4dc5b5065b": "제거",
           "d36883e046": "취소",
@@ -5846,7 +5860,8 @@
           "sidebarRowMissing": "대상이 더 이상 존재하지 않습니다",
           "failedUnnestWorkspace": "워크트리 펼치기 실패",
           "groupRenameFailed": "그룹 이름을 바꾸지 못했습니다.",
-          "groupRenameFailedDesc": "Orca는 그룹 호스트에게 새 이름을 확인할 수 없습니다. 다시 연결한 후 그룹을 다시 확인하세요."
+          "groupRenameFailedDesc": "Orca는 그룹 호스트에게 새 이름을 확인할 수 없습니다. 다시 연결한 후 그룹을 다시 확인하세요.",
+          "hostRepairRequired": "Re-pair required"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "취소",
@@ -6062,6 +6077,9 @@
               "8bc3fc0671": "워크스페이스를 절전 모드로 전환하지 못했습니다.",
               "legacy": {
                 "unverified": "The older host runtime could not confirm terminal shutdown. The workspace was kept open; update the host and try again."
+              },
+              "twin": {
+                "unattributed": "Orca couldn't tell which host runs this workspace's terminals, so the workspace was kept open. Reconnect its hosts and try again."
               },
               "host": {
                 "unverified": "The host could not confirm terminal shutdown. The workspace was kept open; check the connection and try again."
@@ -6286,7 +6304,8 @@
           "59b553e2aa": "연결 해제",
           "2d3e4f5a6b": "연결 확인",
           "3c4d5e6f7a": "호스트 관리…",
-          "6e7f8a9b0c": "호스트 제거…"
+          "6e7f8a9b0c": "호스트 제거…",
+          "repair": "Re-pair…"
         },
         "WorkspaceKanbanDrawer": {
           "1975a4e480": "작업 상태 동기화 실패",
@@ -6297,6 +6316,7 @@
           "f4a5b6c7d8": "Linear 이슈 {{value0}}을(를) 업데이트할 수 없습니다.",
           "a5b6c7d8e9": "Linear 이슈 {{value0}}을(를) 동기화할 수 없습니다.",
           "b6c7d8e9f0": "작업 상태 동기화를 완료할 수 없습니다.",
+          "f0a1b2c3d4": "Linear 이슈 {{value0}}을(를) 건너뛰었습니다: 이 워크스페이스가 둘 이상의 호스트에 있습니다.",
           "c7d8e9f0a1": "{{value0}}개 업데이트됨",
           "d8e9f0a1b2": "{{value0}}개 건너뜀",
           "e9f0a1b2c3": "{{value0}}개 실패"
@@ -8363,7 +8383,11 @@
           "serverWorkspaceWindowClosed": "워크스페이스 창이 닫혔습니다.",
           "serverRuntimeUnavailable": "Orca를 사용할 수 없습니다.",
           "serverRuntimeUnavailableDescription": "SSH 전송이 연결되었지만 Orca 런타임이 응답하지 않았습니다. 호스트가 아직 실행 중일 수 있습니다.",
-          "serverReconnecting": "다시 연결하는 중"
+          "serverReconnecting": "다시 연결하는 중",
+          "accessRevoked": "{{value0}} no longer accepts this computer. Re-pair it with a new access link.",
+          "repair": "Re-pair…",
+          "serverAccessRevoked": "Access revoked",
+          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)"
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "{{value0}} 복사"
@@ -12069,7 +12093,9 @@
           "networkConnection": "네트워크 연결",
           "notAttempted": "시도하지 않음",
           "saveFailed": "호스트를 저장할 수 없습니다.",
-          "saveFailedHelp": "호스트가 확인되었지만 Orca가 호스트를 저장할 수 없습니다. 이름과 로컬 설정 저장소를 확인한 후 다시 시도하세요."
+          "saveFailedHelp": "호스트가 확인되었지만 Orca가 호스트를 저장할 수 없습니다. 이름과 로컬 설정 저장소를 확인한 후 다시 시도하세요.",
+          "differentServer": "This link is for a different server",
+          "differentServerHelp": "This pairing link is for a different server. Create the link on the server you are re-pairing."
         },
         "CloudVmSetupGuide": {
           "title": "클라우드 VM 만들기",
@@ -12639,6 +12665,13 @@
           "remove": "제거",
           "turnOn": "실험적에서 켜기",
           "forceUpdate": "강제 업데이트"
+        },
+        "RuntimeRepairDialog": {
+          "title": "Re-pair {{name}}",
+          "description": "{{name}} no longer accepts this computer. On {{name}}, open Settings → Remote Orca Servers → Share this host, create a link for another Orca client, then paste it here.",
+          "submit": "Re-pair",
+          "success": "Re-paired with {{name}}",
+          "failed": "Re-pair failed"
         }
       },
       "right": {
@@ -18232,6 +18265,8 @@
         "removeImagesToSend": "복원하지 못한 이미지가 있습니다. 보내려면 제거하세요.",
         "imageAttachAgainLabel": "다시 첨부",
         "pastedImageNotKeptLabel": "보존되지 않음",
+        "imageNumber": "이미지 #{{number}}",
+        "imageReferenceMissing": "이미지가 제거됨",
         "imagePasteFailed": "이미지 붙여넣기 실패.",
         "worktreeNotReady": "워크트리가 준비되지 않았습니다 — 잠시 후 다시 시도하세요.",
         "pasteUnavailable": "붙여넣을 수 없습니다 — 이 채팅은 지금 입력을 받을 수 없습니다.",
@@ -19189,7 +19224,6 @@
       "cancel": "설치 취소",
       "cancelled": "설치가 취소되었습니다.",
       "cancelling": "취소하는 중…",
-      "chatTitle": "채팅을 시작하려면 {{agent}}을(를) 설치하세요.",
       "damaged": "이 {{agent}} 사본이 손상되었습니다.",
       "downloadSize": "{{size}}MB 다운로드.",
       "downloading": "{{done}}MB 다운로드 중입니다.",
@@ -19208,7 +19242,28 @@
       "retry": "설치 다시 시도",
       "unavailable": "{{agent}}은(는) 이 호스트에서 사용할 수 없습니다.",
       "update": "{{agent}} 업데이트",
-      "verifying": "다운로드한 런타임을 확인하는 중입니다."
+      "verifying": "다운로드한 런타임을 확인하는 중입니다.",
+      "installTitle": "채팅을 시작하려면 {{agent}}을(를) 설치하세요",
+      "continueTitle": "계속하려면 {{agent}}을(를) 설치하세요",
+      "heroBody": "한 번만 {{size}}MB를 다운로드합니다. 이 채팅을 실행하는 컴퓨터의 {{agent}} 채팅이 함께 사용합니다.",
+      "heroBodyNoSize": "한 번만 다운로드합니다. 이 채팅을 실행하는 컴퓨터의 {{agent}} 채팅이 함께 사용합니다.",
+      "stripSize": "이 채팅을 실행하는 컴퓨터에 {{size}}MB 다운로드",
+      "settingsHint": "설정 › 채팅 › 공급자에서도 설치할 수 있습니다",
+      "installShort": "설치",
+      "tryAgain": "다시 시도",
+      "cancelShort": "취소",
+      "failedTitle": "{{agent}}을(를) 설치하지 못했습니다",
+      "cancelledTitle": "설치가 취소되었습니다",
+      "cancelledBody": "아무것도 설치되지 않았습니다.",
+      "downloadingTitle": "{{agent}} 다운로드 중",
+      "unpackingTitle": "{{agent}} 압축 해제 중",
+      "checkingTitle": "다운로드 확인 중",
+      "progressOf": "{{total}}MB 중 {{done}}MB",
+      "unpackingDetail": "런타임 압축을 푸는 중",
+      "checkingDetail": "다운로드한 런타임을 확인하는 중",
+      "stepDownload": "다운로드",
+      "stepUnpack": "압축 해제",
+      "stepCheck": "확인"
     }
   },
   "dashboardPopout": {

@@ -89,7 +89,6 @@ describe('listAiVaultSessions host routing', () => {
       }),
       expect.any(AbortSignal),
       expect.objectContaining({
-        sent: expect.any(Function),
         work: expect.any(Function),
         finish: expect.any(Function),
         fail: expect.any(Function)

@@ -21,9 +21,9 @@ import {
   formatWorktreeRemovalError,
   isWindowsLongPathWorktreeRemovalError,
   isOrphanCompatiblePreflightError,
-  isOrphanedWorktreeError,
-  areWorktreePathsEqual
+  isOrphanedWorktreeError
 } from './worktree-logic'
+import { areWorktreePathsEqual } from '../git/worktree-path-comparison'
 
 describe('sanitizeWorktreeName', () => {
   it('replaces spaces with hyphens', () => {

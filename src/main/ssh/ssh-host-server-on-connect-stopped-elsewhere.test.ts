@@ -5,7 +5,7 @@ import {
   withDeactivatedVersion,
   withDeactivatedVersionCommitted,
   type OrcadActivationRecord
-} from './orcad-activation-record'
+} from '../managed-server/activation/orcad-activation-record'
 import { planManagedOrcadAutoUpdate } from './orcad-managed-auto-update'
 import { compareAppVersions } from '../../shared/app-version'
 import {

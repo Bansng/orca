@@ -118,7 +118,7 @@ export async function acquireAcpStructuredSession(input: {
     {
       clientInfo: { name: 'orca', version: '1' },
       ...(acquire.onOutput ? { onOutput: acquire.onOutput } : {}),
-      ...(spec.signInPrompt ? { signInPrompt: spec.signInPrompt } : {}),
+      ...(spec.signIn ? { signIn: spec.signIn } : {}),
       onPermission: (request, context) => {
         if (!session?.turns.acceptsRequests) {
           // No prompt of Orca's runs (a turn the agent began itself included), or a Stop or steer
@@ -281,6 +281,7 @@ export async function acquireAcpStructuredSession(input: {
       ...takeover
     }
     session = {
+      events,
       sessionId,
       fence: acquire.fence,
       acquisitionGeneration: generation,
@@ -305,16 +306,13 @@ export async function acquireAcpStructuredSession(input: {
       exitObservedAt: null
     }
     const reading = liveLane
-    const unbind = events?.bindReadingControl?.({
+    session.unbindReadingControl = events?.bindReadingControl?.({
       pauseReading: () => connection.pauseReading(),
       resumeReading: () => {
         connection.resumeReading()
         reading.retry()
       }
     })
-    if (unbind) {
-      session.unbindReadingControl = unbind
-    }
     if (connection.exited || connection.closed) {
       throw new Error(connection.stderrTail() || `${spec.command} exited while starting`)
     }

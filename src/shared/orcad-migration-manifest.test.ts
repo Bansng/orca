@@ -2,12 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { getDefaultWorkspaceSession } from './constants'
 import {
   MAX_ORCAD_MIGRATION_DORMANT_NAMESPACES,
-  MAX_ORCAD_MIGRATION_DORMANT_ROWS,
+  MAX_ORCAD_MIGRATION_DORMANT_ROWS
+} from './orcad-migration-dormant-state-validation'
+import {
   MAX_ORCAD_MIGRATION_IMPORT_RECEIPTS,
   MAX_ORCAD_MIGRATION_MANIFEST_BYTES,
   normalizeOrcadMigrationImportReceipts,
   ORCAD_MIGRATION_MANIFEST_VERSION,
-  parseOrcadMigrationManifest,
+  parseOrcadMigrationManifest
+} from './orcad-migration-manifest-validation'
+import {
   serializeOrcadMigrationValue,
   type OrcadMigrationImportReceipt
 } from './orcad-migration-manifest'

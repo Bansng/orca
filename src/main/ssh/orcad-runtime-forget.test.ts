@@ -25,14 +25,16 @@ vi.mock('./ssh-target-registry', () => ({
   getSshConnectionManager: () => ({ connect: mocks.connect }),
   getSshTargetRegistryStore: () => mocks.state.store
 }))
-vi.mock('./orcad-remote-context', () => ({ resolveOrcadRemoteContext: mocks.resolveContext }))
+vi.mock('../managed-server/install/orcad-remote-context', () => ({
+  resolveOrcadRemoteContext: mocks.resolveContext
+}))
 vi.mock('./orcad-managed-tunnel', () => ({
   closeOrcadManagedTunnel: mocks.closeTunnel,
   ensureOrcadManagedTunnel: vi.fn()
 }))
 
 const { forgetManagedOrcadEnvironment, stopManagedOrcadEnvironment } =
-  await import('./orcad-runtime-lifecycle')
+  await import('./orcad-runtime-decommission')
 
 let harness: ReturnType<typeof createManagedLifecycleHarness>
 

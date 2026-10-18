@@ -6,7 +6,7 @@ import type {
   PortForwardStartOptions,
   SshPortForwardProvider,
   StartedPortForward
-} from './ssh-port-forward-provider'
+} from './port-forwarding/ssh-port-forward-provider'
 import type { TcpForwardingVerdict } from './ssh-tcp-forwarding-probe'
 
 let generation = 1

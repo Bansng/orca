@@ -12,8 +12,8 @@
  */
 import { createHash } from 'node:crypto'
 import { shellEscape } from './ssh-connection-utils'
-import { RELAY_REMOTE_DIR } from './relay-protocol'
-import { ORCAD_ACTIVATION_FILENAME } from './orcad-activation-record'
+import { RELAY_REMOTE_DIR } from './remote-frame-protocol'
+import { ORCAD_ACTIVATION_FILENAME } from '../managed-server/activation/orcad-activation-record'
 import { parseDarwinPlatformUuid } from '../persistence/profile-state/profile-state-access-identity'
 import {
   joinRemotePath,

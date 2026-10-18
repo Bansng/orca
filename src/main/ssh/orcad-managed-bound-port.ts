@@ -10,12 +10,15 @@ import {
 import type { SshTarget } from '../../shared/ssh-types'
 import type { ServeReadiness } from '../server/serve-readiness'
 import { managedOrcadInstallDir } from './orcad-managed-runtime-context'
-import { resolveOrcadRemoteContext } from './orcad-remote-context'
+import { resolveOrcadRemoteContext } from '../managed-server/install/orcad-remote-context'
 import {
   parseOrcadReadinessWaitOutput,
   readOrcadReadinessNowCommand
-} from './orcad-remote-readiness-wait'
-import { execOrcadRemote, type OrcadRemoteExecTarget } from './orcad-remote-runtime-control'
+} from '../managed-server/install/orcad-remote-readiness-wait'
+import {
+  execOrcadRemote,
+  type OrcadRemoteExecTarget
+} from '../managed-server/install/orcad-remote-runtime-control'
 import type { OrcadHostTransport } from './orcad-host-transport'
 
 export type OrcadTunnelPortInput = {

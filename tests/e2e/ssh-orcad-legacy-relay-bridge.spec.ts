@@ -10,7 +10,7 @@
  * When another desktop on the same login already moved that terminal's project to the host's
  * server, the host stays unmoved but connected, and the old tab keeps its shell until it exits.
  *
- * COMPAT(legacy-relay-bridge): revisit 2027-01-15, with src/main/ssh/legacy-relay-bridge/.
+ * COMPAT(legacy-relay-bridge): revisit 2027-01-15, with src/main/ssh/legacy-relay/.
  */
 import type { ElectronApplication, Page, TestInfo } from '@stablyai/playwright-test'
 import { z } from 'zod'

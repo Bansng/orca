@@ -3,25 +3,25 @@
  * that stopped itself after idling. A stopped server is just "not running": it is neither a
  * failure nor evidence about terminals, which the daemon owns and which outlive orcad.
  */
-import { ORCAD_FENCE_OWNER_FILENAME } from './orcad-activation-fence-scope'
+import { ORCAD_FENCE_OWNER_FILENAME } from '../managed-server/activation/orcad-activation-fence-scope'
 import type { ServeReadiness } from '../server/serve-readiness'
-import { readOrcadActivationRecord } from './orcad-activation-record-store'
+import { readOrcadActivationRecord } from '../managed-server/activation/orcad-activation-record-store'
 import { randomUUID } from 'node:crypto'
 import {
   orcadActivationFenceExists,
   releaseOrcadActivationFence,
   withOrcadActivationLock
-} from './orcad-activation-lock'
-import { orcadLivenessProvenExited } from './orcad-remote-launch'
-import { readBoundedOrcadRemoteRecord } from './orcad-remote-record-file'
-import { orcadActivationFenceLockDir } from './orcad-activation-transaction'
+} from '../managed-server/activation/orcad-activation-lock'
+import { orcadLivenessProvenExited } from '../managed-server/install/orcad-remote-launch'
+import { readBoundedOrcadRemoteRecord } from '../managed-server/install/orcad-remote-record-file'
+import { orcadActivationFenceLockDir } from '../managed-server/activation/orcad-activation-transaction'
 import { joinRemotePath } from './ssh-remote-platform'
 
-import { readOrcadActivationTransaction } from './orcad-activation-transaction-store'
+import { readOrcadActivationTransaction } from '../managed-server/activation/orcad-activation-transaction-store'
 import {
   ORCAD_RECOVERY_UNVERIFIABLE_CODE,
   recoverInterruptedOrcadActivation
-} from './orcad-activation-recovery'
+} from '../managed-server/activation/orcad-activation-recovery'
 import {
   ensureOrcadSlotServing,
   orcadSlotDir,

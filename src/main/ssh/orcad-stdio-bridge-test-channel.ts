@@ -2,7 +2,7 @@
 import { createServer, type Server } from 'node:net'
 import { Duplex } from 'node:stream'
 import { spawnProcess } from '@orca/process-host'
-import type { RemoteCommandChannel } from './remote-install-transport'
+import type { RemoteCommandChannel } from '../managed-server/install/remote-install-transport'
 
 export function spawnLocalBridgeChannel(
   program: string,

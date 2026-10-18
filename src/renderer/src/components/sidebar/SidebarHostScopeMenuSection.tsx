@@ -29,7 +29,7 @@ type SidebarHostScopeMenuSectionProps = {
 }
 
 function getHostMetadata(host: SidebarHostOption): string {
-  const healthLabel = getSidebarHostHealthLabel(host.health)
+  const healthLabel = getSidebarHostHealthLabel(host.health, host.blockedReason)
   if (host.kind === 'local') {
     return host.detail
   }

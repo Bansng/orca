@@ -8,8 +8,11 @@
 import { join } from 'node:path'
 import { getAppEnvironment } from '../../shared/app-environment'
 import type { NodeRuntimeTarget } from '../../shared/node-runtime-pin'
-import { ensureRemoteOrcadNodeRuntime } from './orcad-remote-node-runtime'
-import { installOrcadWindowsHostScript, orcadRemoteBaseDir } from './orcad-remote-windows-node'
+import { ensureRemoteOrcadNodeRuntime } from '../managed-server/install/orcad-remote-node-runtime'
+import {
+  installOrcadWindowsHostScript,
+  orcadRemoteBaseDir
+} from '../managed-server/install/orcad-remote-windows-node'
 import { materializeNodeRuntimeArchive } from '../node-runtime/pinned-runtime-materializer'
 import type { OrcadHostTransport } from './orcad-host-transport'
 import { joinRemotePath, type RemoteHostPlatform } from './ssh-remote-platform'

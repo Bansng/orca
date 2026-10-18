@@ -7,7 +7,7 @@ vi.mock('electron', () => ({
 }))
 
 import { SshConnection } from './ssh-connection'
-import { uploadDirectoryViaSystemSsh } from './ssh-system-fallback'
+import { uploadDirectoryViaSystemSsh } from './system-ssh-file-transfer'
 import type { SshTarget } from '../../shared/ssh-types'
 import { relayArtifactFilenames } from './relay-install-artifacts'
 

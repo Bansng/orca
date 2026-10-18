@@ -1,7 +1,7 @@
 import { constants } from 'node:fs'
 import { open, stat } from 'node:fs/promises'
 import type { SshTarget } from '../../shared/ssh-types'
-import type { SshResolvedConfig } from './ssh-config-parser'
+import type { SshResolvedConfig } from './ssh-g-config-resolution'
 import { listDefaultIdentityFilePaths, resolveIdentityFilePaths } from './ssh-auth-resolution'
 import { resolveSshConfigHomePath } from './ssh-config-path-expansion'
 import {

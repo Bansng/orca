@@ -1,4 +1,4 @@
-import type { RuntimeEnvironmentStatus } from './runtime-host-status'
+import type { RuntimeEnvironmentStatus, RuntimeHostBlockedReason } from './runtime-host-status'
 import {
   LOCAL_EXECUTION_HOST_ID,
   getLocalExecutionHostLabel,
@@ -36,6 +36,8 @@ export type ExecutionHostRegistryEntry = {
   health: ExecutionHostHealth
   connectionStatus?: SshConnectionStatus
   compatibility?: RuntimeCompatVerdict
+  /** Present only while health is blocked; local evidence, never published to peers. */
+  blockedReason?: RuntimeHostBlockedReason
   capabilities?: readonly string[]
   appVersion?: string | null
   protocolVersion?: number | null
@@ -160,12 +162,18 @@ function addRuntimeHost(
             snapshot?.transport === 'connecting'
           ? 'connecting'
           : runtimeControlHealth(remoteControl)
+  const health = controlHealth ?? runtimeHealth(status, compatibility, remoteControl)
+  const blockedReason =
+    health === 'blocked'
+      ? (snapshot?.verification === 'blocked' && snapshot.blockedReason) || 'incompatible'
+      : undefined
   setHost(hosts, {
     id: hostId,
     kind: 'runtime',
     label,
     detail: 'Orca server',
-    health: controlHealth ?? runtimeHealth(status, compatibility, remoteControl),
+    health,
+    ...(blockedReason ? { blockedReason } : {}),
     compatibility: compatibility ?? undefined,
     capabilities: metadata?.capabilities,
     appVersion: runtimeStatus?.appVersion ?? metadata?.appVersion ?? null,

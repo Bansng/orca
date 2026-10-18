@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import { connect, createServer } from 'node:net'
-import { buildSshArgs, findSystemSsh, type SystemSshBuildArgsOptions } from './ssh-system-fallback'
+import { buildSshArgs, type SystemSshBuildArgsOptions } from './system-ssh-args'
+import { findSystemSsh } from './system-ssh-binary'
 import { stopOrphanedOrcaSshForward } from './system-ssh-orphaned-forward'
 import type { SshTarget } from '../../shared/ssh-types'
 

@@ -7,11 +7,11 @@
  * can count the terminals it started, so the snapshot may no longer describe them.
  */
 import { execOrcadStateMutation } from './orcad-state-mutation-exec'
-import { orcadRemoteBaseDir } from './orcad-remote-windows-node'
+import { orcadRemoteBaseDir } from '../managed-server/install/orcad-remote-windows-node'
 import type { ServeReadiness } from '../server/serve-readiness'
-import { RELAY_REMOTE_DIR } from './relay-protocol'
-import { ORCAD_STATE_SNAPSHOT_DIR } from './orcad-activation-record'
-import type { OrcadSnapshotVerdict } from './orcad-activation-transaction'
+import { RELAY_REMOTE_DIR } from './remote-frame-protocol'
+import { ORCAD_STATE_SNAPSHOT_DIR } from '../managed-server/activation/orcad-activation-record'
+import type { OrcadSnapshotVerdict } from '../managed-server/activation/orcad-activation-transaction'
 import {
   clearOrcadStateSnapshotMembersCommand,
   compareOrcadStateSnapshotCommand,
@@ -19,7 +19,7 @@ import {
   parseOrcadSnapshotRestore,
   restoreOrcadStateSnapshotCommand
 } from './orcad-state-snapshot'
-import { execOrcadRemote } from './orcad-remote-runtime-control'
+import { execOrcadRemote } from '../managed-server/install/orcad-remote-runtime-control'
 import {
   ensureOrcadSlotServing,
   launchOrcadSlot,

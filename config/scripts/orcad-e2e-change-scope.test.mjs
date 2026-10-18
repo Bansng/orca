@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { matchesGlob } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { parse } from 'yaml'
@@ -15,6 +15,12 @@ const workflows = {
   ),
   computer: parse(
     readFileSync(new URL('../../.github/workflows/computer-e2e.yml', import.meta.url), 'utf8')
+  ),
+  hostileHosts: parse(
+    readFileSync(new URL('../../.github/workflows/ssh-hostile-hosts.yml', import.meta.url), 'utf8')
+  ),
+  windowsHosts: parse(
+    readFileSync(new URL('../../.github/workflows/ssh-windows-hosts.yml', import.meta.url), 'utf8')
   )
 }
 
@@ -58,7 +64,7 @@ const cases = {
       'src/main/wsl/wsl-orcad-deploy.test.ts',
       'src/main/wsl/nested/wsl-orcad-deploy.test.ts',
       'src/main/ssh/orcad-activation-outcome-log.test.ts',
-      'src/main/ssh/orcad-remote-shell-commands.integration.test.ts'
+      'src/main/managed-server/install/orcad-remote-shell-commands.integration.test.ts'
     ],
     retained: [
       'src/main/wsl/wsl-orcad-real-distro-lane.test.ts',
@@ -66,10 +72,10 @@ const cases = {
       'src/main/wsl/wsl-orcad-bridge-test-child.ts',
       'src/main/wsl/wsl-orcad.test-fixture.ts',
       'src/main/wsl/wsl-orcad.test.json',
-      'src/main/ssh/orcad-remote-launch.ts',
+      'src/main/managed-server/install/orcad-remote-launch.ts',
       'src/main/ssh/orcad-launch-test-harness.ts',
       'src/main/ssh/orcad-launch.test-fixture.ts',
-      'src/main/ssh/remote-install-transport.ts',
+      'src/main/managed-server/install/remote-install-transport.ts',
       '.github/workflows/wsl-orcad-e2e.yml'
     ],
     product: 'src/main/wsl/wsl-orcad-deploy.ts'
@@ -151,4 +157,19 @@ it('re-includes the real WSL distro root after excluding unit tests', () => {
   for (const phase of phases) {
     expect(phase.run).toContain('src/main/wsl/wsl-orcad-real-distro-lane.test.ts')
   }
+})
+
+// Each remote host lane executes these sources, so a change to one must start the lane.
+describe.each([
+  ['hostileHosts', ['src/main/ssh/ssh-connection.ts', 'src/main/ssh/ssh-connection-utils.ts']],
+  ['windowsHosts', ['src/main/ssh/ssh-connection.ts', 'src/main/ssh/ssh-connection-utils.ts']],
+  ['wsl', ['src/main/orcad/orcad-wsl-host-login-environment.ts']]
+])('%s remote transport routing', (lane, sources) => {
+  const paths = workflows[lane].on.pull_request.paths
+
+  it.each(sources)('starts the lane for %s', (file) => {
+    expect(existsSync(new URL(`../../${file}`, import.meta.url)), file).toBe(true)
+    expect(workflowIncludes(paths, [file])).toBe(true)
+    expect(workflowIncludes(paths, [file.replace(/\.ts$/, '.test.ts')])).toBe(false)
+  })
 })

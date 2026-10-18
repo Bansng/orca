@@ -24,11 +24,11 @@ import type {
 } from '../../terminal/launch/mobile-terminal-startup'
 import type { OrcaRuntimeWithStopTerminalsForWorktree as SessionEditHost } from '../../terminal/stop/worktree-terminal-stop'
 import { claimWindowWakeRecordForPane, isWindowWakeSleepRecord } from './window-wake-sleep-record'
-import { runtimeWorktreeIdsEqual } from '../../runtime-worktree-path-identity'
 import {
   buildHeadlessMobileSessionTabGroups,
   cloneTerminalLayoutSnapshot
 } from '../../mobile-session-layout-projection'
+import { worktreeIdsEqual } from '../../../../shared/worktree/id'
 
 export abstract class OrcaRuntimeWithApplyMobileSessionTabNavigation extends OrcaRuntimeWithPerformMobileSessionPtyRecordsRefresh {
   protected abstract emitMobileSessionTabsSnapshotToClient(
@@ -262,7 +262,7 @@ export abstract class OrcaRuntimeWithApplyMobileSessionTabNavigation extends Orc
       this.getWorkspaceSessionForWorktree(worktreeId)?.sleepingAgentSessionsByPaneKey?.[
         makePaneKey(tab.parentTabId, tab.leafId)
       ]
-    return record && runtimeWorktreeIdsEqual(record.worktreeId, worktreeId) ? record : null
+    return record && worktreeIdsEqual(record.worktreeId, worktreeId) ? record : null
   }
 
   protected shouldMaterializeHeadlessMobileSessionTab(

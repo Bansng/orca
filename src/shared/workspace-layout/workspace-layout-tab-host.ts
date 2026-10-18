@@ -8,6 +8,7 @@ import {
 } from '../execution-host'
 import type { TabContentType } from '../tab-types'
 import type { PersistedOpenFile } from '../workspace-session-state-types'
+import { editorTabShowsFile } from './workspace-layout-editor-tab-file'
 
 type FileOwner = Pick<
   PersistedOpenFile,
@@ -18,10 +19,13 @@ type FileOwner = Pick<
 export function tabExecutionHostId(
   tab: { kind: TabContentType; entityId: string },
   files: readonly FileOwner[] | undefined,
-  hostId: ExecutionHostId
+  hostId: ExecutionHostId,
+  worktreeId: string
 ): ExecutionHostId {
   const file =
-    tab.kind === 'editor' ? files?.find((entry) => entry.filePath === tab.entityId) : undefined
+    tab.kind === 'editor'
+      ? files?.find((entry) => editorTabShowsFile(tab.entityId, entry, worktreeId))
+      : undefined
   if (file?.externalSshTargetId) {
     return toSshExecutionHostId(file.externalSshTargetId)
   }

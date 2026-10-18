@@ -1,5 +1,5 @@
 import type { BrowserWindow } from 'electron'
-import type { SshPortForwardManager } from '../ssh/ssh-port-forward'
+import type { SshPortForwardManager } from '../ssh/port-forwarding/ssh-port-forward'
 import type { DetectedPort, EnrichedDetectedPort, SshConnectionState } from '../../shared/ssh-types'
 import { isRuntimeOwnedSshTargetId } from '../../shared/execution-host'
 import {

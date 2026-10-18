@@ -27,7 +27,7 @@ import { getPassphrasePrivateKeyPath } from './ssh-private-key-authentication'
 import { buildSshArgs } from './system-ssh-args'
 import { walkInitialAuthLadder } from './ssh-connection-test-fixtures'
 import type { SshTarget } from '../../shared/ssh-types'
-import type { SshResolvedConfig } from './ssh-config-parser'
+import type { SshResolvedConfig } from './ssh-g-config-resolution'
 
 function makeTarget(overrides: Partial<SshTarget> = {}): SshTarget {
   return {

@@ -8,18 +8,22 @@ import {
   coreOrcadActivationRecord,
   serializeOrcadActivationRecord,
   type OrcadActivationRecord
-} from './orcad-activation-record'
+} from '../managed-server/activation/orcad-activation-record'
 import {
   parseOrcadActivationTransaction,
   serializeOrcadActivationTransaction
-} from './orcad-activation-transaction'
+} from '../managed-server/activation/orcad-activation-transaction'
 import {
   createOrcadDecommissionTransaction,
   withOrcadDecommissionProcessExited,
   withOrcadDecommissionStopDispatched,
   type OrcadDecommissionTransaction
 } from './orcad-decommission-transaction'
-import { FakeOrcadHost, NEW, OLD } from './orcad-activation-host-test-harness'
+import {
+  FakeOrcadHost,
+  NEW,
+  OLD
+} from '../managed-server/activation/orcad-activation-host-test-harness'
 import { compareAppVersions } from '../../shared/app-version'
 import type { OrcadManagedStopRequest } from '../../shared/orcad-stop-request'
 

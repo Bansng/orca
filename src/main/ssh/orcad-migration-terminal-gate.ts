@@ -11,7 +11,7 @@ export type OrcadMigrationTerminalVerdict =
   | { verdict: 'exited'; provenPtyIds: string[] }
   /**
    * COMPAT(legacy-relay-bridge, revisit 2027-01-15): relay terminals may still run, and the host
-   * converts anyway. Converting stops nothing; src/main/ssh/legacy-relay-bridge/ keeps serving
+   * converts anyway. Converting stops nothing; src/main/ssh/legacy-relay/ keeps serving
    * these leases' panes from the old relay until each terminal exits.
    */
   | {

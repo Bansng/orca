@@ -1,3 +1,4 @@
+import type { ManagedServerUpdateDeps } from './managed-server-update-check'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SshTarget } from '../../shared/ssh-types'
 import type { ManagedOrcadAutoUpdateOutcome } from './orcad-managed-auto-update'
@@ -7,6 +8,10 @@ import {
   updateManagedOrcadOnRestore,
   type ManagedOrcadRestoreUpdateDeps
 } from './orcad-managed-update-on-restore'
+
+// The retry decision is read under the host's lifecycle lock, so the stub's last call answers it.
+const failedBeforeOf = (autoUpdate: ManagedServerUpdateDeps['autoUpdate']) =>
+  vi.mocked(autoUpdate).mock.lastCall?.[1].failedBefore()
 
 const target: SshTarget = { id: 'ssh-1', label: 'Box', host: 'box', port: 22, username: 'me' }
 
@@ -24,6 +29,7 @@ function deps(
       return outcome
     }),
     recordedUpdateFailure: () => null,
+    failedThisLaunch: () => true,
     recordUpdateFailure: vi.fn(),
     clearUpdateFailure: vi.fn(),
     ...overrides
@@ -36,10 +42,7 @@ describe('updating a managed server when the launch restores its tunnel', () => 
   it('runs the same update check a connect runs, and publishes it', async () => {
     const d = deps({ outcome: 'updated', activeVersion: '0.1.0+b' })
     await updateManagedOrcadOnRestore('env-1', () => d)
-    expect(d.autoUpdate).toHaveBeenCalledWith(
-      'env-1',
-      expect.objectContaining({ failedBefore: false })
-    )
+    expect(failedBeforeOf(d.autoUpdate)).toBe(false)
     expect(vi.mocked(d.publish).mock.calls).toEqual([
       [target, 'env-1', 'updating'],
       [target, 'env-1', 'settled', undefined]
@@ -80,10 +83,7 @@ describe('updating a managed server when the launch restores its tunnel', () => 
       { recordedUpdateFailure: () => 'rolled back' }
     )
     await updateManagedOrcadOnRestore('env-held', () => held)
-    expect(held.autoUpdate).toHaveBeenCalledWith(
-      'env-held',
-      expect.objectContaining({ failedBefore: true })
-    )
+    expect(failedBeforeOf(held.autoUpdate)).toBe(true)
   })
 
   it('never fails the restore that triggered it', async () => {

@@ -16,6 +16,11 @@ export abstract class AgentHookServerAuthorityAliases extends AgentHookServerAut
     this.paneKeyAliasPersistenceListener = listener
   }
 
+  /** The pane key that owns `paneKey`'s agent status once aliases are followed. */
+  resolvePaneAuthorityOwner(paneKey: string): string {
+    return this.resolvePaneKeyAlias(paneKey)
+  }
+
   protected getPersistedPaneKeyAliases(): LegacyPaneKeyAliasEntry[] {
     return Array.from(this.legacyPaneKeyAliases.entries()).flatMap(([legacyPaneKey, entry]) =>
       entry.ptyId

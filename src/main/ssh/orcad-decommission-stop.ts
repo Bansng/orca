@@ -5,7 +5,7 @@
  * lost answer is `unverifiable`, never exit; cancelling is how a stop that did not finish is
  * withdrawn, and only an orcad-confirmed cancellation lets the fence go.
  */
-import { isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
+import { isUnconfirmedSshCommandTermination } from './remote-exec-command'
 import {
   cancelRemoteOrcadManagedStop,
   completeRemoteOrcadManagedStop

@@ -42,6 +42,7 @@
 4 src/main/persistence/migrating-orcad-catalog/orcad-source-workspace-session-subtraction.ts
 1 src/main/persistence/migrating-orcad-catalog/orcad-source-workspace-session.ts
 1 src/main/persistence/restoring-sessions/folder-workspace-operations.ts
+1 src/main/persistence/restoring-sessions/invalid-workspace-layout-purge.ts
 5 src/main/persistence/restoring-sessions/session-owner-fields.ts
 12 src/main/persistence/restoring-sessions/session-owner-removal.ts
 2 src/main/persistence/restoring-sessions/workspace-pane-normalization.ts

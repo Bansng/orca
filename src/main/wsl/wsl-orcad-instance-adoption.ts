@@ -7,33 +7,33 @@
  * the activation fence. A different version is then handled by the usual update gate.
  */
 import { ORCAD_LOCK_FILE_NAME, parseOrcadInstanceLockRecord } from '../orcad/orcad-instance-lock'
-import type { OrcadActivationRecord } from '../ssh/orcad-activation-record'
+import type { OrcadActivationRecord } from '../managed-server/activation/orcad-activation-record'
 import {
   readOrcadActivationRecord,
   writeOrcadActivationRecord
-} from '../ssh/orcad-activation-record-store'
-import { evaluateOrcadActivation } from '../ssh/orcad-activation-gate'
-import { withOrcadActivationLock } from '../ssh/orcad-activation-lock'
-import { sameOrcadActivationRecord } from '../ssh/orcad-activation-transaction'
-import { readOrcadActivationTransaction } from '../ssh/orcad-activation-transaction-store'
+} from '../managed-server/activation/orcad-activation-record-store'
+import { evaluateOrcadActivation } from '../managed-server/activation/orcad-activation-gate'
+import { withOrcadActivationLock } from '../managed-server/activation/orcad-activation-lock'
+import { sameOrcadActivationRecord } from '../managed-server/activation/orcad-activation-transaction'
+import { readOrcadActivationTransaction } from '../managed-server/activation/orcad-activation-transaction-store'
 import { readRemoteOrcadManagedStopTarget } from '../ssh/orcad-managed-remote-stop'
 import {
   orcadSlotDir,
   resolveOrcadSlotIdentity,
   type OrcadSlotOptions
 } from '../ssh/orcad-recovery-slot'
-import { ORCAD_PID_FILENAME } from '../ssh/orcad-remote-launch'
+import { ORCAD_PID_FILENAME } from '../managed-server/install/orcad-remote-host-support'
 import {
   parseOrcadReadinessWaitOutput,
   readOrcadReadinessNowCommand
-} from '../ssh/orcad-remote-readiness-wait'
-import { readBoundedOrcadRemoteRecord } from '../ssh/orcad-remote-record-file'
-import { execOrcadRemote } from '../ssh/orcad-remote-runtime-control'
+} from '../managed-server/install/orcad-remote-readiness-wait'
+import { readBoundedOrcadRemoteRecord } from '../managed-server/install/orcad-remote-record-file'
+import { execOrcadRemote } from '../managed-server/install/orcad-remote-runtime-control'
 import {
   ORCAD_INSTALL_MODEL,
   remoteInstallDirName,
   remoteInstallVersionDirRegex
-} from '../ssh/remote-install-model'
+} from '../managed-server/install/remote-install-model'
 import { shellEscape } from '../ssh/ssh-connection-utils'
 import { joinRemotePath } from '../ssh/ssh-remote-platform'
 

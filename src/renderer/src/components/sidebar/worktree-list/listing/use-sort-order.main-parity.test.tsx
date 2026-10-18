@@ -102,7 +102,7 @@ describe('main temporal owner against the window, on one fake clock', () => {
     const owner = mainOwner()
     const window = renderWindow()
     owner.beginSession('s1')
-    owner.noteRowsChange(3)
+    owner.noteCatalogListing(useAppStore.getState().worktreesByRepo[repo.id] ?? [], false)
     await advance(0)
     expect(mainRanks(owner)).toEqual(window.result.current)
 
@@ -121,6 +121,40 @@ describe('main temporal owner against the window, on one fake clock', () => {
     expect(mainRanks(owner)).toEqual(window.result.current)
   })
 
+  it('waits out a burst when a listing brings only fresher activity, as the window does', async () => {
+    seed(
+      [
+        makeWorktree('a', 'A', { lastActivityAt: 2 }),
+        makeWorktree('b', 'B', { lastActivityAt: 1 })
+      ],
+      'recent'
+    )
+    const owner = mainOwner()
+    const window = renderWindow()
+    owner.beginSession('s1')
+    await advance(0)
+    expect(mainRanks(owner)).toEqual(window.result.current)
+
+    // The window bumps once; the activity write on the row it shows reorders nothing by itself.
+    change(owner, {})
+    act(() =>
+      useAppStore.setState((s) => ({
+        worktreesByRepo: {
+          [repo.id]: (s.worktreesByRepo[repo.id] ?? []).map((w) =>
+            w.id === 'b' ? { ...w, lastActivityAt: 9 } : w
+          )
+        }
+      }))
+    )
+    owner.noteCatalogListing(useAppStore.getState().worktreesByRepo[repo.id] ?? [], false)
+    await advance(SORT_SETTLE_MS - 1)
+    expect(window.result.current).toEqual(['a', 'b'])
+    expect(mainRanks(owner)).toEqual(window.result.current)
+    await advance(1)
+    expect(window.result.current).toEqual(['b', 'a'])
+    expect(mainRanks(owner)).toEqual(window.result.current)
+  })
+
   it('latches Smart on the same live signal and both go cold on a remount', async () => {
     seed(
       [
@@ -132,7 +166,7 @@ describe('main temporal owner against the window, on one fake clock', () => {
     const owner = mainOwner()
     let window = renderWindow()
     owner.beginSession('s1')
-    owner.noteRowsChange(2)
+    owner.noteCatalogListing(useAppStore.getState().worktreesByRepo[repo.id] ?? [], false)
     await advance(0)
     expect(window.result.current).toEqual(['a', 'b'])
     expect(mainRanks(owner)).toEqual(window.result.current)

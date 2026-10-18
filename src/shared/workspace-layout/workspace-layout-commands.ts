@@ -66,6 +66,9 @@ function applyCommand(
   command: LayoutCommand,
   context: LayoutContext
 ): Applied {
+  if (command.type === 'setDefaultTabsApplied') {
+    return setDefaultTabsApplied(model, command.workspace)
+  }
   if (!model.workspaces[command.workspace] && !CREATES_WORKSPACE.has(command.type)) {
     // Closing what is already gone is not an error (#10747).
     if (command.type === 'closeTabs') {
@@ -137,4 +140,16 @@ function applyCommand(
     case 'wake':
       return wake(model, command)
   }
+}
+
+// A record, not a layout: a workspace with no tabs yet (zero templates) is marked, not created.
+function setDefaultTabsApplied(model: WorkspaceLayoutModel, workspace: string): Applied {
+  const marks = model.records.defaultTabsAppliedByWorkspace
+  if (marks?.[workspace]) {
+    return applied(model)
+  }
+  return applied({
+    ...model,
+    records: { ...model.records, defaultTabsAppliedByWorkspace: { ...marks, [workspace]: true } }
+  })
 }

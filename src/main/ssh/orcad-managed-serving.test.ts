@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('./orcad-remote-context', () => ({
+vi.mock('../managed-server/install/orcad-remote-context', () => ({
   resolveOrcadRemoteContext: vi.fn(async () => ({
     connection: {},
     host: {},

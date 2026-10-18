@@ -10,10 +10,7 @@ const { spawnMock, connectMock, createServerMock, waitForStopMock } = vi.hoisted
 
 vi.mock('node:child_process', () => ({ spawn: spawnMock }))
 vi.mock('node:net', () => ({ connect: connectMock, createServer: createServerMock }))
-vi.mock('./ssh-system-fallback', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>
-  return { ...actual, findSystemSsh: () => '/usr/bin/ssh' }
-})
+vi.mock('./system-ssh-binary', () => ({ findSystemSsh: () => '/usr/bin/ssh' }))
 vi.mock('./system-ssh-forward-process', () => ({
   waitForSystemSshForwardStop: waitForStopMock
 }))
