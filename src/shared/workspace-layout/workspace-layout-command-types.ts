@@ -40,6 +40,8 @@ export type LayoutCommand =
       viewMode?: 'terminal' | 'chat'
       /** When the window drew the tab, so a later save of it matches main's copy. */
       createdAt?: number
+      /** A quick command tab's label, so a later save of it matches main's copy. */
+      quickCommandLabel?: string
       creation?: Partial<LayoutTerminalCreation>
       initial?: InitialSurfaceReason
       split?: NewGroupSplit

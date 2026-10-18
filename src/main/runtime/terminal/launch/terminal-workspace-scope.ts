@@ -28,7 +28,6 @@ import type { TerminalWorkspaceLaunchScope } from '../../runtime-legacy-worker-t
 import { resolveTerminalStartupCwd } from '../../../../shared/terminal-startup-cwd'
 import type { ResolvedTerminalWorkspaceLaunchTarget } from '../../orca-runtime-core'
 import { AGENT_HOOK_RUNTIME_ENV_KEYS } from '../../orca-runtime-core'
-import { ensureJcodeRuntimeDir } from '../../../../shared/jcode-runtime-dir'
 import { FLOATING_TERMINAL_WORKTREE_ID } from '../../../../shared/constants'
 import { homedir } from 'node:os'
 import { getExplicitWorktreeIdSelector } from '../../runtime-worktree-selection'
@@ -189,29 +188,20 @@ export abstract class OrcaRuntimeWithResolveBrowserNetworkExecutionHostForWorktr
     }
   }
 
-  protected async buildTerminalWorkspaceEnv(
+  protected buildTerminalWorkspaceEnv(
     scope: TerminalWorkspaceLaunchScope,
     baseEnv: Record<string, string>,
-    paneKey: string,
-    tabId: string,
     agentTeamsEnv?: Record<string, string>
-  ): Promise<Record<string, string>> {
+  ): Record<string, string> {
     const cleanBaseEnv = { ...baseEnv }
     for (const key of AGENT_HOOK_RUNTIME_ENV_KEYS) {
       delete cleanBaseEnv[key]
     }
-    const jcodeRuntimeDirEnv =
-      scope.connectionId === null ? await ensureJcodeRuntimeDir(paneKey) : undefined
+    // Pane identity (ORCA_PANE_KEY/TAB_ID/WORKTREE_ID, jcode dir) is stamped by the spawn step from the spawn's ids.
     const env = {
       ...cleanBaseEnv,
       ...agentTeamsEnv,
-      ...this.buildAgentHookPtyEnv?.(),
-      // Why: the runtime dir is a local unix-socket path; remote (SSH)
-      // terminals must keep jcode on its own guest-side default daemon.
-      ...jcodeRuntimeDirEnv,
-      ORCA_PANE_KEY: paneKey,
-      ORCA_TAB_ID: tabId,
-      ORCA_WORKTREE_ID: scope.id
+      ...this.buildAgentHookPtyEnv?.()
     }
     if (!scope.folderWorkspace) {
       return env

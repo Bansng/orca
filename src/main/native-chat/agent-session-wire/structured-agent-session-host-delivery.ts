@@ -75,7 +75,12 @@ export function createStructuredAgentSessionConversationDelivery(input: {
   mutationContext: () => StructuredAgentSessionMutationContext
   clientDelivery: Pick<
     StructuredAgentSessionClientDelivery,
-    'publishRestored' | 'readChildWork' | 'childWorkOpen' | 'readStopping' | 'publishStatus'
+    | 'publishRestored'
+    | 'readChildWork'
+    | 'childWorkOpen'
+    | 'readStopping'
+    | 'publishStatus'
+    | 'publishGenerationEnded'
   >
 }): StructuredAgentSessionConversationDelivery {
   const { deps, sessions } = input
@@ -137,6 +142,7 @@ export function createStructuredAgentSessionConversationDelivery(input: {
     currentWork: (sessionId) =>
       hostStructuredAgentSessionCurrentWork({ store: deps.store, sessions }, sessionId),
     readChildWork: input.clientDelivery.readChildWork,
+    workChanged: (sessionId) => input.clientDelivery.publishGenerationEnded(sessionId),
     childWorkOpen: input.clientDelivery.childWorkOpen,
     stopping: input.clientDelivery.readStopping,
     now: () => deps.now?.() ?? Date.now()

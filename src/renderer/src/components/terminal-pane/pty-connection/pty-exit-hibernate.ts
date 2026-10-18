@@ -20,6 +20,7 @@ import type { PtyPaneStartup } from '../pty-connection-types'
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
 import { isPtyExitReplacedByRestart } from '../pty-exit-delivery'
 import { armRestartReplacement } from './restart-replacement-on-show'
+import { noteHiddenAgentResumePtyEnded } from './hidden-agent-resume-deferral'
 import { closeExitedSplitPaneThroughLayoutOwner } from './exited-split-pane-close'
 import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../../shared/layout-owner-switch'
 
@@ -105,8 +106,8 @@ export function installPtyExitHibernate(session: ConnectPanePtySession): void {
   session.spawnedFreshPtyId = null
   // Why: hibernation suppresses its kill's exit while the pane is hidden, so
   // onExit must not tear the pane down — but the pane still owes the user a
-  // wake. Remember the hibernated PTY and exact record; the visibility-resume
-  // hook consumes both and cannot accidentally adopt a later stale record.
+  // wake. Remember the hibernated PTY and record; the visibility-resume hook
+  // consumes both and cannot adopt a later record of a different session.
   session.hibernatedWakeTarget = null
   session.wakeHibernatedAgentPane = null
   // Why: a mobile wake can land after the sleeping record is written but
@@ -131,7 +132,11 @@ export function installPtyExitHibernate(session: ConnectPanePtySession): void {
       return null
     }
     const currentRecord = session.getSleepingRecordForPane(useAppStore.getState())?.record
-    if (currentRecord !== target.record) {
+    // Why claim keys: a held pane can wait a whole session, and a re-capture of the same session must not strand it.
+    if (
+      !currentRecord ||
+      getProviderSessionClaimKey(currentRecord) !== getProviderSessionClaimKey(target.record)
+    ) {
       session.hibernatedWakeTarget = null
       session.pendingHibernatedWakeTarget = null
       return null
@@ -162,8 +167,8 @@ export function installPtyExitHibernate(session: ConnectPanePtySession): void {
     // Why: reveal is the wake signal for a hibernated pane. Resume the recorded
     // agent session (or fall back to a fresh shell) instead of leaving the
     // frozen frame with no PTY behind it.
-    void session
-      .wakeHibernatedAgentPane()
+    const wake: () => Promise<string | null> = target.wake ?? session.wakeHibernatedAgentPane
+    void wake()
       .then((spawnedPtyId) => {
         if (!spawnedPtyId) {
           // Why: a transient replacement-spawn failure leaves the passive
@@ -219,6 +224,7 @@ export function installPtyExitHibernate(session: ConnectPanePtySession): void {
       return
     }
     session.handledExitPtyId = ptyId
+    noteHiddenAgentResumePtyEnded(session)
     const processExitState =
       session.processExitStateByPtyId.get(ptyId) ?? session.currentProcessExitState
     session.processExitStateByPtyId.delete(ptyId)

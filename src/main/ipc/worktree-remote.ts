@@ -938,14 +938,26 @@ export function createLocalWorktree(
   store: Store,
   mainWindow: BrowserWindow,
   runtime: OrcaRuntimeService,
-  timing: WorktreeCreateTimingRecorder = createWorktreeCreateTimingRecorder()
+  timing: WorktreeCreateTimingRecorder = createWorktreeCreateTimingRecorder(),
+  onWorkspaceCreated?: (worktreeId: string) => void
 ): Promise<CreateWorktreeResult> {
   // Why a holder fired in `finally`: consuming a prepared checkout leaves the pool one short, so a
   // create that fails after that point — include copy, push target, terminal startup — must still
   // arm the replacement. Fires exactly once, after startup on the success path.
   const rearm: PreparationRearmHolder = { fire: () => {} }
   return worktreeCreateGit
-    .run(() => performLocalWorktreeCreate(args, repo, store, mainWindow, rearm, timing, runtime))
+    .run(() =>
+      performLocalWorktreeCreate(
+        args,
+        repo,
+        store,
+        mainWindow,
+        rearm,
+        timing,
+        runtime,
+        onWorkspaceCreated
+      )
+    )
     .finally(() => {
       // Closes the create's measured window first, so its own re-arm is not counted against it.
       timing.finish()
@@ -960,7 +972,8 @@ async function performLocalWorktreeCreate(
   mainWindow: BrowserWindow,
   rearm: PreparationRearmHolder,
   timing: WorktreeCreateTimingRecorder,
-  runtime: OrcaRuntimeService
+  runtime: OrcaRuntimeService,
+  onWorkspaceCreated?: (worktreeId: string) => void
 ): Promise<CreateWorktreeResult> {
   const settings = store.getSettings()
   const worktreePathSettings = getWorktreePathSettings(
@@ -1563,6 +1576,7 @@ async function performLocalWorktreeCreate(
     const meta = store.setWorktreeMeta(worktreeId, metaUpdates)
     return { worktree: mergeWorktree(repo.id, created, meta) }
   })
+  onWorkspaceCreated?.(worktreeId)
   const { lineage: worktreeLineage, workspaceLineage } = recordWorkspaceLineageForCreatedWorktree(
     store,
     args,

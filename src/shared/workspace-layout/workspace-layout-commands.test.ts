@@ -706,6 +706,15 @@ describe('layout command effects', () => {
     expect(terminalTab(model, results[1]!.tabId!).createdAt).toBeGreaterThan(42)
   })
 
+  it('creates a terminal tab with the quick command label the window drew it with', () => {
+    const { model, results } = build(testContext(), [
+      { type: 'createTerminalTab', workspace: WS, quickCommandLabel: 'Dev server' },
+      { type: 'createTerminalTab', workspace: WS }
+    ])
+    expect(terminalTab(model, results[0]!.tabId!).quickCommandLabel).toBe('Dev server')
+    expect(terminalTab(model, results[1]!.tabId!)).not.toHaveProperty('quickCommandLabel')
+  })
+
   it('opens an editor tab at the time the window drew it, else now', () => {
     const ctx = testContext()
     const open = { type: 'openEditorTab', workspace: WS, contentType: 'editor' } as const

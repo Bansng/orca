@@ -17,7 +17,9 @@ import { resolvePathEnvKey } from '../../../pty/windows-environment-path'
 import type { RuntimePtySpawnState } from './spawn-state'
 import { resolvePtySpawnStartupTarget } from '../spawn-startup-target'
 import { resolvePtySpawnHostEnv } from '../spawn-host-env'
+import { ptySpawnPaneFromIds, stampPtySpawnPaneEnv } from '../spawn-pane-env'
 import { getConnectionExecutionHostId } from '../../../../shared/execution-host'
+import { ensureJcodeRuntimeDir, JCODE_RUNTIME_DIR_ENV_KEY } from '../../../../shared/jcode-runtime-dir'
 
 export async function prepareRuntimePtySpawn(
   ctx: RuntimePtySpawnState
@@ -104,6 +106,20 @@ export async function prepareRuntimePtySpawn(
     : undefined
   if (args.preAllocatedHandle) {
     ctx.env = { ...ctx.env, ORCA_TERMINAL_HANDLE: args.preAllocatedHandle }
+  }
+  if (ctx.env) {
+    // Why a copy: without a handle or Claude auth this is still the caller's env, which a split reuses.
+    ctx.env = { ...ctx.env }
+    const pane = ptySpawnPaneFromIds(args)
+    const jcodeEnv = pane ? await ensureJcodeRuntimeDir(pane.paneKey) : undefined
+    stampPtySpawnPaneEnv(ctx.env, {
+      pane,
+      jcodeRuntimeDir: jcodeEnv?.[JCODE_RUNTIME_DIR_ENV_KEY],
+      isDaemonHostSpawn: ctx.isDaemonHostSpawn,
+      launchAgent: args.launchAgent,
+      cwd: args.cwd,
+      prewarmsJcodeOnDaemonHost: false
+    })
   }
   // Why: a dropped resume still applies here, but this controller's result has no field for
   // notifyResumeUnavailable — runtime/relay panes start fresh without the notice.

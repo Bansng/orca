@@ -84,11 +84,13 @@ export function serveWithOrcad(
   args: ServeOrcaAppArgs,
   userDataPath: string,
   /** The caller's environment without `ELECTRON_RUN_AS_NODE`. */
-  baseEnv: NodeJS.ProcessEnv
+  baseEnv: NodeJS.ProcessEnv,
+  /** The app's browser client; the slot does not carry one, so orcad serves it from here. */
+  webClientRoot?: string
 ): Promise<number> {
   const spec: ProcessSpec = {
     program: selection.runtime,
-    args: [selection.entry, ...orcadServeArgs(args)],
+    args: [selection.entry, ...orcadServeArgs(args, webClientRoot)],
     detached: args.recipeJson === true,
     cwd: dirname(selection.entry),
     stdio: args.recipeJson === true ? ['ignore', 'pipe', 'inherit'] : 'inherit',
@@ -132,6 +134,11 @@ export function serveOptionArgs(args: ServeOrcaAppArgs, prefix: '--' | '--serve-
   ]
 }
 
-export function orcadServeArgs(args: ServeOrcaAppArgs): string[] {
-  return ['--bind', '0.0.0.0', ...serveOptionArgs(args, '--')]
+export function orcadServeArgs(args: ServeOrcaAppArgs, webClientRoot?: string): string[] {
+  return [
+    '--bind',
+    '0.0.0.0',
+    ...serveOptionArgs(args, '--'),
+    ...(webClientRoot ? ['--web-client-root', webClientRoot] : [])
+  ]
 }

@@ -8,7 +8,7 @@ import {
 import { connectTarget } from './ssh-connect-flow'
 import { connectionManager } from './ssh-ipc-context'
 import { getPublicSshState } from './ssh-renderer-broadcast'
-import { disconnectRegisteredSshTarget } from './ssh-session-teardown'
+import { disconnectSshHostForUser } from './ssh-host-user-disconnect'
 import { errorMessage } from '../../shared/error-message'
 import { clearSshCredentialDeclined, isSshCredentialDeclined } from '../ssh/ssh-credential-decline'
 
@@ -23,7 +23,7 @@ export function registerSshConnectionHandlers(): void {
   })
 
   ipcMain.handle('ssh:disconnect', async (_event, args: { targetId: string }) => {
-    await disconnectRegisteredSshTarget(args.targetId)
+    await disconnectSshHostForUser(args.targetId)
   })
 
   ipcMain.handle('ssh:getState', (_event, args: { targetId: string }) => {
@@ -65,7 +65,8 @@ export function registerSshConnectionHandlers(): void {
     const probe = runSshTestConnectionProbe(args.targetId, async () => {
       // Why: a probe transport opened after the shutdown drain would outlive orderly teardown.
       assertSshConnectsNotFenced()
-      const conn = await connectionManager!.connect(target)
+      // Why: a test of a disconnected host may dial it, but must leave it disconnected.
+      const conn = await connectionManager!.connect(target, { probe: true })
       const state = conn.getState()
       await connectionManager!.disconnect(args.targetId)
       return state

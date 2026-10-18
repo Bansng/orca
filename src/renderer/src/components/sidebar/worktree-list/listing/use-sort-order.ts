@@ -2,26 +2,19 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useAppStore } from '@/store'
 import { getAllWorktreesFromState } from '@/store/selectors'
 import { track } from '@/lib/telemetry'
-import { tabHasLivePty } from '@/lib/tab-has-live-pty'
 import { persistWorktreeSortOrderByHost } from '@/lib/worktree-sort-order-persistence'
 import type { Repo } from '../../../../../../shared/repo-types'
-import {
-  buildWorktreeComparator,
-  buildWorktreeSortLabels,
-  compareWorktreeSortLabel,
-  type SortBy
-} from '../../smart-sort'
-import {
-  buildAttentionByWorktree,
-  hasFreshAttributedAgentStatus,
-  type SmartClass,
-  type WorktreeAttention
-} from '../../smart-attention'
+import { rankWorktreesForSort, type SortBy } from '../../../../../../shared/sidebar-list/smart-sort'
+import type {
+  SmartClass,
+  WorktreeAttention
+} from '../../../../../../shared/sidebar-list/smart-attention'
 import {
   ranksFollowPersistedOrder,
   smartSortPhase
 } from '../../../../../../shared/sidebar-list/smart-sort-phase'
 import { useReusedArrayIdentity } from './use-reused-array-identity'
+import { useSidebarListSession } from '@/lib/sidebar-list-session'
 
 function trackSmartClassDistribution(attention: ReadonlyMap<string, WorktreeAttention>): void {
   let class1 = 0
@@ -75,64 +68,27 @@ export function useSidebarWorktreeSortOrder(args: {
 
   const recomputedSort = useMemo(() => {
     const state = useAppStore.getState()
-    const nonArchivedWorktrees = getAllWorktreesFromState(state).filter(
-      (worktree) => !worktree.isArchived
-    )
-    const now = Date.now()
-    // Why precompute: the label tiebreaker runs on every comparison in every mode.
-    const labels = buildWorktreeSortLabels(nonArchivedWorktrees)
-    let detectedLiveSmartSignal = false
-
-    // Why cold-start detection: agent-status hydrates async, so the warm comparator would collapse all to Class 4; keep the persisted order until a live signal appears.
-    if (smartSortPhase(sortBy, sessionHasHadLiveSmartSignal.current) === 'cold') {
-      // Why tabHasLivePty over tab.ptyId: slept terminals keep tab.ptyId as a wake hint, so it'd falsely keep cold-start ordering off.
-      const hasAnyLivePty = Object.values(state.tabsByWorktree).some((tabs) =>
-        tabs.some((tab) => tabHasLivePty(state.ptyIdsByTabId, tab.id))
-      )
-      if (
-        hasAnyLivePty ||
-        hasFreshAttributedAgentStatus(state.agentStatusByPaneKey, now, state.tabsByWorktree)
-      ) {
-        detectedLiveSmartSignal = true
-      } else {
-        nonArchivedWorktrees.sort(
-          (a, b) => b.sortOrder - a.sortOrder || compareWorktreeSortLabel(a, b, labels)
-        )
-        return {
-          sortedIds: nonArchivedWorktrees.map((w) => w.id),
-          attentionByWorktree: null,
-          detectedLiveSmartSignal: false
-        }
-      }
-    }
-
-    // Why precompute: hot sort — build the attention map once so the O(N log N) comparator does O(1) lookups.
-    const attentionByWorktree =
-      sortBy === 'smart'
-        ? buildAttentionByWorktree(
-            nonArchivedWorktrees,
-            state.tabsByWorktree,
-            state.agentStatusByPaneKey,
-            state.runtimePaneTitlesByTabId,
-            state.ptyIdsByTabId,
-            now,
-            state.migrationUnsupportedByPtyId,
-            state.terminalLayoutsByTabId
-          )
-        : new Map<string, WorktreeAttention>()
-    nonArchivedWorktrees.sort(
-      buildWorktreeComparator(sortBy, repoMap, now, attentionByWorktree, labels)
-    )
+    const ranking = rankWorktreesForSort({
+      worktrees: getAllWorktreesFromState(state).filter((worktree) => !worktree.isArchived),
+      sortBy,
+      latched: sessionHasHadLiveSmartSignal.current,
+      repoMap,
+      now: Date.now(),
+      sources: state
+    })
     return {
-      sortedIds: nonArchivedWorktrees.map((w) => w.id),
-      attentionByWorktree: sortBy === 'smart' ? attentionByWorktree : null,
-      detectedLiveSmartSignal
+      sortedIds: ranking.sorted.map((w) => w.id),
+      attentionByWorktree: ranking.attentionByWorktree,
+      detectedLiveSmartSignal: ranking.detectedLiveSmartSignal
     }
     // settledSortEpoch is an intentional trigger not read in the memo; its change signals a recompute.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [settledSortEpoch, persistedRankTrigger, repoMap, sortBy])
   // Why: stable ID order prevents rank-only refreshes from echoing an unchanged snapshot.
   const sortedIds = useReusedArrayIdentity(recomputedSort.sortedIds)
+
+  // Why: main's copy of the latch and retention lives as long as this list, as the ref above does.
+  useSidebarListSession(sortBy, sortedIds)
 
   // Why after commit: a discarded render must not latch Smart onto a live signal that never committed.
   useEffect(() => {

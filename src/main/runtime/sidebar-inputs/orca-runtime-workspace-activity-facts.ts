@@ -5,6 +5,7 @@ import type {
   WorkspaceTerminalLiveness
 } from '../../../shared/sidebar-list/workspace-activity-facts'
 import { worktreeIdComparisonKey } from '../../../shared/worktree/id'
+import { SidebarClock } from './sidebar-clock'
 import {
   WorkspaceActivityFactsProducer,
   type WorkspaceSurfaceActivity
@@ -19,9 +20,11 @@ type Runtime = OrcaRuntimeWithMigrationCatalog
  * publication follows: exits, verdicts and the inventory sweep.
  */
 export abstract class OrcaRuntimeWithWorkspaceActivityFacts extends OrcaRuntimeWithMigrationCatalog {
+  readonly sidebarClock = new SidebarClock()
   readonly workspaceActivityFacts = new WorkspaceActivityFactsProducer({
     readSurfaces: (worktreeId) => this.readWorkspaceSurfaceActivity(worktreeId),
-    resolveTabWorktreeId: (tabId) => this.tabs.get(tabId)?.worktreeId
+    resolveTabWorktreeId: (tabId) => this.tabs.get(tabId)?.worktreeId,
+    clock: this.sidebarClock
   })
 
   getWorkspaceActivityFacts(): WorkspaceActivityFactsSnapshot {

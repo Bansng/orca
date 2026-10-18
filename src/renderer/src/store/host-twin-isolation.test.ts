@@ -6,6 +6,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ExecutionHostId } from '../../../shared/execution-host'
+import { hostWorktreeTarget } from '../../../shared/worktree/host-qualified-identity'
 import {
   createCompatibleRuntimeStatusResponseIfNeeded,
   type RuntimeEnvironmentCallRequest
@@ -149,7 +150,9 @@ const TWIN_ACTIONS: readonly TwinAction[] = [
     run: async (f, target) =>
       f.store
         .getState()
-        .purgeWorktreeTerminalState([{ id: f.workspaceKey, hostId: target.hostId }]),
+        .purgeWorktreeTerminalState([
+          hostWorktreeTarget({ id: f.workspaceKey, hostId: target.hostId })
+        ]),
     applied: (f, target) =>
       expect(f.store.getState().ptyIdsByTabId[target.terminalTabId]).toBeUndefined()
   },
@@ -202,10 +205,6 @@ function everyCell(actionId: string, reason: string, kinds = TWIN_KINDS): [strin
 
 /** `<action> | <kind> | <target>` → why the survivor is touched today (tracker Stage 1 worklist). */
 const KNOWN_TWIN_LEAKS: Readonly<Record<string, string>> = Object.fromEntries([
-  ...everyCell(
-    'purge terminal state',
-    'the purge drops every bucket under the raw id; the target host only scopes visit recency'
-  ),
   ...everyCell('kill terminals', 'takes a raw worktree id, so it stops both twins’ PTYs'),
   ...everyCell('sleep', 'takes a raw worktree id, so it sleeps both twins'),
   [

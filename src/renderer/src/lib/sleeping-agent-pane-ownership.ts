@@ -122,9 +122,9 @@ function paneWillConnectOnActivation(
   if (state.activeWorktreeId !== worktreeId) {
     return false
   }
-  // Why: keep-alive mounts every terminal tab of the active worktree and pane
-  // connect is not visibility-gated (cold-activation deferral delays a mount,
-  // never cancels it), so any preserved restorable pane cold-restores in place.
+  // Why: keep-alive mounts every terminal tab of the active worktree (cold-activation
+  // deferral delays a mount, never cancels it), and a mounted pane cold-restores in
+  // place once shown, so any preserved restorable pane owns its session's resume.
   // Gating on the visible tab forked a second live surface onto the same
   // provider session for every non-group-active agent tab. Web-mirror tabs are
   // the exception: their pane attaches the host PTY instead of cold-restoring
@@ -221,6 +221,9 @@ export function recordPaneIsOwnedByPreservedPane(
     return false
   }
   const tab = worktreeTabs.find((candidate) => candidate.id === tabId) ?? null
+  if (tab && isPaneSpawnDeferred(record.paneKey)) {
+    return true
+  }
   const providerKeys = getLegacyProviderSessionKeysForTab(state, record.worktreeId, tabId)
   // Why: legacy numeric pane keys lack leaf identity, so only a preserved
   // tab-level wake hint plus a single provider session is strong enough to

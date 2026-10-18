@@ -25,6 +25,7 @@ import {
 } from './serve-update-supervisor'
 import { RuntimeClientError } from './types'
 import { SERVE_RUNTIME_ELECTRON, SERVE_RUNTIME_ENV } from '../../shared/orcad-local-serve-selection'
+import { findBundledWebClientRoot } from '../../shared/bundled-web-client-root'
 import {
   resolveLocalServeRuntime,
   serveOptionArgs,
@@ -192,7 +193,13 @@ async function serveWithSelectedRuntime(
       return refusal
     }
     process.stderr.write(`[serve] running on orcad ${selection.version}\n`)
-    return serveWithOrcad(selection, args, userDataPath, stripElectronRunAsNode(process.env))
+    return serveWithOrcad(
+      selection,
+      args,
+      userDataPath,
+      stripElectronRunAsNode(process.env),
+      findBundledWebClientRoot(resolveAppRoot())
+    )
   }
   if (selection.reason) {
     process.stderr.write(`[serve] using Electron serve: ${selection.reason}\n`)

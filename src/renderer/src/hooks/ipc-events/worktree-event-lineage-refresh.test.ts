@@ -14,6 +14,7 @@ import {
 import { replaceRuntimeEnvironmentRevisions } from '../../runtime/runtime-environment-revision'
 import { advanceRuntimeEnvironmentConnectionGeneration } from '../../store/slices/runtime-status-connection-generation'
 import { createWorktreeEventRuntime } from './worktree-event-runtime'
+import { hostWorktreeTarget } from '../../../../shared/worktree/host-qualified-identity'
 import {
   beginWorktreeLineageRefresh,
   invalidateRemoteWorktreeLineage,
@@ -219,7 +220,7 @@ describe('remote worktree event lineage refresh', () => {
     expect(store.getState().fetchWorktreeLineage).toHaveBeenCalledTimes(2)
     expect(store.getState().setActiveWorktree).toHaveBeenCalledWith('repo-rename::/new')
     expect(store.getState().purgeWorktreeTerminalState).toHaveBeenCalledWith([
-      { id: deleted.id, hostId: 'runtime:env-1' }
+      hostWorktreeTarget({ id: deleted.id, hostId: 'runtime:env-1' })
     ])
     expect(store.getState().removeWorkspaceSpaceWorktrees).toHaveBeenCalledWith([deleted.id])
   })

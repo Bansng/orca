@@ -254,10 +254,10 @@ describe('an open chat receives each row once', () => {
         turnScope: AGENT_JOURNAL_THREAD_SCOPE
       }
     )
-    host['subscribers'].publish(SESSION, journal)
-
     expect(pane.received().statuses).toEqual(['host row'])
+    const delivered = pane.received().batches
+    host['subscribers'].publish(SESSION, journal)
     // The second publish found nothing past the reader's cursor, so it sent nothing at all.
-    expect(pane.received().batches).toBe(1)
+    expect(pane.received().batches).toBe(delivered)
   })
 })

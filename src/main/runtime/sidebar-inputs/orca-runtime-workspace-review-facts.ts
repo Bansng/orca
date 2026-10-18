@@ -1,6 +1,4 @@
 import { OrcaRuntimeWithWorkspaceActivityFacts } from './orca-runtime-workspace-activity-facts'
-import { ORCA_SIDEBAR_INPUTS_IS_MAIN } from '../../../shared/sidebar-inputs-switch'
-import type { OrcaRuntimeWithMigrationCatalog } from '../orca-runtime-migration-catalog'
 import {
   buildWorkspaceReviewFacts,
   type WorkspaceReviewFactsSnapshot
@@ -25,13 +23,4 @@ export abstract class OrcaRuntimeWithWorkspaceReviewFacts extends OrcaRuntimeWit
       )
     }
   }
-}
-
-export function sidebarFactsRuntime(
-  runtime: OrcaRuntimeWithMigrationCatalog
-): OrcaRuntimeWithWorkspaceReviewFacts | null {
-  // Why the switch first: it lets a switch-off build fold the instanceof away.
-  return ORCA_SIDEBAR_INPUTS_IS_MAIN && runtime instanceof OrcaRuntimeWithWorkspaceReviewFacts
-    ? runtime
-    : null
 }

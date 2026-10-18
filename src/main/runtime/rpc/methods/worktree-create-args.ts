@@ -21,6 +21,8 @@ export function buildManagedWorktreeCreateArgs(
   const viewerSupported = origin && terminalImageViewerSupported(origin)
   return {
     repoSelector: params.repo,
+    // A phone's retry key is the identity of its creation.
+    creationId: params.creationId ?? params.clientMutationId,
     ...(viewerSupported !== undefined ? { terminalImageViewerSupported: viewerSupported } : {}),
     name: params.name ?? '',
     // Absent means the user typed the name, which must never be retired.

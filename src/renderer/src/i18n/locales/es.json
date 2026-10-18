@@ -36,6 +36,10 @@
         "saveFailed": "No se pudo guardar la configuración de nombres de chats.",
         "searchAgent": "agente",
         "searchTemplate": "plantilla de comandos"
+      },
+      "providers": {
+        "title": "Proveedores",
+        "antigravityDescription": "Los chats de Antigravity usan un servidor que Orca descarga en este host, independiente de la CLI de agy."
       }
     },
     "terminal": {
@@ -543,7 +547,9 @@
           "presenceProfileOverflow": "{{names}} +{{count}} más",
           "removeProjectFailed": "No se ha podido eliminar el proyecto ",
           "wslFilesystemBoundaryTitle": "Este proyecto se almacena en una unidad de Windows",
-          "wslFilesystemBoundaryDescription": "Git para este proyecto se ejecuta en {{distro}}, que llega a las unidades de Windows a través del puente del sistema de archivos WSL. Espera que git sea aproximadamente 20 veces más lento de lo que sería en una copia almacenada dentro de {{distro}}."
+          "wslFilesystemBoundaryDescription": "Git para este proyecto se ejecuta en {{distro}}, que llega a las unidades de Windows a través del puente del sistema de archivos WSL. Espera que git sea aproximadamente 20 veces más lento de lo que sería en una copia almacenada dentro de {{distro}}.",
+          "moveToGroupOtherHost": "No se pudo mover el proyecto al grupo",
+          "moveToGroupOtherHostDesc": "El equipo donde se ejecuta este proyecto no tiene este grupo. Un proyecto solo puede unirse a grupos guardados en su propio equipo."
         },
         "settings": {
           "e12dab333b": "No se pudo cambiar de servidor",
@@ -18015,7 +18021,7 @@
         "signInThenSend": "Inicie sesión y vuelva a enviar su mensaje.",
         "historyTooLarge": "El historial de esta conversación es demasiado grande para restaurarlo aquí.",
         "managedAccountEnvOverride": "Este inicio de Claude define sus propias variables de inicio de sesión de Anthropic. Quítelas para usar una cuenta de Claude administrada.",
-        "accountSwitchInProgress": "Hay un cambio de cuenta de Claude en curso. Vuelva a intentarlo cuando termine.",
+        "accountSwitchInProgress": "La configuración de {{agent}} está cambiando en este host. Vuelva a intentarlo cuando termine.",
         "managedAccountUnsupported": "Mientras haya una cuenta de Claude agregada en WSL, los chats de Claude necesitan una cuenta de Claude de Windows.",
         "launchFolderMissing": "La carpeta en la que se ejecutaba este chat ya no existe. Restáurela para continuar este chat.",
         "historyInOtherAccount": "El historial de este chat está en otra cuenta de Claude. Vuelva a esa cuenta para continuarlo.",
@@ -18044,6 +18050,7 @@
         "attachmentInvalid": "Un archivo adjunto de este mensaje no se puede enviar al agente.",
         "attachmentUnreadable": "No se pudo leer un archivo adjunto de este mensaje, así que el mensaje no se envió.",
         "emptyMessage": "Este mensaje está vacío, así que no se envió.",
+        "commandUnavailable": "Este comando no está disponible en los chats de {{agent}}, así que no se envió.",
         "queueFull": "Había demasiados mensajes esperando al agente, así que este no se envió.",
         "writeFailed": "Orca no pudo entregar este mensaje al agente, así que no se envió.",
         "cancelled": "Este mensaje se retiró antes de que el agente empezara a procesarlo.",
@@ -18250,6 +18257,7 @@
         "permissionAskSharedDescription": "Pregunta antes de ediciones o comandos que aún no tiene permitidos",
         "permissionAcceptEdits": "Aceptar ediciones",
         "permissionAcceptEditsDescription": "Aprueba ediciones y comandos de archivos; pregunta por lo demás",
+        "permissionAcceptEditsAntigravityDescription": "Aprueba ediciones de archivos; pregunta por lo demás",
         "permissionAuto": "Aprobar por mí",
         "permissionAutoDescription": "Revisa las solicitudes de aprobación por ti",
         "permissionFullAccess": "Acceso total",
@@ -19171,6 +19179,7 @@
       "cancelling": "Cancelando…",
       "chatTitle": "Instala {{agent}} para empezar a chatear.",
       "damaged": "Esta copia de {{agent}} está dañada.",
+      "downloadSize": "Descarga de {{size}} MB.",
       "downloading": "Descargando {{done}} MB.",
       "downloadingOf": "Descargando {{done}} MB de {{total}} MB.",
       "external": "Usa la copia de {{agent}} encontrada en este host.",

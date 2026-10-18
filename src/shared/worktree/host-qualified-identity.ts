@@ -22,6 +22,23 @@ declare const hostScopedWorktreeKeyBrand: unique symbol
 // Why: for new code only; existing raw-id stores stay as they are (D7).
 export type HostScopedWorktreeKey = string & { readonly [hostScopedWorktreeKeyBrand]: true }
 
+declare const hostWorktreeTargetBrand: unique symbol
+
+/** One host's copy of a workspace, for destructive entry points that must not reach its twin. */
+export type HostWorktreeTarget = {
+  readonly hostId: ExecutionHostId
+  readonly worktreeId: string
+  readonly [hostWorktreeTargetBrand]: true
+}
+
+export function hostWorktreeTarget(row: {
+  id: string
+  hostId: ExecutionHostId
+}): HostWorktreeTarget {
+  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the only constructor of the brand; `hostId` is a concrete host by the parameter type.
+  return { hostId: row.hostId, worktreeId: row.id } as HostWorktreeTarget
+}
+
 /**
  * Stable key for one workspace on one host (STA-4343).
  *

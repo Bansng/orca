@@ -140,6 +140,10 @@
         "saveFailed": "Impossible d’enregistrer les paramètres de nom des chats.",
         "searchAgent": "agent",
         "searchTemplate": "modèle de commande"
+      },
+      "providers": {
+        "title": "Fournisseurs",
+        "antigravityDescription": "Les chats Antigravity utilisent un serveur qu’Orca télécharge sur cet hôte, distinct de la CLI agy."
       }
     },
     "terminal": {
@@ -648,7 +652,9 @@
           "presenceProfileOverflow": "{{names}} +{{count}} autres",
           "removeProjectFailed": "Échec de la suppression du projet",
           "wslFilesystemBoundaryTitle": "Ce projet est stocké sur un lecteur Windows",
-          "wslFilesystemBoundaryDescription": "Git pour ce projet s'exécute dans {{distro}}, qui atteint les lecteurs Windows via le pont du système de fichiers WSL. Attendez-vous à ce que git soit environ 20 fois plus lent que sur une copie stockée dans {{distro}}."
+          "wslFilesystemBoundaryDescription": "Git pour ce projet s'exécute dans {{distro}}, qui atteint les lecteurs Windows via le pont du système de fichiers WSL. Attendez-vous à ce que git soit environ 20 fois plus lent que sur une copie stockée dans {{distro}}.",
+          "moveToGroupOtherHost": "Impossible de déplacer le projet dans le groupe",
+          "moveToGroupOtherHostDesc": "L’ordinateur sur lequel ce projet s’exécute n’a pas ce groupe. Un projet ne peut rejoindre que les groupes enregistrés sur son propre ordinateur."
         },
         "settings": {
           "e12dab333b": "Échec du changement de serveur",
@@ -18124,7 +18130,7 @@
         "signInThenSend": "Connectez-vous, puis renvoyez votre message.",
         "historyTooLarge": "L'historique de cette conversation est trop volumineux pour être restauré ici.",
         "managedAccountEnvOverride": "Ce lancement de Claude définit ses propres variables de connexion Anthropic. Supprimez-les pour utiliser un compte Claude géré.",
-        "accountSwitchInProgress": "Un changement de compte Claude est en cours. Réessayez une fois qu'il sera terminé.",
+        "accountSwitchInProgress": "La configuration de {{agent}} est en cours de modification sur cet hôte. Réessayez une fois l'opération terminée.",
         "managedAccountUnsupported": "Tant qu'un compte Claude est ajouté dans WSL, les chats Claude nécessitent un compte Claude Windows.",
         "launchFolderMissing": "Le dossier dans lequel ce chat s'exécutait n'existe plus. Restaurez-le pour poursuivre ce chat.",
         "historyInOtherAccount": "L'historique de ce chat se trouve dans un autre compte Claude. Revenez à ce compte pour le poursuivre.",
@@ -18153,6 +18159,7 @@
         "attachmentInvalid": "Une pièce jointe de ce message ne peut pas être envoyée à l'agent.",
         "attachmentUnreadable": "Une pièce jointe de ce message n'a pas pu être lue, le message n'a donc pas été envoyé.",
         "emptyMessage": "Ce message est vide, il n'a donc pas été envoyé.",
+        "commandUnavailable": "Cette commande n'est pas disponible dans les chats {{agent}}, elle n'a donc pas été envoyée.",
         "queueFull": "Trop de messages attendaient l'agent, celui-ci n'a donc pas été envoyé.",
         "writeFailed": "Orca n'a pas pu transmettre ce message à l'agent, il n'a donc pas été envoyé.",
         "cancelled": "Ce message a été retiré avant que l'agent ne commence à le traiter.",
@@ -18359,6 +18366,7 @@
         "permissionAskSharedDescription": "Demande avant les modifications ou commandes qui ne sont pas déjà autorisées",
         "permissionAcceptEdits": "Accepter les modifications",
         "permissionAcceptEditsDescription": "Approuve les modifications et commandes de fichiers ; demande pour le reste",
+        "permissionAcceptEditsAntigravityDescription": "Approuve les modifications de fichiers ; demande pour le reste",
         "permissionAuto": "Approuver pour moi",
         "permissionAutoDescription": "Examine les demandes d’approbation pour vous",
         "permissionFullAccess": "Accès complet",
@@ -19287,6 +19295,7 @@
       "cancelling": "Annulation…",
       "chatTitle": "Installez {{agent}} pour commencer à discuter.",
       "damaged": "Cette copie de {{agent}} est endommagée.",
+      "downloadSize": "Téléchargement de {{size}} Mo.",
       "downloading": "Téléchargement de {{done}} Mo.",
       "downloadingOf": "Téléchargement de {{done}} Mo sur {{total}} Mo.",
       "external": "Utilise la copie de {{agent}} trouvée sur cet hôte.",

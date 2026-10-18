@@ -167,7 +167,14 @@ describe('settling a send the provider proves it received after the ack window',
         clientMessageId: params.envelope.clientOperationId,
         providerIdentity: { provider: 'claude', sessionId: THREAD, uuid: 'early-echo' }
       })
-      expect(events.at(-1)).toMatchObject({
+      const accepted = events.findLast(
+        (event) =>
+          event.type === 'batch' &&
+          event.batch.submissions.some(
+            (entry) => entry.clientMessageId === params.envelope.clientOperationId
+          )
+      )
+      expect(accepted).toMatchObject({
         type: 'batch',
         batch: {
           submissions: [

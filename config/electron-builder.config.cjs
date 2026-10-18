@@ -37,6 +37,7 @@ const {
   assertMobileWebBundleBuilt
 } = require('./scripts/verify-packaged-mobile-web-bundle.cjs')
 const { verifyPackagedPluginResources } = require('./scripts/verify-packaged-plugin-resources.cjs')
+const { assertPackagedWebClient } = require('./scripts/verify-packaged-web-client.cjs')
 const {
   assertBundledRipgrepInstalled,
   bundledRipgrepExtraResources,
@@ -501,6 +502,7 @@ module.exports = {
     // Why: inspect electron-builder's real output so a broken extraResources
     // mapping fails packaging before bundled content reaches users.
     verifyPackagedPluginResources(resourcesDir)
+    assertPackagedWebClient(resourcesDir)
     finalizePackagedRipgrep(resourcesDir)
     await finalizePackagedOrcadTemplate(resourcesDir, {
       platform: context.electronPlatformName,

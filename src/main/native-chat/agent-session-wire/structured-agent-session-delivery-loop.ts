@@ -20,10 +20,7 @@ import { agentSessionFailureFact } from '../../../shared/agent-session-failure'
 import type { AgentSessionFailureWordsContext } from '../../../shared/agent-session-failure-words'
 import type { StructuredAgentSessionAdapter } from './structured-agent-session-adapter'
 import type { StructuredAgentRegistry } from './structured-agent-registry'
-import {
-  structuredAgentSessionStartFailure,
-  type StructuredAgentSessionStartFailureCause
-} from './structured-agent-session-failure-text'
+import { structuredAgentSessionStartFailure } from './structured-agent-session-failure-text'
 import type { StructuredAgentSessionResumeOutcome } from './structured-agent-session-agent-start'
 import type {
   StructuredAgentSessionHostSession,
@@ -80,6 +77,8 @@ export type StructuredAgentSessionDeliveryLoopDeps = {
   record: (sessionId: string) => AgentSessionRecord | null
   /** The host's projection of the chat's current work (`hostStructuredAgentSessionCurrentWork`). */
   currentWork: (sessionId: string) => StructuredAgentSessionCurrentWork | null
+  /** What is current changed with no row (`publishGenerationEnded`). */
+  workChanged?: (sessionId: string) => void
   readChildWork: (sessionId: string) => readonly AgentChildWorkView[] | undefined
   childWorkOpen: (sessionId: string) => boolean
   /** A person's Stop is still ending the session's work: the status feed's own reading. */
@@ -102,7 +101,7 @@ type Prepared =
     }
 
 /** A failed start before it is worded; `fail` words it once, through the one wording point. */
-type StartFailure = { startKey: string | null; cause: StructuredAgentSessionStartFailureCause }
+type StartFailure = NonNullable<ReturnType<typeof startThatFailedWhileQueued>>
 
 export class StructuredAgentSessionDeliveryLoop {
   private readonly running = new Set<string>()
@@ -289,7 +288,8 @@ export class StructuredAgentSessionDeliveryLoop {
       return this.stop(sessionId)
     }
     // None while a turn is still opening: joining it would record the message ahead of it.
-    const next = structuredAgentSessionNextHandover(session, awaitedChild.fence)
+    const work = this.deps.currentWork(sessionId)
+    const next = structuredAgentSessionNextHandover(session, awaitedChild.fence, work)
     if (!next) {
       return this.stop(sessionId)
     }
@@ -313,9 +313,11 @@ export class StructuredAgentSessionDeliveryLoop {
         agents: this.deps.agents,
         failureTextContext: this.deps.failureTextContext(sessionId),
         record: () => this.deps.record(sessionId),
+        currentWork: () => this.deps.currentWork(sessionId),
         childWork: () => this.deps.readChildWork(sessionId),
         childWorkOpen: () => this.deps.childWorkOpen(sessionId),
-        now: this.deps.now
+        now: this.deps.now,
+        workChanged: () => this.deps.workChanged?.(sessionId)
       },
       next
     )

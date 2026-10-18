@@ -10,6 +10,9 @@ import {
 import { createStoreCascadesMockApi } from './store-cascades-test-harness'
 import { provideLayoutFrameTerminalPanes } from '@/runtime/layout-frame-terminal-panes'
 import type { PublishedTab } from '../../../../shared/workspace-layout/workspace-layout-published'
+import { LOCAL_EXECUTION_HOST_ID } from '../../../../shared/execution-host'
+import { LayoutApplyParams } from '../../../../shared/rpc-contract/workspace-layout-params'
+import { applyLayoutCommand } from '../../../../shared/workspace-layout/workspace-layout-commands'
 
 const mocks = vi.hoisted(() => ({
   layoutOwnerIsMain: true,
@@ -136,6 +139,35 @@ describe('createTab in a layout-owner build', () => {
       label: 'Terminal 3'
     })
     expect(mocks.callRuntimeRpc).not.toHaveBeenCalled()
+  })
+
+  it('records a quick command tab’s label in main, so the window’s save of it changes nothing', () => {
+    const store = storeWithWorktree()
+
+    store.getState().createTab(WORKTREE, undefined, undefined, {
+      id: TAB,
+      initialLeafId: LEAF,
+      quickCommandLabel: ' Dev server '
+    })
+
+    const { command } = LayoutApplyParams.parse(mocks.callRuntimeRpc.mock.calls[0]?.[2])
+    const applied = applyLayoutCommand(
+      {
+        hostId: LOCAL_EXECUTION_HOST_ID,
+        workspaces: {},
+        records: {},
+        legacy: { terminalRowOwners: {} }
+      },
+      command,
+      { mintId: () => 'minted', mintLeafId: () => 'minted-leaf', now: () => 1 }
+    )
+    expect(applied.ok && applied.model.workspaces[WORKTREE]?.tabs[0]).toMatchObject({
+      id: TAB,
+      quickCommandLabel: 'Dev server'
+    })
+    expect(store.getState().unifiedTabsByWorktree[WORKTREE]?.[0]?.quickCommandLabel).toBe(
+      'Dev server'
+    )
   })
 
   it('sends the leaf id the window named the first pane with when the caller gave none', () => {

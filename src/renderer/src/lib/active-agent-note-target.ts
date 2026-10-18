@@ -18,7 +18,7 @@ import {
   isExplicitAgentStatusFresh,
   resolveTitleActivityLabel
 } from '@/lib/pane-agent-evidence'
-import { resolveRuntimePaneTitleForLeaf } from './runtime-pane-title-leaf-id'
+import { resolveRuntimePaneTitleForLeaf } from '../../../shared/runtime-pane-title-leaf-id'
 
 const ACTIVE_AGENT_PROBE_RPC_TIMEOUT_MS = 3000
 const ACTIVE_AGENT_TERMINAL_LIST_LIMIT = 200

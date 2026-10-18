@@ -131,6 +131,8 @@ export const WorktreeCreate = z
     // Why: mobile retries a create interrupted by a connection migration with the
     // same key so the host dedupes instead of spawning a duplicate worktree.
     clientMutationId: z.string().min(1).max(128).optional(),
+    /** The requesting window's pending creation, so the host's in-progress entry shares its id. */
+    creationId: z.string().min(1).max(128).optional(),
     automationProvenanceRequest: AutomationWorkspaceProvenanceRequest.optional(),
     cliProvenanceRequest: CliWorkspaceProvenanceRequest.optional()
   })

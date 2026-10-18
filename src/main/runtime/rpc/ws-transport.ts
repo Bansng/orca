@@ -3,7 +3,7 @@ import { createServer as createHttpsServer, type Server as HttpsServer } from 'n
 import { createServer as createHttpServer, type Server as HttpServer } from 'node:http'
 import { WebSocketServer, type WebSocket } from 'ws'
 import type { RpcTransport } from './transport'
-import { createStaticWebClientHandler } from './static-web-client-handler'
+import { answerWithoutWebClient, createStaticWebClientHandler } from './static-web-client-handler'
 import {
   attachNodeWebSocketLifecycle,
   clearNodeWebSocketPreAuthTimer,
@@ -200,9 +200,10 @@ export class WebSocketTransport implements RpcTransport {
   }
 
   private createHttpServer(): HttpServer | HttpsServer {
+    // Why the 404: with no 'request' listener Node never answers plain HTTP, so it hung (#30100).
     const requestListener = this.staticRoot
       ? createStaticWebClientHandler(this.staticRoot)
-      : undefined
+      : answerWithoutWebClient
     return this.tlsCert && this.tlsKey
       ? createHttpsServer({ cert: this.tlsCert, key: this.tlsKey }, requestListener)
       : createHttpServer(requestListener)

@@ -170,6 +170,7 @@ const CreateTerminalTabCommand = z.object({
   groupId: z.string().min(1).optional(),
   viewMode: z.enum(['terminal', 'chat']).optional(),
   createdAt: z.number().int().nonnegative().optional(),
+  quickCommandLabel: z.string().trim().min(1).optional(),
   creation: z
     .object({
       defaultTitle: z.string().min(1).optional(),

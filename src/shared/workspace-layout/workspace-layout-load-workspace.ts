@@ -1,4 +1,6 @@
+import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../layout-owner-switch'
 import type { Tab } from '../tab-types'
+import { normalizeTerminalLayoutPtyOwnership } from '../terminal-layout-pty-ownership'
 import type { TerminalLayoutSnapshot, TerminalTab } from '../terminal-tab-types'
 import type { WorkspaceSessionState } from '../workspace-session-state-types'
 import { childRecord, pickStoredFields } from './stored-record-fields'
@@ -65,7 +67,11 @@ function loadPanes(
   tab: Omit<LayoutTerminalTab, 'panes'>,
   args: WorkspaceLoadArgs
 ): LayoutTerminalTab {
-  const layout = session.terminalLayoutsByTabId?.[tab.entityId] ?? legacyLayout(session, row, args)
+  const stored = session.terminalLayoutsByTabId?.[tab.entityId] ?? legacyLayout(session, row, args)
+  // Switch point: window saves no longer carry its duplicate-terminal pane repair, so main applies it.
+  const layout = ORCA_LAYOUT_OWNER_IS_MAIN
+    ? normalizeTerminalLayoutPtyOwnership(stored).snapshot
+    : stored
   // Each pane's data is loaded once every tab is placed (loadLeaves).
   args.layouts.set(tab.entityId, layout)
   return { ...tab, panes: { root: layout.root, ...pickStoredFields(layout, ['chatLeafId']) } }

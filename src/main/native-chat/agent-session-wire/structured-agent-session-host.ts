@@ -312,8 +312,7 @@ export class StructuredAgentSessionHost {
   rewind = (caller: HostTypes.StructuredAgentSessionCaller, params: AgentSessionRewindParams) =>
     rewindStructuredAgentSession(this.mutationContext(), this.attachContext(), caller, params)
 
-  conversationCommand = (...args: Parameters<StructuredConversationCommandController['run']>) =>
-    this.conversationCommands.run(...args)
+  conversationCommand = this.conversationCommands.run
   /** Undefined means unavailable; an empty array is an authoritative catalog. */
   readCommands = (sessionId: string) => ({ commands: this.clientDelivery.readCommands(sessionId) })
 
@@ -338,6 +337,8 @@ export class StructuredAgentSessionHost {
 
   settleLateDispatch = this.mutations.settleLateDispatch
   releaseUnansweredDispatches = this.mutations.releaseUnansweredDispatches
+  /** What the live child holds changed with no row: every reader re-derives current work. */
+  publishWorkChanged: (sessionId: string) => void = this.clientDelivery.publishGenerationEnded
 
   publishChildWorkEvidence = this.clientDelivery.publishChildWork
   unsubscribe = (sessionId: string, id: string): void => this.subscribers.close(sessionId, id)

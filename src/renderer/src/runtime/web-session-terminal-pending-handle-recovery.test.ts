@@ -482,7 +482,7 @@ describe('web session pending terminal handle recovery', () => {
         { call: call as never }
       )
     ).resolves.toMatchObject({
-      tabs: [expect.objectContaining({ status: 'ready', terminal: TERMINAL_HANDLE })]
+      tabs: [expect.objectContaining({ status: 'pending-handle', terminal: null })]
     })
   })
 
