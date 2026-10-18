@@ -282,6 +282,12 @@ const SetBrowserTabProfileCommand = z.object({
 
 const PromotePreviewTabCommand = z.object({ type: z.literal('promotePreviewTab'), ...OnTab })
 
+/** The window applied the workspace's default tabs (or it had none); main records it, once. */
+const SetDefaultTabsAppliedCommand = z.object({
+  type: z.literal('setDefaultTabsApplied'),
+  workspace: OnPane.workspace
+})
+
 /** A simulator tab under the id the window drew it with, which is also its entity. */
 const OpenSimulatorTabCommand = z.object({
   type: z.literal('openSimulatorTab'),
@@ -369,6 +375,7 @@ export const LayoutApplyParams = z.object({
     MoveTabToWorkspaceCommand,
     RenameEditorFilesCommand,
     SleepCommand,
-    WakeCommand
+    WakeCommand,
+    SetDefaultTabsAppliedCommand
   ])
 })

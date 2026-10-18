@@ -387,7 +387,8 @@
         "loopbackPairingBlocked": "此访问链接会指回此设备。",
         "remotePairingUnreachable": "无法连接 {{endpoint}} 上的 Orca。",
         "remotePairingInvalidDetails": "此访问链接包含无效的连接信息。",
-        "remotePairingSaveFailed": "Orca 验证了主机但无法保存它。检查浏览器存储并重试。"
+        "remotePairingSaveFailed": "Orca 验证了主机但无法保存它。检查浏览器存储并重试。",
+        "remotePairingRepairUnavailable": "Re-pairing is not available in the browser. Pair this browser with the server again."
       },
       "web": {
         "preload": {
@@ -4181,7 +4182,14 @@
             "runtime_unavailable_explanation": "远程主机可能仍在运行；仅 Orca 运行时连接不可用。",
             "contact_note": "主机可能仍在运行；仅 Orca 连接不可用。",
             "last_connected": "最后连接 {{value0}}",
-            "reconnect_attempt": "尝试{{value0}}"
+            "reconnect_attempt": "尝试{{value0}}",
+            "access_revoked": "Access revoked",
+            "access_revoked_summary": "This server revoked access for this computer",
+            "access_revoked_explanation": "Re-pair with a new pairing link from the server to reconnect.",
+            "update_required": "Update required",
+            "update_required_summary": "Orca versions are not compatible",
+            "update_required_explanation": "Update Orca on this computer or on the server, then connect again.",
+            "repair": "Re-pair…"
           },
           "NativeChatResumeStatusSegment": {
             "labelOne": "恢复 1 次聊天",
@@ -5404,6 +5412,12 @@
           "00c4235c10": "没有匹配“{{value0}}”",
           "largeInputNoMatches": "没有匹配此长输入的结果"
         },
+        "SleepTwinWorkspaceDialog": {
+          "title": "Sleep Workspace",
+          "alsoSleeps": "Also sleeps the copy on {{hosts}}",
+          "cancel": "Cancel",
+          "confirm": "Sleep"
+        },
         "RemoveFolderDialog": {
           "4dc5b5065b": "移除",
           "d36883e046": "取消",
@@ -5846,7 +5860,8 @@
           "sidebarRowMissing": "目标不再存在",
           "failedUnnestWorkspace": "展开工作区失败",
           "groupRenameFailed": "重命名组失败",
-          "groupRenameFailedDesc": "Orca 无法与该群组的主持人确认新名称。重新连接后重新检查该组。"
+          "groupRenameFailedDesc": "Orca 无法与该群组的主持人确认新名称。重新连接后重新检查该组。",
+          "hostRepairRequired": "Re-pair required"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "取消",
@@ -6062,6 +6077,9 @@
               "8bc3fc0671": "无法睡眠工作区",
               "legacy": {
                 "unverified": "旧版主机运行时无法确认终端已关闭。工作区已保持打开；请更新主机后重试。"
+              },
+              "twin": {
+                "unattributed": "Orca couldn't tell which host runs this workspace's terminals, so the workspace was kept open. Reconnect its hosts and try again."
               },
               "host": {
                 "unverified": "主机无法确认终端已关闭。工作区已保持打开；请检查连接后重试。"
@@ -6286,7 +6304,8 @@
           "59b553e2aa": "断开连接",
           "2d3e4f5a6b": "检查连接",
           "3c4d5e6f7a": "管理主机…",
-          "6e7f8a9b0c": "删除主机..."
+          "6e7f8a9b0c": "删除主机...",
+          "repair": "Re-pair…"
         },
         "WorkspaceKanbanDrawer": {
           "1975a4e480": "任务状态同步失败",
@@ -6297,6 +6316,7 @@
           "f4a5b6c7d8": "无法更新 Linear 议题 {{value0}}。",
           "a5b6c7d8e9": "无法同步 Linear 议题 {{value0}}。",
           "b6c7d8e9f0": "无法完成任务状态同步。",
+          "f0a1b2c3d4": "已跳过 Linear 问题 {{value0}}：此工作区位于多个主机上。",
           "c7d8e9f0a1": "已更新 {{value0}} 个",
           "d8e9f0a1b2": "已跳过 {{value0}} 个",
           "e9f0a1b2c3": "失败 {{value0}} 个"
@@ -8363,7 +8383,11 @@
           "serverWorkspaceWindowClosed": "工作区窗口已关闭",
           "serverRuntimeUnavailable": "Orca 不可用",
           "serverRuntimeUnavailableDescription": "SSH 传输已连接，但 Orca 运行时未应答。主机可能仍在运行。",
-          "serverReconnecting": "重新连接"
+          "serverReconnecting": "重新连接",
+          "accessRevoked": "{{value0}} no longer accepts this computer. Re-pair it with a new access link.",
+          "repair": "Re-pair…",
+          "serverAccessRevoked": "Access revoked",
+          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)"
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "复制 {{value0}}"
@@ -12069,7 +12093,9 @@
           "networkConnection": "网络连接",
           "notAttempted": "未尝试",
           "saveFailed": "无法保存主机",
-          "saveFailedHelp": "主机已验证，但 Orca 无法保存。检查名称和本地设置存储，然后重试。"
+          "saveFailedHelp": "主机已验证，但 Orca 无法保存。检查名称和本地设置存储，然后重试。",
+          "differentServer": "This link is for a different server",
+          "differentServerHelp": "This pairing link is for a different server. Create the link on the server you are re-pairing."
         },
         "CloudVmSetupGuide": {
           "title": "创建云虚拟机",
@@ -12639,6 +12665,13 @@
           "remove": "移除",
           "turnOn": "在实验性中开启",
           "forceUpdate": "强制更新"
+        },
+        "RuntimeRepairDialog": {
+          "title": "Re-pair {{name}}",
+          "description": "{{name}} no longer accepts this computer. On {{name}}, open Settings → Remote Orca Servers → Share this host, create a link for another Orca client, then paste it here.",
+          "submit": "Re-pair",
+          "success": "Re-paired with {{name}}",
+          "failed": "Re-pair failed"
         }
       },
       "right": {
@@ -18197,6 +18230,8 @@
         "removeImagesToSend": "有些图片无法恢复。请将其移除后再发送。",
         "imageAttachAgainLabel": "重新附加",
         "pastedImageNotKeptLabel": "未保留",
+        "imageNumber": "图片 #{{number}}",
+        "imageReferenceMissing": "图片已移除",
         "imagePasteFailed": "图片粘贴失败。",
         "worktreeNotReady": "工作树未就绪 — 请稍后重试。",
         "pasteUnavailable": "无法粘贴 — 此聊天当前不接受输入。",
@@ -19189,7 +19224,6 @@
       "cancel": "取消安装",
       "cancelled": "已取消安装。",
       "cancelling": "正在取消…",
-      "chatTitle": "安装 {{agent}} 即可开始聊天。",
       "damaged": "此 {{agent}} 副本已损坏。",
       "downloadSize": "下载大小 {{size}} MB。",
       "downloading": "正在下载 {{done}} MB。",
@@ -19208,7 +19242,28 @@
       "retry": "重试安装",
       "unavailable": "{{agent}} 在此主机上不可用。",
       "update": "更新 {{agent}}",
-      "verifying": "正在检查已下载的运行时。"
+      "verifying": "正在检查已下载的运行时。",
+      "installTitle": "安装 {{agent}} 以开始聊天",
+      "continueTitle": "安装 {{agent}} 以继续",
+      "heroBody": "一次性下载 {{size}} MB，由运行此聊天的电脑上的 {{agent}} 聊天共用。",
+      "heroBodyNoSize": "一次性下载，由运行此聊天的电脑上的 {{agent}} 聊天共用。",
+      "stripSize": "在运行此聊天的电脑上下载 {{size}} MB",
+      "settingsHint": "也可在 设置 › 聊天 › 供应商 中安装",
+      "installShort": "安装",
+      "tryAgain": "重试",
+      "cancelShort": "取消",
+      "failedTitle": "无法安装 {{agent}}",
+      "cancelledTitle": "安装已取消",
+      "cancelledBody": "未安装任何内容。",
+      "downloadingTitle": "正在下载 {{agent}}",
+      "unpackingTitle": "正在解压 {{agent}}",
+      "checkingTitle": "正在检查下载内容",
+      "progressOf": "{{done}} / {{total}} MB",
+      "unpackingDetail": "正在解压运行时",
+      "checkingDetail": "正在检查已下载的运行时",
+      "stepDownload": "下载",
+      "stepUnpack": "解压",
+      "stepCheck": "检查"
     }
   },
   "dashboardPopout": {

@@ -33,14 +33,20 @@ vi.mock('./ssh-target-registry', () => ({
   getSshConnectionManager: () => ({ connect: async () => ({}) }),
   getSshTargetRegistryStore: () => mocks.state.store
 }))
-vi.mock('./orcad-remote-context', () => ({ resolveOrcadRemoteContext: mocks.resolveContext }))
+vi.mock('../managed-server/install/orcad-remote-context', () => ({
+  resolveOrcadRemoteContext: mocks.resolveContext
+}))
 vi.mock('./orcad-terminal-census-client', () => ({ collectManagedTerminalCensus: mocks.census }))
-vi.mock('./orcad-remote-decommission', () => ({ decommissionRemoteOrcad: mocks.decommission }))
-vi.mock('./orcad-activation-recovery', () => ({ recoverInterruptedOrcadActivation: mocks.recover }))
-vi.mock('./orcad-activation-transaction-store', () => ({
+vi.mock('../managed-server/install/orcad-remote-decommission', () => ({
+  decommissionRemoteOrcad: mocks.decommission
+}))
+vi.mock('../managed-server/activation/orcad-activation-recovery', () => ({
+  recoverInterruptedOrcadActivation: mocks.recover
+}))
+vi.mock('../managed-server/activation/orcad-activation-transaction-store', () => ({
   readOrcadActivationTransaction: async () => mocks.state.transaction
 }))
-vi.mock('./orcad-activation-lock', () => ({
+vi.mock('../managed-server/activation/orcad-activation-lock', () => ({
   withStaleOrcadActivationRecoveryLock: async (
     _options: unknown,
     run: (lock: { retain: () => void }) => Promise<unknown>
@@ -54,7 +60,7 @@ vi.mock('./orcad-managed-tunnel', () => ({
 }))
 
 const { cancelManagedOrcadStop, stopManagedOrcadEnvironment } =
-  await import('./orcad-runtime-lifecycle')
+  await import('./orcad-runtime-decommission')
 
 const idle = { liveSessions: 0, startedSinceActivation: 0, daemonProtocolVersion: 7 }
 let harness: ReturnType<typeof createManagedLifecycleHarness>

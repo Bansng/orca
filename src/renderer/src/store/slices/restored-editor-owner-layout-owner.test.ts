@@ -137,16 +137,25 @@ function openRestoredSource(): string {
 }
 
 /** The window's move when the restored tab's file loads under a sibling workspace (F42). */
-function reparent(fileId: string) {
+function reparent(
+  fileId: string,
+  targetWorktreeId = TARGET,
+  targetRelativePath = 'docs/readme.md'
+) {
   const state = useAppStore.getState()
   state.setRestoredEditorOwnerMigrationPending(fileId, true)
   return state.reparentRestoredEditorFileOwner({
     fileId,
-    targetWorktreeId: TARGET,
-    targetRelativePath: 'docs/readme.md',
+    targetWorktreeId,
+    targetRelativePath,
     targetExecutionHostId: 'local',
     targetRuntimeEnvironmentId: null,
-    targetOperationProvenance: captureEditorFileOperationProvenance(state, TARGET, null, true)
+    targetOperationProvenance: captureEditorFileOperationProvenance(
+      state,
+      targetWorktreeId,
+      null,
+      true
+    )
   })
 }
 
@@ -216,6 +225,33 @@ describe('restored editor tab moved to its owning workspace, layout-owner build'
     expect(command!.type === 'moveTabToWorkspace' && command.tabs).toHaveLength(2)
     expect(windowView(TARGET)[0]!.tabs).toHaveLength(3)
     expectMainMatchesWindow()
+  })
+
+  it('records a re-own inside the same local workspace as a rename with its new record', () => {
+    const inSourcePath = '/repo-a/notes.md'
+    const oldId = useAppStore.getState().openFile(
+      {
+        filePath: inSourcePath,
+        relativePath: inSourcePath,
+        worktreeId: SOURCE,
+        runtimeEnvironmentId: null,
+        language: 'markdown',
+        mode: 'edit'
+      },
+      { suppressActiveRuntimeFallback: true }
+    )
+    applySent()
+    expectMainMatchesWindow()
+
+    const result = reparent(oldId, SOURCE, 'notes.md')
+
+    expect(result).toMatchObject({ ok: true })
+    const [command] = applySent()
+    expect(command).toMatchObject({ type: 'renameEditorFiles', workspace: SOURCE })
+    expectMainMatchesWindow()
+    expect(main.workspaces[SOURCE]!.editorFiles).toEqual([
+      expect.objectContaining({ filePath: inSourcePath, relativePath: 'notes.md' })
+    ])
   })
 
   it('sends nothing when the move fails or the switch is off', () => {

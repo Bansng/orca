@@ -186,7 +186,7 @@ function changesMobileWebApp(changedFiles) {
 const CROSS_VERSION_WIRE_PREFIXES = [
   'tests/e2e/cross-version-wire/',
   // COMPAT(legacy-relay-bridge): the bridge is proven against a real 1.4.224 relay here.
-  'src/main/ssh/legacy-relay-bridge/',
+  'src/main/ssh/legacy-relay/',
   'config/scripts/stable-release-tags',
   // The R1 daemon protocol crossing gate runs in this job.
   'config/scripts/daemon-protocol-facts',
@@ -198,6 +198,10 @@ const CROSS_VERSION_WIRE_PREFIXES = [
   'src/shared/terminal-stream-protocol',
   'src/shared/browser-client-host-protocol',
   'src/shared/browser-network-tunnel-protocol',
+  // The released and current WebSocket transports both accept the web upgrade marker
+  // (cross-version-web-upgrade-marker).
+  'src/main/runtime/rpc/ws-transport.ts',
+  'src/shared/web-origin-security.ts',
   'src/shared/browser-client-host-placement',
   'src/shared/agent-launch-intent',
   'src/shared/rpc-contract/agent-launch-params',

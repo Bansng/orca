@@ -9,7 +9,7 @@ import { requireManagedOrcadInfrastructure } from '../ssh/orcad-managed-runtime-
 import { ensureOrcadManagedTunnel } from '../ssh/orcad-managed-tunnel'
 import { keepOrcadServerVersion, runOrcadDeltaMove } from '../ssh/orcad-migration-delta-move'
 import { planOrcadDeltaMove } from '../ssh/orcad-migration-delta-plan'
-import { censusHostRelayTerminalsFor } from '../ssh/ssh-host-relay-census-for-target'
+import { censusHostRelayTerminalsFor } from '../ssh/legacy-relay/ssh-host-relay-census-for-target'
 import { orcadMigrationDestinationFor } from '../ssh/orcad-runtime-conversion-wiring'
 import { requiredString } from './orcad-runtime-lifecycle-handlers'
 import { publishResolvedChangedHostStatus } from './runtime-environment-managed-tunnel'

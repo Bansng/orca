@@ -7,11 +7,14 @@
  */
 import { randomUUID } from 'node:crypto'
 import {
+  MAX_ORCAD_MIGRATION_MANIFEST_BYTES,
   ORCAD_MIGRATION_MANIFEST_VERSION,
-  parseOrcadMigrationManifest,
-  type OrcadMigrationCatalogPayload,
-  type OrcadMigrationDormantStatePayload,
-  type OrcadMigrationManifest
+  parseOrcadMigrationManifest
+} from '../../shared/orcad-migration-manifest-validation'
+import type {
+  OrcadMigrationCatalogPayload,
+  OrcadMigrationDormantStatePayload,
+  OrcadMigrationManifest
 } from '../../shared/orcad-migration-manifest'
 import type { SshTarget } from '../../shared/ssh-types'
 import type { Store } from '../persistence'
@@ -86,10 +89,61 @@ export function createOrcadMigrationManifest(
       ? { destinationEnvironmentId: options.destinationEnvironmentId }
       : {})
   }
-  return parseOrcadMigrationManifest({
-    ...unsigned,
-    manifestSha256: computeOrcadMigrationManifestSha256(unsigned)
-  })
+  try {
+    return parseOrcadMigrationManifest({
+      ...unsigned,
+      manifestSha256: computeOrcadMigrationManifestSha256(unsigned)
+    })
+  } catch (error) {
+    if (error instanceof Error && error.message === ORCAD_MIGRATION_MANIFEST_TOO_LARGE) {
+      throw new Error(describeOversizedOrcadMigrationPayload(payload))
+    }
+    throw error
+  }
+}
+
+const ORCAD_MIGRATION_MANIFEST_TOO_LARGE = 'orcad_migration_manifest_too_large'
+
+/** The bare code told users nothing (#30126): name the largest parts and what to trim. */
+export function describeOversizedOrcadMigrationPayload(
+  payload: OrcadMigrationCatalogPayload,
+  limitBytes = MAX_ORCAD_MIGRATION_MANIFEST_BYTES
+): string {
+  const dormant = payload.dormantState
+  const parts: [string, unknown][] = [
+    ['projects', payload.repositories],
+    ['folder workspaces', payload.folderWorkspaces],
+    ['project groups', payload.projectGroups],
+    ['saved tabs and panes', dormant?.workspaceSession],
+    ['saved terminal history', dormant?.terminalScrollbackSnapshots],
+    ['saved workspace details', dormant?.worktreeMeta],
+    ['workspace history', [dormant?.worktreeLineage, dormant?.workspaceLineage]],
+    ['sparse checkout presets', dormant?.sparsePresets],
+    [
+      'retired workspace names',
+      [dormant?.retiredWorktreeNames, dormant?.retiredWorktreeNamespaces]
+    ],
+    ['automations', [dormant?.automations, dormant?.automationRuns]],
+    ['sidebar and browser settings', dormant?.clientState]
+  ]
+  const largest = parts
+    .map(([words, value]) => ({
+      words,
+      bytes: new TextEncoder().encode(JSON.stringify(value ?? null)).byteLength
+    }))
+    .sort((left, right) => right.bytes - left.bytes)
+    .slice(0, 3)
+    .map(({ words, bytes }) => `${words} (${formatKib(bytes)})`)
+  return (
+    `This SSH host's saved state is too large to move to its Orca server (limit ` +
+    `${formatKib(limitBytes)}). Largest parts: ${largest.join(', ')}. ` +
+    `Close tabs you no longer need or remove unused projects for this host, then reconnect. ` +
+    `(${ORCAD_MIGRATION_MANIFEST_TOO_LARGE})`
+  )
+}
+
+function formatKib(bytes: number): string {
+  return `${Math.ceil(bytes / 1024)} KB`
 }
 
 export type OrcadMigrationCatalogIds = {

@@ -4,8 +4,11 @@
  */
 import { randomUUID } from 'node:crypto'
 import type { OrcadManagedRestartResult } from '../../shared/orcad-managed-runtime'
-import { withOrcadActivationLock, type OrcadActivationLockControl } from './orcad-activation-lock'
-import { readOrcadActivationRecord } from './orcad-activation-record-store'
+import {
+  withOrcadActivationLock,
+  type OrcadActivationLockControl
+} from '../managed-server/activation/orcad-activation-lock'
+import { readOrcadActivationRecord } from '../managed-server/activation/orcad-activation-record-store'
 import {
   orcadLaunchSshSessionProbeCommand,
   parseOrcadLaunchSshSession,
@@ -20,14 +23,14 @@ import {
   requireManagedOrcadInfrastructure,
   resolveLinkedOrcadContext
 } from './orcad-managed-runtime-context'
-import { resolveOrcadRemoteContext } from './orcad-remote-context'
+import { resolveOrcadRemoteContext } from '../managed-server/install/orcad-remote-context'
 import { sshOrcadHostTransport } from './orcad-ssh-host-transport'
 import { rebuildOrcadManagedTunnel } from './orcad-managed-tunnel'
 import { wakeStoppedManagedOrcad } from './orcad-managed-wake'
 import { readRemoteOrcadManagedStopTarget } from './orcad-managed-remote-stop'
 import { orcadSlotDir, type OrcadSlotOptions } from './orcad-recovery-slot'
 import { stopIncumbentBehindTerminalBarrier } from './orcad-rollback-terminal-barrier'
-import { execOrcadRemote } from './orcad-remote-runtime-control'
+import { execOrcadRemote } from '../managed-server/install/orcad-remote-runtime-control'
 import { collectManagedTerminalCensus } from './orcad-terminal-census-client'
 
 export async function readManagedOrcadLaunchSshSession(

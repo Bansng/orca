@@ -12,7 +12,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { runProcess, spawnProcess } from '@orca/process-host'
-import { ORCAD_FENCE_LOST_EXIT, ORCAD_FENCE_LOST_MARKER } from './orcad-activation-fence-scope'
+import {
+  ORCAD_FENCE_LOST_EXIT,
+  ORCAD_FENCE_LOST_MARKER
+} from '../managed-server/activation/orcad-activation-fence-scope'
 import { ORCAD_WINDOWS_HOST_SCRIPT } from './orcad-windows-host-script'
 
 const dirs: string[] = []

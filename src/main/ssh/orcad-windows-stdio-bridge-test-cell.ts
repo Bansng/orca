@@ -7,8 +7,8 @@ import { OrcadManagedTunnelTransportProvider } from './orcad-managed-tunnel-tran
 import {
   parseOrcadReadinessWaitOutput,
   readOrcadReadinessNowCommand
-} from './orcad-remote-readiness-wait'
-import { execOrcadRemote } from './orcad-remote-runtime-control'
+} from '../managed-server/install/orcad-remote-readiness-wait'
+import { execOrcadRemote } from '../managed-server/install/orcad-remote-runtime-control'
 import type { SshConnection } from './ssh-connection'
 import type { RemoteHostPlatform } from './ssh-remote-platform'
 import { probeTcpForwarding } from './ssh-tcp-forwarding-probe'

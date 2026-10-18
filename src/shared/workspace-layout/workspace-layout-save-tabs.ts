@@ -94,7 +94,7 @@ export function saveTabBarEntry(
     entityId: tab.entityId,
     groupId: placement.groupId,
     worktreeId: scope.worktreeId,
-    executionHostId: tabExecutionHostId(tab, scope.editorFiles, scope.hostId),
+    executionHostId: tabExecutionHostId(tab, scope.editorFiles, scope.hostId, scope.worktreeId),
     contentType: tab.kind,
     label,
     ...(tab.generatedTitle !== undefined ? { generatedLabel: tab.generatedTitle } : {}),

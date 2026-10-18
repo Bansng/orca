@@ -7,6 +7,7 @@ import { isLocalWindowsDesktopClient } from '@/lib/desktop-window-chrome'
 import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
 import { isWindowsAbsolutePathLike } from '../../../shared/cross-platform-path'
 import {
+  isLocalExecutionHost,
   parseExecutionHostId,
   toRuntimeExecutionHostId,
   toSshExecutionHostId,
@@ -126,10 +127,6 @@ function addWatchConsumer(
   consumers.set(`${consumer.owner ?? ''}::${consumer.hostId ?? ''}`, consumer)
 }
 
-function isLocalHostStamp(value: string | null | undefined): boolean {
-  return parseExecutionHostId(value)?.kind === 'local'
-}
-
 function canWatchLocalWindowsWslAliases(args: {
   worktreePath: string
   runtimeEnvironmentId: string | null
@@ -150,14 +147,14 @@ function canWatchLocalWindowsWslAliases(args: {
     return (
       !!args.repo &&
       !args.worktree.runtimeOwnerEnvironmentId?.trim() &&
-      isLocalHostStamp(args.worktree.hostId) &&
-      isLocalHostStamp(args.repo.executionHostId)
+      isLocalExecutionHost(args.worktree.hostId) &&
+      isLocalExecutionHost(args.repo.executionHostId)
     )
   }
   return (
     !!args.folderWorkspace &&
-    isLocalHostStamp(args.folderWorkspace.executionHostId) &&
-    isLocalHostStamp(args.projectGroup?.executionHostId)
+    isLocalExecutionHost(args.folderWorkspace.executionHostId) &&
+    isLocalExecutionHost(args.projectGroup?.executionHostId)
   )
 }
 

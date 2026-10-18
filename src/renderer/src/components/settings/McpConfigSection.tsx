@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { useMountedRef } from '@/hooks/useMountedRef'
 import type { Repo } from '../../../../shared/repo-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import { getRepoIdFromWorktreeId } from '../../../../shared/worktree/id'
+import { composeWorktreeId, getRepoIdFromWorktreeId } from '../../../../shared/worktree/id'
 import {
   getRepoExecutionHostId,
   getRepoSshConnectionId,
@@ -94,7 +94,7 @@ export function McpConfigSection({ repo }: McpConfigSectionProps): React.JSX.Ele
     return (
       worktreesForRepo.find((worktree) => worktree.isMainWorktree) ??
       worktreesForRepo.find((worktree) => worktree.path === repo.path) ??
-      worktreesForRepo[0] ?? { id: `${repo.id}::${repo.path}`, path: repo.path }
+      worktreesForRepo[0] ?? { id: composeWorktreeId(repo.id, repo.path), path: repo.path }
     )
   }, [activeWorktreeId, allWorktreesForRepo, repo.id, repo.path, worktreesForRepo])
   const targetWorktreeId = targetWorktree.id

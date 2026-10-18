@@ -1,3 +1,4 @@
+import { ProducerRevision } from './producer-revision'
 import { toRuntimeExecutionHostId, type ExecutionHostId } from '../../../shared/execution-host'
 import { describePairedServerHosts } from '../../../shared/paired-server-hosts'
 import type { MobileRelayServerWorktreeRow } from '../../../shared/mobile-relay-hosts-contract'
@@ -49,7 +50,7 @@ type ServerEntry = {
 export class PairedServerRowsProducer implements ServerWorktreeRows {
   private readonly servers = new Map<string, ServerEntry>()
   private hosts: MobileDesktopRelayHosts | null = null
-  private revision = 0
+  readonly revision = new ProducerRevision()
 
   constructor(
     private readonly options: {
@@ -82,7 +83,7 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
       }
       this.servers.clear()
       this.hosts = null
-      this.revision += 1
+      this.revision.bump()
     }
   }
 
@@ -99,7 +100,7 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
       if (fences.get(environmentId) !== entry.fence) {
         entry.watch?.close()
         this.servers.delete(environmentId)
-        this.revision += 1
+        this.revision.bump()
       }
     }
     // Why the shown hosts: a managed server reached over its SSH host's relay is not in contact here.
@@ -117,7 +118,7 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
           refreshing: null,
           refreshAgain: false
         })
-        this.revision += 1
+        this.revision.bump()
       }
     }
     for (const entry of this.servers.values()) {
@@ -125,7 +126,7 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
       if (inContact !== entry.inContact) {
         entry.inContact = inContact
         entry.confirmed = false
-        this.revision += 1
+        this.revision.bump()
       }
       // Why current(): a replaced transport can end the stream without telling it.
       if (inContact && !entry.watch?.current()) {
@@ -173,7 +174,7 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
       ])
     )
     return {
-      revision: this.revision,
+      revision: this.revision.value,
       servers: [...this.servers.values()].map((entry) => {
         const hostId = toRuntimeExecutionHostId(entry.environmentId)
         return {
@@ -209,7 +210,7 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
   private unconfirm(entry: ServerEntry): void {
     if (entry.confirmed) {
       entry.confirmed = false
-      this.revision += 1
+      this.revision.bump()
     }
   }
 
@@ -245,6 +246,6 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
     entry.rows = stampServerWorktreeRows(entry.environmentId, reply.data.worktrees)
     entry.confirmed = entry.inContact
     // Every answer moves the revision: rows carry activity that changes without a catalog event.
-    this.revision += 1
+    this.revision.bump()
   }
 }

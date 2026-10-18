@@ -92,6 +92,7 @@ import {
   type WorktreeCreateTimingRecorder
 } from '../worktree-create-timing'
 import type { SparsePreset } from '../../shared/worktree/create-types'
+import { withoutInFlightWorktreeCreates } from '../worktree-create-in-flight'
 
 const worktreePath = resolve('/worktrees', 'app')
 
@@ -182,6 +183,29 @@ beforeEach(() => {
   mocks.copyPaths.mockResolvedValue([])
   mocks.effectiveHooks.mockReturnValue(null)
   readSparsePresets.mockReturnValue([WEB_PRESET])
+})
+
+describe('runtime create listing hold', () => {
+  const rows = [{ path: worktreePath }]
+
+  it('holds the checkout during Git creation and releases it once metadata is saved', async () => {
+    mocks.consume.mockImplementation(async () => {
+      expect(withoutInFlightWorktreeCreates('repo-1', rows)).toEqual([])
+      return { status: 'hit', result: {}, rearm: mocks.rearm }
+    })
+    mocks.resolveShared.mockImplementation(async () => {
+      expect(withoutInFlightWorktreeCreates('repo-1', rows)).toBe(rows)
+      return []
+    })
+    await createWorktree()
+    expect(mocks.resolveShared).toHaveBeenCalledOnce()
+  })
+
+  it('releases the checkout when Git creation fails', async () => {
+    mocks.consume.mockRejectedValue(new Error('checkout failed'))
+    await expect(createWorktree()).rejects.toThrow('checkout failed')
+    expect(withoutInFlightWorktreeCreates('repo-1', rows)).toBe(rows)
+  })
 })
 
 describe('runtime nested-workspaces layout', () => {

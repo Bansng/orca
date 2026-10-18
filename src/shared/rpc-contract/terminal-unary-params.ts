@@ -187,6 +187,13 @@ export const TerminalSetViewerColors = z.object({
   colors: TerminalColorQueryReplyColorsParam
 })
 
+/** The provider session a terminal's launch resumes. */
+export const ResumeProviderSessionParam = z.object({
+  key: z.enum(['session_id', 'conversation_id']),
+  id: z.string().min(1).max(512),
+  transcriptPath: z.string().min(1).max(32_768).optional()
+})
+
 export const TerminalCreateParams = z.object({
   worktree: OptionalString,
   clientMutationId: z.string().min(1).max(128).optional(),
@@ -207,13 +214,7 @@ export const TerminalCreateParams = z.object({
         .optional()
     })
     .optional(),
-  resumeProviderSession: z
-    .object({
-      key: z.enum(['session_id', 'conversation_id']),
-      id: z.string().min(1).max(512),
-      transcriptPath: z.string().min(1).max(32_768).optional()
-    })
-    .optional(),
+  resumeProviderSession: ResumeProviderSessionParam.optional(),
   launchToken: OptionalString,
   launchAgent: z.string().refine(isTuiAgent).optional(),
   terminalKittyKeyboardProtocol: z.boolean().optional(),

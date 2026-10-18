@@ -9,13 +9,16 @@ import type { ServeReadiness } from '../server/serve-readiness'
 import { computeLocalOrcadBuildHash } from './orcad-local-build-hash'
 import { sshOrcadHostTransport } from './orcad-ssh-host-transport'
 import type { OrcadHostTarget } from './orcad-host-transport'
-import type { OrcadActivationRecord } from './orcad-activation-record'
+import type { OrcadActivationRecord } from '../managed-server/activation/orcad-activation-record'
 import { refuseOrcadHostDowngrade } from './orcad-host-version-admission'
-import type { OrcadTerminalCensus } from './orcad-update-plan'
+import type { OrcadTerminalCensus } from '../../shared/orcad-terminal-census'
 import { probeActiveOrcadReadiness } from './orcad-active-readiness'
-import { resolveOrcadRemoteContext, type OrcadRemoteContext } from './orcad-remote-context'
-import { ORCAD_INSTALL_MODEL } from './remote-install-model'
-import { computeRemoteInstallDir } from './remote-versioned-install'
+import {
+  resolveOrcadRemoteContext,
+  type OrcadRemoteContext
+} from '../managed-server/install/orcad-remote-context'
+import { ORCAD_INSTALL_MODEL } from '../managed-server/install/remote-install-model'
+import { computeRemoteInstallDir } from '../managed-server/install/remote-versioned-install'
 import { getSshConnectionManager, getSshTargetRegistryStore } from './ssh-target-registry'
 
 export const ORCAD_BIND_HOST = '127.0.0.1'

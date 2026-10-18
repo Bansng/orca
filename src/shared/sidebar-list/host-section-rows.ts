@@ -10,6 +10,7 @@ import {
 } from '../execution-host'
 import type { ExecutionHostHealth } from '../execution-host-registry'
 import type { RuntimeCompatVerdict } from '../protocol-compat'
+import type { RuntimeHostBlockedReason } from '../runtime-host-status'
 import type { SshConnectionStatus } from '../ssh-types'
 import type { Repo } from '../repo-types'
 import type { Row } from './row-types'
@@ -26,6 +27,8 @@ export type HostHeaderRow = {
   // Why: blocked-host guidance in the header menu needs the verdict reason so
   // it can deep-link an "Update server/client required" row per skew direction.
   compatibility?: RuntimeCompatVerdict
+  // Why: a revoked pairing needs "Re-pair", not the update guidance a version block gets.
+  blockedReason?: RuntimeHostBlockedReason
   connectionStatus?: SshConnectionStatus
   collapsed: boolean
   count: number
@@ -40,6 +43,7 @@ export type HostSectionOption = {
   detail: string
   health: ExecutionHostHealth
   compatibility?: RuntimeCompatVerdict
+  blockedReason?: RuntimeHostBlockedReason
   connectionStatus?: SshConnectionStatus
 }
 
@@ -295,6 +299,7 @@ export function addHostSectionRows(args: {
       detail: host.detail,
       health: host.health,
       compatibility: host.compatibility,
+      ...(host.blockedReason ? { blockedReason: host.blockedReason } : {}),
       connectionStatus: host.connectionStatus,
       collapsed,
       count: countWorkspaceRows(hostRows)

@@ -15,7 +15,7 @@ import { OrcadStdioBridgeBase64Encoder, OrcadStdioBridgeDecoder } from './orcad-
 import { spawnLocalBridgeChannel, startEchoServer } from './orcad-stdio-bridge-test-channel'
 import { ORCAD_WINDOWS_HOST_SCRIPT } from './orcad-windows-host-script'
 import type { OrcadHostTransport } from './orcad-host-transport'
-import type { RemoteCommandChannel } from './remote-install-transport'
+import type { RemoteCommandChannel } from '../managed-server/install/remote-install-transport'
 
 const POSIX = process.platform !== 'win32'
 let echo: { server: Server; port: number }

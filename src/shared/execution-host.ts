@@ -127,6 +127,10 @@ export function parseExecutionHostId(value: string | null | undefined): ParsedEx
 }
 
 /** Whether a host id names another machine; an absent or unparsable id reads as this one. */
+export function isLocalExecutionHost(value: string | null | undefined): boolean {
+  return parseExecutionHostId(value)?.kind === 'local'
+}
+
 export function isRemoteExecutionHostId(value: string | null | undefined): boolean {
   return (parseExecutionHostId(value)?.kind ?? 'local') !== 'local'
 }

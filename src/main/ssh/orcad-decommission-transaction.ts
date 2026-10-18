@@ -11,8 +11,8 @@ import {
   withDeactivatedVersion,
   withDeactivatedVersionCommitted,
   type OrcadActivationRecord
-} from './orcad-activation-record'
-import { ORCAD_ACTIVATION_TRANSACTION_SCHEMA_VERSION } from './orcad-activation-transaction-schema'
+} from '../managed-server/activation/orcad-activation-record'
+import { ORCAD_ACTIVATION_TRANSACTION_SCHEMA_VERSION } from '../managed-server/activation/orcad-activation-transaction-schema'
 import type { OrcadManagedStopRequest } from '../../shared/orcad-stop-request'
 
 export type OrcadDecommissionTransaction = {

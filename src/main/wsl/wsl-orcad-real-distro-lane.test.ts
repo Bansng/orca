@@ -30,7 +30,7 @@ import {
   ORCAD_TEMPLATE_MANIFEST_FILENAME
 } from '../../shared/orcad-artifacts'
 import { requestOrcadTerminalCensus } from '../ssh/orcad-terminal-census-client'
-import { execCommand } from '../ssh/ssh-relay-exec-command'
+import { execCommand } from '../ssh/remote-exec-command'
 import { readConfirmedRunningWslDistros } from '../wsl-background-distro-gate'
 import { readWindowsProcessTableFresh } from '../windows/windows-process-table'
 import { resolveWslInteropSpawnCwd } from '../wsl-interop-spawn-directory'

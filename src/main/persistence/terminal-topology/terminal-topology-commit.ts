@@ -200,7 +200,7 @@ export function topologyCommitContext({
 }
 
 // A paused WSL move keeps its local rows as the quiesce left them.
-function keepFrozen(
+export function keepFrozen(
   hostId: ExecutionHostId,
   session: WorkspaceSessionState,
   context: TerminalTopologyCommitContext

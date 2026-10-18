@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SshConnection } from './ssh-connection'
-import type { PortForwardStartOptions } from './ssh-port-forward-provider'
+import type { PortForwardStartOptions } from './port-forwarding/ssh-port-forward-provider'
 import type * as ForwardProcess from './system-ssh-forward-process'
 
 const { reserveLocalForwardPort } = vi.hoisted(() => ({

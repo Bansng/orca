@@ -387,7 +387,8 @@
         "loopbackPairingBlocked": "このアクセスリンクはこのデバイス自身を指しています。",
         "remotePairingUnreachable": "{{endpoint}} の Orca に接続できません。",
         "remotePairingInvalidDetails": "このアクセスリンクには無効な接続情報が含まれています。",
-        "remotePairingSaveFailed": "Orca はホストを確認しましたが、ホストを保存できませんでした。ブラウザのストレージを確認して、もう一度試してください。"
+        "remotePairingSaveFailed": "Orca はホストを確認しましたが、ホストを保存できませんでした。ブラウザのストレージを確認して、もう一度試してください。",
+        "remotePairingRepairUnavailable": "Re-pairing is not available in the browser. Pair this browser with the server again."
       },
       "web": {
         "preload": {
@@ -4181,7 +4182,14 @@
             "runtime_unavailable_explanation": "リモートホストがまだ実行されている可能性があります。 Orca ランタイム接続のみが利用できません。",
             "contact_note": "ホストはまだ実行中の可能性があります。 Orca 接続のみが利用できません。",
             "last_connected": "最後に接続したのは {{value0}}",
-            "reconnect_attempt": "{{value0}} を試みます"
+            "reconnect_attempt": "{{value0}} を試みます",
+            "access_revoked": "Access revoked",
+            "access_revoked_summary": "This server revoked access for this computer",
+            "access_revoked_explanation": "Re-pair with a new pairing link from the server to reconnect.",
+            "update_required": "Update required",
+            "update_required_summary": "Orca versions are not compatible",
+            "update_required_explanation": "Update Orca on this computer or on the server, then connect again.",
+            "repair": "Re-pair…"
           },
           "NativeChatResumeStatusSegment": {
             "labelOne": "再開するには 1 チャット",
@@ -5404,6 +5412,12 @@
           "00c4235c10": "「{{value0}}」に一致するものはありません",
           "largeInputNoMatches": "この長い入力に一致するものはありません"
         },
+        "SleepTwinWorkspaceDialog": {
+          "title": "Sleep Workspace",
+          "alsoSleeps": "Also sleeps the copy on {{hosts}}",
+          "cancel": "Cancel",
+          "confirm": "Sleep"
+        },
         "RemoveFolderDialog": {
           "4dc5b5065b": "削除",
           "d36883e046": "キャンセル",
@@ -5846,7 +5860,8 @@
           "sidebarRowMissing": "対象はもう存在しません",
           "failedUnnestWorkspace": "ワークスペースの展開に失敗しました",
           "groupRenameFailed": "グループ名の変更に失敗しました",
-          "groupRenameFailedDesc": "Orca はグループのホストに新規名前を確認できませんでした。再接続後、グループを再確認してください。"
+          "groupRenameFailedDesc": "Orca はグループのホストに新規名前を確認できませんでした。再接続後、グループを再確認してください。",
+          "hostRepairRequired": "Re-pair required"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "キャンセル",
@@ -6062,6 +6077,9 @@
               "8bc3fc0671": "ワークスペースのスリープに失敗しました",
               "legacy": {
                 "unverified": "古いホストランタイムでは、ターミナルの終了を確認できませんでした。ワークスペースは開いたままです。ホストを更新してから、もう一度お試しください。"
+              },
+              "twin": {
+                "unattributed": "Orca couldn't tell which host runs this workspace's terminals, so the workspace was kept open. Reconnect its hosts and try again."
               },
               "host": {
                 "unverified": "ホストがターミナルの終了を確認できませんでした。ワークスペースは開いたままです。接続を確認してから、もう一度お試しください。"
@@ -6286,7 +6304,8 @@
           "59b553e2aa": "切断",
           "2d3e4f5a6b": "接続を確認",
           "3c4d5e6f7a": "ホストを管理…",
-          "6e7f8a9b0c": "ホストを削除…"
+          "6e7f8a9b0c": "ホストを削除…",
+          "repair": "Re-pair…"
         },
         "WorkspaceKanbanDrawer": {
           "1975a4e480": "タスクステータスの同期に失敗しました",
@@ -6297,6 +6316,7 @@
           "f4a5b6c7d8": "Linear Issue {{value0}} を更新できませんでした。",
           "a5b6c7d8e9": "Linear Issue {{value0}} を同期できませんでした。",
           "b6c7d8e9f0": "タスクステータスの同期を完了できませんでした。",
+          "f0a1b2c3d4": "Linear の課題 {{value0}} をスキップしました: このワークスペースは複数のホストにあります。",
           "c7d8e9f0a1": "{{value0}} 件更新",
           "d8e9f0a1b2": "{{value0}} 件スキップ",
           "e9f0a1b2c3": "{{value0}} 件失敗"
@@ -8400,7 +8420,11 @@
           "serverWorkspaceWindowClosed": "ワークスペースウィンドウを閉じた",
           "serverRuntimeUnavailable": "Orca は利用できません",
           "serverRuntimeUnavailableDescription": "SSH トランスポートは接続されていますが、Orca ランタイムが応答しませんでした。ホストがまだ実行中の可能性があります。",
-          "serverReconnecting": "再接続中"
+          "serverReconnecting": "再接続中",
+          "accessRevoked": "{{value0}} no longer accepts this computer. Re-pair it with a new access link.",
+          "repair": "Re-pair…",
+          "serverAccessRevoked": "Access revoked",
+          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)"
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "{{value0}}をコピー"
@@ -12069,7 +12093,9 @@
           "networkConnection": "ネットワーク接続",
           "notAttempted": "未試行",
           "saveFailed": "ホストを保存できませんでした",
-          "saveFailedHelp": "ホストは確認されましたが、Orca はホストを保存できませんでした。名前とローカル設定ストレージを確認して、再試行してください。"
+          "saveFailedHelp": "ホストは確認されましたが、Orca はホストを保存できませんでした。名前とローカル設定ストレージを確認して、再試行してください。",
+          "differentServer": "This link is for a different server",
+          "differentServerHelp": "This pairing link is for a different server. Create the link on the server you are re-pairing."
         },
         "CloudVmSetupGuide": {
           "title": "クラウド VM を作成",
@@ -12639,6 +12665,13 @@
           "remove": "削除",
           "turnOn": "実験的機能でオンにする",
           "forceUpdate": "強制更新"
+        },
+        "RuntimeRepairDialog": {
+          "title": "Re-pair {{name}}",
+          "description": "{{name}} no longer accepts this computer. On {{name}}, open Settings → Remote Orca Servers → Share this host, create a link for another Orca client, then paste it here.",
+          "submit": "Re-pair",
+          "success": "Re-paired with {{name}}",
+          "failed": "Re-pair failed"
         }
       },
       "right": {
@@ -18232,6 +18265,8 @@
         "removeImagesToSend": "復元できなかった画像があります。送信するには削除してください。",
         "imageAttachAgainLabel": "もう一度添付",
         "pastedImageNotKeptLabel": "保持されていません",
+        "imageNumber": "画像 #{{number}}",
+        "imageReferenceMissing": "画像は削除されました",
         "imagePasteFailed": "画像の貼り付けに失敗しました。",
         "worktreeNotReady": "ワークツリーが準備できていません — しばらくしてから再試行してください。",
         "pasteUnavailable": "貼り付けできません — このチャットは現在入力を受け付けていません。",
@@ -19189,7 +19224,6 @@
       "cancel": "インストールをキャンセル",
       "cancelled": "インストールをキャンセルしました。",
       "cancelling": "キャンセルしています…",
-      "chatTitle": "チャットを始めるには {{agent}} をインストールしてください。",
       "damaged": "この {{agent}} のコピーは破損しています。",
       "downloadSize": "{{size}} MB のダウンロード。",
       "downloading": "{{done}} MB をダウンロード中です。",
@@ -19208,7 +19242,28 @@
       "retry": "インストールを再試行",
       "unavailable": "{{agent}} はこのホストでは利用できません。",
       "update": "{{agent}} を更新",
-      "verifying": "ダウンロードしたランタイムを確認しています。"
+      "verifying": "ダウンロードしたランタイムを確認しています。",
+      "installTitle": "チャットを始めるには {{agent}} をインストールしてください",
+      "continueTitle": "続けるには {{agent}} をインストールしてください",
+      "heroBody": "{{size}} MB の一度きりのダウンロードです。このチャットを実行するコンピューター上の {{agent}} チャットで共有されます。",
+      "heroBodyNoSize": "一度きりのダウンロードです。このチャットを実行するコンピューター上の {{agent}} チャットで共有されます。",
+      "stripSize": "このチャットを実行するコンピューターに {{size}} MB をダウンロード",
+      "settingsHint": "設定 › チャット › プロバイダー からも行えます",
+      "installShort": "インストール",
+      "tryAgain": "再試行",
+      "cancelShort": "キャンセル",
+      "failedTitle": "{{agent}} をインストールできませんでした",
+      "cancelledTitle": "インストールをキャンセルしました",
+      "cancelledBody": "何もインストールされていません。",
+      "downloadingTitle": "{{agent}} をダウンロード中",
+      "unpackingTitle": "{{agent}} を展開中",
+      "checkingTitle": "ダウンロードを確認中",
+      "progressOf": "{{total}} MB 中 {{done}} MB",
+      "unpackingDetail": "ランタイムを展開しています",
+      "checkingDetail": "ダウンロードしたランタイムを確認しています",
+      "stepDownload": "ダウンロード",
+      "stepUnpack": "展開",
+      "stepCheck": "確認"
     }
   },
   "dashboardPopout": {

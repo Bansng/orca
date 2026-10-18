@@ -13,7 +13,7 @@ import { errorMessage } from '../../shared/error-message'
 import {
   forgetLegacyRelayTarget,
   stopLegacyRelayBridge
-} from '../ssh/legacy-relay-bridge/legacy-relay-bridge-registry'
+} from '../ssh/legacy-relay/legacy-relay-bridge-registry'
 
 export async function disconnectRegisteredSshTarget(targetId: string): Promise<void> {
   invalidateConnectAttempt(targetId)

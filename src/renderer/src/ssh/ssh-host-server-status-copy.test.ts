@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { SshManagedServerUpdateNote } from '../../../shared/ssh-types'
 import { sshConnectFailureText, sshHostServerStatusLine } from './ssh-host-server-status-copy'
 
 const plain = {}
@@ -66,7 +67,7 @@ describe('SSH host server status line', () => {
       sshHostServerStatusLine(plain, { managedServer: { kind: 'setting-up', phase: 'updating' } })
         ?.text
     ).toBe('Updating managed server…')
-    const managed = (update: { state: 'host-newer' | 'deferred' | 'failed'; detail?: string }) =>
+    const managed = (update: SshManagedServerUpdateNote) =>
       sshHostServerStatusLine(plain, {
         managedServer: { kind: 'managed', environmentId: 'e', update }
       })
@@ -78,6 +79,21 @@ describe('SSH host server status line', () => {
     expect(managed({ state: 'failed', detail: 'readiness timed out' })).toMatchObject({
       tone: 'warning',
       detail: 'readiness timed out'
+    })
+  })
+
+  it('says a managed server may be behind this app, whatever kept it there', () => {
+    const line = (update: SshManagedServerUpdateNote) =>
+      sshHostServerStatusLine(plain, {
+        managedServer: { kind: 'managed', environmentId: 'e', update }
+      })
+    expect(line({ state: 'rolled-back' })).toMatchObject({ tone: 'warning' })
+    expect(line({ state: 'rolled-back' })?.text).toContain('Update server')
+    expect(line({ state: 'no-template' })?.text).toContain('can’t update')
+    expect(line({ state: 'migrating' })?.text).toContain('project move')
+    expect(line({ state: 'check-failed', detail: 'ssh dropped' })).toMatchObject({
+      tone: 'warning',
+      detail: 'ssh dropped'
     })
   })
 

@@ -33,7 +33,7 @@ import {
 } from './profile-cloud-dev-service'
 import { getOrcaProfileAuthStatusFromProfile } from './profile-cloud-auth-status'
 import { selectCloudOrg } from './profile-cloud-org-selection'
-import { clearRelayRegionPreferenceCache } from '../runtime/relay/relay-region-preference'
+import { clearRelayRegionPreferenceCache } from '../runtime/mobile-cloud-relay/relay-region-preference'
 
 export { refreshCurrentOrcaProfileAuth } from './profile-cloud-capability-refresh'
 

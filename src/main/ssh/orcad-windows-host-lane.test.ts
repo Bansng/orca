@@ -16,17 +16,20 @@ import { SshConnection } from './ssh-connection'
 import {
   connectHostileHost,
   installHostileHostAppEnvironment
-} from './ssh-hostile-host-test-harness'
-import { resolveOrcadRemoteContext } from './orcad-remote-context'
+} from './hostile-host-test-support/ssh-hostile-host-test-harness'
+import { resolveOrcadRemoteContext } from '../managed-server/install/orcad-remote-context'
 import { proveWindowsStdioBridge } from './orcad-windows-stdio-bridge-test-cell'
 import { deployOrcad } from './orcad-remote-deploy'
-import { orcadLivenessProbeCommand, parseOrcadLiveness } from './orcad-remote-launch'
+import {
+  orcadLivenessProbeCommand,
+  parseOrcadLiveness
+} from '../managed-server/install/orcad-remote-launch'
 import { orcadSlotDir, type OrcadSlotOptions } from './orcad-recovery-slot'
-import { decommissionRemoteOrcad } from './orcad-remote-decommission'
-import { readOrcadActivationRecord } from './orcad-activation-record-store'
-import { gcOldOrcadVersions } from './orcad-remote-gc'
-import { execOrcadRemote } from './orcad-remote-runtime-control'
-import { orcadWindowsNodeCommandLine } from './orcad-remote-windows-node'
+import { decommissionRemoteOrcad } from '../managed-server/install/orcad-remote-decommission'
+import { readOrcadActivationRecord } from '../managed-server/activation/orcad-activation-record-store'
+import { gcOldOrcadVersions } from '../managed-server/install/orcad-remote-gc'
+import { execOrcadRemote } from '../managed-server/install/orcad-remote-runtime-control'
+import { orcadWindowsNodeCommandLine } from '../managed-server/install/orcad-remote-windows-node'
 import { joinRemotePath } from './ssh-remote-platform'
 import {
   isWindowsOrcadCellId,

@@ -14,10 +14,8 @@ import {
   type OrcadMigrationBlobDescriptor
 } from './orcad-migration-blob-transfer'
 import { parseOrcadMigrationCatalogState } from './orcad-migration-catalog-state'
-import {
-  ORCAD_MIGRATION_MANIFEST_VERSION,
-  type OrcadMigrationManifest
-} from './orcad-migration-manifest'
+import { ORCAD_MIGRATION_MANIFEST_VERSION } from './orcad-migration-manifest-validation'
+import type { OrcadMigrationManifest } from './orcad-migration-manifest'
 import { ORCAD_MIGRATION_BLOB_CHANNEL_RUNTIME_CAPABILITY } from './orcad-runtime-capabilities'
 
 const HASH = 'a'.repeat(16)

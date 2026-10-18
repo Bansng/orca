@@ -8,7 +8,7 @@
 import { createBrowserUuid } from '@/lib/browser-uuid'
 import { afterLayoutFrame, layoutFramesFlowing } from '@/runtime/layout-frame-position'
 import { expectTabRowFields } from '@/runtime/layout-owner-pane-intents'
-import { getExplicitRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
+import { runtimeEnvironmentIdUnlessTwin } from '@/lib/resolve-owner'
 import { newGroupSplitOf } from '@/runtime/layout-owner-new-group-split'
 import { callRuntimeRpc } from '@/runtime/runtime-rpc-client'
 import { layoutFrameTerminalTab } from '@/runtime/layout-frame-terminal-panes'
@@ -86,9 +86,8 @@ export function terminalTabCreateCommand(
 }
 
 /**
- * Sends a tab the window just drew to main. Nothing to undo on any answer: main holding the same
- * pane already, or a paired server or no partition holding the workspace, leaves the window's own
- * session save to carry the tab, as today.
+ * Sends a tab the window just drew to main. Nothing to undo on any answer: main's frame is what
+ * stays drawn, since the window's session save no longer carries the tab. A refusal is logged.
  */
 export function recordCreatedTerminalTabInLayoutOwner(
   state: AppState,
@@ -97,20 +96,21 @@ export function recordCreatedTerminalTabInLayoutOwner(
   // Why: a paired server mirrors this workspace's tabs; main does not own its layout. A tab main
   // already holds is its own.
   if (
-    getExplicitRuntimeEnvironmentIdForWorktree(state, command.workspace) ||
+    // Why: as `sendLayoutApply`, a twin stays on main's path: it edits this window's layout.
+    runtimeEnvironmentIdUnlessTwin(state, command.workspace) !== null ||
     layoutFrameTerminalTab(command.workspace, command.tabId)
   ) {
     return
   }
   void callRuntimeRpc<LayoutApplyReply>({ kind: 'local' }, 'layout.apply', { command }).then(
     (reply) => {
-      if (!reply.ok && reply.code !== 'host_not_owned') {
+      if (!reply.ok) {
         console.warn('[layout-owner] createTerminalTab refused:', reply.code)
       }
     },
     (error: unknown) => {
       console.warn(
-        '[layout-owner] createTerminalTab failed:',
+        '[layout-owner] createTerminalTab refused: call_failed',
         error instanceof Error ? error.message : error
       )
     }
@@ -130,7 +130,7 @@ export function createInitialTerminalThroughLayoutOwner(
   worktreeId: string,
   create: (ids?: { tabId: string; leafId: string }) => void
 ): boolean {
-  if (getExplicitRuntimeEnvironmentIdForWorktree(getState(), worktreeId)) {
+  if (runtimeEnvironmentIdUnlessTwin(getState(), worktreeId) !== null) {
     return false
   }
   const tabId = createBrowserUuid()

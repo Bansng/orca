@@ -6,6 +6,7 @@ import type {
 } from '../../shared/workspace-layout/workspace-layout-command-types'
 import type { TerminalLeafMoveRequest } from '../../shared/terminal-leaf-move'
 import { markAgentLaunchesClosedByUser } from '../agent-launch/agent-launch-pane-attachment'
+import { isWslMoveWorkspaceSessionFrozen } from '../persistence/moving-wsl-projects/wsl-move-scope-guard'
 import type { RuntimeStore } from './runtime-store-contract'
 
 /**
@@ -24,12 +25,15 @@ export type WindowLayoutCommand = LayoutCommand &
     | { type: 'moveTabToWorkspace' }
     // Editor tabs live in their workspace's routed partition.
     | { type: 'renameEditorFiles' }
+    // So does the workspace's default-tabs mark, which no tab carries.
+    | { type: 'setDefaultTabsApplied' }
   )
 
 /**
  * `layout.apply`: the window's command on the partitions holding its tab, routed partition first;
  * a group tree command goes to the workspace's routed partition. A pane close is the user's: main
  * marks it so, and the window cannot. A pane moved to a new tab follows the desktop's move rules.
+ * A workspace a WSL move has paused is refused: its write would be dropped and the change revert.
  */
 export async function applyWindowLayoutCommand(
   store: RuntimeStore,
@@ -38,6 +42,13 @@ export async function applyWindowLayoutCommand(
   /** Agent status and orchestration records follow a pane moved into a new tab. */
   onPaneMoved: (move: TerminalLeafMoveRequest) => void = () => {}
 ): Promise<LayoutApplyReply> {
+  if (
+    isWslMoveWorkspaceSessionFrozen(command.workspace) ||
+    // The target's dropped write would lose the tab the source gave up.
+    (command.type === 'moveTabToWorkspace' && isWslMoveWorkspaceSessionFrozen(command.toWorkspace))
+  ) {
+    return { ok: false, code: 'wsl_move_in_progress' }
+  }
   if (command.type === 'moveTabToWorkspace') {
     return moveTabToWorkspace(store, hostIdsFor, command)
   }
@@ -113,8 +124,8 @@ export async function applyWindowLayoutCommand(
 }
 
 /**
- * Applied in the one partition holding both workspaces. Workspaces in two partitions are refused:
- * the window's save carries that move, as today.
+ * Applied in the one partition holding both workspaces, or across the two that do (a local and an
+ * SSH workspace) in one durable write: a window save no longer carries the move.
  */
 async function moveTabToWorkspace(
   store: RuntimeStore,
@@ -132,7 +143,10 @@ async function moveTabToWorkspace(
     return { ok: false, code: 'host_not_owned' }
   }
   if (from !== to) {
-    return { ok: false, code: 'other_partition' }
+    if (!store.moveTabToWorkspaceAcrossPartitions) {
+      throw new Error('layout_store_unavailable')
+    }
+    return store.moveTabToWorkspaceAcrossPartitions(command, from, to)
   }
   if (!store.applyLayoutCommand) {
     throw new Error('layout_store_unavailable')

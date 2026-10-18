@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { resolveWithSshG } from './ssh-config-parser'
+import { resolveWithSshG } from './ssh-g-config-resolution'
 import { runProcess } from '@orca/process-host'
 
 vi.mock('os', () => ({

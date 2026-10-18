@@ -163,6 +163,10 @@ export function registerRuntimeClientIpcBridge(
         })
       return
     }
+    // This window builds its sidebar from its own store, never from a host's phone feed.
+    if (event.type === 'sidebarInputsChanged') {
+      return
+    }
     // Older hosts broadcast local/CLI activation without an address; that is not this viewer's intent.
     if (!event.navigation || !navigationTargetsClients(event.navigation)) {
       return

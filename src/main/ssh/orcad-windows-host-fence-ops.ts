@@ -7,7 +7,7 @@ import {
   ORCAD_FENCE_LOST_EXIT,
   ORCAD_FENCE_LOST_MARKER,
   ORCAD_FENCE_OWNER_FILENAME
-} from './orcad-activation-fence-scope'
+} from '../managed-server/activation/orcad-activation-fence-scope'
 import { ORCAD_EXITED_OWN_LOCK_QUIET_SECONDS } from './orcad-state-snapshot-members'
 
 export const ORCAD_WINDOWS_FENCE_ARG = '--fence'

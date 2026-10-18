@@ -8,8 +8,10 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('electron', () => ({ ipcMain: { handle: mocks.handle } }))
-vi.mock('../ssh/orcad-runtime-lifecycle', () => ({
-  createManagedOrcadEnvironment: mocks.deploy,
+vi.mock('../ssh/orcad-runtime-deployment', () => ({
+  createManagedOrcadEnvironment: mocks.deploy
+}))
+vi.mock('../ssh/orcad-runtime-status', () => ({
   getManagedOrcadRuntimeStatus: mocks.status
 }))
 vi.mock('./orcad-ssh-provisioning-handlers', () => ({

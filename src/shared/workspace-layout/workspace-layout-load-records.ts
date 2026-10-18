@@ -6,6 +6,7 @@ import {
   EDITOR_DRAFT_FIELDS
 } from './workspace-layout-beside'
 import { childRecord, omitStoredFields, pickStoredFields } from './stored-record-fields'
+import { editorTabShowsFile } from './workspace-layout-editor-tab-file'
 import type { WorkspaceLoadArgs } from './workspace-layout-load-types'
 import type { LayoutBrowserTab, LayoutEditorFile, LayoutTab } from './workspace-layout-model'
 
@@ -42,7 +43,8 @@ export function resolveWorktreeId({ session, key }: WorkspaceLoadArgs): string {
  */
 export function loadEditorFiles(
   args: WorkspaceLoadArgs,
-  tabs: LayoutTab[]
+  tabs: LayoutTab[],
+  worktreeId: string
 ): LayoutEditorFile[] | undefined {
   const { session, key, view } = args
   const files = session.openFilesByWorktree?.[key]
@@ -54,7 +56,9 @@ export function loadEditorFiles(
     if (Object.keys(draft).length > 0) {
       childRecord(view.editorDrafts, key)[file.filePath] = draft
     }
-    const fileTabs = tabs.filter((tab) => tab.kind === 'editor' && tab.entityId === file.filePath)
+    const fileTabs = tabs.filter(
+      (tab) => tab.kind === 'editor' && editorTabShowsFile(tab.entityId, file, worktreeId)
+    )
     // The file's copy is true when any of its tabs is preview (split groups share one file).
     const demoted = file.isPreview === true ? [] : fileTabs.filter((tab) => tab.isPreview)
     for (const tab of demoted) {

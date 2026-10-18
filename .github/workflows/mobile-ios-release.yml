@@ -99,7 +99,8 @@ jobs:
         run: npx expo prebuild --platform ios --no-install
 
       - name: Install CocoaPods
-        run: npx pod-install ios
+        working-directory: mobile/ios
+        run: bundle exec pod install
 
       # Why: `-allowProvisioningUpdates` + the App Store Connect API key can
       # create/refresh provisioning profiles, but it cannot recreate the

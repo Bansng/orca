@@ -93,6 +93,11 @@ export type RuntimeApi = {
       pairingCode: string
       allowLoopback?: boolean
     }) => Promise<VerifyAndAddRuntimeEnvironmentResult>
+    /** Replaces a revoked pairing in place; refuses a link for a different server. */
+    repairFromPairingCode: (args: {
+      selector: string
+      pairingCode: string
+    }) => Promise<VerifyAndAddRuntimeEnvironmentResult>
     resolve: (args: { selector: string }) => Promise<PublicKnownRuntimeEnvironment>
     remove: (args: { selector: string }) => Promise<{ removed: PublicKnownRuntimeEnvironment }>
     disconnect: (args: {

@@ -2,8 +2,8 @@ import { EventEmitter } from 'node:events'
 import { vi } from 'vitest'
 import type { Mock } from 'vitest'
 import type { AnyAuthMethod, AuthenticationType } from 'ssh2'
-import type { SshConnectionCallbacks } from './ssh-connection'
-import type { SshResolvedConfig } from './ssh-config-parser'
+import type { SshConnectionCallbacks } from './ssh-connection-utils'
+import type { SshResolvedConfig } from './ssh-g-config-resolution'
 import type { SshTarget } from '../../shared/ssh-types'
 
 export function createTarget(overrides?: Partial<SshTarget>): SshTarget {

@@ -23,12 +23,11 @@ import {
   isHostAnsweredSystemSshExit,
   type ProcessResult
 } from './system-ssh-operation-lifecycle'
+import { uploadFileViaSystemSsh, writeBufferViaSystemSsh } from './system-ssh-file-binary-transfer'
 import {
-  uploadFileViaSystemSsh,
   WINDOWS_STDIN_WRITE_CHUNK_BYTES,
-  WINDOWS_STDIN_WRITE_TIMEOUT_MS,
-  writeBufferViaSystemSsh
-} from './system-ssh-file-binary-transfer'
+  WINDOWS_STDIN_WRITE_TIMEOUT_MS
+} from './system-ssh-windows-write-strategy'
 import {
   isSftpPathUnsupportedError,
   isSftpUnavailableError,

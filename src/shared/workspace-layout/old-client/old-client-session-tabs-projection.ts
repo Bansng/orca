@@ -32,6 +32,7 @@ import {
   type DesktopLayoutView,
   type LayoutContentFacts
 } from '../workspace-layout-beside'
+import { editorTabFile } from '../workspace-layout-editor-tab-file'
 import type {
   LayoutContentTab,
   LayoutTab,
@@ -257,7 +258,7 @@ function editorRow(
   tab: LayoutContentTab,
   scope: Scope
 ): RuntimeMobileSessionMarkdownTab | RuntimeMobileSessionFileTab | null {
-  const file = scope.workspace.editorFiles?.find((entry) => entry.filePath === tab.entityId)
+  const file = editorTabFile(scope.workspace, tab.entityId)
   if (!file) {
     return null
   }

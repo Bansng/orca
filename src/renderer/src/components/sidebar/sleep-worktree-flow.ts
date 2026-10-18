@@ -112,6 +112,13 @@ function preserveSidebarWorktreePosition(worktreeId: string): () => void {
 
 function describeSleepFailure(error: unknown): string {
   const detail = error instanceof Error ? error.message : String(error)
+  // Why first: the twin refusal names no connection problem, though it contains "terminal_".
+  if (detail.includes('ambiguous_terminal_owner')) {
+    return translate(
+      'auto.components.sidebar.sleep.worktree.flow.twin.unattributed',
+      "Orca couldn't tell which host runs this workspace's terminals, so the workspace was kept open. Reconnect its hosts and try again."
+    )
+  }
   if (detail.includes('legacy')) {
     return translate(
       'auto.components.sidebar.sleep.worktree.flow.legacy.unverified',
@@ -140,7 +147,7 @@ export async function runSleepWorktrees(worktreeIds: readonly string[]): Promise
   if (errors.length > 0) {
     // Why: callers are fire-and-forget; surface actionable teardown failures after restoring retryable UI state.
     toast.error(
-      worktreeIds.length === 1
+      new Set(worktreeIds).size === 1
         ? translate(
             'auto.components.sidebar.sleep.worktree.flow.8bc3fc0671',
             'Failed to sleep workspace'
@@ -160,8 +167,10 @@ export type WorktreeSleepOutcome = { failedWorktreeIds: string[]; errors: string
 
 /** The sleep without the toast, for callers that report failures themselves. */
 export async function sleepWorktreesReportingFailures(
-  worktreeIds: readonly string[]
+  requestedWorktreeIds: readonly string[]
 ): Promise<WorktreeSleepOutcome> {
+  // Why unique: both copies of a twin share one id, and sleeping it sleeps the whole workspace.
+  const worktreeIds = [...new Set(requestedWorktreeIds)]
   if (worktreeIds.length === 0) {
     return { failedWorktreeIds: [], errors: [] }
   }

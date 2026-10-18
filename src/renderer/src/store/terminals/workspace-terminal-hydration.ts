@@ -10,7 +10,7 @@ import { addAdditionalValidWorkspaceKeys } from '@/lib/workspace-session-hydrati
 import {
   buildValidWorktreeIdsForSessionHydration,
   collectPersistedWorktreeIdsForSessionHydration
-} from '../slices/degraded-repo-worktree-validity'
+} from '../../../../shared/worktree/degraded-repo-worktree-validity'
 import type { TerminalSlice, TerminalStoreGet, TerminalStoreSet } from './terminal-state'
 import { buildRuntimeSessionPlaceholders } from './workspace-terminal-placeholders'
 import {

@@ -72,8 +72,11 @@ pnpm build
 ```
 
 For repeated local typechecks, use `pnpm tc` (or `pnpm tc:node`, `pnpm tc:web`,
-and `pnpm tc:cli`). These keep TypeScript's incremental cache. CI uses
-`pnpm typecheck:ci` with Bun for full checks. Shared tests are checked by the
+and `pnpm tc:cli`). These run `bun check` from the pinned `bun` devDependency —
+about a third of tsc's CPU and an eighth of its memory, so several agents can
+typecheck at once. Pass `--compiler=native` to use tsc and its incremental
+cache instead. CI uses `pnpm typecheck:ci`, the same Bun check with CI's
+concurrency. Shared tests are checked by the
 Node project; shared production code is checked in all three environments.
 Run `pnpm tc:node` after editing shared tests, or `pnpm tc` to check everything.
 

@@ -171,7 +171,10 @@ export class StructuredAgentSessionHost {
   private now = (): number => this.deps.now?.() ?? Date.now()
 
   hasSession = (sessionId: string): boolean => this.sessions.has(sessionId)
-  hasLoadedProviders = () => [...this.sessions.values()].some(({ child }) => child !== null)
+  /** Sessions whose agent child is starting or running. */
+  loadedSessionIds = (): string[] =>
+    [...this.sessions].flatMap(([sessionId, { child }]) => (child ? [sessionId] : []))
+  hasLoadedProviders = (): boolean => this.loadedSessionIds().length > 0
   sessionAgent = (sessionId: string) => this.deps.store.getRecord(sessionId)?.provider ?? null
 
   handleAdapterEvent = (event: Parameters<StructuredAgentSessionEventRecovery['handle']>[0]) =>
@@ -273,6 +276,7 @@ export class StructuredAgentSessionHost {
       conversation: this.lifetime.conversation,
       readChildWork: this.clientDelivery.readChildWork,
       publishChildWork: this.clientDelivery.publishChildWork,
+      publishWorkChanged: (sessionId) => this.clientDelivery.publishGenerationEnded(sessionId),
       captureChildWorkStops: this.clientDelivery.captureChildWorkStops,
       childWorkOpen: this.clientDelivery.childWorkOpen,
       childWorkIncomplete: this.clientDelivery.childWorkIncomplete,
@@ -336,7 +340,6 @@ export class StructuredAgentSessionHost {
   subscribe = (input: AgentSessionSubscribeInput) => this.backgroundTasks.subscribe(input)
 
   settleLateDispatch = this.mutations.settleLateDispatch
-  releaseUnansweredDispatches = this.mutations.releaseUnansweredDispatches
   /** What the live child holds changed with no row: every reader re-derives current work. */
   publishWorkChanged: (sessionId: string) => void = this.clientDelivery.publishGenerationEnded
 

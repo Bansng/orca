@@ -26,12 +26,8 @@ import {
 import { RuntimeClientError } from './types'
 import { SERVE_RUNTIME_ELECTRON, SERVE_RUNTIME_ENV } from '../../shared/orcad-local-serve-selection'
 import { findBundledWebClientRoot } from '../../shared/bundled-web-client-root'
-import {
-  resolveLocalServeRuntime,
-  serveOptionArgs,
-  serveWithOrcad,
-  type ServeOrcaAppArgs
-} from './serve-orcad-launch'
+import { resolveLocalServeRuntime, serveWithOrcad } from './serve-orcad-launch'
+import { serveOptionArgs, type ServeOrcaAppArgs } from '../../shared/orcad-serve-argv'
 import { waitForRecipeJson } from './serve-recipe-json'
 import {
   preflightElectronServe,

@@ -5,7 +5,7 @@
 import type { Tab } from '../../../shared/tab-types'
 import type { AppState } from '@/store/types'
 import { recordLayoutApply } from '@/runtime/layout-apply-send'
-import { newGroupSplitOf } from '@/runtime/layout-owner-new-group-split'
+import { drawnTabPlacement } from '@/runtime/layout-owner-drawn-tab-placement'
 
 type SimulatorTabState = Parameters<typeof recordLayoutApply>[0] &
   Pick<AppState, 'groupsByWorktree' | 'layoutByWorktree'>
@@ -15,19 +15,12 @@ export function recordOpenedSimulatorTabInLayoutOwner(state: SimulatorTabState, 
   if (tab.contentType !== 'simulator') {
     return
   }
-  const order = state.groupsByWorktree[tab.worktreeId]?.find(
-    (group) => group.id === tab.groupId
-  )?.tabOrder
-  const position = order?.indexOf(tab.id) ?? -1
-  const afterTabId = position > 0 ? order?.[position - 1] : undefined
   recordLayoutApply(state, tab.worktreeId, {
     type: 'openSimulatorTab',
     tabId: tab.id,
-    groupId: tab.groupId,
-    ...(afterTabId ? { afterTabId } : position === 0 ? { index: 0 } : {}),
-    createdAt: tab.createdAt,
     // Opened to the right: main makes the window's new split with the tab.
-    ...newGroupSplitOf(state, tab.worktreeId, tab.groupId, tab.id)
+    ...drawnTabPlacement(state, tab.worktreeId, tab.groupId, tab.id),
+    createdAt: tab.createdAt
   })
 }
 

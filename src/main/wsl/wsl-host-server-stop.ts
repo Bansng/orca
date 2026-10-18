@@ -15,8 +15,8 @@ import type { WslHostServerStop } from '../../shared/wsl-host-types'
 import type { OrcadHostTransport } from '../ssh/orcad-host-transport'
 import { readRemoteOrcadManagedStopTarget } from '../ssh/orcad-managed-remote-stop'
 import { managedOrcadSlot } from '../ssh/orcad-managed-runtime-context'
-import { resolveOrcadRemoteContext } from '../ssh/orcad-remote-context'
-import { decommissionRemoteOrcad } from '../ssh/orcad-remote-decommission'
+import { resolveOrcadRemoteContext } from '../managed-server/install/orcad-remote-context'
+import { decommissionRemoteOrcad } from '../managed-server/install/orcad-remote-decommission'
 import type { WslOrcadHostTarget } from './wsl-orcad-host-target'
 
 const CENSUS_ATTEMPTS = 20

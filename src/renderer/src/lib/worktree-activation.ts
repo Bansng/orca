@@ -20,7 +20,7 @@ import {
   findFolderWorkspaceOwner,
   getRuntimeEnvironmentIdForFolderWorkspace
 } from './folder-workspace-runtime-owner'
-import { getFolderWorkspaceHostId } from '@/store/folder-workspaces/folder-workspace-catalog'
+import { getFolderWorkspaceHostId } from '../../../shared/folder-workspace-execution-host'
 import type { WorktreeStartupPayload } from '@/lib/worktree-startup-payload'
 import {
   ensureFolderWorkspaceInitialTerminal,

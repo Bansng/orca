@@ -1,3 +1,4 @@
+import { realpath } from 'node:fs/promises'
 import { describe, expect, it, vi } from 'vitest'
 import {
   DEFAULT_REPO_BADGE_COLOR,
@@ -350,7 +351,9 @@ describe('OrcaRuntimeService', () => {
   })
 
   it('preserves existing badgeColor on runtime cloneRepo folder->git dedupe upgrade', async () => {
-    const destination = await mkdtemp(join(tmpdir(), 'orca-runtime-folder-upgrade-'))
+    const destination = await mkdtemp(
+      join(await realpath(tmpdir()), 'orca-runtime-folder-upgrade-')
+    )
     const clonePath = join(destination, 'repo-badge-color')
     const spawnSpy = vi.spyOn(gitRunner, 'gitSpawnAfterWindowsEnvironmentReady')
     spawnSpy.mockImplementation(() => {

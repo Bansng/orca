@@ -6,7 +6,7 @@ import { sleepingAgentLaunchConfigSchema } from '../workspace-session-sleeping-a
 import type { TuiAgent } from '../tui-agent'
 import { isTuiAgent } from '../tui-agent-config'
 import { LEGACY_MAX_QUICK_COMMAND_AGENT_PROMPT_LENGTH } from '../terminal-quick-command-prompt-limit'
-import { WindowsShellOverrideParam } from './terminal-unary-params'
+import { ResumeProviderSessionParam, WindowsShellOverrideParam } from './terminal-unary-params'
 
 export const WorktreeTabSelector = z.object({
   worktree: z
@@ -158,6 +158,9 @@ export const CreateTerminalTab = WorktreeTabSelector.extend({
   startupCommandDelivery: z.enum(['fast', 'shell-ready']).optional(),
   launchConfig: sleepingAgentLaunchConfigSchema,
   launchToken: z.string().min(1).max(128).optional(),
+  // Why: lets the host record which conversation the pane resumes before the agent reports it
+  // (#10923); a malformed value drops the hint, never the create. Older hosts strip it.
+  resumeProviderSession: ResumeProviderSessionParam.optional().catch(undefined),
   agent: z
     .custom<TuiAgent>(isTuiAgent, {
       message: 'Unknown agent preset'
@@ -204,6 +207,7 @@ export const CreateTerminalTab = WorktreeTabSelector.extend({
       'cwd',
       'launchConfig',
       'launchToken',
+      'resumeProviderSession',
       'launchAgent',
       'startupCommandDelivery',
       'viewMode'

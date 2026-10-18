@@ -9,17 +9,17 @@ import type {
   PortForwardStartOptions,
   SshPortForwardProvider,
   StartedPortForward
-} from './ssh-port-forward-provider'
+} from './port-forwarding/ssh-port-forward-provider'
 import {
   checkForwardChannel,
   probeTcpForwarding,
   type TcpForwardingVerdict
 } from './ssh-tcp-forwarding-probe'
-import { Ssh2PortForwardProvider } from './ssh2-port-forward-provider'
+import { Ssh2PortForwardProvider } from './port-forwarding/ssh2-port-forward-provider'
 import {
   SystemSshPortForwardProvider,
   systemSshForwardBuildArgsOptions
-} from './system-ssh-port-forward-provider'
+} from './port-forwarding/system-ssh-port-forward-provider'
 import {
   buildSystemSshPortForwardArgs,
   reserveLocalForwardPort

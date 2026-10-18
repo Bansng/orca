@@ -12,8 +12,6 @@ import {
   type OrcadTunnelStartChecks
 } from './orcad-managed-tunnel-target'
 
-export { OrcadManagedTunnelManager } from './orcad-managed-tunnel-manager'
-
 const managedTunnels = new OrcadManagedTunnelManager({
   getConnectionManager: getSshConnectionManager,
   getTargetStore: getSshTargetRegistryStore,

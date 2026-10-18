@@ -8,7 +8,7 @@ import {
 import type { SshTarget } from '../../shared/ssh-types'
 import type { SshConnection } from './ssh-connection'
 import { adoptSshConnection } from './ssh-connection-attribution'
-import type { PortForwardEntry, SshPortForwardManager } from './ssh-port-forward'
+import type { PortForwardEntry, SshPortForwardManager } from './port-forwarding/ssh-port-forward'
 
 export type ActiveOrcadTunnel = {
   connection: SshConnection

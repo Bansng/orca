@@ -3,9 +3,9 @@ import type { OrcadHostTransport } from './orcad-host-transport'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
 
 const execOrcadRemote = vi.hoisted(() => vi.fn())
-vi.mock('./orcad-remote-runtime-control', () => ({ execOrcadRemote }))
+vi.mock('../managed-server/install/orcad-remote-runtime-control', () => ({ execOrcadRemote }))
 const resolveOrcadRemoteContext = vi.hoisted(() => vi.fn())
-vi.mock('./orcad-remote-context', () => ({ resolveOrcadRemoteContext }))
+vi.mock('../managed-server/install/orcad-remote-context', () => ({ resolveOrcadRemoteContext }))
 
 import {
   orcadBoundPort,

@@ -12,7 +12,8 @@ import {
 } from './system-ssh-args'
 import { spawnSystemSshCommand } from './system-ssh-command'
 import { isWindowsRemoteHost, type RemoteHostPlatform } from './ssh-remote-platform'
-import { powerShellCommand, powerShellLiteral } from './ssh-remote-powershell'
+import { powerShellCommand } from './ssh-remote-powershell'
+import { quotePowerShellLiteral as powerShellLiteral } from '../../shared/powershell-native-argument'
 import {
   awaitWithSystemSshAbort,
   throwIfAborted,
@@ -22,12 +23,6 @@ import {
   writeWindowsRemoteFile,
   type WindowsWriteSource
 } from './system-ssh-windows-write-strategy'
-
-export {
-  WINDOWS_STDIN_WRITE_CHUNK_BYTES,
-  WINDOWS_STDIN_WRITE_TIMEOUT_MS
-} from './system-ssh-windows-write-strategy'
-export { WINDOWS_STAGED_WRITE_SUFFIX } from './system-ssh-windows-file-write'
 
 type SystemSshOperationOptions = SystemSshBuildArgsOptions & {
   signal?: AbortSignal

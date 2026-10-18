@@ -11,16 +11,13 @@ vi.mock('../ssh/ssh-connection-store', () => mocks.sshConnectionStore)
 vi.mock('./ssh-host-server-connect', () => mocks.hostServerConnect)
 vi.mock('../ssh/ssh-connection-manager', () => mocks.sshConnectionManager)
 vi.mock('../ssh/ssh-channel-multiplexer', () => mocks.sshChannelMultiplexer)
-vi.mock('../ssh/ssh-port-forward', () => mocks.sshPortForward)
+vi.mock('../ssh/port-forwarding/ssh-port-forward', () => mocks.sshPortForward)
 vi.mock('../ssh/ssh-port-scanner', () => mocks.sshPortScanner)
-vi.mock(
-  import('../ssh/legacy-relay-bridge/legacy-relay-bridge-registry'),
-  async (importOriginal) => ({
-    ...(await importOriginal()),
-    startLegacyRelayBridge: vi.fn(async () => {}),
-    stopLegacyRelayBridge: vi.fn()
-  })
-)
+vi.mock(import('../ssh/legacy-relay/legacy-relay-bridge-registry'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  startLegacyRelayBridge: vi.fn(async () => {}),
+  stopLegacyRelayBridge: vi.fn()
+}))
 
 import type { SshTarget } from '../../shared/ssh-types'
 import type { SshConnection } from '../ssh/ssh-connection'
@@ -35,7 +32,7 @@ import {
 import {
   startLegacyRelayBridge,
   stopLegacyRelayBridge
-} from '../ssh/legacy-relay-bridge/legacy-relay-bridge-registry'
+} from '../ssh/legacy-relay/legacy-relay-bridge-registry'
 import { createSshIpcHarness } from './ssh-ipc-test-harness'
 
 const { mockSshStore, mockConnectionManager } = mocks

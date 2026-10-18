@@ -1,14 +1,14 @@
 /** Recovering an interrupted decommission from its journal entry; see orcad-decommission-transaction. */
-import { writeOrcadActivationRecord } from './orcad-activation-record-store'
-import type { OrcadActivationRecoveryResult } from './orcad-activation-recovery'
+import { writeOrcadActivationRecord } from '../managed-server/activation/orcad-activation-record-store'
+import type { OrcadActivationRecoveryResult } from '../managed-server/activation/orcad-activation-recovery'
 import type { OrcadDecommissionRecoveryPlan } from './orcad-decommission-transaction'
 import { settleOrcadDecommissionStop } from './orcad-decommission-stop'
 import {
   orcadLivenessProbeCommand,
   orcadLivenessProvenExited,
   parseOrcadLiveness
-} from './orcad-remote-launch'
-import { execOrcadRemote } from './orcad-remote-runtime-control'
+} from '../managed-server/install/orcad-remote-launch'
+import { execOrcadRemote } from '../managed-server/install/orcad-remote-runtime-control'
 import {
   ensureOrcadSlotServing,
   orcadSlotDir,

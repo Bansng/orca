@@ -11,10 +11,12 @@ const mocks = vi.hoisted(() => ({
 }))
 
 vi.mock('electron', () => ({ ipcMain: { handle: mocks.handle } }))
-vi.mock('../ssh/orcad-runtime-lifecycle', () => ({
+vi.mock('../ssh/orcad-runtime-maintenance', () => ({
   updateManagedOrcadEnvironment: mocks.update,
   rollbackManagedOrcadEnvironment: mocks.rollback,
-  recoverManagedOrcadEnvironment: mocks.recover,
+  recoverManagedOrcadEnvironment: mocks.recover
+}))
+vi.mock('../ssh/orcad-runtime-decommission', () => ({
   stopManagedOrcadEnvironment: mocks.stop,
   cancelManagedOrcadStop: mocks.cancel
 }))

@@ -52,27 +52,27 @@ export const MOBILE_WEB_APP_BUNDLE_MAX_TOTAL_BYTES = 9 * 1024 * 1024
  * `routes.slice(0, n)` for every n, which is what the fence below is derived from rather than
  * fitted to. The spread it shows is 1 to 11: `pr` adds one script, `tasks` adds eleven.
  * The root `./_layout.tsx` (the page's web sibling of the native root) sorts first; with it the
- * swept tree reads 79 scripts at 15 routes, Accounts now drawing on the page.
+ * swept tree reads 78 scripts at 15 routes, with theme tokens in the entry.
  *
  * This table is the fence's only input, so a route added to the tree stales it and the pins beside
  * the fence fail until it is re-measured. That is the point: the bound is re-derived, never bumped.
  */
 export const MOBILE_WEB_APP_BUNDLE_SCRIPT_SWEEP = [
   ['./_layout.tsx', 3],
-  ['./h/[hostId]/[...page].tsx', 7],
-  ['./h/[hostId]/accounts.tsx', 11],
-  ['./h/[hostId]/agent-history/[worktreeId].tsx', 16],
-  ['./h/[hostId]/edit.tsx', 21],
-  ['./h/[hostId]/files/[worktreeId].tsx', 25],
-  ['./h/[hostId]/files/preview/[worktreeId].tsx', 32],
-  ['./h/[hostId]/history/[worktreeId].tsx', 35],
-  ['./h/[hostId]/index.tsx', 43],
-  ['./h/[hostId]/pr/[worktreeId].tsx', 44],
-  ['./h/[hostId]/review/[worktreeId].tsx', 51],
-  ['./h/[hostId]/session/[worktreeId].tsx', 61],
-  ['./h/[hostId]/source-control/[worktreeId].tsx', 65],
-  ['./h/[hostId]/tasks.tsx', 76],
-  ['./h/_layout.tsx', 79]
+  ['./h/[hostId]/[...page].tsx', 6],
+  ['./h/[hostId]/accounts.tsx', 10],
+  ['./h/[hostId]/agent-history/[worktreeId].tsx', 15],
+  ['./h/[hostId]/edit.tsx', 20],
+  ['./h/[hostId]/files/[worktreeId].tsx', 24],
+  ['./h/[hostId]/files/preview/[worktreeId].tsx', 31],
+  ['./h/[hostId]/history/[worktreeId].tsx', 34],
+  ['./h/[hostId]/index.tsx', 42],
+  ['./h/[hostId]/pr/[worktreeId].tsx', 43],
+  ['./h/[hostId]/review/[worktreeId].tsx', 50],
+  ['./h/[hostId]/session/[worktreeId].tsx', 60],
+  ['./h/[hostId]/source-control/[worktreeId].tsx', 64],
+  ['./h/[hostId]/tasks.tsx', 75],
+  ['./h/_layout.tsx', 78]
 ]
 
 const sweptScripts = MOBILE_WEB_APP_BUNDLE_SCRIPT_SWEEP.map(([, scripts]) => scripts)

@@ -40,7 +40,7 @@ const { createWorktreeVisibilitySourceMatcher, resolveCustomWorktreeVisibilitySo
   await import('../../../../shared/worktree/visibility-sources')
 const { resolveConfiguredWorktreeBasePaths } =
   await import('../../../../shared/worktree/configured-worktree-base-path')
-const { dedupeWorktreesByPath } = await import('../../worktree-path-comparison')
+const { dedupeWorktreesByPath } = await import('../../../git/worktree-path-comparison')
 const { readWorktreeMetaForHost } =
   await import('../../../persistence/host-qualified-worktree-meta')
 const { getRepoOwnedWorktreeMeta } = await import('../../../worktree-metadata-ownership')

@@ -1,6 +1,6 @@
 import { posix as posixPath } from 'node:path'
 import { shellEscape } from './ssh-connection-utils'
-import { powerShellLiteral } from './ssh-remote-powershell'
+import { quotePowerShellLiteral as powerShellLiteral } from '../../shared/powershell-native-argument'
 
 /** The host-Node floor for the npm path. */
 export const MIN_HOST_NODE_MAJOR = 18

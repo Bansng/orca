@@ -281,7 +281,16 @@ export const SSH_MANAGED_SERVER_PHASES = [
   'starting'
 ] as const
 
-export const SSH_MANAGED_SERVER_UPDATE_STATES = ['host-newer', 'deferred', 'failed'] as const
+// Every state but host-newer means the server may be behind this app. Readers drop unknown states.
+export const SSH_MANAGED_SERVER_UPDATE_STATES = [
+  'host-newer',
+  'deferred',
+  'failed',
+  'rolled-back',
+  'no-template',
+  'migrating',
+  'check-failed'
+] as const
 
 /** Why a managed server kept its version on this connect; absent when it is current or updated. */
 export type SshManagedServerUpdateNote = {

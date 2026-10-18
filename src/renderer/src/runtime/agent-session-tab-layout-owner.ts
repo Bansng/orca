@@ -6,7 +6,7 @@
 import type { Tab } from '../../../shared/tab-types'
 import type { AppState } from '@/store/types'
 import { recordLayoutApply } from './layout-apply-send'
-import { newGroupSplitOf } from './layout-owner-new-group-split'
+import { drawnTabPlacement } from './layout-owner-drawn-tab-placement'
 
 type ChatTabState = Parameters<typeof recordLayoutApply>[0] &
   Pick<AppState, 'unifiedTabsByWorktree' | 'groupsByWorktree' | 'layoutByWorktree'>
@@ -16,20 +16,13 @@ export function recordOpenedAgentSessionTabInLayoutOwner(state: ChatTabState, ta
   if (tab.contentType !== 'agent-session' || !tab.agentSessionAgent) {
     return
   }
-  const order = state.groupsByWorktree[tab.worktreeId]?.find(
-    (group) => group.id === tab.groupId
-  )?.tabOrder
-  const position = order?.indexOf(tab.id) ?? -1
-  const afterTabId = position > 0 ? order?.[position - 1] : undefined
   recordLayoutApply(state, tab.worktreeId, {
     type: 'openAgentSessionTab',
     tabId: tab.id,
     sessionId: tab.entityId,
     agent: tab.agentSessionAgent,
-    groupId: tab.groupId,
-    ...(afterTabId ? { afterTabId } : position === 0 ? { index: 0 } : {}),
-    createdAt: tab.createdAt,
-    ...newGroupSplitOf(state, tab.worktreeId, tab.groupId, tab.id)
+    ...drawnTabPlacement(state, tab.worktreeId, tab.groupId, tab.id),
+    createdAt: tab.createdAt
   })
   recordChatTabProps(state, tab, { color: null })
 }

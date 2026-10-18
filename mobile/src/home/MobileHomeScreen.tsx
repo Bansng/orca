@@ -17,7 +17,7 @@ import {
   useDisconnectHostClient,
   useForceReconnect,
   useForgetHostClient
-} from '../transport/client-context'
+} from '../transport/host-client-hooks'
 import { hostEndpointLabel } from '../transport/host-endpoint-label'
 import { resolveHomeHostConnectionState } from '../transport/home-host-auto-connect'
 import { removeHostAndCloseClient } from '../transport/host-removal-lifecycle'

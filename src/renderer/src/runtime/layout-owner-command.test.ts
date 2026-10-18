@@ -18,8 +18,12 @@ const mocks = vi.hoisted(
 
 vi.mock('@/runtime/runtime-rpc-client', () => ({ callRuntimeRpc: mocks.callRuntimeRpc }))
 vi.mock('@/store', () => ({ useAppStore: { getState: () => ({}) } }))
-vi.mock('@/lib/worktree-runtime-owner', () => ({
-  getExplicitRuntimeEnvironmentIdForWorktree: () => mocks.ownerEnvironmentId
+vi.mock('@/lib/resolve-owner', () => ({
+  runtimeEnvironmentIdUnlessTwin: () => mocks.ownerEnvironmentId,
+  runtimeEnvironmentIdForWorkspaceOwner: () => ({
+    kind: 'resolved',
+    environmentId: mocks.ownerEnvironmentId
+  })
 }))
 
 const SPLIT = {
@@ -100,8 +104,7 @@ describe('sendLayoutCommandToOwner', () => {
     [
       'main lacks the workspace',
       () => mocks.callRuntimeRpc.mockResolvedValue({ ok: false, code: 'workspace_not_found' })
-    ],
-    ['the call fails', () => mocks.callRuntimeRpc.mockRejectedValue(new Error('rpc_failed'))]
+    ]
   ])('acts as today when %s', async (_case, arrange) => {
     arrange()
     const on = handlers()
@@ -112,15 +115,19 @@ describe('sendLayoutCommandToOwner', () => {
     expect(on.refused).not.toHaveBeenCalled()
   })
 
-  it.each([
-    ['main lacks the pane', { ok: false, code: 'pane_not_found' }],
-    ['the call fails', new Error('rpc_failed')]
-  ])('draws nothing for a pane command passing `unapplied` when %s', async (_case, answer) => {
-    if (answer instanceof Error) {
-      mocks.callRuntimeRpc.mockRejectedValue(answer)
-    } else {
-      mocks.callRuntimeRpc.mockResolvedValue(answer)
-    }
+  it('refuses, drawing nothing, when the call fails', async () => {
+    mocks.callRuntimeRpc.mockRejectedValue(new Error('rpc_failed'))
+    const on = { ...handlers(), unapplied: vi.fn() }
+
+    sendLayoutCommandToOwner('worktree-1', SPLIT, on)
+
+    await vi.waitFor(() => expect(on.refused).toHaveBeenCalledWith('call_failed'))
+    expect(on.asToday).not.toHaveBeenCalled()
+    expect(on.unapplied).not.toHaveBeenCalled()
+  })
+
+  it('draws nothing for a pane command passing `unapplied` when main lacks the pane', async () => {
+    mocks.callRuntimeRpc.mockResolvedValue({ ok: false, code: 'pane_not_found' })
     const on = { ...handlers(), unapplied: vi.fn() }
 
     sendLayoutCommandToOwner('worktree-1', SPLIT, on)
@@ -188,13 +195,14 @@ describe('sendLayoutCommandToOwner', () => {
     await vi.waitFor(() => expect(on.refused).toHaveBeenCalledWith('last_pane'))
   })
 
-  it('acts as today when main says a paired server holds the tab', async () => {
+  it('refuses a workspace main routes to no host of its own, drawing nothing', async () => {
     mocks.callRuntimeRpc.mockResolvedValue({ ok: false, code: 'host_not_owned' })
     const on = handlers()
 
     expect(sendLayoutCommandToOwner('worktree-1', SPLIT, on)).toBe(true)
 
-    await vi.waitFor(() => expect(on.asToday).toHaveBeenCalled())
+    await vi.waitFor(() => expect(on.refused).toHaveBeenCalledWith('host_not_owned'))
+    expect(on.asToday).not.toHaveBeenCalled()
     expect(on.apply).not.toHaveBeenCalled()
   })
 

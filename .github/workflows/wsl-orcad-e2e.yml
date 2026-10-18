@@ -14,8 +14,13 @@ on:
       - 'src/main/wsl/wsl-orcad-real-distro-lane.test.ts'
       # This lane executes only the real distro test above.
       - 'src/main/ssh/orcad-*'
+      - 'src/main/managed-server/**'
       - '!src/main/ssh/orcad-*.test.ts'
-      - 'src/main/ssh/remote-install-transport.ts'
+      - '!src/main/managed-server/**/*.test.ts'
+      - 'src/main/managed-server/install/remote-install-transport.ts'
+      # orcad-entry runs this on every boot of the orcad the lane launches in the distro.
+      - 'src/main/orcad/orcad-wsl-*'
+      - '!src/main/orcad/orcad-wsl-*.test.ts'
       - '.github/workflows/wsl-orcad-e2e.yml'
   workflow_dispatch:
 

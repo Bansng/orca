@@ -26,14 +26,13 @@ import {
   isAuthError,
   isAgentFallbackError,
   shellEscape,
-  findDefaultKeyFile,
-  buildConnectConfig,
-  resolveAgentSocket
+  buildConnectConfig
 } from './ssh-connection-utils'
+import { findDefaultKeyFile, resolveAgentSocket } from './ssh-auth-resolution'
 import { resolveEffectiveProxy } from './ssh-proxy-command'
 import { walkInitialAuthLadder } from './ssh-connection-test-fixtures'
 import type { SshTarget } from '../../shared/ssh-types'
-import type { SshResolvedConfig } from './ssh-config-parser'
+import type { SshResolvedConfig } from './ssh-g-config-resolution'
 
 // ── isTransientError ─────────────────────────────────────────────────
 

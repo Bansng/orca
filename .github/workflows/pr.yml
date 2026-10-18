@@ -314,6 +314,12 @@ jobs:
           if [ "$PREFLIGHT_PHASE_SELECTED" != true ] || [ "$PREFLIGHT_PRIOR_SUCCESS" != true ]; then exit 0; fi
           node config/scripts/check-changed-code-quality.mjs "${{ github.event.pull_request.base.sha }}"
 
+      - name: Verify locked audit tools
+        if: needs.code_paths.outputs.static_analysis == 'true'
+        env:
+          ORCA_BACKGROUND_LAUNCH: '1'
+        run: node config/scripts/verify-locked-audit-tools.mjs
+
       - name: Enforce React Doctor on changed lines
         if: needs.code_paths.outputs.static_analysis == 'true'
         run: node config/scripts/check-react-doctor-changed.mjs "${{ github.event.pull_request.base.sha }}"
@@ -389,6 +395,22 @@ jobs:
       - name: Enforce deprecated runtime-owner importer ratchet
         if: needs.code_paths.outputs.static_analysis == 'true'
         run: node config/scripts/check-deprecated-runtime-owner-ratchet.mjs
+
+      - name: Enforce path-literal ratchet
+        if: needs.code_paths.outputs.static_analysis == 'true'
+        run: node config/scripts/check-path-literal-ratchet.mjs
+
+      - name: Enforce worktree-id composer ratchet
+        if: needs.code_paths.outputs.static_analysis == 'true'
+        run: node config/scripts/check-worktree-id-composer-ratchet.mjs
+
+      - name: Enforce e2e typecheck ratchet
+        if: needs.code_paths.outputs.static_analysis == 'true'
+        run: node config/scripts/check-e2e-typecheck-ratchet.mjs
+
+      - name: Enforce legacy relay fence ratchet
+        if: needs.code_paths.outputs.static_analysis == 'true'
+        run: node config/scripts/check-legacy-relay-fence-ratchet.mjs
 
       - name: Check Node runtime pin
         if: needs.code_paths.outputs.static_analysis == 'true'
@@ -1433,7 +1455,7 @@ jobs:
           src/main/ipc/pty-spawn-env-codex-resume-provenance.test.ts
           src/main/ipc/preflight-provider-command-selection.test.ts
           src/main/ipc/preflight-runnable-local-cli.test.ts
-          src/main/ssh/remote-node-runtime-store-windows.test.ts
+          src/main/managed-server/install/remote-node-runtime-store-windows.test.ts
 
       # Why the :parallel variant: identical to build:release except the three
       # electron-vite targets overlap instead of running back to back. The Linux package

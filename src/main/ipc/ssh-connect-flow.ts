@@ -24,7 +24,7 @@ import {
 import { connectionManager } from './ssh-ipc-context'
 import { abandonDecisionTransport } from './ssh-session-teardown'
 import { awaitTargetLifecycle } from './ssh-target-lifecycle-queue'
-import { startLegacyRelayBridge } from '../ssh/legacy-relay-bridge/legacy-relay-bridge-registry'
+import { startLegacyRelayBridge } from '../ssh/legacy-relay/legacy-relay-bridge-registry'
 import { clearSshCredentialDeclined } from '../ssh/ssh-credential-decline'
 import { createSshUserDisconnectedError, isSshUserDisconnected } from '../ssh/ssh-user-disconnect'
 import {

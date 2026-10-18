@@ -11,7 +11,7 @@ import { getManagedOrcadFenceEnvironmentId } from '../../shared/managed-orcad-ss
 import type { SshConnection } from './ssh-connection'
 import { isAuthError } from './ssh-connection-utils'
 import type { SshConnectionManager } from './ssh-connection-manager'
-import { SshPortForwardManager } from './ssh-port-forward'
+import { SshPortForwardManager } from './port-forwarding/ssh-port-forward'
 import { OrcadManagedTunnelTransportProvider } from './orcad-managed-tunnel-transport'
 import {
   OrcadManagedTunnelResumeRecovery,

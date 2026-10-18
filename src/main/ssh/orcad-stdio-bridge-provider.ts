@@ -16,13 +16,13 @@ import {
 } from './orcad-stdio-bridge'
 import { listenOrcadStdioBridge } from './orcad-stdio-bridge-listener'
 import { sshOrcadHostTransport } from './orcad-ssh-host-transport'
-import type { RemoteCommandChannel } from './remote-install-transport'
+import type { RemoteCommandChannel } from '../managed-server/install/remote-install-transport'
 import type { SshConnection } from './ssh-connection'
 import type {
   PortForwardStartOptions,
   SshPortForwardProvider,
   StartedPortForward
-} from './ssh-port-forward-provider'
+} from './port-forwarding/ssh-port-forward-provider'
 
 export type OrcadStdioBridgeDependencies = {
   resolveBridge: (conn: OrcadHostTransport, port: number) => Promise<OrcadStdioBridge>

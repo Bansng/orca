@@ -25,6 +25,7 @@ import { TabSessionSurfaceSwitchMenuItems } from './TabSessionSurfaceSwitchMenuI
 import type { NativeChatTabSession } from './tab-session-history-switch'
 import { TAB_CONTEXT_MENU_CONTENT_CLASS } from './tab-context-menu-sizing'
 import { CopyTabIdMenuItem } from './CopyTabIdMenuItem'
+import { CloseSplitPaneMenuItem } from './CloseSplitPaneMenuItem'
 
 const TAB_COLORS = [
   {
@@ -108,6 +109,7 @@ type SortableTabContextMenuProps = {
   onCloseOthers: (tabId: string) => void
   onCloseToRight: (tabId: string) => void
   onCloseToLeft: (tabId: string) => void
+  onCloseSplitPane?: () => void
   onRenameOpen: () => void
   onSetTabColor: (tabId: string, color: string | null) => void
   onTogglePin: () => void
@@ -144,6 +146,7 @@ export function SortableTabContextMenu({
   onCloseOthers,
   onCloseToRight,
   onCloseToLeft,
+  onCloseSplitPane,
   onRenameOpen,
   onSetTabColor,
   onTogglePin,
@@ -239,6 +242,7 @@ export function SortableTabContextMenu({
             'Close Tabs To The Left'
           )}
         </DropdownMenuItem>
+        <CloseSplitPaneMenuItem onCloseSplitPane={onCloseSplitPane} />
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onRenameOpen}>
           <Pencil className="size-3.5" />

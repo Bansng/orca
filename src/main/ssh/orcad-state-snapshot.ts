@@ -22,7 +22,7 @@ import {
   posixOrcadFenceGuard,
   posixOrcadFenceOwnedTest,
   type OrcadFence
-} from './orcad-activation-fence-scope'
+} from '../managed-server/activation/orcad-activation-fence-scope'
 import { shellEscape } from './ssh-connection-utils'
 import { isWindowsRemoteHost, joinRemotePath, type RemoteHostPlatform } from './ssh-remote-platform'
 import type { OrcadWindowsHostStateOp } from './orcad-windows-host-state-ops'
@@ -34,7 +34,7 @@ import {
   ORCAD_STATE_MUTATION_LOCK_DIRNAME,
   ORCAD_STATE_RESTORE_STAGE_DIRNAME
 } from './orcad-state-snapshot-members'
-import { orcadWindowsHostOpCommand } from './orcad-remote-windows-node'
+import { orcadWindowsHostOpCommand } from '../managed-server/install/orcad-remote-windows-node'
 import {
   posixStateMutationGroupRecord,
   posixStateMutationPidRecord

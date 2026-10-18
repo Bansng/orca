@@ -228,6 +228,62 @@ describe('editor tabs in a layout-owner build', () => {
     expect(sentCommands()).toEqual([])
   })
 
+  it('sends main the file record a reopen in the same tab changed, and nothing when unchanged', () => {
+    const log = { filePath: '/a.log', relativePath: 'a.log', worktreeId: WT, language: 'log' }
+    const fileId = store
+      .getState()
+      .openFile({ ...log, mode: 'edit', readOnly: true, liveTail: true }, { preview: false })
+    applySent()
+    const tabId = tabIn('g1', fileId)
+    expect(main.workspaces[WT]!.editorFiles).toEqual([
+      expect.objectContaining({ filePath: '/a.log', readOnly: true, liveTail: true })
+    ])
+
+    // A normal open of the View Log path makes the same tab writable.
+    store.getState().openFile({ ...log, mode: 'edit' })
+    const [command, ...rest] = applySent()
+    expect(rest).toEqual([])
+    expect(command).toMatchObject({ type: 'openEditorTab', tabId, fileId, groupId: 'g1' })
+    expect(command?.type === 'openEditorTab' && command.file).toEqual(
+      restorableEditorFile(store.getState().openFiles[0]!)
+    )
+    expect(main.workspaces[WT]!.editorFiles).toEqual([
+      { filePath: '/a.log', relativePath: 'a.log', language: 'log', runtimeEnvironmentId: null }
+    ])
+    expect(mainView()).toEqual(windowView())
+
+    store.getState().openFile({ ...log, mode: 'edit' })
+    expect(sentCommands()).toEqual([])
+  })
+
+  it('sends main the record a conflict open rewrote in an open tab', () => {
+    const fileId = openFile('/repo/a.ts')
+    applySent()
+    store.getState().openConflictFile(
+      WT,
+      '/repo',
+      {
+        path: 'a.ts',
+        status: 'modified',
+        area: 'unstaged',
+        conflictKind: 'both_modified',
+        conflictStatus: 'unresolved',
+        conflictStatusSource: 'git'
+      },
+      'typescript'
+    )
+    expect(applySent()).toEqual([
+      expect.objectContaining({
+        type: 'openEditorTab',
+        tabId: tabIn('g1', fileId),
+        file: expect.objectContaining({ relativePath: 'a.ts', language: 'typescript' })
+      })
+    ])
+    expect(main.workspaces[WT]!.editorFiles).toEqual([
+      expect.objectContaining({ filePath: '/repo/a.ts', relativePath: 'a.ts' })
+    ])
+  })
+
   it('records a close, and a reopen where the window put it back', () => {
     openFile('/a.ts')
     const b = openFile('/b.ts')

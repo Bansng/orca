@@ -3,10 +3,8 @@ import type {
   RuntimeLeafRecord,
   RuntimePtyWorktreeRecord
 } from '../../runtime-terminal-state-records'
-import {
-  runtimeWorktreeIdentityKey,
-  type ResolvedWorktree
-} from '../../runtime-worktree-path-identity'
+import type { ResolvedWorktree } from '../../runtime-worktree-path-identity'
+import { worktreeIdentityKey } from '../../../../shared/worktree/id'
 import type { RuntimeTerminalRead, RuntimeTerminalSummary } from '../../../../shared/runtime-types'
 import { getLatestPtyTitle } from '../../runtime-worktree-status-projection'
 import { parsePaneKey } from '../../../../shared/stable-pane-id'
@@ -53,7 +51,7 @@ export abstract class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntime
     if (
       orphaned &&
       (this.pendingPtyRegistrationIncarnations.has(pty.ptyId) ||
-        this.terminalMutationLock.hasActiveSpawns(runtimeWorktreeIdentityKey(pty.worktreeId)))
+        this.terminalMutationLock.hasActiveSpawns(worktreeIdentityKey(pty.worktreeId)))
     ) {
       throw new Error('terminal_surface_ownership_unavailable')
     }

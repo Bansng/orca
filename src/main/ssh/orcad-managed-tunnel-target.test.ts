@@ -3,7 +3,7 @@ import type { SshTarget } from '../../shared/ssh-types'
 import type { KnownRuntimeEnvironment } from '../../shared/runtime-environments'
 import type { OrcadHostTransport } from './orcad-host-transport'
 import type { SshConnection } from './ssh-connection'
-import type { SshPortForwardManager } from './ssh-port-forward'
+import type { SshPortForwardManager } from './port-forwarding/ssh-port-forward'
 import {
   OrcadManagedIdentityError,
   type OrcadTunnelIdentity
@@ -16,7 +16,9 @@ import {
 
 const mocks = vi.hoisted(() => ({ wake: vi.fn(), resolveContext: vi.fn() }))
 vi.mock('./orcad-managed-wake', () => ({ wakeStoppedManagedOrcad: mocks.wake }))
-vi.mock('./orcad-remote-context', () => ({ resolveOrcadRemoteContext: mocks.resolveContext }))
+vi.mock('../managed-server/install/orcad-remote-context', () => ({
+  resolveOrcadRemoteContext: mocks.resolveContext
+}))
 
 const FOREIGN: OrcadTunnelIdentity = { verdict: 'foreign', detail: '4001: Unauthorized' }
 

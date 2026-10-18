@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
-import { powerShellCommand, powerShellLiteral } from './ssh-remote-powershell'
+import { powerShellCommand } from './ssh-remote-powershell'
+import { quotePowerShellLiteral as powerShellLiteral } from '../../shared/powershell-native-argument'
 import { normalizeWindowsRemotePath } from './ssh-remote-platform'
 
 /**

@@ -1,17 +1,24 @@
 import { pairedRuntimeConnectionFromOffer } from '../../shared/paired-runtime-connection'
 import {
   addEnvironmentFromPairingCode,
-  RuntimeEnvironmentStoreError
+  resolveEnvironment,
+  RuntimeEnvironmentStoreError,
+  updateEnvironmentFromPairingCode
 } from '../../shared/runtime-environment-store'
-import { parseHostAccessLink } from '../../shared/remote-pairing-address'
+import { parseHostAccessLink, type ParsedHostAccessLink } from '../../shared/remote-pairing-address'
 import {
   verifyRemotePairingRuntimeStatus,
+  type RemotePairingFailure,
   type VerifyAndAddRuntimeEnvironmentResult
 } from '../../shared/remote-pairing-verification'
 import { RemoteRuntimeClientError } from '../../shared/remote-runtime-client-error'
 import { sendRemoteRuntimeRequest } from '../../shared/remote-runtime-client'
 import { ELECTRON_REMOTE_RUNTIME_CLIENT_CAPABILITIES } from '../../shared/electron-remote-runtime-client-capabilities'
-import { redactRuntimeEnvironment } from '../../shared/runtime-environments'
+import {
+  getPreferredPairingOffer,
+  isEphemeralVmRuntimeEnvironment,
+  redactRuntimeEnvironment
+} from '../../shared/runtime-environments'
 import type { RuntimeStatus } from '../../shared/runtime-types'
 
 type VerifyAndAddRuntimeEnvironmentArgs = {
@@ -20,23 +27,28 @@ type VerifyAndAddRuntimeEnvironmentArgs = {
   allowLoopback?: boolean
 }
 
-export async function verifyAndAddRuntimeEnvironmentFromPairingCode(
-  userDataPath: string,
-  args: VerifyAndAddRuntimeEnvironmentArgs
-): Promise<VerifyAndAddRuntimeEnvironmentResult> {
-  const parsed = parseHostAccessLink(args.pairingCode)
+type VerifiedPairingCode = {
+  ok: true
+  link: ParsedHostAccessLink
+  runtimeStatus: RuntimeStatus
+}
+
+/** Proves a pairing link reaches a compatible host that accepts it, without saving anything. */
+async function verifyPairingCode(
+  pairingCode: string,
+  allowLoopback: boolean | undefined
+): Promise<VerifiedPairingCode | RemotePairingFailure> {
+  const parsed = parseHostAccessLink(pairingCode)
   if (!parsed.ok) {
     return { ok: false, kind: 'access-link-invalid', message: parsed.message }
   }
-  if (parsed.value.endpointKind === 'loopback' && !args.allowLoopback) {
+  if (parsed.value.endpointKind === 'loopback' && !allowLoopback) {
     return {
       ok: false,
       kind: 'host-unreachable',
       message: 'This access link points back to this device.'
     }
   }
-
-  let runtimeStatus: RuntimeStatus
   try {
     const response = await sendRemoteRuntimeRequest<RuntimeStatus>(
       pairedRuntimeConnectionFromOffer(parsed.value.pairing),
@@ -58,12 +70,26 @@ export async function verifyAndAddRuntimeEnvironmentFromPairingCode(
     if (!statusVerification.ok) {
       return statusVerification
     }
-    runtimeStatus = statusVerification.runtimeStatus
+    return {
+      ok: true,
+      link: parsed.value,
+      runtimeStatus: statusVerification.runtimeStatus
+    }
   } catch (error) {
     return classifyPairingVerificationError(error, parsed.value.displayEndpoint)
   }
+}
 
-  const usesSshTunnel = parsed.value.endpointKind === 'loopback' && args.allowLoopback === true
+export async function verifyAndAddRuntimeEnvironmentFromPairingCode(
+  userDataPath: string,
+  args: VerifyAndAddRuntimeEnvironmentArgs
+): Promise<VerifyAndAddRuntimeEnvironmentResult> {
+  const verified = await verifyPairingCode(args.pairingCode, args.allowLoopback)
+  if (!verified.ok) {
+    return verified
+  }
+  const { link, runtimeStatus } = verified
+  const usesSshTunnel = link.endpointKind === 'loopback' && args.allowLoopback === true
   let environment: ReturnType<typeof addEnvironmentFromPairingCode>
   try {
     environment = addEnvironmentFromPairingCode(userDataPath, {
@@ -87,10 +113,64 @@ export async function verifyAndAddRuntimeEnvironmentFromPairingCode(
   }
 }
 
-function classifyPairingVerificationError(
-  error: unknown,
-  endpoint: string
-): VerifyAndAddRuntimeEnvironmentResult {
+/**
+ * Replaces a saved server's revoked pairing with a fresh link to the same server. Nothing is
+ * written unless the link verifies and carries the saved server's key, so a bad or foreign link
+ * leaves the working record untouched.
+ */
+export async function verifyAndRepairRuntimeEnvironmentFromPairingCode(
+  userDataPath: string,
+  args: { selector: string; pairingCode: string }
+): Promise<VerifyAndAddRuntimeEnvironmentResult> {
+  const existing = resolveEnvironment(userDataPath, args.selector)
+  if (isEphemeralVmRuntimeEnvironment(existing)) {
+    return {
+      ok: false,
+      kind: 'environment-save-failed',
+      message: 'This server belongs to a cloud workspace, which pairs it again when it resumes.'
+    }
+  }
+  // Why: a tunnel-backed server is legitimately re-paired with a loopback link.
+  const verified = await verifyPairingCode(
+    args.pairingCode,
+    existing.connectionDependency === 'ssh-tunnel'
+  )
+  if (!verified.ok) {
+    return verified
+  }
+  // Why the key, not runtimeId: runtimeId is minted per server process, so a restart changes it.
+  if (verified.link.pairing.publicKeyB64 !== getPreferredPairingOffer(existing).publicKeyB64) {
+    return {
+      ok: false,
+      kind: 'different-server',
+      message: 'This pairing link is for a different server.'
+    }
+  }
+  let environment: ReturnType<typeof updateEnvironmentFromPairingCode>
+  try {
+    environment = updateEnvironmentFromPairingCode(userDataPath, existing.id, {
+      pairingCode: args.pairingCode,
+      // Why: the key match proves the same server; a restarted one may report a new runtimeId.
+      runtimeId: verified.runtimeStatus.runtimeId
+    })
+  } catch (error) {
+    return {
+      ok: false,
+      kind: 'environment-save-failed',
+      message:
+        error instanceof RuntimeEnvironmentStoreError && error.code === 'invalid_argument'
+          ? error.message
+          : 'Orca verified the server but could not save the new pairing. Check local settings storage and try again.'
+    }
+  }
+  return {
+    ok: true,
+    environment: redactRuntimeEnvironment(environment),
+    runtimeStatus: verified.runtimeStatus
+  }
+}
+
+function classifyPairingVerificationError(error: unknown, endpoint: string): RemotePairingFailure {
   if (error instanceof RemoteRuntimeClientError) {
     if (error.code === 'invalid_argument') {
       return invalidAccessLinkResult()
@@ -128,7 +208,7 @@ function classifyPairingVerificationError(
   return unreachableHostResult(endpoint)
 }
 
-function invalidAccessLinkResult(): VerifyAndAddRuntimeEnvironmentResult {
+function invalidAccessLinkResult(): RemotePairingFailure {
   return {
     ok: false,
     kind: 'access-link-invalid',
@@ -136,7 +216,7 @@ function invalidAccessLinkResult(): VerifyAndAddRuntimeEnvironmentResult {
   }
 }
 
-function unreachableHostResult(endpoint: string): VerifyAndAddRuntimeEnvironmentResult {
+function unreachableHostResult(endpoint: string): RemotePairingFailure {
   return {
     ok: false,
     kind: 'host-unreachable',

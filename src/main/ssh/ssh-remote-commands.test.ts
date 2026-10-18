@@ -18,7 +18,7 @@ import {
   lockAgeSecondsCommand,
   tryCreateInstallLockCommand,
   tryStealInstallLockCommand
-} from './ssh-relay-install-lock-commands'
+} from '../managed-server/install/remote-install-lock-commands'
 import {
   commandWithNodePath,
   listRemoteInstallBaseDirsCommand,
@@ -28,14 +28,17 @@ import {
   readRemoteHomeCommand,
   removeRemoteTreeCommand
 } from './ssh-remote-commands'
-import { ORCAD_INSTALL_MODEL, RELAY_INSTALL_MODEL } from './remote-install-model'
+import {
+  ORCAD_INSTALL_MODEL,
+  RELAY_INSTALL_MODEL
+} from '../managed-server/install/remote-install-model'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
 import {
   createRelayGcListingFixture,
   readUncappedRelayGcPaths,
   runCappedRelayGcShellCommand,
   SSH_EXEC_OUTPUT_CAP_CHARS
-} from './ssh-relay-gc-listing.test-fixture'
+} from '../managed-server/install/remote-install-gc-listing.test-fixture'
 
 const posix = getRemoteHostPlatform('linux-x64')
 const nativePosix = getRemoteHostPlatform(

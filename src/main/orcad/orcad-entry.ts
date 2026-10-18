@@ -324,6 +324,8 @@ async function startOrcadRuntime(
 
   await runtime.refreshRestoredOrchestrationAuthority()
   await runtime.reconcileLegacyWorkerTerminals()
+  // Hook rows hydrated and the PTY runtime registered: stored sort tiers can be checked.
+  void runtime.sidebarFacts?.reconcileSortStampTiers(getLocalPtyProvider())
 
   // Runs after RPC stops (cleanups run reversed); later records save synchronously until exit.
   registerCleanup(() => runtime.closeNotificationDismissals())

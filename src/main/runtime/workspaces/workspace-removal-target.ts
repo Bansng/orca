@@ -7,8 +7,7 @@ import type {
 } from '../runtime-worktree-selection'
 import { resolveRuntimeWorktreeRemovalTarget } from '../runtime-worktree-removal-target'
 import type { RuntimeStore } from '../runtime-store-contract'
-import { splitWorktreeId } from '../../../shared/worktree/id'
-import { runtimeWorktreeIdsEqual } from '../runtime-worktree-path-identity'
+import { splitWorktreeId, worktreeIdsEqual } from '../../../shared/worktree/id'
 import { hasWorktreeRemovalRepoOwnerOnOtherHost } from '../../worktree-removal-repo-owner'
 import { advertisedUrlWatcher } from '../../ports/advertised-url-watcher'
 import { deleteWorktreeHistoryDir } from '../../terminal-history-deletion'
@@ -167,7 +166,7 @@ export abstract class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRu
       // rescued into a newly-created occupant of the same path-derived ID.
       for (const ptyId of this.pairedRendererSessionOwnedPtyIds) {
         const ptyWorktreeId = this.ptysById.get(ptyId)?.worktreeId
-        if (ptyWorktreeId && runtimeWorktreeIdsEqual(ptyWorktreeId, worktreeId)) {
+        if (ptyWorktreeId && worktreeIdsEqual(ptyWorktreeId, worktreeId)) {
           this.pairedRendererSessionOwnedPtyIds.delete(ptyId)
         }
       }

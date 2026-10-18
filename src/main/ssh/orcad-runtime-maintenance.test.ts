@@ -33,13 +33,21 @@ vi.mock('./ssh-target-registry', () => ({
   getSshConnectionManager: () => ({ connect: async () => ({}) }),
   getSshTargetRegistryStore: () => mocks.state.store
 }))
-vi.mock('./orcad-remote-context', () => ({ resolveOrcadRemoteContext: mocks.resolveContext }))
+vi.mock('../managed-server/install/orcad-remote-context', () => ({
+  resolveOrcadRemoteContext: mocks.resolveContext
+}))
 vi.mock('./orcad-terminal-census-client', () => ({ collectManagedTerminalCensus: mocks.census }))
 vi.mock('./orcad-remote-deploy', () => ({ deployOrcad: mocks.deploy }))
-vi.mock('./orcad-remote-rollback', () => ({ rollbackOrcad: mocks.rollback }))
-vi.mock('./orcad-activation-recovery', () => ({ recoverInterruptedOrcadActivation: mocks.recover }))
+vi.mock('../managed-server/install/orcad-remote-rollback', () => ({
+  rollbackOrcad: mocks.rollback
+}))
+vi.mock('../managed-server/activation/orcad-activation-recovery', () => ({
+  recoverInterruptedOrcadActivation: mocks.recover
+}))
 vi.mock('./orcad-active-readiness', () => ({ probeActiveOrcadReadiness: mocks.probe }))
-vi.mock('./orcad-remote-build-hash', () => ({ readRemoteOrcadBuildHash: mocks.buildHash }))
+vi.mock('../managed-server/install/orcad-remote-build-hash', () => ({
+  readRemoteOrcadBuildHash: mocks.buildHash
+}))
 vi.mock('../orcad/orcad-artifact-materializer', () => ({
   materializeOrcadArtifact: async () => '/local/orcad'
 }))
@@ -52,16 +60,16 @@ vi.mock('./orcad-managed-wake', () => ({ wakeStoppedManagedOrcad: mocks.wake }))
 vi.mock('./orcad-managed-migration-status', () => ({
   findIncompleteManagedOrcadMigration: mocks.pendingMigration
 }))
-vi.mock('./orcad-activation-transaction-store', () => ({
+vi.mock('../managed-server/activation/orcad-activation-transaction-store', () => ({
   readOrcadActivationTransaction: async () => null
 }))
 
+const { getManagedOrcadRuntimeStatus } = await import('./orcad-runtime-status')
 const {
-  getManagedOrcadRuntimeStatus,
   recoverManagedOrcadEnvironment,
   rollbackManagedOrcadEnvironment,
   updateManagedOrcadEnvironment
-} = await import('./orcad-runtime-lifecycle')
+} = await import('./orcad-runtime-maintenance')
 
 const idle = { liveSessions: 0, startedSinceActivation: 0, daemonProtocolVersion: 7 }
 let harness: ReturnType<typeof createManagedLifecycleHarness>

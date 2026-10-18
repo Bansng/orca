@@ -15,6 +15,7 @@ import {
   FACT_SESSION_FIELDS,
   VIEW_SESSION_FIELDS
 } from './workspace-layout-beside'
+import { editorTabShowsFile } from './workspace-layout-editor-tab-file'
 import type { LoadedWorkspaceLayout } from './workspace-layout-load-types'
 import { collectLayoutLeafIdsInOrder } from './terminal-pane-tree'
 import { paneKeyOf, tabsInOrder, type WorkspaceLayout } from './workspace-layout-model'
@@ -99,15 +100,13 @@ function saveWorkspace(
   }
   if (workspace.editorFiles) {
     // One preview fact per editor tab; today's writer stores the file's copy only when true.
-    const previewFiles = new Set(
-      workspace.tabs.flatMap((tab) =>
-        tab.kind === 'editor' && tab.isPreview ? [tab.entityId] : []
-      )
-    )
+    const previewTabs = workspace.tabs.filter((tab) => tab.kind === 'editor' && tab.isPreview)
     session.openFilesByWorktree[key] = workspace.editorFiles.map((file): PersistedOpenFile => ({
       ...file,
       worktreeId,
-      ...(previewFiles.has(file.filePath) ? { isPreview: true } : {}),
+      ...(previewTabs.some((tab) => editorTabShowsFile(tab.entityId, file, worktreeId))
+        ? { isPreview: true }
+        : {}),
       ...view.editorDrafts[key]?.[file.filePath]
     }))
   }

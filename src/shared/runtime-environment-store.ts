@@ -104,7 +104,7 @@ export function removeEnvironment(userDataPath: string, selector: string): Known
 export function updateEnvironmentFromPairingCode(
   userDataPath: string,
   selector: string,
-  args: { pairingCode: string; now?: number }
+  args: { pairingCode: string; now?: number; runtimeId?: string }
 ): KnownRuntimeEnvironment {
   const offer = parseRemotePairingCode(userDataPath, args.pairingCode)
   assertNoIndependentSshAccess(
@@ -119,7 +119,7 @@ export function updateEnvironmentFromPairingCode(
     name: existing.name,
     now: existing.createdAt,
     offer,
-    runtimeId: existing.runtimeId,
+    runtimeId: args.runtimeId ?? existing.runtimeId,
     ...(existing.source ? { source: existing.source } : {}),
     ...getPairingConnectionDependency(existing.connectionDependency, offer)
   })

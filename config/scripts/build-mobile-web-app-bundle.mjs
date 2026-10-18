@@ -605,11 +605,16 @@ export async function buildMobileWebAppBundle({
   const [
     desktopVersion,
     protocolWindow,
-    { script, chunks, images, entryStaticBytes, routeChunks, routeKeys }
+    { script, chunks, images, entryStaticBytes, routeChunks, routeKeys },
+    scrollbarStyle
   ] = await Promise.all([
     readDesktopVersion(),
     readProtocolWindow(),
-    bundleMobileWebApp({ appDir })
+    bundleMobileWebApp({ appDir }),
+    readFile(join(projectDir, 'src/shared/styles/scrollbar-sleek.css'), 'utf8').then((style) =>
+      // The shared desktop stylesheet can be checked out as CRLF on Windows.
+      style.replace(/\r\n/g, '\n')
+    )
   ])
   // Every output is already named by its own bytes, and a name is written inside whatever imports
   // it, so hashedAsset here reproduces the name rather than choosing one.
@@ -625,7 +630,7 @@ export async function buildMobileWebAppBundle({
   // type="module", because the entry is esm and reaches its routes through import(). Same-origin
   // module and chunk both load under the shell's script-src 'self'; the policy is unchanged.
   const html =
-    '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8" />\n' +
+    '<!doctype html>\n<html lang="en" data-orca-scrollbars="sleek">\n<head>\n<meta charset="utf-8" />\n' +
     // No viewport-fit=cover: the page never asks to extend under the system bars. The shell owns
     // the safe area: it pads the WebView and, on Android, zeroes the insets the WebView would
     // report via env(); on iOS the padded WKWebView reports none.
@@ -634,7 +639,7 @@ export async function buildMobileWebAppBundle({
     // answers 403, the path being in no manifest. Empty rather than an asset: a WebView document
     // has no tab for an icon, and the bundle's images are route assets named by their own bytes.
     '<link rel="icon" href="data:," />\n' +
-    `<title>Orca</title>\n${MOBILE_WEB_APP_ROOT_RESET}\n${MOBILE_WEB_APP_NATIVE_PARITY_STYLE}\n</head>\n<body>\n<div id="root"></div>\n` +
+    `<title>Orca</title>\n${MOBILE_WEB_APP_ROOT_RESET}\n${MOBILE_WEB_APP_NATIVE_PARITY_STYLE}\n<style id="orca-scrollbars">${scrollbarStyle}</style>\n</head>\n<body>\n<div id="root"></div>\n` +
     `<script type="module" src="/${scriptAsset.path}"></script>\n</body>\n</html>\n`
   const indexBytes = Buffer.from(html, 'utf8')
   const indexAsset = {

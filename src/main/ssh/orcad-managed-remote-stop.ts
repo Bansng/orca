@@ -7,21 +7,21 @@
  */
 import { randomUUID } from 'node:crypto'
 import { shellEscape } from './ssh-connection-utils'
-import { selectOrcadSlotRuntimeCommand } from './orcad-remote-runtime'
+import { selectOrcadSlotRuntimeCommand } from '../managed-server/install/orcad-remote-runtime'
 import {
   parseOrcadReadinessWaitOutput,
   readOrcadReadinessNowCommand
-} from './orcad-remote-readiness-wait'
-import { execOrcadRemote } from './orcad-remote-runtime-control'
-import { readBoundedOrcadRemoteRecord } from './orcad-remote-record-file'
+} from '../managed-server/install/orcad-remote-readiness-wait'
+import { execOrcadRemote } from '../managed-server/install/orcad-remote-runtime-control'
+import { readBoundedOrcadRemoteRecord } from '../managed-server/install/orcad-remote-record-file'
 import { orcadSlotDir, type OrcadSlotOptions } from './orcad-recovery-slot'
 import { isWindowsRemoteHost, joinRemotePath } from './ssh-remote-platform'
-import { isUnconfirmedSshCommandTermination } from './ssh-relay-exec-command'
+import { isUnconfirmedSshCommandTermination } from './remote-exec-command'
 import {
   orcadWindowsNodeCommandLine,
   orcadWindowsSlotOpCommand,
   readOrcadWindowsEncodedAnswer
-} from './orcad-remote-windows-node'
+} from '../managed-server/install/orcad-remote-windows-node'
 import { ORCAD_WINDOWS_RUNTIME_MARKER } from './orcad-windows-host-script'
 import { ORCAD_LOCK_FILE_NAME, parseOrcadInstanceLockRecord } from '../orcad/orcad-instance-lock'
 import {

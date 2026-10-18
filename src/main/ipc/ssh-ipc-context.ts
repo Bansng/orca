@@ -1,7 +1,7 @@
 import type { BrowserWindow } from 'electron'
 import type { Store } from '../persistence'
 import type { SshConnectionManager } from '../ssh/ssh-connection-manager'
-import type { SshPortForwardManager } from '../ssh/ssh-port-forward'
+import type { SshPortForwardManager } from '../ssh/port-forwarding/ssh-port-forward'
 import type { OrcaRuntimeService } from '../runtime/orca-runtime'
 
 // Why live bindings rather than getters: every SSH IPC module reads these singletons on the hot
