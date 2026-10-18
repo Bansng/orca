@@ -9,6 +9,7 @@ import {
   type ExecutionHostId
 } from '../../../../shared/execution-host'
 import { folderWorkspaceKey, parseWorkspaceKey } from '../../../../shared/workspace-scope'
+import { hostWorktreeTarget } from '../../../../shared/worktree/host-qualified-identity'
 import { catalogOwnsHost, getProjectGroupHostId } from '../slices/project-group-owner-routing'
 import type { FolderWorkspaceUpdateTicket } from '../slices/folder-workspace-update-coordinator'
 import { callRuntimeRpc } from '../../runtime/runtime-rpc-client'
@@ -267,7 +268,12 @@ export async function reconcileFailedFolderWorkspaceUpdate(args: {
         : {})
     }))
     if (!refreshed) {
-      args.get().purgeWorktreeTerminalState([folderWorkspaceKey(args.folderWorkspaceId)])
+      args.get().purgeWorktreeTerminalState([
+        hostWorktreeTarget({
+          id: folderWorkspaceKey(args.folderWorkspaceId),
+          hostId: args.ownerHostId
+        })
+      ])
     }
   } catch (err) {
     console.warn('Failed to reconcile folder workspace after update failure:', err)

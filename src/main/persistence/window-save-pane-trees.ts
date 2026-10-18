@@ -5,6 +5,7 @@
 // window's tree, as does a paired server's partition: main applies no pane command there.
 
 import { parseExecutionHostId } from '../../shared/execution-host'
+import { normalizeTerminalLayoutPtyOwnership } from '../../shared/terminal-layout-pty-ownership'
 import type { TerminalLayoutSnapshot } from '../../shared/terminal-tab-types'
 import type {
   WorkspaceSessionPatch,
@@ -17,7 +18,9 @@ function withStoredPaneTrees(
 ): Record<string, TerminalLayoutSnapshot> {
   let result = incoming
   for (const [tabId, layout] of Object.entries(incoming)) {
-    const root = stored?.[tabId]?.root
+    const storedLayout = stored?.[tabId]
+    // Main's Loader drops a duplicate terminal's pane; storing that tree makes the repair durable.
+    const root = storedLayout && normalizeTerminalLayoutPtyOwnership(storedLayout).snapshot.root
     if (root && layout.root !== root) {
       result = result === incoming ? { ...incoming } : result
       result[tabId] = { ...layout, root }

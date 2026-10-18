@@ -19,6 +19,7 @@ import { bindReplayDataDrain } from './replay-data-drain'
 import { bindStartFreshSpawn } from './fresh-spawn-start'
 
 import { bindFreshSpawnFollowReset } from './fresh-spawn-follow-reset'
+import { deferHiddenAgentResume } from './hidden-agent-resume-deferral'
 
 export function bindDeferredColdRestoreAndSnapshot(session: ConnectPanePtySession): void {
   session.applyColdRestoreAgentResumeStartup = (
@@ -67,16 +68,24 @@ export function bindDeferredColdRestoreAndSnapshot(session: ConnectPanePtySessio
             : {})
         }
       : undefined
-  session.startFreshColdRestoreAgentResume = (
+  // Why ungated: a reveal, a restart replacement on show, or a phone wake already chose to run now.
+  session.spawnColdRestoreAgentResume = (
     startup: ColdRestoreAgentResumeStartup | null = session.buildColdRestoreAgentResumeStartup(),
     options: FreshSpawnOptions = {}
   ): Promise<string | null> => {
     session.applyColdRestoreAgentResumeStartup(startup)
     return session.startFreshSpawn(startup, options)
   }
+  session.startFreshColdRestoreAgentResume = (
+    startup: ColdRestoreAgentResumeStartup | null = session.buildColdRestoreAgentResumeStartup(),
+    options: FreshSpawnOptions = {}
+  ): Promise<string | null> =>
+    deferHiddenAgentResume(session, startup)
+      ? Promise.resolve(null)
+      : session.spawnColdRestoreAgentResume(startup, options)
   // Why: the hibernation wake fires from noteVisibilityResume in the outer
   // connection scope, long after this deferred-connect closure has run.
-  session.wakeHibernatedAgentPane = () => session.startFreshColdRestoreAgentResume()
+  session.wakeHibernatedAgentPane = () => session.spawnColdRestoreAgentResume()
   const isStartupPasteTargetCurrent = (ptyId: string | null): boolean =>
     !session.disposed &&
     session.deps.paneTransportsRef.current.get(session.pane.id) === session.transport &&

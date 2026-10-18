@@ -36,6 +36,10 @@
         "saveFailed": "チャット名の設定を保存できませんでした。",
         "searchAgent": "Agent",
         "searchTemplate": "コマンドテンプレート"
+      },
+      "providers": {
+        "title": "プロバイダー",
+        "antigravityDescription": "Antigravity チャットは、Orca がこのホストにダウンロードするサーバーで動作します。agy CLI とは別です。"
       }
     },
     "terminal": {
@@ -544,7 +548,9 @@
           "presenceProfileOverflow": "{{names}} 他 {{count}} 件",
           "removeProjectFailed": "プロジェクトの削除に失敗しました",
           "wslFilesystemBoundaryTitle": "このプロジェクトは Windows ドライブに保存されています",
-          "wslFilesystemBoundaryDescription": "このプロジェクトの Git は {{distro}} で実行され、WSL ファイルシステムブリッジを介して Windows ドライブに到達します。 git は、{{distro}} 内に保存されたコピーよりも約 20 倍遅くなることが予想されます。"
+          "wslFilesystemBoundaryDescription": "このプロジェクトの Git は {{distro}} で実行され、WSL ファイルシステムブリッジを介して Windows ドライブに到達します。 git は、{{distro}} 内に保存されたコピーよりも約 20 倍遅くなることが予想されます。",
+          "moveToGroupOtherHost": "プロジェクトをグループに移動できませんでした",
+          "moveToGroupOtherHostDesc": "このプロジェクトを実行しているコンピューターにはこのグループがありません。プロジェクトは同じコンピューターに保存されたグループにのみ参加できます。"
         },
         "settings": {
           "e12dab333b": "サーバーの切り替えに失敗しました",
@@ -18055,7 +18061,7 @@
         "signInThenSend": "サインインしてから、メッセージをもう一度送信してください。",
         "historyTooLarge": "この会話の履歴は大きすぎるため、ここでは復元できません。",
         "managedAccountEnvOverride": "この Claude の起動では独自の Anthropic サインイン変数が設定されています。管理対象の Claude アカウントを使用するには、それらを削除してください。",
-        "accountSwitchInProgress": "Claude アカウントの切り替え中です。完了してからもう一度お試しください。",
+        "accountSwitchInProgress": "このホストで {{agent}} のセットアップを変更中です。完了してからもう一度お試しください。",
         "managedAccountUnsupported": "WSL に Claude アカウントが追加されている間、Claude チャットには Windows の Claude アカウントが必要です。",
         "launchFolderMissing": "このチャットが実行されていたフォルダーは存在しなくなりました。このチャットを続けるには、フォルダーを復元してください。",
         "historyInOtherAccount": "このチャットの履歴は別の Claude アカウントにあります。続けるには、そのアカウントに切り替えてください。",
@@ -18084,6 +18090,7 @@
         "attachmentInvalid": "このメッセージの添付ファイルは Agent に送信できません。",
         "attachmentUnreadable": "このメッセージの添付ファイルを読み取れなかったため、メッセージは送信されませんでした。",
         "emptyMessage": "このメッセージは空のため、送信されませんでした。",
+        "commandUnavailable": "このコマンドは {{agent}} のチャットでは使用できないため、送信されませんでした。",
         "queueFull": "Agent を待っているメッセージが多すぎたため、このメッセージは送信されませんでした。",
         "writeFailed": "Orca はこのメッセージを Agent に渡せなかったため、送信されませんでした。",
         "cancelled": "このメッセージは Agent が処理を始める前に取り消されました。",
@@ -18290,6 +18297,7 @@
         "permissionAskSharedDescription": "まだ許可されていない編集やコマンドの前に確認します",
         "permissionAcceptEdits": "編集を許可",
         "permissionAcceptEditsDescription": "ファイルの編集とファイル操作コマンドを承認し、それ以外は確認します",
+        "permissionAcceptEditsAntigravityDescription": "ファイルの編集を承認し、それ以外は確認します",
         "permissionAuto": "代わりに承認",
         "permissionAutoDescription": "承認リクエストを代わりに審査します",
         "permissionFullAccess": "フルアクセス",
@@ -19183,6 +19191,7 @@
       "cancelling": "キャンセルしています…",
       "chatTitle": "チャットを始めるには {{agent}} をインストールしてください。",
       "damaged": "この {{agent}} のコピーは破損しています。",
+      "downloadSize": "{{size}} MB のダウンロード。",
       "downloading": "{{done}} MB をダウンロード中です。",
       "downloadingOf": "{{total}} MB 中 {{done}} MB をダウンロード中です。",
       "external": "このホストで見つかった {{agent}} のコピーを使用しています。",

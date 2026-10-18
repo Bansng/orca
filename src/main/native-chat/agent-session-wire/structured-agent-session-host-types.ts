@@ -77,6 +77,8 @@ export type StructuredAgentSessionProviderChild = StructuredAgentSessionProvider
   readonly startedFor?: string
   /** The permission mode it was launched with, in memory only; absent for an agent with none. */
   readonly permissionMode?: AgentChatPermissionMode
+  /** The adapter's `heldSends` for this conversation, read at each decision. */
+  readonly heldSends?: () => ReadonlySet<string> | undefined
   close?: StructuredAgentSessionChildClose
 }
 

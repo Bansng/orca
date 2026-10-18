@@ -66,12 +66,6 @@ export abstract class OrcaRuntimeWithGetStructuredAgentSessionCreateSupport exte
     if (!registration) {
       return null
     }
-    const services = {
-      getClaudeConfigDirectory: (target) => this.accounts.getClaudeConfigDirectory(target),
-      prepareCodexLaunchHome: this.prepareCodexStructuredLaunchFn,
-      readCodexLaunchHome: this.resolveCodexStructuredLaunchHomeFn,
-      workspaceTrustSettings: () => this.requireStore().getSettings()
-    }
     return async ({ launchEnv, location }) =>
       registration.resolveAccountHome(
         {
@@ -85,7 +79,14 @@ export abstract class OrcaRuntimeWithGetStructuredAgentSessionCreateSupport exte
                   (await this.resolveRuntimeFileTarget(worktree)).worktree.path
               : null
         },
-        services
+        {
+          getClaudeConfigDirectory: (target) => this.accounts.getClaudeConfigDirectory(target),
+          prepareCodexLaunchHome: this.prepareCodexStructuredLaunchFn,
+          readCodexLaunchHome: this.resolveCodexStructuredLaunchHomeFn,
+          workspaceTrustSettings: () => this.requireStore().getSettings(),
+          // The chat host's own state root (ensureStructuredAgentSessionHost).
+          stateDirectory: getProfileUserDataPath()
+        }
       )
   }
 

@@ -18,6 +18,13 @@ import type {
 } from '../../shared/workspace-layout/workspace-layout-model'
 import type { TabGroupLayoutNode } from '../../shared/tab-types'
 import type { WorkspaceSessionState } from '../../shared/workspace-session-state-types'
+import {
+  closedTabsOfOneSidedWorkspaces,
+  droppedTabBarEntries,
+  overriddenPaneTrees,
+  terminalTabBarEntries,
+  type SavedPaneTrees
+} from './window-save-raw-session-divergence'
 
 /** Set by evidence runs: each divergence is appended there as one JSON line. */
 const LOG_PATH_ENV = 'ORCA_LAYOUT_SAVE_DIVERGENCE_LOG'
@@ -117,6 +124,30 @@ function reboundLeaves(
   return { rebound, was, now }
 }
 
+/**
+ * Whether a workspace holds anything. The Loader makes one for every key a save names and places a
+ * stored closed-tab record by worktree id into it, so neither makes one by itself.
+ */
+function hasContent(workspace: WorkspaceLayout | undefined): workspace is WorkspaceLayout {
+  return Boolean(
+    workspace &&
+    (workspace.tabs.length > 0 ||
+      workspace.groups.length > 0 ||
+      workspace.groupLayout ||
+      [workspace.editorFiles, workspace.browserTabs, workspace.editorViews, workspace.leaves].some(
+        (items) => items && Object.keys(items).length > 0
+      ))
+  )
+}
+
+function diffClosedTabs(before: WorkspaceLayout, after: WorkspaceLayout): string[] {
+  return diffKeyed(
+    'closed tab',
+    recordById(before.closedTerminalTabs),
+    recordById(after.closedTerminalTabs)
+  )
+}
+
 /** A lone group with no stored tree is that group's leaf, as main's own save writes it. */
 function groupTreeOf(workspace: WorkspaceLayout): TabGroupLayoutNode | null {
   const [only, ...rest] = workspace.groups
@@ -130,11 +161,12 @@ export function diffWorkspaceLayouts(
   before: WorkspaceLayout | undefined,
   after: WorkspaceLayout | undefined
 ): WorkspaceDiff {
-  if (!before || !after) {
-    return {
-      paths: before === after ? [] : [after ? 'workspace added' : 'workspace removed'],
-      rebound: 0
+  if (!hasContent(before) || !hasContent(after)) {
+    if (hasContent(before) || hasContent(after)) {
+      return { paths: [hasContent(after) ? 'workspace added' : 'workspace removed'], rebound: 0 }
     }
+    // Both hold no tab: only a closed-tab record of a workspace both copies name can differ.
+    return { paths: before && after ? diffClosedTabs(before, after) : [], rebound: 0 }
   }
   const leaves = reboundLeaves(before.leaves, after.leaves)
   const paths = [
@@ -159,11 +191,7 @@ export function diffWorkspaceLayouts(
       listById(before.browserTabs, (b) => b.id),
       listById(after.browserTabs, (b) => b.id)
     ),
-    ...diffKeyed(
-      'closed tab',
-      recordById(before.closedTerminalTabs),
-      recordById(after.closedTerminalTabs)
-    ),
+    ...diffClosedTabs(before, after),
     ...diffKeyed('leaf', leaves.was, leaves.now)
   ]
   if (stableJson(groupTreeOf(before)) !== stableJson(groupTreeOf(after))) {
@@ -172,29 +200,33 @@ export function diffWorkspaceLayouts(
   return { paths, rebound: leaves.rebound.size }
 }
 
-/** Each workspace whose part of main's model differs between two copies of one partition. */
+/**
+ * Each workspace whose part of main's model differs between two copies of one partition, plus
+ * `rawPaths`: what only the stored session itself shows, by workspace.
+ */
 export function windowSaveDivergences(
   was: WorkspaceLayoutModel | null,
-  now: WorkspaceLayoutModel | null
+  now: WorkspaceLayoutModel | null,
+  rawPaths: ReadonlyMap<string, string[]> = new Map()
 ): WindowSaveDivergence[] {
   // Records count for a workspace with no tabs too.
-  const workspaces = new Set(
-    [was, now].flatMap((model) =>
+  const workspaces = new Set([
+    ...[was, now].flatMap((model) =>
       model
         ? [
             ...Object.keys(model.workspaces),
-            ...RECORDS.flatMap((record) => Object.keys(model.records[record] ?? {})),
-            ...Object.keys(model.legacy.terminalRowOwners)
+            ...RECORDS.flatMap((record) => Object.keys(model.records[record] ?? {}))
           ]
         : []
-    )
-  )
+    ),
+    ...rawPaths.keys()
+  ])
   const result: WindowSaveDivergence[] = []
   for (const workspace of workspaces) {
-    const { paths, rebound } = diffWorkspaceLayouts(
-      was?.workspaces[workspace],
-      now?.workspaces[workspace]
-    )
+    const before = was?.workspaces[workspace]
+    const after = now?.workspaces[workspace]
+    const { paths: modelPaths, rebound } = diffWorkspaceLayouts(before, after)
+    const paths = [...modelPaths, ...(rawPaths.get(workspace) ?? [])]
     for (const record of RECORDS) {
       if (
         stableJson(was?.records[record]?.[workspace] ?? null) !==
@@ -203,6 +235,7 @@ export function windowSaveDivergences(
         paths.push(`${record} changed`)
       }
     }
+    // Counted for an empty workspace too: a relaunch reads it there to skip the first terminal.
     if (
       Boolean(was?.legacy.terminalRowOwners[workspace]) !==
       Boolean(now?.legacy.terminalRowOwners[workspace])
@@ -238,15 +271,17 @@ function report(source: string, partition: ExecutionHostId, divergence: WindowSa
 }
 
 /**
- * Runs the window's save `write` and reports what it changed in main's layout model. A paired
- * server's partition is skipped: its layout is the server's, mirrored by the window. Nothing here
- * can fail the save: the write's own errors propagate, the check's are only logged.
+ * Runs the window's save `write` and reports what it changed in main's layout model, and which of
+ * its `savedPaneTrees` (as the window sent them) main keeps its own tree over. A paired server's
+ * partition is skipped: its layout is the server's, mirrored by the window. Nothing here can fail
+ * the save: the write's own errors propagate, the check's are only logged.
  */
 export function writeWindowSaveWatchingLayout(
   read: () => WorkspaceSessionState | null | undefined,
   hostId: string | null | undefined,
   write: () => void,
-  source: string
+  source: string,
+  savedPaneTrees?: SavedPaneTrees
 ): void {
   const partition = normalizeExecutionHostId(hostId) ?? LOCAL_EXECUTION_HOST_ID
   if (parseExecutionHostId(partition)?.kind === 'runtime') {
@@ -254,17 +289,35 @@ export function writeWindowSaveWatchingLayout(
     return
   }
   let was: WorkspaceLayoutModel | null | undefined
+  let wasEntries: Map<string, Set<string>> | undefined
+  let wasClosed: WorkspaceSessionState['closedTerminalTabTombstonesByTabId']
+  const rawPaths = new Map<string, string[]>()
   try {
-    was = layoutModelOf(read(), partition)
+    const stored = read()
+    was = layoutModelOf(stored, partition)
+    wasEntries = stored ? terminalTabBarEntries(stored) : new Map()
+    wasClosed = stored?.closedTerminalTabTombstonesByTabId
+    if (savedPaneTrees) {
+      overriddenPaneTrees(stored, was, savedPaneTrees, rawPaths)
+    }
   } catch (error) {
+    was = undefined
     console.warn('[layout-owner] save divergence check failed:', error)
   }
   write()
-  if (was === undefined) {
+  if (was === undefined || wasEntries === undefined) {
     return
   }
   try {
-    for (const divergence of windowSaveDivergences(was, layoutModelOf(read(), partition))) {
+    const now = read()
+    const nowModel = layoutModelOf(now, partition)
+    droppedTabBarEntries(wasEntries, now, rawPaths)
+    closedTabsOfOneSidedWorkspaces(
+      { model: was, closed: wasClosed },
+      { model: nowModel, closed: now?.closedTerminalTabTombstonesByTabId },
+      rawPaths
+    )
+    for (const divergence of windowSaveDivergences(was, nowModel, rawPaths)) {
       report(source, partition, divergence)
     }
   } catch (error) {

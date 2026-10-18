@@ -59,6 +59,7 @@ export const HOST_OPERATION_OWNERSHIP = {
   settings: 'scope-picked',
   shell: 'client',
   sidebarInputs: 'host',
+  sidebarSession: 'host',
   skills: 'host',
   speech: 'host',
   ssh: 'host',

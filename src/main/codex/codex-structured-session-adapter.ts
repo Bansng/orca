@@ -174,6 +174,9 @@ export class CodexStructuredSessionAdapter implements StructuredAgentSessionAdap
   backgroundTaskState = (sessionId: string): AgentSessionBackgroundTaskState | null | undefined =>
     this.sessions.get(sessionId)?.backgroundTasks.state
 
+  heldSends = (sessionId: string): ReadonlySet<string> | undefined =>
+    this.sessions.get(sessionId)?.dispatchEchoes.heldSends()
+
   // `ended` is set in the same turn as the connection's own exit report.
   holdsLiveProviderProcess = (sessionId: string, acquisitionGeneration: string): boolean => {
     const session = this.sessions.get(sessionId)

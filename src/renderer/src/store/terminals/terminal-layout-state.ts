@@ -4,7 +4,7 @@ import { terminalLayoutEqual } from '../../../../shared/terminal-layout-equality
 import {
   normalizeTerminalLayoutPtyOwnership,
   resolveTerminalLayoutPtyOwnershipTransfers
-} from '@/components/terminal-pane/terminal-layout-pty-ownership'
+} from '../../../../shared/terminal-layout-pty-ownership'
 import type { TerminalSlice, TerminalStoreGet, TerminalStoreSet } from './terminal-state'
 import {
   resolvePrimaryLayoutPtyId,

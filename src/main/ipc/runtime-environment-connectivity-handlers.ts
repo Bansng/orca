@@ -30,7 +30,6 @@ import {
 import {
   clearRuntimeEnvironmentManualDisconnect,
   isRuntimeEnvironmentManuallyDisconnected,
-  markRuntimeEnvironmentManuallyDisconnected,
   RUNTIME_MANUALLY_DISCONNECTED_MESSAGE
 } from './runtime-environment-manual-disconnect'
 import {
@@ -40,6 +39,11 @@ import {
 import { publicRuntimeEnvironmentWithHostKey } from './runtime-environment-host-key'
 import { withWslOrcadAccountEnv } from '../wsl/wsl-orcad-account-env'
 import { clearSshCredentialDeclinedForEnvironment } from '../ssh/ssh-credential-decline'
+import {
+  disconnectManagedHostOfEnvironmentForUser,
+  disconnectRuntimeEnvironmentForUser,
+  liftSshUserDisconnectForEnvironment
+} from './ssh-host-user-disconnect'
 import {
   observeWslOrcadHostResponse,
   wslOrcadHostSupports
@@ -141,13 +145,16 @@ export function registerRuntimeEnvironmentConnectivityHandlers({
   )
   ipcMain.handle(
     'runtimeEnvironments:disconnect',
-    (_event, args: { selector: string }): { disconnected: PublicKnownRuntimeEnvironment } => {
+    async (
+      _event,
+      args: { selector: string }
+    ): Promise<{ disconnected: PublicKnownRuntimeEnvironment }> => {
       const environment = resolveEnvironment(getUserDataPath(), args.selector)
-      markRuntimeEnvironmentManuallyDisconnected(environment.id)
-      invalidateTransport(environment.id)
+      const runtimeLayer = { userDataPath: getUserDataPath(), invalidateTransport }
+      disconnectRuntimeEnvironmentForUser(environment.id, runtimeLayer)
       closeLegacySelectorTransport(args.selector, environment.id)
-      // Retain disconnected evidence for renderers that missed the teardown event.
-      getRuntimeEnvironmentStatusOwner(getUserDataPath(), environment.id)
+      // Why: otherwise Settings keeps showing the managed host's SSH connection as live (#30085).
+      await disconnectManagedHostOfEnvironmentForUser(environment, runtimeLayer)
       return { disconnected: redactRuntimeEnvironment(environment) }
     }
   )
@@ -161,6 +168,7 @@ export function registerRuntimeEnvironmentConnectivityHandlers({
       assertWslHostReachable(environment)
       clearRuntimeEnvironmentManualDisconnect(environment.id)
       clearSshCredentialDeclinedForEnvironment(environment)
+      await liftSshUserDisconnectForEnvironment(environment)
       await connectThroughOwningService(environment)
       return getRuntimeEnvironmentStatus(getUserDataPath(), environment.id, args.timeoutMs, {
         reconnect: true

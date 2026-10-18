@@ -55,6 +55,7 @@ export function createTerminalTab(
     createdAt: command.createdAt ?? context.now(),
     customTitle: command.title ?? null,
     color: command.color ?? null,
+    ...(command.quickCommandLabel ? { quickCommandLabel: command.quickCommandLabel } : {}),
     ...(command.viewMode ? { viewMode: command.viewMode } : {}),
     kind: 'terminal',
     terminal: { defaultTitle: `Terminal ${ordinal}`, ...command.creation },

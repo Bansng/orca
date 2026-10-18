@@ -26,6 +26,7 @@ import {
   type WorktreeListingMergeOutcome
 } from './detected-worktree-refresh-admission'
 import { buildWorktreePurgeState } from '../teardown/worktree-purge-state'
+import { hostWorktreeTarget } from '../../../../../../shared/worktree/host-qualified-identity'
 import { isDisplayNamePersistencePending } from '../metadata/worktree-meta-persist'
 import { branchName } from '@/lib/git-utils'
 import {
@@ -271,7 +272,7 @@ export function mergeFetchedWorktrees(
       ...(removedIds.length > 0
         ? buildWorktreePurgeState(
             s,
-            removedIds.map((id) => ({ id, hostId: args.hostId }))
+            removedIds.map((id) => hostWorktreeTarget({ id, hostId: args.hostId }))
           )
         : {})
     }

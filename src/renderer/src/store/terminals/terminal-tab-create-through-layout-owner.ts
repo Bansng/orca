@@ -79,6 +79,7 @@ export function terminalTabCreateCommand(
         }
       : {}),
     ...(entry?.viewMode ? { viewMode: entry.viewMode } : {}),
+    ...(tab.quickCommandLabel?.trim() ? { quickCommandLabel: tab.quickCommandLabel.trim() } : {}),
     createdAt: entry?.createdAt ?? tab.createdAt,
     creation
   }

@@ -411,6 +411,7 @@ describe('packaged runtime resources', () => {
           { recursive: true }
         )
         await seedBundledRipgrep(resourcesDir)
+        await seedPackagedWebClient(resourcesDir)
 
         const unpackedMainDir = join(resourcesDir, 'app.asar.unpacked', 'out', 'main')
         await mkdir(unpackedMainDir, { recursive: true })
@@ -477,6 +478,7 @@ describe('packaged runtime resources', () => {
           { recursive: true }
         )
         await seedBundledRipgrep(resourcesDir)
+        await seedPackagedWebClient(resourcesDir)
         // Layout fixtures use a cross-arch slice; native PTY probes need real packaged binaries.
         const target =
           process.arch === 'x64'
@@ -552,6 +554,14 @@ async function stubObjdump(root) {
   await mkdir(directory)
   await writeFile(join(directory, 'objdump'), '#!/bin/sh\nexit 0\n', { mode: 0o755 })
   process.env.PATH = `${directory}${delimiter}${process.env.PATH ?? ''}`
+}
+
+async function seedPackagedWebClient(resourcesDir) {
+  const webDir = join(resourcesDir, 'app.asar.unpacked', 'out', 'web')
+  await mkdir(join(webDir, 'assets'), { recursive: true })
+  await mkdir(join(resourcesDir, 'app.asar.unpacked', 'out', 'cli'), { recursive: true })
+  await writeFile(join(webDir, 'web-index.html'), '<script src="./assets/web.js"></script>')
+  await writeFile(join(webDir, 'assets', 'web.js'), '')
 }
 
 async function seedBundledRipgrep(resourcesDir) {

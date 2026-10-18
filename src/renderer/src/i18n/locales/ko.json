@@ -36,6 +36,10 @@
         "saveFailed": "채팅 이름 설정을 저장하지 못했습니다.",
         "searchAgent": "에이전트",
         "searchTemplate": "명령 템플릿"
+      },
+      "providers": {
+        "title": "공급자",
+        "antigravityDescription": "Antigravity 채팅은 Orca가 이 호스트에 다운로드하는 서버에서 실행되며, agy CLI와는 별개입니다."
       }
     },
     "terminal": {
@@ -544,7 +548,9 @@
           "presenceProfileOverflow": "{{names}} 외 {{count}}개",
           "removeProjectFailed": "프로젝트를 삭제하지 못했습니다.",
           "wslFilesystemBoundaryTitle": "이 프로젝트는 Windows 드라이브에 저장되어 있습니다.",
-          "wslFilesystemBoundaryDescription": "이 프로젝트의 Git은 WSL 파일 시스템 브리지를 통해 Windows 드라이브에 연결되는 {{distro}}에서 실행됩니다. git은 {{distro}}에 저장된 복사본에 비해 약 20배 느릴 것으로 예상됩니다."
+          "wslFilesystemBoundaryDescription": "이 프로젝트의 Git은 WSL 파일 시스템 브리지를 통해 Windows 드라이브에 연결되는 {{distro}}에서 실행됩니다. git은 {{distro}}에 저장된 복사본에 비해 약 20배 느릴 것으로 예상됩니다.",
+          "moveToGroupOtherHost": "프로젝트를 그룹으로 이동할 수 없습니다",
+          "moveToGroupOtherHostDesc": "이 프로젝트가 실행되는 컴퓨터에 이 그룹이 없습니다. 프로젝트는 같은 컴퓨터에 저장된 그룹에만 참여할 수 있습니다."
         },
         "settings": {
           "e12dab333b": "서버를 전환하지 못했습니다.",
@@ -18055,7 +18061,7 @@
         "signInThenSend": "로그인한 다음 메시지를 다시 보내세요.",
         "historyTooLarge": "이 대화의 기록이 너무 커서 여기에서 복원할 수 없습니다.",
         "managedAccountEnvOverride": "이 Claude 실행은 자체 Anthropic 로그인 변수를 설정합니다. 관리되는 Claude 계정을 사용하려면 해당 변수를 제거하세요.",
-        "accountSwitchInProgress": "Claude 계정 전환이 진행 중입니다. 완료된 후 다시 시도하세요.",
+        "accountSwitchInProgress": "이 호스트에서 {{agent}} 설정을 변경하는 중입니다. 완료된 후 다시 시도하세요.",
         "managedAccountUnsupported": "WSL에 Claude 계정이 추가되어 있는 동안에는 Claude 채팅에 Windows Claude 계정이 필요합니다.",
         "launchFolderMissing": "이 채팅이 실행되던 폴더가 더 이상 존재하지 않습니다. 이 채팅을 계속하려면 폴더를 복원하세요.",
         "historyInOtherAccount": "이 채팅의 기록은 다른 Claude 계정에 있습니다. 계속하려면 해당 계정으로 다시 전환하세요.",
@@ -18084,6 +18090,7 @@
         "attachmentInvalid": "이 메시지의 첨부 파일은 에이전트에 보낼 수 없습니다.",
         "attachmentUnreadable": "이 메시지의 첨부 파일을 읽을 수 없어 메시지가 전송되지 않았습니다.",
         "emptyMessage": "이 메시지가 비어 있어 전송되지 않았습니다.",
+        "commandUnavailable": "이 명령은 {{agent}} 채팅에서 사용할 수 없어 전송되지 않았습니다.",
         "queueFull": "에이전트를 기다리는 메시지가 너무 많아 이 메시지는 전송되지 않았습니다.",
         "writeFailed": "Orca가 이 메시지를 에이전트에 전달하지 못해 전송되지 않았습니다.",
         "cancelled": "이 메시지는 에이전트가 처리를 시작하기 전에 철회되었습니다.",
@@ -18290,6 +18297,7 @@
         "permissionAskSharedDescription": "아직 허용되지 않은 편집이나 명령 전에 묻습니다",
         "permissionAcceptEdits": "편집 허용",
         "permissionAcceptEditsDescription": "파일 편집과 파일 명령은 승인하고, 나머지는 묻습니다",
+        "permissionAcceptEditsAntigravityDescription": "파일 편집은 승인하고, 나머지는 묻습니다",
         "permissionAuto": "대신 승인",
         "permissionAutoDescription": "승인 요청을 대신 검토합니다",
         "permissionFullAccess": "전체 액세스",
@@ -19183,6 +19191,7 @@
       "cancelling": "취소하는 중…",
       "chatTitle": "채팅을 시작하려면 {{agent}}을(를) 설치하세요.",
       "damaged": "이 {{agent}} 사본이 손상되었습니다.",
+      "downloadSize": "{{size}}MB 다운로드.",
       "downloading": "{{done}}MB 다운로드 중입니다.",
       "downloadingOf": "{{total}}MB 중 {{done}}MB 다운로드 중입니다.",
       "external": "이 호스트에서 찾은 {{agent}} 사본을 사용합니다.",

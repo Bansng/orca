@@ -7,7 +7,7 @@ import {
   takePaneCloseIntent
 } from '@/runtime/layout-owner-pane-intents'
 import { planTerminalLiveLayoutInsertions } from './terminal-live-layout-reconciliation'
-import { collectLeafIds } from './terminal-pane-layout-tree'
+import { collectLeafIds } from '../../../../shared/terminal-pane-layout-tree'
 import { recordCreatedTerminalPaneSplit } from './terminal-pane-split-completion'
 
 /**

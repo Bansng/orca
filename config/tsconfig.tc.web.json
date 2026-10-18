@@ -26,6 +26,8 @@
     "../src/shared/**/*",
     "../src/packages/process-host/src/__fixtures__/**/*",
     "../src/main/gitlab/mappers.ts",
+    "../src/main/runtime/sidebar-inputs/sidebar-clock.ts",
+    "../src/main/runtime/sidebar-inputs/sidebar-temporal-owner.ts",
     "../src/main/jira/adf-markdown.ts",
     "../src/main/jira/adf-text-marks.ts",
     "../src/main/jira/adf-media-destination.ts",

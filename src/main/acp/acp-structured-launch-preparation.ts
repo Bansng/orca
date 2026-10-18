@@ -21,9 +21,7 @@ export async function prepareAcpStructuredLaunch(
       spawnToken: acquire.spawnToken,
       ...(acquire.permissionMode ? { permissionMode: acquire.permissionMode } : {})
     })
-    .catch((error: unknown) => {
-      throw new AgentSessionPreSpawnError(error)
-    })
+    .catch(preSpawnFailure)
   closedBeforeSpawn()
   // A missed lookup returns the bare name; a selected Command setting resolves or refuses.
   if (spec.managedRuntime && launch.command === spec.command) {
@@ -32,5 +30,14 @@ export async function prepareAcpStructuredLaunch(
       { reason: 'runtimeNotInstalled' }
     )
   }
+  const { prepare } = spec.account
+  if (prepare) {
+    await prepare(launch.env).catch(preSpawnFailure)
+    closedBeforeSpawn()
+  }
   return launch
+}
+
+function preSpawnFailure(error: unknown): never {
+  throw new AgentSessionPreSpawnError(error)
 }

@@ -215,7 +215,8 @@
         "installed": "Installed",
         "notInstalled": "Not installed",
         "install": "Install",
-        "toggleLabel": "Open {{value0}} as a chat"
+        "toggleLabel": "Open {{value0}} as a chat",
+        "antigravityDescription": "Antigravity chats run a server Orca downloads to this host, separate from the agy CLI."
       }
     },
     "terminal": {
@@ -727,7 +728,9 @@
           "presenceProfileOverflow": "{{names}} +{{count}} more",
           "removeProjectFailed": "Failed to remove project",
           "wslFilesystemBoundaryTitle": "This project is stored on a Windows drive",
-          "wslFilesystemBoundaryDescription": "Git for this project runs in {{distro}}, which reaches Windows drives over the WSL filesystem bridge. Expect git to be roughly 20x slower than it would be on a copy stored inside {{distro}}."
+          "wslFilesystemBoundaryDescription": "Git for this project runs in {{distro}}, which reaches Windows drives over the WSL filesystem bridge. Expect git to be roughly 20x slower than it would be on a copy stored inside {{distro}}.",
+          "moveToGroupOtherHost": "Could not move project to group",
+          "moveToGroupOtherHostDesc": "The computer this project runs on does not have this group. A project can only join groups saved on its own computer."
         },
         "settings": {
           "e12dab333b": "Failed to switch servers",
@@ -15752,6 +15755,9 @@
           "2076ecfc9c": "Previous change",
           "631dab0df3": "Next change"
         },
+        "EditorPanelActionsMenu": {
+          "fileActions": "File actions"
+        },
         "EditorPanelMarkdownActionsMenu": {
           "3e0ce48c24": "Export as PDF",
           "561251019a": "More actions",
@@ -18268,7 +18274,7 @@
         "signInThenSend": "Sign in, then send your message again.",
         "historyTooLarge": "This conversation's history is too large to restore here.",
         "managedAccountEnvOverride": "This Claude launch sets its own Anthropic sign-in variables. Remove them to use a managed Claude account.",
-        "accountSwitchInProgress": "A Claude account switch is in progress. Try again after it finishes.",
+        "accountSwitchInProgress": "{{agent}}'s setup is changing on this host. Try again after it finishes.",
         "managedAccountUnsupported": "While a Claude account is added in WSL, Claude chats need a Windows Claude account.",
         "launchFolderMissing": "The folder this chat ran in no longer exists. Restore it to continue this chat.",
         "historyInOtherAccount": "This chat's history is in another Claude account. Switch back to that account to continue it.",
@@ -18297,6 +18303,7 @@
         "attachmentInvalid": "An attachment on this message can't be sent to the agent.",
         "attachmentUnreadable": "An attachment on this message couldn't be read, so the message was not sent.",
         "emptyMessage": "This message is empty, so it was not sent.",
+        "commandUnavailable": "This command isn't available in {{agent}} chats, so it was not sent.",
         "queueFull": "Too many messages were waiting for the agent, so this one was not sent.",
         "writeFailed": "Orca couldn't hand this message to the agent, so it was not sent.",
         "cancelled": "This message was withdrawn before the agent started it.",
@@ -18552,6 +18559,7 @@
         "permissionAskSharedDescription": "Asks before edits or commands it isn't already allowed to make",
         "permissionAcceptEdits": "Accept edits",
         "permissionAcceptEditsDescription": "Approves file edits and file commands; asks for the rest",
+        "permissionAcceptEditsAntigravityDescription": "Approves file edits; asks for the rest",
         "permissionAuto": "Approve for me",
         "permissionAutoDescription": "Reviews approval requests for you",
         "permissionFullAccess": "Full access",
@@ -19399,6 +19407,7 @@
       "cancelling": "Cancelling…",
       "chatTitle": "Install {{agent}} to start chatting.",
       "damaged": "This copy of {{agent}} is damaged.",
+      "downloadSize": "{{size}} MB download.",
       "downloading": "Downloading {{done}} MB.",
       "downloadingOf": "Downloading {{done}} MB of {{total}} MB.",
       "external": "Uses the copy of {{agent}} found on this host.",

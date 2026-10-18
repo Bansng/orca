@@ -1,7 +1,7 @@
 import { useAppStore, type AppState } from '@/store'
 import { getAllWorktreesFromState, getRepoMapFromState } from '@/store/selectors'
 import { getLiveAgentStatusByWorktreeId } from '@/lib/worktree-activity-state'
-import { tabHasLivePty } from '@/lib/tab-has-live-pty'
+import { tabHasLivePty } from '../../../../shared/tab-has-live-pty'
 import { getWorktreeIdsWithStructuredChat } from '@/components/sidebar/visible-worktree-activity-inputs'
 import {
   getRepoExecutionHostId,

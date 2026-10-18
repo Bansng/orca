@@ -356,6 +356,19 @@ describe('the slices built from layout frames match the window restored from dis
     expect(titleOf(buildLayoutFrameSlices(input))).toEqual({ row: 'pane 2', label: 'pane 2' })
   })
 
+  it('keeps a live agent title a frame reports instead of resetting it as restore does', () => {
+    const input = frameInput('local', localDesktopSession())
+    const shell = input.layouts[GIT]!.tabs.find((tab) => tab.id === 'tab-shell')!
+    shell.terminal!.panes = shell.terminal!.panes.map((pane) => ({
+      ...pane,
+      liveTitle: '\u280b use Claude Sonnet'
+    }))
+    const row = buildLayoutFrameSlices(input).tabsByWorktree[GIT]!.find(
+      (tab) => tab.id === 'tab-shell'
+    )!
+    expect(row.title).toBe('\u280b use Claude Sonnet')
+  })
+
   it('restores a browser tab from a frame without its creation time, as the tab-bar tab’s', () => {
     const input = frameInput('local', localDesktopSession())
     const browser = input.layouts[GIT]!.browserTabs[0]!

@@ -1,7 +1,7 @@
 import { sameAgentStatusTerminalOwner } from '../../../../shared/agent-status-terminal-owner'
 import type { AppState } from '../types'
 import { resolveAgentStatusLiveEntryMainAgent } from './agent-status-live-entry-main-agent'
-import { resolveAgentStatusLiveEntryStateHistory } from './agent-status-live-entry-state-history'
+import { resolveAgentStatusLiveEntryStateHistory } from '../../../../shared/agent-status-live-entry-state-history'
 import type {
   MigrationUnsupportedPtyEntry,
   AgentStatusEntry

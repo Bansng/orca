@@ -1,8 +1,20 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { LOCAL_EXECUTION_HOST_ID } from '../../shared/execution-host'
+import { normalizeTerminalLayoutPtyOwnership } from '../../shared/terminal-layout-pty-ownership'
 import type { TerminalLayoutSnapshot } from '../../shared/terminal-tab-types'
 import type { WorkspaceSessionState } from '../../shared/workspace-session-state-types'
+import { loadWorkspaceLayout } from '../../shared/workspace-layout/workspace-layout-load'
+import { nameBasedLoadContext } from '../../shared/workspace-layout/workspace-layout-minted-ids'
+import {
+  addWorkspace,
+  emptySession,
+  GIT_KEY,
+  leaf
+} from '../../shared/workspace-layout/workspace-layout-session.test-fixture'
 import { windowSaveForMain } from './window-save-pane-trees'
 import { applyPtyBinding } from './loading-store/pty-binding-session-update'
+
+vi.mock('../../shared/layout-owner-switch', () => ({ ORCA_LAYOUT_OWNER_IS_MAIN: true }))
 
 const A = '11111111-1111-4111-8111-111111111111'
 const B = '22222222-2222-4222-8222-222222222222'
@@ -136,5 +148,49 @@ describe('pane trees main writes itself', () => {
 
     expect(session.terminalLayoutsByTabId['tab-1']?.root).toEqual(windows.root)
     expect(save.terminalLayoutsByTabId?.['tab-1']).toEqual(windows)
+  })
+})
+
+describe('windowSaveForMain after a duplicate-terminal repair', () => {
+  it('stores the repaired pane tree, so the next load still draws one pane', () => {
+    const session = addWorkspace(emptySession(), GIT_KEY, [
+      {
+        id: 'g1',
+        tabs: [
+          {
+            id: 'tab-a',
+            leaves: [
+              [leaf(1), 'pty-a'],
+              [leaf(2), 'pty-a']
+            ]
+          }
+        ]
+      }
+    ])
+    const paneRoot = (state: WorkspaceSessionState) => {
+      const workspace = loadWorkspaceLayout(LOCAL_EXECUTION_HOST_ID, state, nameBasedLoadContext())
+        .layout.workspaces[GIT_KEY]!
+      const tab = workspace.tabs.find((candidate) => candidate.id === 'tab-a')
+      return {
+        root: tab?.kind === 'terminal' ? tab.panes.root : undefined,
+        ptyId: workspace.leaves?.[leaf(1)]?.ptyId
+      }
+    }
+    const repaired = { root: { type: 'leaf', leafId: leaf(1) }, ptyId: 'pty-a' }
+    expect(paneRoot(session)).toEqual(repaired)
+
+    // The window saves its own repair of the same stored layout.
+    const windowLayout = normalizeTerminalLayoutPtyOwnership(
+      session.terminalLayoutsByTabId['tab-a']!
+    ).snapshot
+    const save = windowSaveForMain(
+      session,
+      { terminalLayoutsByTabId: { 'tab-a': windowLayout } },
+      'local'
+    )
+    const next = { ...session, terminalLayoutsByTabId: save.terminalLayoutsByTabId! }
+
+    expect(next.terminalLayoutsByTabId['tab-a']).toEqual(windowLayout)
+    expect(paneRoot(next)).toEqual(repaired)
   })
 })

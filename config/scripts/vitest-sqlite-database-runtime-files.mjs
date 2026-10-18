@@ -185,6 +185,7 @@ export const SQLITE_DATABASE_RUNTIME_INCLUDE = [
   'src/main/runtime/settled-worker-process-replacement.test.ts',
   'src/main/runtime/structured-agent-launch-args-wiring.test.ts',
   'src/main/runtime/structured-agent-session-codex-compact-exit.test.ts',
+  'src/main/runtime/structured-agent-session-codex-held-sends.test.ts',
   'src/main/runtime/structured-agent-session-codex-stopped-send-order.test.ts',
   'src/main/runtime/structured-agent-session-codex-turn-end-settlement.test.ts',
   'src/main/runtime/structured-agent-session-failure-logging.test.ts',

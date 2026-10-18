@@ -55,6 +55,7 @@ import {
   resetSshCredentialDeclinesForTests
 } from './ssh-credential-decline'
 import { isAuthError } from './ssh-connection-utils'
+import { recordSshUserDisconnected, resetSshUserDisconnectsForTests } from './ssh-user-disconnect'
 
 const target = {
   id: 'target-1',
@@ -269,5 +270,45 @@ describe('SshConnectionManager after a cancelled sign-in', () => {
 
     await expect(manager.connect(target)).resolves.toBeDefined()
     expect(mockState.instances).toHaveLength(1)
+  })
+})
+
+describe('SshConnectionManager after a user Disconnect', () => {
+  beforeEach(() => {
+    mockState.connectResults.length = 0
+    mockState.instances.length = 0
+    resetSshUserDisconnectsForTests()
+  })
+
+  it('refuses the background dials that revived the host, without opening a connection', async () => {
+    // A managed server's tunnel, its status checks, a census and host-resume recovery dial here.
+    const manager = new SshConnectionManager({ onStateChange: vi.fn() })
+    await manager.connect(target)
+    await manager.disconnect(target.id)
+    recordSshUserDisconnected(target.id)
+    mockState.instances.length = 0
+
+    const error = await manager.connect(target).catch((err: unknown) => err)
+
+    expect(error instanceof Error && error.message).toBe(
+      'Target 1 was disconnected. Connect to use it again.'
+    )
+    expect(error instanceof Error && isAuthError(error)).toBe(false)
+    expect(mockState.instances).toHaveLength(0)
+  })
+
+  it("does not lend a connection test's transport to a background dial", async () => {
+    const manager = new SshConnectionManager({ onStateChange: vi.fn() })
+    recordSshUserDisconnected(target.id)
+    await manager.connect(target, { probe: true })
+
+    await expect(manager.connect(target)).rejects.toThrow('was disconnected')
+  })
+
+  it("dials a user's connection test", async () => {
+    const manager = new SshConnectionManager({ onStateChange: vi.fn() })
+    recordSshUserDisconnected(target.id)
+
+    await expect(manager.connect(target, { probe: true })).resolves.toBeDefined()
   })
 })

@@ -23,6 +23,7 @@ import {
   resumeHostAutomaticRestores
 } from '@/runtime/resume-host-automatic-restores'
 import type { ConnectPanePtySession } from './connect-pane-pty-session'
+import { releaseHiddenAgentResumeHold } from './hidden-agent-resume-deferral'
 import type {
   ColdRestoreAgentResumeStartup,
   FreshSpawnOptions,
@@ -229,5 +230,6 @@ export function installSpawnDeferredSleep(session: ConnectPanePtySession): void 
     session.deferredSpawn = null
     cancelDeferredRestoreRetry(session.cacheKey)
     clearPaneSpawnDeferral(session.cacheKey)
+    releaseHiddenAgentResumeHold(session)
   }
 }

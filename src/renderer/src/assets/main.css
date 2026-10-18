@@ -1288,8 +1288,8 @@ html.native-shell .app-layout {
   align-items: center;
   /* Keep adjacent actions aligned with the app's compact toolbar spacing. */
   gap: 4px;
-  min-height: 36px;
-  padding: 6px 14px;
+  min-height: 32px;
+  padding: 3px 14px;
   background: var(--editor-surface);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   flex-shrink: 0;

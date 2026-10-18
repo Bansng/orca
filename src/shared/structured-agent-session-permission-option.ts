@@ -39,8 +39,19 @@ const OTHER_AGENT_DESCRIPTIONS: Partial<Record<AgentChatPermissionMode, string>>
   ask: "Asks before edits or commands it isn't already allowed to make"
 }
 
+const ANTIGRAVITY_DESCRIPTIONS: Partial<Record<AgentChatPermissionMode, string>> = {
+  ...OTHER_AGENT_DESCRIPTIONS,
+  'accept-edits': 'Approves file edits; asks for the rest'
+}
+
+const AGENT_DESCRIPTIONS = new Map<string, Partial<Record<AgentChatPermissionMode, string>>>([
+  ['codex', CODEX_DESCRIPTIONS],
+  ['claude', {}],
+  ['antigravity', ANTIGRAVITY_DESCRIPTIONS]
+])
+
 function agentDescriptions(agent: string): Partial<Record<AgentChatPermissionMode, string>> {
-  return agent === 'codex' ? CODEX_DESCRIPTIONS : agent === 'claude' ? {} : OTHER_AGENT_DESCRIPTIONS
+  return AGENT_DESCRIPTIONS.get(agent) ?? OTHER_AGENT_DESCRIPTIONS
 }
 
 /** Only decides whether the menu offers Approve for me, by the host's own rule. */

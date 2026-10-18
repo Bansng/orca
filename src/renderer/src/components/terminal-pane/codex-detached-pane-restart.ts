@@ -25,7 +25,7 @@ import {
   hasCachedWindowsTerminalCapabilities
 } from '@/lib/windows-terminal-capabilities'
 import { ptyDataHandlers, unregisterPtyDataHandlers } from './pty-dispatcher'
-import { collectLeafIds } from './terminal-pane-layout-tree'
+import { collectLeafIds } from '../../../../shared/terminal-pane-layout-tree'
 import { discardPreHandlerPtyState } from './pty-pre-handler-buffer'
 import { disposeParkedTerminalWatchersForPtyIds } from './terminal-parked-watcher-registry'
 import { buildPaneIdentityEnv, getWorkspacePath } from './detached-pane-restart-spawn-context'

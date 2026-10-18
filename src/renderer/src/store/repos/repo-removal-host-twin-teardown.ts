@@ -6,7 +6,7 @@ import { buildTerminalTabRetirementPlans } from '../slices/terminal-tab-retireme
 import { omitSleepingAgentSessionsForWorktrees } from '../slices/worktrees/teardown/sleeping-agent-session-omission'
 import type { RecentlyClosedTabKind } from '../slices/recently-closed-tabs'
 import { omitRecordKeys } from '../slices/worktrees/teardown/record-key-omission'
-import { cancelStructuredLaunchesForWorktrees } from '../slices/worktrees/teardown/worktree-purge-state'
+import { cancelStructuredLaunchesForWorktrees } from '../slices/worktrees/teardown/purged-structured-launch-retirement'
 import {
   belongsToRemovedHost,
   collectRemovedHostTwinState,

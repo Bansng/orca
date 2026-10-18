@@ -36,6 +36,10 @@
         "saveFailed": "无法保存聊天命名设置。",
         "searchAgent": "智能体",
         "searchTemplate": "命令模板"
+      },
+      "providers": {
+        "title": "提供方",
+        "antigravityDescription": "Antigravity 聊天运行在 Orca 下载到此主机的服务器上，与 agy CLI 相互独立。"
       }
     },
     "terminal": {
@@ -544,7 +548,9 @@
           "presenceProfileOverflow": "{{names}} 及另外 {{count}} 个",
           "removeProjectFailed": "删除项目失败",
           "wslFilesystemBoundaryTitle": "该项目存储在 Windows 驱动器上",
-          "wslFilesystemBoundaryDescription": "该项目的 Git 在 {{distro}} 中运行，它通过 WSL 文件系统桥到达 Windows 驱动器。预计 git 的速度比存储在 {{distro}} 内的副本慢大约 20 倍。"
+          "wslFilesystemBoundaryDescription": "该项目的 Git 在 {{distro}} 中运行，它通过 WSL 文件系统桥到达 Windows 驱动器。预计 git 的速度比存储在 {{distro}} 内的副本慢大约 20 倍。",
+          "moveToGroupOtherHost": "无法将项目移动到分组",
+          "moveToGroupOtherHostDesc": "运行此项目的计算机上没有此分组。项目只能加入保存在其所在计算机上的分组。"
         },
         "settings": {
           "e12dab333b": "切换服务器失败",
@@ -18020,7 +18026,7 @@
         "signInThenSend": "请登录，然后重新发送您的消息。",
         "historyTooLarge": "此对话的历史记录过大，无法在此恢复。",
         "managedAccountEnvOverride": "此次 Claude 启动设置了自己的 Anthropic 登录变量。请移除这些变量以使用受管理的 Claude 账户。",
-        "accountSwitchInProgress": "正在切换 Claude 账户。请在切换完成后重试。",
+        "accountSwitchInProgress": "正在此主机上更改 {{agent}} 的设置。请在完成后重试。",
         "managedAccountUnsupported": "当 WSL 中添加了 Claude 账户时，Claude 聊天需要 Windows Claude 账户。",
         "launchFolderMissing": "此聊天运行所在的文件夹已不存在。请恢复该文件夹以继续此聊天。",
         "historyInOtherAccount": "此聊天的历史记录位于另一个 Claude 账户中。请切换回该账户以继续此聊天。",
@@ -18049,6 +18055,7 @@
         "attachmentInvalid": "此消息中的附件无法发送给智能体。",
         "attachmentUnreadable": "无法读取此消息中的附件，因此消息未发送。",
         "emptyMessage": "此消息为空，因此未发送。",
+        "commandUnavailable": "此命令在 {{agent}} 聊天中不可用，因此未发送。",
         "queueFull": "等待智能体处理的消息过多，因此此消息未发送。",
         "writeFailed": "Orca 无法将此消息交给智能体，因此消息未发送。",
         "cancelled": "此消息在智能体开始处理前已撤回。",
@@ -18255,6 +18262,7 @@
         "permissionAskSharedDescription": "在执行尚未获准的编辑或命令前询问",
         "permissionAcceptEdits": "接受编辑",
         "permissionAcceptEditsDescription": "批准文件编辑和文件命令；其余操作会询问",
+        "permissionAcceptEditsAntigravityDescription": "批准文件编辑；其余操作会询问",
         "permissionAuto": "替我批准",
         "permissionAutoDescription": "代你审核批准请求",
         "permissionFullAccess": "完全访问",
@@ -19183,6 +19191,7 @@
       "cancelling": "正在取消…",
       "chatTitle": "安装 {{agent}} 即可开始聊天。",
       "damaged": "此 {{agent}} 副本已损坏。",
+      "downloadSize": "下载大小 {{size}} MB。",
       "downloading": "正在下载 {{done}} MB。",
       "downloadingOf": "正在下载 {{done}} MB / {{total}} MB。",
       "external": "使用在此主机上找到的 {{agent}} 副本。",

@@ -68,7 +68,8 @@ export function registerRendererShutdownCheckpointHandler(store: Store): void {
               () => store.getWorkspaceSession(hostId),
               hostId,
               stage,
-              'shutdown-checkpoint'
+              'shutdown-checkpoint',
+              state.terminalLayoutsByTabId
             )
           } else {
             stage()

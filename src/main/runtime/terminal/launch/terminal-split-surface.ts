@@ -64,15 +64,13 @@ export abstract class OrcaRuntimeWithSplitPtyBackedTerminal extends OrcaRuntimeW
       cwd: workspace.path,
       command: opts.command,
       commandDelivery: 'provider',
-      env: await this.buildTerminalWorkspaceEnv(
+      env: this.buildTerminalWorkspaceEnv(
         workspace,
         // A split is a plain shell: it takes the host's account pointer, as every create does.
         {
           ...(workspace.connectionId ? {} : this.accounts.hostLaunchEnvFor(null)),
           ...opts.env
-        },
-        paneKey,
-        parentTabId
+        }
       ),
       envToDelete: opts.envToDelete,
       connectionId: workspace.connectionId,

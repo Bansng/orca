@@ -65,7 +65,9 @@ function createCodexAdapter(context: StructuredAgentAdapterContext): StructuredA
     onChildWorkEvidence: (sessionId, evidence, producer) =>
       host()?.publishChildWorkEvidence(sessionId, evidence, producer),
     onDispatchSettledLate: followUps.onDispatchSettledLate,
-    onPrimaryThreadStoppedRunning: followUps.releaseUnansweredDispatches,
+    // After the frame being read: what the child holds is re-derived, never published mid-frame.
+    onHeldSendsChanged: ({ sessionId }) =>
+      queueMicrotask(() => host()?.publishWorkChanged(sessionId)),
     logger: deps.logger,
     onEvent: (event) => {
       // Every exit, expected or not: the host ends that child's record.

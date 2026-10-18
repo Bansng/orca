@@ -33,13 +33,19 @@ export function registerSessionHandlers(store: Store, runtime: OrcaRuntimeServic
 
   // Switch point: main keeps its own pane trees over the window's, and reports any layout the
   // save still changes.
-  const saveFromWindow = (hostId: string | null | undefined, write: () => void, source: string) =>
+  const saveFromWindow = (
+    hostId: string | null | undefined,
+    write: () => void,
+    source: string,
+    save: WorkspaceSessionState | WorkspaceSessionPatch
+  ) =>
     ORCA_LAYOUT_OWNER_IS_MAIN
       ? writeWindowSaveWatchingLayout(
           () => store.getWorkspaceSession(hostId),
           hostId,
           write,
-          source
+          source,
+          save.terminalLayoutsByTabId
         )
       : write()
   const forMain = <T extends WorkspaceSessionState | WorkspaceSessionPatch>(
@@ -55,7 +61,8 @@ export function registerSessionHandlers(store: Store, runtime: OrcaRuntimeServic
       saveFromWindow(
         hostId,
         () => store.setWorkspaceSession(forMain(args, hostId), hostId),
-        'session:set'
+        'session:set',
+        args
       )
     }
   })
@@ -65,7 +72,8 @@ export function registerSessionHandlers(store: Store, runtime: OrcaRuntimeServic
       saveFromWindow(
         hostId,
         () => store.patchWorkspaceSession(forMain(args, hostId), hostId),
-        'session:patch'
+        'session:patch',
+        args
       )
     }
   })

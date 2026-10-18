@@ -6,6 +6,7 @@ import {
 } from '../../../../shared/execution-host'
 import type { RuntimeClientEvent } from '../../../../shared/runtime-client-events'
 import type { AppState } from '../../store/types'
+import { hostWorktreeTarget } from '../../../../shared/worktree/host-qualified-identity'
 import type { WorktreeSortOrderUpdate } from '../../../../shared/worktree/sort-order-update'
 import {
   hasHostRowsForSortOrders,
@@ -189,7 +190,7 @@ export function createWorktreeEventRuntime(
         // A forced-local refresh owns only the local host's panes.
         (options?.forceLocalOwner ? LOCAL_EXECUTION_HOST_ID : undefined)
       afterState.purgeWorktreeTerminalState(
-        purgeHostId ? removed.map((id) => ({ id, hostId: purgeHostId })) : removed
+        purgeHostId ? removed.map((id) => hostWorktreeTarget({ id, hostId: purgeHostId })) : removed
       )
       afterState.removeWorkspaceSpaceWorktrees(removed)
     }

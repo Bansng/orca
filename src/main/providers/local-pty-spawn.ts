@@ -44,10 +44,7 @@ export async function spawnLocalPty(
   if (args.attachOnly) {
     throw new SessionNotFoundError(args.sessionId ?? '')
   }
-  // Why: the jcode runtime dir is stamped into the spawn env by the pty:spawn
-  // handler and the runtime env builder; create it async here at the provider
-  // chokepoint both paths pass through, keeping the sync spawn path free of
-  // filesystem syscalls.
+  // Validate the selected runtime directory before starting a fresh local process.
   const jcodeRuntimeDir = args.env?.[JCODE_RUNTIME_DIR_ENV_KEY]
   if (jcodeRuntimeDir) {
     try {

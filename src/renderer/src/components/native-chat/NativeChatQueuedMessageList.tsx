@@ -9,7 +9,11 @@ import {
   NativeChatQueuedMessageCard,
   queuedMessageCardCaption
 } from './NativeChatQueuedMessageCard'
-import type { StructuredAgentSessionQueuedMessagesController } from './use-structured-agent-session-queued-messages'
+import type {
+  QueuedMessagesPendingAction,
+  StructuredAgentSessionQueuedMessagesController
+} from './use-structured-agent-session-queued-messages'
+import { NativeChatPendingIcon } from './NativeChatPendingIcon'
 import type { AgentSessionFailureFact } from '../../../../shared/agent-session-failure'
 import { NATIVE_CHAT_ROOT_SELECTOR } from '@/lib/native-chat-paste-request'
 import { focusNativeChatPromptCard } from './use-native-chat-prompt-card-focus'
@@ -108,7 +112,7 @@ export function NativeChatQueuedMessageList({
               count={cards.length}
               attentionCaption={attentionCaption}
               pause={pause}
-              queueBusy={controller.queueBusy}
+              queuePending={controller.queuePending}
               clearCapable={controller.clearCapable}
               expanded={expanded}
               listId={listId}
@@ -137,7 +141,7 @@ export function NativeChatQueuedMessageList({
                   statedFailures={statedFailures}
                   showsSteerShortcut={controller.queueCapable && card === newest}
                   steerHeld={steerHeld}
-                  busy={controller.busy(card.messageId)}
+                  pending={controller.pending(card.messageId)}
                   onSteer={() => refocusAfter(controller.steer(card.messageId))}
                   onDelete={() => refocusAfter(controller.remove(card.messageId))}
                   onEdit={
@@ -164,7 +168,7 @@ function NativeChatQueueHeader({
   count,
   attentionCaption,
   pause,
-  queueBusy,
+  queuePending,
   clearCapable,
   expanded,
   listId,
@@ -175,7 +179,7 @@ function NativeChatQueueHeader({
   count: number
   attentionCaption: string | null
   pause: { reason: string } | null
-  queueBusy: boolean
+  queuePending: QueuedMessagesPendingAction | null
   clearCapable: boolean
   expanded: boolean
   listId: string
@@ -216,14 +220,24 @@ function NativeChatQueueHeader({
             type="button"
             variant="ghost"
             size="xs"
-            disabled={!clearCapable || queueBusy}
+            disabled={!clearCapable || queuePending !== null}
             onClick={onClearAll}
           >
-            <Trash2 />
+            <NativeChatPendingIcon pending={queuePending === 'clear'} className="size-3">
+              <Trash2 className="size-3" />
+            </NativeChatPendingIcon>
             {translate('components.native-chat.queuedMessages.clearAll', 'Clear all')}
           </Button>
-          <Button type="button" variant="ghost" size="xs" disabled={queueBusy} onClick={onResume}>
-            <Play />
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            disabled={queuePending !== null}
+            onClick={onResume}
+          >
+            <NativeChatPendingIcon pending={queuePending === 'resume'} className="size-3">
+              <Play className="size-3" />
+            </NativeChatPendingIcon>
             {translate('components.native-chat.queuedMessages.resume', 'Resume')}
           </Button>
         </>

@@ -113,9 +113,8 @@ export type CodexStructuredSessionAdapterDeps = {
         } & AgentJournalDispatchRejection)
     )
   ) => void
-  /** Codex reported its thread not running with no turn open: a send whose
-   *  dispatch was never answered is owed nothing after this. */
-  onPrimaryThreadStoppedRunning?: (input: { sessionId: string }) => void
+  /** The sends Codex holds (`CodexDispatchEchoes.heldSends`) changed with no journal row. */
+  onHeldSendsChanged?: (input: { sessionId: string }) => void
   openConnection?: typeof openCodexAppServerConnection
   readProcessStartTime?: (pid: number) => Promise<number | null>
   mintLinkId?: () => string
