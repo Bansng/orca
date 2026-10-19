@@ -3,12 +3,12 @@ import {
   getProcessOutputFields,
   iterateProcessOutputLines
 } from '../../shared/process-output-field-scanner'
-import { parseUnameToRelayPlatform, type RelayPlatform } from './remote-frame-protocol'
+import { parseUnameToRelayPlatform, type RelayPlatform } from './remote-exec/remote-frame-protocol'
 import {
   execCommand,
   isSshExecTimeout,
   isUnconfirmedSshCommandTermination
-} from './remote-exec-command'
+} from './remote-exec/remote-exec-command'
 import { isSshSessionLimitError } from './ssh-session-limit-error'
 import { getRemoteHostPlatform, type RemoteHostPlatform } from './ssh-remote-platform'
 import { powerShellCommand } from './ssh-remote-powershell'

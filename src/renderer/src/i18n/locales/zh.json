@@ -582,7 +582,8 @@
             "76deec8f58": "切换组织失败",
             "7d4bc516ee": "切换配置文件失败",
             "f518e89aa5": "该项目已存在于那个配置文件中",
-            "f03ae7f27b": "转移项目失败"
+            "f03ae7f27b": "转移项目失败",
+            "signInTimedOut": "登录超时"
           }
         },
         "runtime": {
@@ -3429,7 +3430,9 @@
             "copiedLink": "已复制链接",
             "copyLinkFailed": "复制链接失败",
             "downloadOpenWithDefaultApp": "下载并使用默认应用程序打开",
-            "downloadOpenFailed": "无法下载“{{value0}}”。"
+            "downloadOpenFailed": "无法下载“{{value0}}”。",
+            "openInThisGroup": "在此分组中打开",
+            "openInThisGroupRefused": "无法在此分组中打开 {{value0}}"
           },
           "TerminalQuickCommandsSubmenu": {
             "3ccc7981bb": "主机不可用",
@@ -6448,8 +6451,7 @@
         },
         "MarkdownImageLightbox": {
           "image": "Image",
-          "expand": "Expand image",
-          "close": "Close"
+          "expand": "Expand image"
         },
         "WorktreeDeveloperMenu": {
           "developer": "Developer",
@@ -15680,7 +15682,9 @@
           "1829437fce": "新 Markdown"
         },
         "DiagramViewerModal": {
-          "title": "图表",
+          "title": "图表"
+        },
+        "PanZoomImageDialog": {
           "zoomOut": "缩小",
           "zoomIn": "放大",
           "fit": "适应屏幕",
@@ -17945,6 +17949,14 @@
         "a62f9db53d": "Cancel",
         "c77189bc0c": "Update filter",
         "19af906d12": "Save filter"
+      },
+      "OrcaSignInProgress": {
+        "waiting": "正在等待在浏览器中登录",
+        "copyLink": "复制登录链接",
+        "copied": "已复制登录链接",
+        "copyFailed": "无法复制链接。",
+        "signingIn": "正在登录…",
+        "cancel": "取消"
       }
     },
     "i18n": {
@@ -18280,7 +18292,6 @@
         "imageSaving": "保存粘贴的图像...",
         "pendingAttachmentLimit": "太多附件正在等待。在附加更多内容之前先完成创作。",
         "viewAttachment": "查看图片",
-        "imagePreview": "全尺寸图像预览",
         "imagePreviewUnavailable": "预览不可用",
         "copyImage": "复制图片",
         "copyImageFailed": "无法复制图片",
@@ -19221,7 +19232,6 @@
       "keywordIssuePicker": "议题选择器"
     },
     "managed-runtime": {
-      "cancel": "取消安装",
       "cancelled": "已取消安装。",
       "cancelling": "正在取消…",
       "damaged": "此 {{agent}} 副本已损坏。",
@@ -19238,10 +19248,17 @@
       "notInstalled": "未安装。",
       "progress": "{{agent}} 下载",
       "readFailed": "无法检查此主机上的 {{agent}}。正在重试。",
-      "reinstall": "重新安装 {{agent}}",
+      "reinstall": "重新安装",
+      "remove": "移除已下载的运行时",
+      "removeConfirm": "移除",
+      "removeDescription": "正在运行的 {{agent}} 聊天会停止。其历史记录会保留。",
+      "removeKeep": "取消",
+      "removeTitle": "要从 {{host}} 移除已下载的 {{agent}} 运行时吗？",
+      "removing": "正在移除…",
       "retry": "重试安装",
+      "thisComputer": "此计算机",
       "unavailable": "{{agent}} 在此主机上不可用。",
-      "update": "更新 {{agent}}",
+      "update": "更新",
       "verifying": "正在检查已下载的运行时。",
       "installTitle": "安装 {{agent}} 以开始聊天",
       "continueTitle": "安装 {{agent}} 以继续",

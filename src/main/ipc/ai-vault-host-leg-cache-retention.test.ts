@@ -25,7 +25,7 @@ vi.mock('../ai-vault/cached-session-list', () => ({
 vi.mock('../ai-vault/ssh-session-list', () => ({
   scanSshAiVaultSessions: mocks.ssh
 }))
-vi.mock('./ssh', () => ({
+vi.mock('./ssh/ssh', () => ({
   getActiveSshAiVaultHostInfos: () =>
     ['one', 'two', 'three', 'four'].map((targetId) => ({ targetId }))
 }))

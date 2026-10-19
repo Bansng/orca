@@ -1,3 +1,4 @@
+import type { StructuredMobileSendAttachment } from './use-mobile-structured-send-with-outcome'
 import type { MobileSessionView } from '../storage/session-view-preferences'
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react'
 import type {
@@ -104,11 +105,7 @@ export type MobileNativeChatController = {
     text: string,
     images?: string[],
     deadline?: number,
-    attachments?: readonly {
-      id?: string
-      path: string
-      previewUri: string
-    }[],
+    attachments?: readonly StructuredMobileSendAttachment[],
     sentAt?: number
   ) => Promise<MobileNativeChatSendOutcome>
   /** Launch-context text still parked on the agent's TUI input line, or null.

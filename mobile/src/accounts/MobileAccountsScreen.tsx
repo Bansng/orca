@@ -356,6 +356,9 @@ export function MobileAccountsScreen() {
           style={styles.iconButton}
           onPress={refresh}
           disabled={!client || refreshing || connState !== 'connected'}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Refresh accounts"
         >
           {refreshing ? (
             <ActivityIndicator size="small" color={colors.textSecondary} />

@@ -1,9 +1,9 @@
-import type * as ExecCommandModule from '../../ssh/remote-exec-command'
+import type * as ExecCommandModule from '../../ssh/remote-exec/remote-exec-command'
 import path from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { NODE_RUNTIME_ASSETS, NODE_RUNTIME_PIN } from '../../../shared/node-runtime-pin'
 import type { OrcadHostTransport } from '../../ssh/orcad-host-transport'
-import { execCommand } from '../../ssh/remote-exec-command'
+import { execCommand } from '../../ssh/remote-exec/remote-exec-command'
 import { uploadRelayDirectory } from './remote-install-transfers'
 import {
   ensureRemoteOrcadNodeRuntime,
@@ -25,7 +25,7 @@ import {
 import { getRemoteHostPlatform } from '../../ssh/ssh-remote-platform'
 import { decodeRemotePowerShellScript } from '../../ssh/ssh-remote-powershell'
 
-vi.mock('../../ssh/remote-exec-command', async (importOriginal) => ({
+vi.mock('../../ssh/remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))

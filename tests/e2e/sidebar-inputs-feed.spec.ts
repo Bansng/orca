@@ -54,7 +54,7 @@ test.describe('switch on', () => {
       const first = await settle(socket, refreshSidebarInputs(INITIAL_SIDEBAR_INPUTS_FEED_STATE))
       expect(first.kinds.every((kind) => kind === 'snapshot')).toBe(true)
       const installed = first.state.installed
-      expect(installed?.domains.get('temporal')?.has('sortSnapshot')).toBe(true)
+      expect(installed?.domains.get('temporal')?.has('retention')).toBe(true)
       expect(pinned(first.state)).not.toContain(worktreeId)
 
       await orcaPage.evaluate(

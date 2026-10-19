@@ -34,6 +34,8 @@ export type RuntimeTerminalSummary = {
   tabId: string
   leafId: string
   title: string | null
+  /** A user's name for this pane from the host's saved layout; absent when unset or the host predates it. */
+  paneTitle?: string
   connected: boolean
   writable: boolean
   lastOutputAt: number | null

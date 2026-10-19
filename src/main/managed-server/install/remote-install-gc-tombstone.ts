@@ -1,5 +1,8 @@
 import type { RemoteInstallTransport } from './remote-install-transport'
-import { execCommand, isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import {
+  execCommand,
+  isUnconfirmedSshCommandTermination
+} from '../../ssh/remote-exec/remote-exec-command'
 import { remoteInstallGcTombstoneRegex, type RemoteInstallModel } from './remote-install-model'
 import { removeRemoteTreeCommand } from '../../ssh/ssh-remote-commands'
 import {

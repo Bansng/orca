@@ -9,6 +9,9 @@ export type SshTargetSummary = {
 }
 export type EnvironmentSummary = { id: string; name: string }
 
+/** The name `orca host list` prints for its own `--host local` row. */
+export const LOCAL_HOST_LIST_NAME = 'this machine'
+
 export type HostAlternatives = {
   sshTargets: readonly SshTargetSummary[]
   environments: readonly EnvironmentSummary[]
@@ -32,9 +35,22 @@ export function findSshTargetByName(
   return byLabel.length === 1 ? byLabel[0] : undefined
 }
 
+// Why: cmd.exe passes single quotes through literally, so `--host 'my box'` from a POSIX habit
+// arrives quoted; a host or project name never legitimately starts and ends with the same quote.
+export function stripWrappingQuotes(value: string): string {
+  const quote = value[0]
+  return value.length >= 2 && (quote === "'" || quote === '"') && value.at(-1) === quote
+    ? value.slice(1, -1)
+    : value
+}
+
+export function normalizeTypedName(value: string): string {
+  return stripWrappingQuotes(value.trim()).trim().toLowerCase()
+}
+
 function matchesByLabel(targets: readonly SshTargetSummary[], name: string): SshTargetSummary[] {
-  const wanted = name.trim().toLowerCase()
-  return targets.filter((target) => target.label.trim().toLowerCase() === wanted)
+  const wanted = normalizeTypedName(name)
+  return targets.filter((target) => normalizeTypedName(target.label) === wanted)
 }
 
 export function ambiguousSshTargets(
@@ -63,8 +79,8 @@ function matchesByEnvironmentName(
   environments: readonly EnvironmentSummary[],
   name: string
 ): EnvironmentSummary[] {
-  const wanted = name.trim().toLowerCase()
-  return environments.filter((environment) => environment.name.trim().toLowerCase() === wanted)
+  const wanted = normalizeTypedName(name)
+  return environments.filter((environment) => normalizeTypedName(environment.name) === wanted)
 }
 
 export function ambiguousEnvironments(
@@ -163,10 +179,15 @@ async function enrichLegacySshTargetStates(
 // target ids are machine-generated (`ssh-<timestamp>-<random>`), the label a caller actually
 // knows never matches one, so this fires on the common spelling rather than a rare typo.
 // Resolving the label and naming the alternative is what makes the failure recoverable.
+// `flagSpelling` names the flag the way the caller typed it, so a bare `--host trader-local`
+// is not echoed back as `--host ssh:trader-local` — a spelling they did not use.
 export async function resolveSshHostTargetId(
   client: RuntimeClient,
   targetId: string,
-  environments: readonly EnvironmentSummary[]
+  environments: readonly EnvironmentSummary[],
+  flagSpelling = `--host ssh:${targetId}`,
+  // A bare name was also tried as this machine and as a paired server, so say "host".
+  bareName = false
 ): Promise<string> {
   const targets = await listSshTargets(client)
   const matched = findSshTargetByName(targets, targetId)
@@ -178,7 +199,7 @@ export async function resolveSshHostTargetId(
   if (ambiguous.length > 0) {
     throw new RuntimeClientError(
       'invalid_argument',
-      `Ambiguous SSH target in --host ssh:${targetId}: ${ambiguous.length} targets share that label. Use the target id.`,
+      `Ambiguous SSH target in ${flagSpelling}: ${ambiguous.length} targets share that label. Use the target id.`,
       {
         knownSshTargets: ambiguous,
         nextSteps: ambiguous.map((target) => `Use --host ssh:${target.id} for ${target.label}.`)
@@ -187,7 +208,9 @@ export async function resolveSshHostTargetId(
   }
   throw new RuntimeClientError(
     'invalid_argument',
-    `Unknown SSH target in --host ssh:${targetId}: this Orca host has no SSH target named or with id ${targetId}.`,
+    bareName
+      ? `Unknown host in ${flagSpelling}: it is not this machine or a paired Orca server the command can use, and the connected Orca host has no SSH target named ${targetId}. Run \`orca host list\` to see every name.`
+      : `Unknown SSH target in ${flagSpelling}: this Orca host has no SSH target named or with id ${targetId}.`,
     {
       knownSshTargets: targets,
       knownEnvironments: environments,

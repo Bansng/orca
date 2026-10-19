@@ -22,9 +22,9 @@ import {
   createOrcadDecommissionTransaction,
   withOrcadDecommissionProcessExited,
   withOrcadDecommissionStopDispatched
-} from '../../ssh/orcad-decommission-transaction'
-import { readRemoteOrcadManagedStopTarget } from '../../ssh/orcad-managed-remote-stop'
-import { settleOrcadDecommissionStop } from '../../ssh/orcad-decommission-stop'
+} from '../lifecycle/orcad-decommission-transaction'
+import { readRemoteOrcadManagedStopTarget } from '../lifecycle/orcad-managed-remote-stop'
+import { settleOrcadDecommissionStop } from '../lifecycle/orcad-decommission-stop'
 import type { OrcadSlotOptions } from '../../ssh/orcad-recovery-slot'
 import type { OrcadDecommissionResult } from '../../../shared/orcad-decommission'
 import type { OrcadTerminalCensus } from '../../../shared/orcad-terminal-census'

@@ -12,6 +12,8 @@ export type NativeChatFileLinkContext = {
   worktreeId: string
   worktreePath: string
   runtimeEnvironmentId: string | null
+  /** The chat's own tab (terminal or agent-session); editor opens place beside its group. */
+  sourceTabId?: string
 }
 
 export type NativeChatResolvedFileLink = {
@@ -120,7 +122,8 @@ function resolveNativeChatFileLinkContextForOwner(
   return {
     worktreeId,
     worktreePath,
-    runtimeEnvironmentId: getRuntimeEnvironmentIdForWorktree(state, worktreeId)
+    runtimeEnvironmentId: getRuntimeEnvironmentIdForWorktree(state, worktreeId),
+    sourceTabId: terminalTabId
   }
 }
 

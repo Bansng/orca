@@ -25,8 +25,8 @@ import {
   getOrcaControlSocketPath,
   isOpenSshConfigBackedTarget,
   type SystemSshBuildArgsOptions
-} from './system-ssh-args'
-import { spawnSystemSshCommand } from './system-ssh-command'
+} from './system-transport/system-ssh-args'
+import { spawnSystemSshCommand } from './system-transport/system-ssh-command'
 import { removeControlSocketPath } from './ssh-control-socket'
 import {
   INITIAL_RETRY_ATTEMPTS,
@@ -61,7 +61,7 @@ import {
   siteConfigMayRestrictHostKeys,
   sshGArgsForHost,
   type SshResolvedConfig
-} from './ssh-g-config-resolution'
+} from './config/ssh-g-config-resolution'
 import {
   boundSshHostKeyStoreFile,
   loadTrustedHostKeys,
@@ -73,7 +73,7 @@ import {
   loadKnownHostsEvidence,
   resolveKnownHostsFiles,
   resolveKnownHostsLookupHost
-} from './ssh-known-hosts-source'
+} from './config/ssh-known-hosts-source'
 import {
   createCancelledConnectAttemptError,
   isCancelledConnectAttemptError
@@ -83,7 +83,7 @@ import {
   isTransientReconnectError
 } from './ssh-reconnect-error-classification'
 import { SshReconnectLadder } from './ssh-reconnect-ladder'
-import { mayUserSshConfigClaimAlias } from './ssh-config-alias-claim'
+import { mayUserSshConfigClaimAlias } from './config/ssh-config-alias-claim'
 import {
   didDeferKeyboardInteractive,
   didOfferKeyboardInteractive,

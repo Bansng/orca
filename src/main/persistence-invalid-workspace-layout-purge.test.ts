@@ -24,7 +24,7 @@ import { WorkspaceLayoutStream } from './runtime/workspace-layout-stream'
 import { windowViewSaveForMain } from './persistence/window-save-view'
 
 vi.mock('../shared/layout-owner-switch', () => ({ ORCA_LAYOUT_OWNER_IS_MAIN: true }))
-vi.mock('./ssh/ssh-config-parser', () => ({
+vi.mock('./ssh/config/ssh-config-parser', () => ({
   loadUserSshConfig: vi.fn(),
   sshConfigHostsToTargets: vi.fn()
 }))

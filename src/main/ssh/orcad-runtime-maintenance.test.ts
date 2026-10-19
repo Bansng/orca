@@ -9,7 +9,7 @@ import {
   MANAGED_PREVIOUS_VERSION,
   MANAGED_VERSION,
   managedReadiness
-} from './orcad-managed-lifecycle-test-fixture'
+} from '../managed-server/lifecycle/orcad-managed-lifecycle-test-fixture'
 
 const mocks = vi.hoisted(() => {
   const state: { store: unknown } = { store: null }
@@ -52,19 +52,22 @@ vi.mock('../orcad/orcad-artifact-materializer', () => ({
   materializeOrcadArtifact: async () => '/local/orcad'
 }))
 vi.mock('./orcad-local-build-hash', () => ({ computeLocalOrcadBuildHash: () => 'local-hash' }))
-vi.mock('./orcad-managed-tunnel', () => ({
+vi.mock('../managed-server/lifecycle/orcad-managed-tunnel', () => ({
   ensureOrcadManagedTunnel: mocks.ensureTunnel,
   rebuildOrcadManagedTunnel: mocks.rebuildTunnel
 }))
-vi.mock('./orcad-managed-wake', () => ({ wakeStoppedManagedOrcad: mocks.wake }))
-vi.mock('./orcad-managed-migration-status', () => ({
+vi.mock('../managed-server/lifecycle/orcad-managed-wake', () => ({
+  wakeStoppedManagedOrcad: mocks.wake
+}))
+vi.mock('../managed-server/lifecycle/orcad-managed-migration-status', () => ({
   findIncompleteManagedOrcadMigration: mocks.pendingMigration
 }))
 vi.mock('../managed-server/activation/orcad-activation-transaction-store', () => ({
   readOrcadActivationTransaction: async () => null
 }))
 
-const { getManagedOrcadRuntimeStatus } = await import('./orcad-runtime-status')
+const { getManagedOrcadRuntimeStatus } =
+  await import('../managed-server/lifecycle/orcad-runtime-status')
 const {
   recoverManagedOrcadEnvironment,
   rollbackManagedOrcadEnvironment,

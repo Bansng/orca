@@ -245,10 +245,12 @@ export function useWorktreeJumpPaletteWorktrees({
         repoMap,
         repoMapByHostIdentity: repoByHostIdentity,
         checksReviewByWorktree,
-        context: paletteSearchContext
+        context: paletteSearchContext,
+        lastVisitedAtByWorktreeId
       }),
     [
       checksReviewByWorktree,
+      lastVisitedAtByWorktreeId,
       paletteSearchQuery,
       paletteSearchContext,
       repoByHostIdentity,

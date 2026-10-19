@@ -9,7 +9,7 @@ import { listEnvironments } from '../../shared/runtime-environment-store'
 import { removeManagedOrcadEnvironment } from '../../shared/runtime-environment-managed-orcad-store'
 import { findOrcadMigrationSourceCutoverForTarget } from './orcad-migration-cutover-journal'
 import { releaseUndeployedMigrationFence } from './orcad-migration-source-fence'
-import { closeOrcadManagedTunnel } from './orcad-managed-tunnel'
+import { closeOrcadManagedTunnel } from '../managed-server/lifecycle/orcad-managed-tunnel'
 import type { SshTargetOrcadClaims } from './ssh-target-orcad-claims'
 import { withOrcadActivationLock } from '../managed-server/activation/orcad-activation-lock'
 import { withDeactivatedVersionCommitted } from '../managed-server/activation/orcad-activation-record'
@@ -17,7 +17,7 @@ import {
   readOrcadActivationRecord,
   writeOrcadActivationRecord
 } from '../managed-server/activation/orcad-activation-record-store'
-import { managedOrcadSlot } from './orcad-managed-runtime-context'
+import { managedOrcadSlot } from '../managed-server/lifecycle/orcad-managed-runtime-context'
 import { resolveOrcadRemoteContext } from '../managed-server/install/orcad-remote-context'
 import { orcadStopFreedTheHost } from '../managed-server/install/orcad-remote-process-control'
 import { orcadSlotDir, stopOrcadSlot } from './orcad-recovery-slot'

@@ -20,7 +20,7 @@ import type {
   SshManagedServerUpdateNote,
   SshTarget
 } from '../../shared/ssh-types'
-import type { OrcadManagedServing } from './orcad-managed-serving'
+import type { OrcadManagedServing } from '../managed-server/lifecycle/orcad-managed-serving'
 import {
   checkManagedServerUpdate,
   type ManagedServerUpdateDeps

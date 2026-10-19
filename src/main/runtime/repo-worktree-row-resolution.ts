@@ -24,7 +24,7 @@ import type { ProjectExecutionRuntimeResolution } from '../../shared/project-exe
 import type { RuntimeStore } from './runtime-store-contract'
 
 import { areWorktreePathsEqual } from '../git/worktree-path-comparison'
-import { mergeWorktree } from '../ipc/worktree-logic'
+import { mergeWorktree } from '../ipc/worktree-metadata-merge'
 import { pruneLineageForMissingRepoWorktrees } from '../worktree-lineage-pruning'
 import { getRepoOwnedWorktreeMeta } from '../worktree-metadata-ownership'
 import { resolveLocalProjectRuntimesForRepos } from '../project-runtime-git-options'

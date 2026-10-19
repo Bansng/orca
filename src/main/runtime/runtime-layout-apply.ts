@@ -76,7 +76,7 @@ export async function applyWindowLayoutCommand(
       markAgentLaunchesClosedByUser(command.workspace, { kind: 'tab', tabId })
     }
     const reply = await store.applyLayoutCommand({ ...command, force: true }, holders)
-    // Why: a workspace main lacks records nothing; today's close records it in the routed partition.
+    // Why: a workspace main lacks has no partition record to write; the window already removed the tab.
     return reply.ok && reply.result.alreadyClosed
       ? { ok: false, code: 'workspace_not_found' }
       : reply

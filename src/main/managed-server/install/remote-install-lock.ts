@@ -1,7 +1,7 @@
 import type { RemoteInstallTransport } from './remote-install-transport'
-import { execHostCommand } from '../../ssh/remote-host-exec'
+import { execHostCommand } from '../../ssh/remote-exec/remote-host-exec'
 import { RELAY_DEPLOY_TIMEOUT_MS } from './remote-deploy-timing'
-import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec/remote-exec-command'
 import { isRelayGcClaimed, waitForRelayGcClaimRelease } from './remote-install-gc-claim'
 import {
   acquireInstallLockParentCommand,

@@ -1,3 +1,4 @@
+import type { StructuredLaunchSurfaceAddress } from './structured-agent-session-launch-record'
 import type { StructuredAgentSessionResumeSource } from '../../../shared/structured-agent-session-create'
 import type { TuiAgent } from '../../../shared/tui-agent'
 import {
@@ -69,6 +70,7 @@ export type AgentSessionStructuredFeasibilityRequest = AgentLaunchRouteArgs & {
 }
 
 export type AgentSessionLaunchTarget = {
+  surfaceAddress?: StructuredLaunchSurfaceAddress
   /** Overrides the verdict's workspace when it was created after planning. */
   worktreeId?: string
   /** The host that admitted the chat, when one was asked first; it is the host the chat is made on. */
@@ -122,6 +124,7 @@ function beginStructuredPlanLaunch(
       verdict.agent,
       {
         ...structuredLaunchOptions(verdict),
+        ...(target?.surfaceAddress ? { surfaceAddress: target.surfaceAddress } : {}),
         ...(executionHostId ? { executionHostId } : {}),
         ...(target?.seedOptions ? { hostSeedOptions: target.seedOptions } : {})
       },

@@ -128,7 +128,7 @@ export const PR_E2E_SOURCE_ROUTES = [
     matches: (file) =>
       MANAGED_SSH_HARNESS.test(file) ||
       (isProductSource(file) &&
-        /^src\/main\/(?:ipc\/ssh-host-server-|ssh\/(?:ssh-host-server-|orcad-runtime-conversion|orcad-migration-|orcad-retained-source|orcad-runtime-deployment))/.test(
+        /^src\/main\/(?:ipc\/(?:ssh\/)?ssh-host-server-|(?:ssh|managed-server\/[a-z-]+)\/(?:ssh-host-server-|orcad-runtime-conversion|orcad-migration-|orcad-retained-source|orcad-runtime-deployment))/.test(
           file
         ))
   },
@@ -248,7 +248,7 @@ export const PR_E2E_SOURCE_ROUTES = [
         file
       ) ||
       (isProductSource(file) &&
-        /^src\/(?:main\/ssh\/orcad-managed-|main\/ipc\/ssh-port-forward|main\/(?:ipc\/(?:ssh-(?:connect-flow|connection-handlers|host-user-disconnect|session-teardown)|runtime-environment-(?:connectivity-handlers|manual-disconnect))|ssh\/ssh-(?:connection-manager|user-disconnect))\.ts$|renderer\/src\/startup\/(?:ssh-startup-reconnect|startup-ssh-connection-restore)\.ts$|renderer\/src\/runtime\/(?:web-runtime-session|web-session-close-|runtime-terminal-artifact-read\.ts$)|renderer\/src\/components\/terminal-pane\/(?:remote-runtime-|terminal-host-(?:workspace-file|file-link-existence)\.ts$))/.test(
+        /^src\/(?:main\/(?:ssh|managed-server\/[a-z-]+)\/orcad-managed-|main\/ipc\/(?:ssh\/)?ssh-port-forward|main\/(?:ipc\/(?:(?:ssh\/)?ssh-(?:connect-flow|connection-handlers|host-user-disconnect|session-teardown)|(?:runtime-environments\/)?runtime-environment-(?:connectivity-handlers|manual-disconnect))|ssh\/ssh-(?:connection-manager|user-disconnect))\.ts$|renderer\/src\/startup\/(?:ssh-startup-reconnect|startup-ssh-connection-restore)\.ts$|renderer\/src\/runtime\/(?:web-runtime-session|web-session-close-|runtime-terminal-artifact-read\.ts$)|renderer\/src\/components\/terminal-pane\/(?:remote-runtime-|terminal-host-(?:workspace-file|file-link-existence)\.ts$))/.test(
           file
         ))
   },
@@ -276,7 +276,7 @@ export const PR_E2E_SOURCE_ROUTES = [
       file === 'tests/e2e/ssh-browser-network-execution-route.docker.unit.test.ts' ||
       /^tests\/e2e\/helpers\/docker-ssh-host-(?:image|target)\.ts$/.test(file) ||
       (isProductSource(file) &&
-        /^src\/main\/(?:browser\/(?:ssh-browser-network-execution-route|browser-network-deferred-socket|browser-network-execution-route|system-ssh-socks-client-socket)|ssh\/system-ssh-dynamic-forward-process)\.ts$/.test(
+        /^src\/main\/(?:browser\/(?:ssh-browser-network-execution-route|browser-network-deferred-socket|browser-network-execution-route|system-ssh-socks-client-socket)|ssh\/system-transport\/system-ssh-dynamic-forward-process)\.ts$/.test(
           file
         ))
   },

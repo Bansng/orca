@@ -3,7 +3,7 @@ import type { PtyLivenessVerdict } from '../../../../shared/pty-liveness-verdict
 import type { DriverState } from '../../orca-runtime-core'
 import type { TerminalInputKind } from '../../../../shared/terminal-input-kind'
 import { isUntypedTerminalInput } from '../../../../shared/terminal-untyped-input'
-import { clampTerminalViewport } from '../../terminal-viewport'
+import { clampTerminalViewport } from '../../../../shared/terminal-viewport'
 import { getPtyTerminalState, getTerminalState } from '../../terminal-wait-results'
 
 // Orphaned verdicts are bounded; active PTYs retain theirs until new evidence resolves them.

@@ -172,7 +172,8 @@ export function prepareTerminalPaneMount(
       return sourceOwner.kind === 'runtime' ? sourceOwner.runtimeEnvironmentId : null
     },
     getRuntimeTerminalHandleForPane: (id) => resolveTerminalRuntimeHandle(paneTransports.get(id)),
-    getLinkActionContext
+    getLinkActionContext,
+    sourceTabId: deps.tabId
   }
   let resizeRaf: number | null = null
   const queueResizeAll = (focusActive: boolean): void => {

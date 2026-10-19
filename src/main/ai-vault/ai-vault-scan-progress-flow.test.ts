@@ -139,7 +139,10 @@ describe('Session History scan progress, scanner child to window', () => {
 
     // A failed refresh puts back the last finished scan rather than leaving the key empty.
     replacement.fail()
-    expect(localAiVaultScanProgress('scope')).toMatchObject({ scanId: 'earlier', stage: 'finished' })
+    expect(localAiVaultScanProgress('scope')).toMatchObject({
+      scanId: 'earlier',
+      stage: 'finished'
+    })
   })
 
   it('settles unfinished work when an interactive timeout retires the shared scanner', async () => {

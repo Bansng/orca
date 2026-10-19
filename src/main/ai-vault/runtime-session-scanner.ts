@@ -9,7 +9,7 @@ import {
 } from '../../shared/ai-vault-types'
 import { toRuntimeExecutionHostId } from '../../shared/execution-host'
 import { listEnvironments } from '../../shared/runtime-environment-store'
-import { callRuntimeEnvironment } from '../ipc/runtime-environment-transport-routing'
+import { callRuntimeEnvironment } from '../ipc/runtime-environments/runtime-environment-transport-routing'
 import type {
   AiVaultPrepareSessionResumeRequest,
   AiVaultPrepareSessionResumeResult

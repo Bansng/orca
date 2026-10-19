@@ -9,7 +9,7 @@ import {
   ORCAD_STDIO_BRIDGE_DEPENDENCIES,
   startOrcadStdioBridge,
   type OrcadStdioBridgeDependencies
-} from '../ssh/orcad-stdio-bridge-provider'
+} from '../managed-server/lifecycle/orcad-stdio-bridge-provider'
 import type { StartedPortForward } from '../ssh/port-forwarding/ssh-port-forward-provider'
 
 export type WslOrcadStdioBridgeOptions = {

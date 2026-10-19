@@ -17,6 +17,8 @@ export type ShutdownCheckpointPersistDeps = {
   captureTerminalBuffers: () => void
   /** Returns the records it changed when main records them (a layout-owner build). */
   captureSleepingAgentSessions: () => SleepingAgentSessionRecord[] | void
+  /** The stage carried the capture's records: a retry's capture may diff from here. */
+  onSleepRecordsStaged?: () => void
   buildSessionSnapshots: () => WorkspaceSessionHostSnapshot[]
   buildUiPatch: () => Partial<PersistedUIState>
   hasDirtyOpenFiles: () => boolean
@@ -82,6 +84,9 @@ export function createShutdownCheckpointPersist(
         ui: deps.buildUiPatch(),
         ...(sleepRecords && sleepRecords.length > 0 && !degraded ? { sleepRecords } : {})
       })
+      if (!degraded) {
+        deps.onSleepRecordsStaged?.()
+      }
     } catch (error) {
       // A durable-only stage has nothing safer left to fall back to.
       if (degraded) {

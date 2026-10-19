@@ -206,14 +206,16 @@ export function registerFilesystemMutationHandlers(store: Store): void {
     'fs:stageExternalPathsForRuntimeUpload',
     async (
       _event,
-      args: { sourcePaths: string[] }
+      args: { sourcePaths: string[]; nameExtensionlessImages?: boolean }
     ): Promise<{ sources: StagedExternalImportSource[] }> => {
       const sources: StagedExternalImportSource[] = []
       // Why: one budget for the whole drop — per-source counters would let five
       // 2 GB files through a ceiling meant to cap the drop.
       let totalBytes = 0
       for (const sourcePath of args.sourcePaths) {
-        const source = await stageOneSourceForRuntimeUpload(sourcePath, totalBytes)
+        const source = await stageOneSourceForRuntimeUpload(sourcePath, totalBytes, {
+          nameExtensionlessImages: args.nameExtensionlessImages
+        })
         totalBytes += stagedRuntimeUploadByteLength(source)
         sources.push(source)
       }

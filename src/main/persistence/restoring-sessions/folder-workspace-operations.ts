@@ -144,6 +144,7 @@ export class FolderWorkspacePersistenceOperations {
         | 'lastActivityAt'
         | 'smartTier'
         | 'smartAt'
+        | 'lastTerminalUseAt'
         | 'diffComments'
       >
     > &
@@ -245,6 +246,9 @@ export class FolderWorkspacePersistenceOperations {
     if ('smartTier' in updates) {
       workspace.smartTier = updates.smartTier
       workspace.smartAt = updates.smartAt
+    }
+    if (updates.lastTerminalUseAt !== undefined && Number.isFinite(updates.lastTerminalUseAt)) {
+      workspace.lastTerminalUseAt = updates.lastTerminalUseAt
     }
     if (updates.diffComments !== undefined) {
       workspace.diffComments = updates.diffComments

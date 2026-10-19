@@ -15,7 +15,9 @@ vi.mock('../managed-server/activation/orcad-activation-fence-hold', () => ({
   orcadActivationFenceRefusal: mocks.fenceRefusal
 }))
 
-vi.mock('./orcad-managed-wake', () => ({ wakeStoppedManagedOrcad: mocks.wake }))
+vi.mock('../managed-server/lifecycle/orcad-managed-wake', () => ({
+  wakeStoppedManagedOrcad: mocks.wake
+}))
 vi.mock('../managed-server/activation/orcad-activation-record-store', () => ({
   readOrcadActivationRecord: mocks.readRecord
 }))

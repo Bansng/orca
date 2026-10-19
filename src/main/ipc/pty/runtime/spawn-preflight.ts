@@ -117,11 +117,7 @@ export async function prepareRuntimePtySpawn(
     const jcodeEnv = pane ? await ensureJcodeRuntimeDir(pane.paneKey) : undefined
     stampPtySpawnPaneEnv(ctx.env, {
       pane,
-      jcodeRuntimeDir: jcodeEnv?.[JCODE_RUNTIME_DIR_ENV_KEY],
-      isDaemonHostSpawn: ctx.isDaemonHostSpawn,
-      launchAgent: args.launchAgent,
-      cwd: args.cwd,
-      prewarmsJcodeOnDaemonHost: false
+      jcodeRuntimeDir: jcodeEnv?.[JCODE_RUNTIME_DIR_ENV_KEY]
     })
   }
   // Why: a dropped resume still applies here, but this controller's result has no field for

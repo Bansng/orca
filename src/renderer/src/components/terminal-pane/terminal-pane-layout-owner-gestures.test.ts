@@ -55,7 +55,6 @@ describe('layoutOwnerPaneGestures', () => {
       {
         apply: expect.any(Function),
         asToday: expect.any(Function),
-        unapplied: expect.any(Function),
         refused: expect.any(Function)
       }
     )
@@ -74,22 +73,13 @@ describe('layoutOwnerPaneGestures', () => {
     expect(move).toHaveBeenCalledOnce()
   })
 
-  it.each(['refused', 'unapplied'] as const)(
-    'keeps the window’s shape when main answers %s, as main’s tree did not change',
-    (outcome) => {
-      const move = vi.fn()
-      gestures().takePaneDrop?.({ sourcePaneId: 2, targetPaneId: 1, zone: 'left' }, move)
-      const handlers = mocks.send.mock.calls[0]?.[2]
+  it('keeps the window’s shape when main refuses, as main’s tree did not change', () => {
+    const move = vi.fn()
+    gestures().takePaneDrop?.({ sourcePaneId: 2, targetPaneId: 1, zone: 'left' }, move)
+    mocks.send.mock.calls[0]?.[2]?.refused?.('same_pane')
 
-      if (outcome === 'refused') {
-        handlers?.refused?.('same_pane')
-      } else {
-        handlers?.unapplied?.()
-      }
-
-      expect(move).not.toHaveBeenCalled()
-    }
-  )
+    expect(move).not.toHaveBeenCalled()
+  })
 
   it('holds divider ratios until every move in flight has settled, even one that threw', () => {
     const view = gestures()

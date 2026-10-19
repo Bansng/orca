@@ -1,9 +1,9 @@
 import type { SshConnection } from '../ssh-connection'
-import type { SystemSshBuildArgsOptions } from '../system-ssh-args'
+import type { SystemSshBuildArgsOptions } from '../system-transport/system-ssh-args'
 import {
   startSystemSshPortForwardProcess,
   systemSshForwardError
-} from '../system-ssh-forward-process'
+} from '../system-transport/system-ssh-forward-process'
 import type {
   ForwardChannelOpenFailure,
   PortForwardStartOptions,

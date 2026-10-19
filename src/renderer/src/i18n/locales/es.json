@@ -581,7 +581,8 @@
             "76deec8f58": "Error al cambiar organización",
             "7d4bc516ee": "Error al cambiar perfil",
             "f518e89aa5": "El proyecto ya existe en ese perfil",
-            "f03ae7f27b": "Error al transferir proyecto"
+            "f03ae7f27b": "Error al transferir proyecto",
+            "signInTimedOut": "Se agotó el tiempo de inicio de sesión"
           }
         },
         "runtime": {
@@ -3427,7 +3428,9 @@
             "copiedLink": "Enlace copiado",
             "copyLinkFailed": "No se pudo copiar el enlace",
             "downloadOpenWithDefaultApp": "Descargar y abrir con la aplicación predeterminada",
-            "downloadOpenFailed": "No se pudo descargar '{{value0}}'."
+            "downloadOpenFailed": "No se pudo descargar '{{value0}}'.",
+            "openInThisGroup": "Abrir en este grupo",
+            "openInThisGroupRefused": "No se pudo abrir {{value0}} en este grupo"
           },
           "TerminalQuickCommandsSubmenu": {
             "3ccc7981bb": "Anfitrión no disponible",
@@ -6443,8 +6446,7 @@
         },
         "MarkdownImageLightbox": {
           "image": "Image",
-          "expand": "Expand image",
-          "close": "Close"
+          "expand": "Expand image"
         },
         "WorktreeDeveloperMenu": {
           "developer": "Developer",
@@ -15675,7 +15677,9 @@
           "1829437fce": "Nuevo Markdown"
         },
         "DiagramViewerModal": {
-          "title": "Diagrama",
+          "title": "Diagrama"
+        },
+        "PanZoomImageDialog": {
           "zoomOut": "Alejar",
           "zoomIn": "Acercar",
           "fit": "Ajustar a la pantalla",
@@ -17940,6 +17944,14 @@
         "a62f9db53d": "Cancel",
         "c77189bc0c": "Update filter",
         "19af906d12": "Save filter"
+      },
+      "OrcaSignInProgress": {
+        "waiting": "Esperando el inicio de sesión en tu navegador",
+        "copyLink": "Copiar enlace de inicio de sesión",
+        "copied": "Enlace de inicio de sesión copiado",
+        "copyFailed": "No se pudo copiar el enlace.",
+        "signingIn": "Iniciando sesión…",
+        "cancel": "Cancelar"
       }
     },
     "i18n": {
@@ -18280,7 +18292,6 @@
         "imageSaving": "Guardando la imagen pegada…",
         "pendingAttachmentLimit": "Hay demasiados archivos adjuntos en espera. Termina de redactar antes de adjuntar más.",
         "viewAttachment": "Ver imagen",
-        "imagePreview": "Vista previa de la imagen a tamaño completo",
         "workspaceAttachmentMismatch": "Los archivos solo se pueden adjuntar a su espacio de trabajo de origen.",
         "attachmentOwnerChanged": "Este espacio de trabajo cambió de host durante la conexión; vuelve a soltar los archivos.",
         "attachmentUnreadable": "No se pudieron leer los archivos soltados.",
@@ -19209,7 +19220,6 @@
       "keywordIssuePicker": "selector de incidencias"
     },
     "managed-runtime": {
-      "cancel": "Cancelar instalación",
       "cancelled": "Instalación cancelada.",
       "cancelling": "Cancelando…",
       "damaged": "Esta copia de {{agent}} está dañada.",
@@ -19226,10 +19236,17 @@
       "notInstalled": "No instalado.",
       "progress": "Descarga de {{agent}}",
       "readFailed": "No se pudo comprobar {{agent}} en este host. Reintentando.",
-      "reinstall": "Reinstalar {{agent}}",
+      "reinstall": "Reinstalar",
+      "remove": "Quitar el runtime descargado",
+      "removeConfirm": "Quitar",
+      "removeDescription": "Los chats de {{agent}} en curso se detienen. Su historial se conserva.",
+      "removeKeep": "Cancelar",
+      "removeTitle": "¿Quitar el runtime de {{agent}} descargado de {{host}}?",
+      "removing": "Quitando…",
       "retry": "Reintentar instalación",
+      "thisComputer": "este equipo",
       "unavailable": "{{agent}} no está disponible en este host.",
-      "update": "Actualizar {{agent}}",
+      "update": "Actualizar",
       "verifying": "Comprobando el entorno descargado.",
       "installTitle": "Instala {{agent}} para empezar a chatear",
       "continueTitle": "Instala {{agent}} para continuar",

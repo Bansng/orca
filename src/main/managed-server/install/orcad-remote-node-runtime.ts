@@ -24,7 +24,10 @@ import {
 } from '../../../shared/orcad-artifacts'
 import type { OrcadHostTransport } from '../../ssh/orcad-host-transport'
 import { shellEscape } from '../../ssh/ssh-connection-utils'
-import { execCommand, isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import {
+  execCommand,
+  isUnconfirmedSshCommandTermination
+} from '../../ssh/remote-exec/remote-exec-command'
 import { uploadRelayDirectory } from './remote-install-transfers'
 import {
   isWindowsRemoteHost,

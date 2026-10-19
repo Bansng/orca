@@ -83,7 +83,8 @@ function StripText({ progress, active }: StripActivity): React.JSX.Element {
     active && progress.stage === 'reading'
       ? `${formatCount(progress.read.done)} / ${formatCount(progress.read.total)}`
       : fileCountLabel(progress.agents.reduce((sum, agent) => sum + foundCount(agent), 0))
-  const sentence = active || progress.stage === 'finished' ? stripSentence(progress) : EMPHASIS_TOKEN
+  const sentence =
+    active || progress.stage === 'finished' ? stripSentence(progress) : EMPHASIS_TOKEN
   const [before, after] = sentence.split(EMPHASIS_TOKEN)
   return (
     <span className="min-w-0 truncate">
@@ -181,7 +182,9 @@ export function AiVaultScanProgressStrip({
               <AgentRow
                 key={agent.agent}
                 agent={agent}
-                observed={(active || (finished && !agent.walking)) && progress.agents.includes(agent)}
+                observed={
+                  (active || (finished && !agent.walking)) && progress.agents.includes(agent)
+                }
               />
             ))}
           </div>

@@ -8,9 +8,9 @@
  */
 import type { SshConnection } from '../ssh-connection'
 import { shellEscape } from '../ssh-connection-utils'
-import { RELAY_REMOTE_DIR } from '../remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../remote-exec/remote-frame-protocol'
 import { SHORT_RELAY_SOCKET_DIR_PREFIX } from '../relay-socket-path-limit'
-import { execCommand } from '../remote-exec-command'
+import { execCommand } from '../remote-exec/remote-exec-command'
 import {
   isReapableRelayHusk,
   probeRelayEndpointIncumbent,

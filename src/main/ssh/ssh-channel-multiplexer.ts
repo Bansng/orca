@@ -12,7 +12,7 @@ import {
   type JsonRpcRequest,
   type JsonRpcResponse,
   type JsonRpcNotification
-} from './remote-frame-protocol'
+} from './remote-exec/remote-frame-protocol'
 import {
   SshMultiplexerTransportWriter,
   type MultiplexerTransport,

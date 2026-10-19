@@ -99,6 +99,9 @@ export function folderWorkspaceToWorktree(folderWorkspace: FolderWorkspace): Wor
     ...(folderWorkspace.smartTier !== undefined
       ? { smartTier: folderWorkspace.smartTier, smartAt: folderWorkspace.smartAt }
       : {}),
+    ...(folderWorkspace.lastTerminalUseAt !== undefined
+      ? { lastTerminalUseAt: folderWorkspace.lastTerminalUseAt }
+      : {}),
     createdAt: folderWorkspace.createdAt,
     createdWithAgent: folderWorkspace.createdWithAgent,
     pendingFirstAgentMessageRename: folderWorkspace.pendingFirstAgentMessageRename,

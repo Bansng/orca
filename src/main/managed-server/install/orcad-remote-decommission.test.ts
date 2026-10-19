@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type * as ExecCommandModule from '../../ssh/remote-exec-command'
+import type * as ExecCommandModule from '../../ssh/remote-exec/remote-exec-command'
 import type * as RecordFile from './orcad-remote-record-file'
 import type * as InstallLock from './remote-install-lock'
 
-vi.mock('../../ssh/remote-exec-command', async (importOriginal) => ({
+vi.mock('../../ssh/remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))
@@ -17,7 +17,7 @@ vi.mock('./orcad-remote-record-file', async (importOriginal) => ({
   writeAtomicOrcadRemoteRecord: vi.fn()
 }))
 
-import { execCommand } from '../../ssh/remote-exec-command'
+import { execCommand } from '../../ssh/remote-exec/remote-exec-command'
 import { acquireInstallLock } from './remote-install-lock'
 import { writeAtomicOrcadRemoteRecord } from './orcad-remote-record-file'
 import { decommissionRemoteOrcad } from './orcad-remote-decommission'

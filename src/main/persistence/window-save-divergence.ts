@@ -2,8 +2,9 @@
 // its own layout over a window save, so a save whose layout differs from main's model shows a
 // change main never got as a command. Report-only, and only when its log is set (evidence runs);
 // it never alters, fails or delays the write. Records main keeps through its own writes (pane
-// bindings, default-tab marks, closed-tab records, terminal row owners) are not compared: a save
-// that has not caught up with them asks main for nothing. Deleted with the old path (phase F).
+// bindings, resume records, default-tab marks, closed-tab records, terminal row owners,
+// client-hosted browser pages, the topology revision) are not compared: a save that has not
+// caught up with them asks main for nothing. Deleted with the old path (phase F).
 
 import { appendFileSync } from 'node:fs'
 import {
@@ -195,7 +196,8 @@ export function windowSaveDivergences(
     ...rawPaths.keys()
   ])
   const result: WindowSaveDivergence[] = []
-  // Ignored, as main's own writes: pane bindings, resume records, default-tab marks, closed-tab records, row owners.
+  // Ignored, as main's own writes: pane bindings, resume records, default-tab marks, closed-tab records, row owners,
+  // clientHostedBrowserPagesByWorkspace and the topology revision.
   for (const workspace of workspaces) {
     const paths = [
       ...diffWorkspaceLayouts(was?.workspaces[workspace], now?.workspaces[workspace]),

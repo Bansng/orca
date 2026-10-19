@@ -25,7 +25,7 @@ import {
   parseExecutionHostId,
   type ExecutionHostId
 } from '../../../shared/execution-host'
-import { invalidateAuthorizedRootsCacheForRepo } from '../../ipc/filesystem-auth'
+import { invalidateAuthorizedRootsCacheForRepo } from '../../ipc/registered-worktree-roots-scoped-invalidation'
 import {
   resumeInterruptedWorktreeRemovals,
   retryFailedWorktreeRemoval,

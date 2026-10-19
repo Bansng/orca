@@ -9,7 +9,7 @@ import { openOrcadStdioBridgeChannel, resolveOrcadStdioBridge } from '../ssh/orc
 import {
   OrcadStdioBridgeDecoder,
   type OrcadStdioBridgeSignal
-} from '../ssh/orcad-stdio-bridge-stream'
+} from '../managed-server/lifecycle/orcad-stdio-bridge-stream'
 import type { RemoteCommandChannel } from '../managed-server/install/remote-install-transport'
 
 export type WslOrcadWatch = {

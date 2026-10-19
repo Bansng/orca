@@ -25,7 +25,7 @@ import type { NodeRuntimeTarget } from '../../shared/node-runtime-pin'
 import { ORCAD_STARTUP_READINESS_TIMEOUT_MS } from '../../shared/orcad-profile-preflight'
 import { materializeOrcadArtifact } from '../orcad/orcad-artifact-materializer'
 import { readOrcadBundleTarget } from './orcad-deployment-target'
-import { resolveOrcadRuntimeTarget } from './orcad-runtime-target'
+import { resolveOrcadRuntimeTarget } from '../managed-server/lifecycle/orcad-runtime-target'
 import { materializeNodeRuntimeArchive } from '../node-runtime/pinned-runtime-materializer'
 import {
   orcadActivationFenceExists,

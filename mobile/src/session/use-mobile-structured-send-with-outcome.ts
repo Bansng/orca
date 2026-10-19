@@ -22,6 +22,7 @@ import type { MobileStructuredSends } from './use-mobile-structured-sends'
 import { structuredSessionOperationId } from './structured-session-operation-id'
 import { timeoutForDeadline } from './mobile-structured-agent-session-rpc'
 import { structuredAgentSessionSendSelection } from '../../../src/shared/structured-agent-session-option-view'
+import { nativeChatTextWithFileReferences } from './mobile-native-chat-file-attachment'
 import {
   actionableStructuredApproval,
   actionableStructuredQuestion
@@ -38,9 +39,11 @@ export function mobileStructuredSendQueues(
   )
 }
 
-export type StructuredMobileSendAttachment = StructuredAgentSessionAttachment & {
-  id?: string
-}
+/** What rides a send: an image the agent is shown, or a file it reads from a reference the send
+ *  writes after the text, as desktop sends one. */
+export type StructuredMobileSendAttachment =
+  | (StructuredAgentSessionAttachment & { kind?: 'image'; id?: string })
+  | { kind: 'file'; id?: string; path: string }
 
 export function useMobileStructuredSendWithOutcome(args: {
   agent: string | null
@@ -133,7 +136,17 @@ export function useMobileStructuredSendWithOutcome(args: {
       if (commandOutcome !== null) {
         return commandOutcome
       }
-      const body = structuredAgentSessionSendBody(text, sendAttachments)
+      const imageAttachments: StructuredAgentSessionAttachment[] = []
+      const files: { path: string }[] = []
+      for (const attachment of sendAttachments) {
+        if (attachment.kind === 'file') {
+          files.push(attachment)
+        } else {
+          imageAttachments.push(attachment)
+        }
+      }
+      const wireText = nativeChatTextWithFileReferences(text, files)
+      const body = structuredAgentSessionSendBody(wireText, imageAttachments)
       if (body.blocks.length === 0) {
         return 'rejected'
       }
@@ -153,8 +166,8 @@ export function useMobileStructuredSendWithOutcome(args: {
         client,
         sessionId,
         expectedRuntimeFence: currentFence,
-        text,
-        attachments: sendAttachments,
+        text: wireText,
+        attachments: imageAttachments,
         ...(mobileStructuredSendQueues(queueCapable, stateRef.current)
           ? { delivery: 'queue-if-active' as const }
           : {}),

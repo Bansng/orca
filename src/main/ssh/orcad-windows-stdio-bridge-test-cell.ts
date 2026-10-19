@@ -3,7 +3,7 @@
  * cells' accounts, so the managed tunnel must choose the bridge and reach the live orcad over it.
  */
 import { connect } from 'node:net'
-import { OrcadManagedTunnelTransportProvider } from './orcad-managed-tunnel-transport'
+import { OrcadManagedTunnelTransportProvider } from '../managed-server/lifecycle/orcad-managed-tunnel-transport'
 import {
   parseOrcadReadinessWaitOutput,
   readOrcadReadinessNowCommand

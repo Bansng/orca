@@ -25,7 +25,7 @@ import type { RuntimeTerminalWriteOptions } from './runtime-terminal-writer'
 import type { TerminalInputKind } from '../../shared/terminal-input-kind'
 import type { RuntimePtyController } from './runtime-pty-controller-contract'
 import type { RuntimeAgentRowSnapshot } from './runtime-worktree-agent-rows'
-import type { WorkerTerminalHostScope } from './orchestration/worker-terminal-process-liveness'
+import type { WorkerTerminalHostScope } from '../../shared/worker-terminal-host-scope'
 
 export type TerminalCreateOptions = {
   command?: string

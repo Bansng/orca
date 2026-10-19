@@ -6,9 +6,10 @@
 // window's save of it changes nothing in main.
 
 import { createBrowserUuid } from '@/lib/browser-uuid'
-import { afterLayoutFrame, layoutFramesFlowing } from '@/runtime/layout-frame-position'
+import { afterLayoutFrame } from '@/runtime/layout-frame-position'
 import { expectTabRowFields } from '@/runtime/layout-owner-pane-intents'
 import { runtimeEnvironmentIdUnlessTwin } from '@/lib/resolve-owner'
+import { sendLayoutApply } from '@/runtime/layout-apply-send'
 import { newGroupSplitOf } from '@/runtime/layout-owner-new-group-split'
 import { callRuntimeRpc } from '@/runtime/runtime-rpc-client'
 import { layoutFrameTerminalTab } from '@/runtime/layout-frame-terminal-panes'
@@ -86,49 +87,41 @@ export function terminalTabCreateCommand(
 }
 
 /**
- * Sends a tab the window just drew to main. Nothing to undo on any answer: main's frame is what
- * stays drawn, since the window's session save no longer carries the tab. A refusal is logged.
+ * Sends a tab the window just drew to main; frames keep it as drawn until main answers. A refusal
+ * is logged and the window closes the tab, stopping its terminal, since main's frame will not
+ * have it. A twin that main may route to a paired server keeps it: the window's save carries the
+ * server's partition as it is.
  */
 export function recordCreatedTerminalTabInLayoutOwner(
   state: AppState,
   command: CommandOf<'createTerminalTab'> & { tabId: string; leafId: string }
 ): void {
-  // Why: a paired server mirrors this workspace's tabs; main does not own its layout. A tab main
-  // already holds is its own.
-  if (
-    // Why: as `sendLayoutApply`, a twin stays on main's path: it edits this window's layout.
-    runtimeEnvironmentIdUnlessTwin(state, command.workspace) !== null ||
-    layoutFrameTerminalTab(command.workspace, command.tabId)
-  ) {
+  // Why: a tab main already holds is its own.
+  if (layoutFrameTerminalTab(command.workspace, command.tabId)) {
     return
   }
-  void callRuntimeRpc<LayoutApplyReply>({ kind: 'local' }, 'layout.apply', { command }).then(
-    (reply) => {
-      if (!reply.ok) {
-        console.warn('[layout-owner] createTerminalTab refused:', reply.code)
-      }
-    },
-    (error: unknown) => {
-      console.warn(
-        '[layout-owner] createTerminalTab refused: call_failed',
-        error instanceof Error ? error.message : error
-      )
-    }
-  )
+  const { workspace, ...rest } = command
+  const keep = (): void => {}
+  sendLayoutApply(state, workspace, rest, {
+    apply: keep,
+    asToday: keep,
+    refused: () => state.closeTab(command.tabId, { reason: 'cleanup' }),
+    drawn: true
+  })
 }
 
 /**
  * A workspace's first terminal on activation (F23). Main creates it only into a workspace its copy
  * holds no tab of, so this window and the runtime asking at once still make one tab. Main's frame
- * draws it, with the window's own row fields; the window draws main's tab itself, under main's
- * ids, only when no frame is coming (the stream is down). False when a paired server owns the
- * workspace's layout. `create` with no ids opens the terminal as today: main holds no partition
- * for the workspace.
+ * draws it, with the window's own row fields; while the stream is down, the reopened stream's
+ * snapshot does. False when a paired server owns the workspace's layout. `create` opens the
+ * terminal as today: main does not own the workspace (a twin it routes to a paired
+ * server, whose partition the window's save carries), or the call threw and was rolled back.
  */
 export function createInitialTerminalThroughLayoutOwner(
   getState: () => AppState,
   worktreeId: string,
-  create: (ids?: { tabId: string; leafId: string }) => void
+  create: () => void
 ): boolean {
   if (runtimeEnvironmentIdUnlessTwin(getState(), worktreeId) !== null) {
     return false
@@ -157,14 +150,8 @@ export function createInitialTerminalThroughLayoutOwner(
       (reply) =>
         // After the frame with main's tab: the stream may end first, and the window draws it then.
         afterLayoutFrame(reply.frameSeq, () => {
+          // Main's frame draws it, a reopened stream's snapshot too.
           if (reply.ok && reply.result.tabId === tabId) {
-            // Why the store check: a frame may have drawn it before the stream ended.
-            if (!layoutFramesFlowing()) {
-              release()
-              if (!holdsTerminalTab(getState(), tabId)) {
-                create({ tabId, leafId })
-              }
-            }
             return
           }
           // No tab id: main's copy already shows a tab here, which its frames bring.
@@ -194,9 +181,47 @@ export function createInitialTerminalThroughLayoutOwner(
   return true
 }
 
+/**
+ * A live terminal the host's census finds no pane for, shown through main: main answers with the
+ * pane it already holds for it (a CLI tab this window never mounted), else makes a tab bound to it,
+ * and its frame draws either. 'as-today': the window shows it itself, since a paired server owns
+ * the workspace, main does not own it (a twin), or the call threw (a thrown write is rolled back).
+ * 'refused': main showed nothing, so the terminal stays without a pane.
+ */
+export async function adoptLiveTerminalThroughLayoutOwner(
+  getState: () => Parameters<typeof runtimeEnvironmentIdUnlessTwin>[0],
+  worktreeId: string,
+  terminal: { ptyId: string; recordedPaneKey?: string }
+): Promise<'shown' | 'refused' | 'as-today'> {
+  if (runtimeEnvironmentIdUnlessTwin(getState(), worktreeId) !== null) {
+    return 'as-today'
+  }
+  try {
+    const reply = await callRuntimeRpc<LayoutApplyReply>({ kind: 'local' }, 'layout.apply', {
+      command: {
+        type: 'createTerminalTab',
+        workspace: worktreeId,
+        tabId: createBrowserUuid(),
+        leafId: createBrowserUuid(),
+        adopt: terminal
+      }
+    })
+    if (reply.ok) {
+      return 'shown'
+    }
+    if (reply.code === 'host_not_owned') {
+      return 'as-today'
+    }
+    console.warn('[layout-owner] live terminal adoption refused:', reply.code)
+    return 'refused'
+  } catch (error) {
+    console.warn(
+      '[layout-owner] live terminal adoption failed:',
+      error instanceof Error ? error.message : error
+    )
+    return 'as-today'
+  }
+}
+
 /** The window's own mark on a first terminal: its spawn does not count as workspace activity. */
 const ACTIVATION_ROW_FIELDS = { pendingActivationSpawn: true } as const
-
-function holdsTerminalTab(state: AppState, tabId: string): boolean {
-  return Object.values(state.tabsByWorktree).some((tabs) => tabs.some((tab) => tab.id === tabId))
-}

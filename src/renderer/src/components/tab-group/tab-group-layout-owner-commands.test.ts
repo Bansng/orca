@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { sendLayoutCommandToOwner } from '@/runtime/layout-owner-command'
 import { createTabsSliceMockApi } from '@/store/slices/tabs-slice-test-harness'
+import { beginLayoutFramePositions, endLayoutFramePositions } from '@/runtime/layout-frame-position'
 import { createTestStore, makeWorktree, seedStore } from '@/store/slices/store-test-helpers'
 import {
   dropTabThroughLayoutOwner,
@@ -136,6 +137,21 @@ describe('dropTabThroughLayoutOwner', () => {
       second: { type: 'leaf', groupId: left },
       ratio: 0.5
     })
+    expect(store().getState().activeGroupIdByWorktree[WT]).toBe(right)
+  })
+
+  it('leaves placing a lone tab’s group to main’s frame while frames flow', () => {
+    const { left, right } = seeded()
+    const layout = store().getState().layoutByWorktree[WT]
+    beginLayoutFramePositions()
+    try {
+      dropTabThroughLayoutOwner(WT, { kind: 'split', tabId: 'c', groupId: left, direction: 'left' })
+      lastHandlers().apply({ groupId: right })
+    } finally {
+      endLayoutFramePositions()
+    }
+
+    expect(store().getState().layoutByWorktree[WT]).toBe(layout)
     expect(store().getState().activeGroupIdByWorktree[WT]).toBe(right)
   })
 

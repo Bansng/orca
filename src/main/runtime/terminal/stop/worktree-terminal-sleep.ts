@@ -6,7 +6,7 @@ import {
 import { worktreeIdentityKey } from '../../../../shared/worktree/id'
 import type { RuntimeWorktreeTerminalSleepResult } from '../../../../shared/runtime-types'
 import { WORKTREE_TERMINAL_SLEEP_TIMEOUT_MS } from '../../orca-runtime-postlude'
-import { teardownRpcDeadline } from '../../worktree-teardown'
+import { teardownRpcDeadline } from '../../worktree-teardown-deadline'
 
 export abstract class OrcaRuntimeWithSleepResolvedWorktreeTerminals extends OrcaRuntimeWithWorktreeSleepResumeRecording {
   protected async sleepResolvedWorktreeTerminals(

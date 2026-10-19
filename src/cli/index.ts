@@ -14,7 +14,7 @@ import {
   assertEnvironmentSelectorResolvable,
   resolveHostFlagEnvironmentId
 } from './execution-host-flag'
-import { listSshTargets } from './host-selector-alternatives'
+import { fetchSshTargetSummaries, listSshTargets } from './host-selector-alternatives'
 import { reportCliError } from './cli-error'
 import { printHelp } from './help'
 import type { RuntimeClient } from './runtime-client'
@@ -139,6 +139,12 @@ export async function main(
           // Why: only consulted when the name missed, and against this machine's own runtime —
           // SSH targets are registered there, not in the paired server we failed to find.
           listSshTargets: listSshTargetsForSuggestion,
+          verifySshTargets: async () =>
+            (
+              await fetchSshTargetSummaries<{ id: string; label: string }>(
+                new RuntimeClientClass(undefined, undefined, null, null)
+              )
+            ).targets,
           pairingCode: typeof pairingCode === 'string' ? pairingCode : null,
           environmentSelector:
             typeof environmentSelector === 'string'

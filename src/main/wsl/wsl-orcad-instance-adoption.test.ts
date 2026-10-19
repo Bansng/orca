@@ -59,7 +59,7 @@ vi.mock('../managed-server/install/orcad-remote-runtime-control', () => ({
     return ''
   }
 }))
-vi.mock('../ssh/orcad-managed-remote-stop', () => ({
+vi.mock('../managed-server/lifecycle/orcad-managed-remote-stop', () => ({
   readRemoteOrcadManagedStopTarget: async () => host.stopTarget
 }))
 vi.mock('../ssh/orcad-recovery-slot', () => ({

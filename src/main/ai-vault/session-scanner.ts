@@ -1,4 +1,8 @@
-import type { AiVaultListResult, AiVaultScanIssue, AiVaultSession } from '../../shared/ai-vault-types'
+import type {
+  AiVaultListResult,
+  AiVaultScanIssue,
+  AiVaultSession
+} from '../../shared/ai-vault-types'
 import { LOCAL_EXECUTION_HOST_ID } from '../../shared/execution-host'
 import { withSpan } from '../observability/tracer'
 import { sessionSortTime } from './session-scanner-accumulator'

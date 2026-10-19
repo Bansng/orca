@@ -4,6 +4,8 @@ import type { Worktree } from '../worktree/types'
 import { getGitHubPRCacheKeyCandidates } from '../github/github-cache-key'
 import { isGitHubPRSuppressed } from '../worktree/github-pr-suppression'
 import { getPRGroupKeyForState, type PRGroupKey } from '../workspace-view/workspace-pr-groups'
+import type { PairedServerWorkspaceRow } from './paired-server-rows'
+import { parseExecutionHostId } from '../execution-host'
 
 /** Grouping by PR reads GitHub PRs only, so only a row with a GitHub PR carries a fact. */
 const WorkspaceReviewFactSchema = z.object({
@@ -70,6 +72,31 @@ export function buildWorkspaceReviewFacts(
     const fact = readWorkspaceReviewFact(worktree, repoById.get(worktree.repoId), prCache)
     if (fact) {
       facts[worktree.id] = fact
+    }
+  }
+  return facts
+}
+
+/** A paired server's rows against this desktop's own cache, under the server's host-scoped keys. */
+export function buildPairedServerReviewFacts(
+  servers: readonly { hostId: string; rows: readonly PairedServerWorkspaceRow[] }[],
+  prCache: PRCacheView
+): Record<string, WorkspaceReviewFact> {
+  const facts: Record<string, WorkspaceReviewFact> = {}
+  for (const server of servers) {
+    const hostId = parseExecutionHostId(server.hostId)?.id
+    for (const row of hostId ? server.rows : []) {
+      const fact =
+        row.kind === 'git'
+          ? readWorkspaceReviewFact(
+              { branch: row.branch, linkedPR: null },
+              { id: row.repoId, path: '', executionHostId: hostId },
+              prCache
+            )
+          : null
+      if (fact) {
+        facts[row.worktreeId] = fact
+      }
     }
   }
   return facts

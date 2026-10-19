@@ -265,6 +265,7 @@ function FileExplorerFiles(): React.JSX.Element {
           repoName={repoName}
           worktreePath={worktreePath}
           {...getRouteForLocalPathOpenOwner(openInOwner)}
+          workspaceId={activeWorktreeId}
           refresh={manualRefresh}
           canRefresh={isFilesViewActive}
           canCollapseAll={canCollapseAll}

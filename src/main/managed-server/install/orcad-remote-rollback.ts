@@ -28,7 +28,7 @@ import {
 } from '../activation/orcad-activation-lock'
 import { orcadActivationFenceRefusal } from '../activation/orcad-activation-fence-hold'
 import { ORCAD_STARTUP_READINESS_TIMEOUT_MS } from '../../../shared/orcad-profile-preflight'
-import { rollbackOrcadLocked } from '../../ssh/orcad-rollback-transition'
+import { rollbackOrcadLocked } from '../lifecycle/orcad-rollback-transition'
 
 export type OrcadRollbackOptions = {
   conn: OrcadHostTransport

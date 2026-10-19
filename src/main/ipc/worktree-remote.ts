@@ -63,16 +63,18 @@ type CreateWorktreeArgsWithSystemProvenance = CreateWorktreeArgs & {
 }
 import {
   sanitizeWorktreeName,
-  resolveWorktreeCreateDisplayNameRequest,
-  resolveWorktreeCreateDisplayNameMeta,
-  computeValidatedBranchName,
   computeWorktreePath,
   computeWorkspaceRootAsync,
   ensurePathWithinWorkspace,
   getWorktreeCreationLayout,
-  getWorktreePathSettings,
-  mergeWorktree
+  getWorktreePathSettings
 } from './worktree-logic'
+import {
+  resolveWorktreeCreateDisplayNameRequest,
+  resolveWorktreeCreateDisplayNameMeta
+} from './worktree-display-name'
+import { computeValidatedBranchName } from './worktree-branch-name'
+import { mergeWorktree } from './worktree-metadata-merge'
 import { resolveCreatedWorktree } from './created-worktree-reconciliation'
 import { notifyLineageRepos } from '../worktree-lineage-change-notification'
 import { getRepoIdFromWorktreeId } from '../../shared/worktree/id'

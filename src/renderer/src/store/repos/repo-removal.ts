@@ -7,7 +7,7 @@ import { getWorktreeIdFromVisitKey, getWorktreeVisitKey } from '@/lib/worktree-v
 import { omitSparsePresetsForRepos } from '../slices/sparse-presets'
 import { repoMatchesHostIdentity } from '../slices/repo-host-identity'
 import { callRuntimeRpc } from '../../runtime/runtime-rpc-client'
-import { hasRuntimeRpcErrorCode } from '../../runtime/runtime-rpc-result'
+import { hasRuntimeRpcErrorCode } from '../../../../shared/runtime-rpc-error-code'
 import { ipcOrRuntimeTargetForHostId } from '../../runtime/runtime-client-target'
 import { translate } from '@/i18n/i18n'
 import { readIpcErrorMessage } from '@/lib/ipc-error'

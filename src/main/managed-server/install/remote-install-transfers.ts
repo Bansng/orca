@@ -8,7 +8,7 @@ import {
   uploadDirectoryViaExecStdin,
   writeStringViaExecStdin
 } from '../../ssh/ssh-exec-stdin-file-transfer'
-import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec/remote-exec-command'
 import {
   describeSandboxedSftpFailure,
   isSandboxedSftpNamespaceError

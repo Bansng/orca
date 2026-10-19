@@ -20,7 +20,10 @@ import {
 } from './orcad-remote-readiness-wait'
 import type { OrcadHostTransport } from '../../ssh/orcad-host-transport'
 import { errorMessage } from '../../../shared/error-message'
-import { execCommand, isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import {
+  execCommand,
+  isUnconfirmedSshCommandTermination
+} from '../../ssh/remote-exec/remote-exec-command'
 import {
   currentOrcadFence,
   isOrcadFenceLost,
@@ -28,7 +31,7 @@ import {
   posixOrcadFenceGuard
 } from '../activation/orcad-activation-fence-scope'
 import { orcadWindowsHomeOpCommand } from './orcad-remote-windows-node'
-import { ORCAD_WINDOWS_FENCE_ARG } from '../../ssh/orcad-windows-host-fence-ops'
+import { ORCAD_WINDOWS_FENCE_ARG } from '../host-state/orcad-windows-host-fence-ops'
 import { isWindowsRemoteHost, type RemoteHostPlatform } from '../../ssh/ssh-remote-platform'
 
 // Only between host-side waits, so a host that answers early cannot turn this into a tight loop.

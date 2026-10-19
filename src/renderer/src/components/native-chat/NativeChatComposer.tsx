@@ -115,7 +115,7 @@ const NativeChatComposerPane = forwardRef<NativeChatComposerHandle, NativeChatCo
       { inputOwnedByCard, onPendingSendRetired: optimisticSendOutcome?.reject }
     )
 
-    const { agentCommands, sessionSkillNames } = useNativeChatComposerCatalog(
+    const { agentCommands, sessionSkills } = useNativeChatComposerCatalog(
       agent,
       structuredTransport
     )
@@ -133,7 +133,7 @@ const NativeChatComposerPane = forwardRef<NativeChatComposerHandle, NativeChatCo
       agentCommands,
       recalledFromHistory: recall.active,
       disabled,
-      sessionSkillNames,
+      sessionSkills,
       textareaRef,
       setDraft,
       setCaret,

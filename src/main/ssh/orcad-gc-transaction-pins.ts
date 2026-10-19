@@ -9,7 +9,7 @@ import { orcadInstallDirNames } from '../managed-server/activation/orcad-activat
 import type { OrcadActivationTransaction } from '../managed-server/activation/orcad-activation-transaction'
 import { readOrcadActivationTransaction } from '../managed-server/activation/orcad-activation-transaction-store'
 import { orcadActivationFenceExists } from '../managed-server/activation/orcad-activation-lock'
-import { isUnconfirmedSshCommandTermination } from './remote-exec-command'
+import { isUnconfirmedSshCommandTermination } from './remote-exec/remote-exec-command'
 import type { OrcadRemoteExecTarget } from '../managed-server/install/orcad-remote-runtime-control'
 
 export type OrcadGcTransactionPins = { state: 'pinned'; dirNames: string[] } | { state: 'keep-all' }

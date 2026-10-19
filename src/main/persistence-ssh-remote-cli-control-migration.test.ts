@@ -13,7 +13,7 @@ import type { SshTarget } from '../shared/ssh-types'
 import { isRemoteCliControlAllowed } from '../shared/ssh-remote-cli-control'
 import { SshConnectionStore } from './ssh/ssh-connection-store'
 
-vi.mock('./ssh/ssh-config-parser', () => ({
+vi.mock('./ssh/config/ssh-config-parser', () => ({
   loadUserSshConfig: vi.fn(),
   sshConfigHostsToTargets: vi.fn()
 }))

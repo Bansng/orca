@@ -3,9 +3,9 @@ import { spawnProcess } from '@orca/process-host'
 import { Duplex } from 'node:stream'
 import type { Socket as NetSocket } from 'node:net'
 import type { SshTarget } from '../../shared/ssh-types'
-import type { SshResolvedConfig } from './ssh-g-config-resolution'
+import type { SshResolvedConfig } from './config/ssh-g-config-resolution'
 import { shellEscape } from './ssh-connection-utils'
-import { isOpenSshConfigBackedTarget } from './system-ssh-args'
+import { isOpenSshConfigBackedTarget } from './system-transport/system-ssh-args'
 
 // Why: ProxyJump and jumpHost are syntactic sugar for ProxyCommand.
 // OpenSSH internally converts `ProxyJump bastion` to

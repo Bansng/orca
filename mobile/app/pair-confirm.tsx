@@ -143,7 +143,13 @@ export default function PairConfirmScreen() {
 
   return (
     <View ref={setPairConfirmRootRef} style={[styles.container, containerPadding]}>
-      <Pressable style={styles.backButton} onPress={cancel}>
+      <Pressable
+        style={styles.backButton}
+        onPress={cancel}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel="Back"
+      >
         <ChevronLeft size={22} color={colors.textSecondary} />
       </Pressable>
 

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type * as AgentStatusModule from '@/lib/agent-status'
 import type { ExecutionHostId } from '../../../shared/execution-host'
 import type { WorkspaceSessionState } from '../../../shared/workspace-session-state-types'
@@ -14,14 +14,20 @@ import {
   type PublishedWorkspaceLayout
 } from '../../../shared/workspace-layout/workspace-layout-published'
 import type { WorkspaceLayoutChangeFrame } from '../../../shared/workspace-layout/workspace-layout-stream-frames'
-import { GIT_KEY } from '../../../shared/workspace-layout/workspace-layout-session.test-fixture'
+import {
+  emptySession,
+  GIT_KEY
+} from '../../../shared/workspace-layout/workspace-layout-session.test-fixture'
 import { buildOwnedEditorFileId } from '../store/slices/editor/file-ids/editor-file-ids'
 import { bootWindowFromPartitions } from '../app-shell/startup-window-view.test-fixture'
-import { reportWindowSessionWriteActivity } from '../lib/window-session-write-activity'
 import { createStoreSessionMockApi } from '../store/slices/store-session-test-harness'
 import { createTestStore } from '../store/slices/store-test-helpers'
 import type { LayoutFrameSlices } from '../store/workspace-layout-frame-slices'
-import { afterLayoutFrame, endLayoutFramePositions } from './layout-frame-position'
+import {
+  afterLayoutFrame,
+  endLayoutFramePositions,
+  layoutFramesFlowing
+} from './layout-frame-position'
 import { holdTabPaneTree, requestTabPaneTreeRedraw } from './layout-owner-pane-intents'
 import { openWorkspaceLayoutFrameSync } from './workspace-layout-frame-sync'
 
@@ -121,10 +127,6 @@ const FRAME_DIFFERENCE_FIXTURES = new Set([
   'session from before the tab bar, with an open file'
 ])
 
-beforeEach(() => {
-  reportWindowSessionWriteActivity(false)
-})
-
 afterEach(() => endLayoutFramePositions())
 
 describe('the window drawn from layout frames', () => {
@@ -221,17 +223,6 @@ describe('the window drawn from layout frames', () => {
     await flushMicrotasks()
     expect(seen).toEqual(['renamed'])
 
-    // A held frame still releases its reply: the window's own save carries what it changed.
-    reportWindowSessionWriteActivity(true)
-    const held = structuredClone(renamed)
-    held.tabs.find((tab) => tab.id === 'tab-shell')!.customTitle = 'held'
-    afterLayoutFrame(3, () => seen.push(shellTitle()))
-    stream.onFrame!({ type: 'workspace', key: GIT_KEY, layout: held, seq: 3 })
-    stream.onPosition!(3)
-    await flushMicrotasks()
-    expect(seen).toEqual(['renamed', 'renamed'])
-    reportWindowSessionWriteActivity(false)
-
     const released = vi.fn()
     afterLayoutFrame(9, released)
     stream.onStatus!({ state: 'lost' })
@@ -245,27 +236,9 @@ describe('the window drawn from layout frames', () => {
     sync.close()
   })
 
-  it('holds a structure frame while the window owes main a write, then shows it', async () => {
+  it('shows main’s pane tree at once, except a tab the window’s own pane command holds', async () => {
     const { store, sync, layouts } = await bootWithFrames('local', localDesktopSession())
     sync.start()
-    reportWindowSessionWriteActivity(true)
-    const renamed = structuredClone(layouts[GIT_KEY]!)
-    renamed.tabs.find((tab) => tab.id === 'tab-shell')!.customTitle = 'renamed'
-    stream.onFrame!({ type: 'workspace', key: GIT_KEY, layout: renamed })
-    await flushMicrotasks()
-    const shellTitle = () =>
-      store.getState().tabsByWorktree[GIT_KEY]!.find((tab) => tab.id === 'tab-shell')!.customTitle
-    expect(shellTitle()).not.toBe('renamed')
-    reportWindowSessionWriteActivity(false)
-    await flushMicrotasks()
-    expect(shellTitle()).toBe('renamed')
-    sync.close()
-  })
-
-  it('shows main’s pane tree at once even while a write is owed, except a tab the window’s own pane command holds', async () => {
-    const { store, sync, layouts } = await bootWithFrames('local', localDesktopSession())
-    sync.start()
-    reportWindowSessionWriteActivity(true)
     const shellRoot = () => store.getState().terminalLayoutsByTabId['tab-shell']!.root
     const withRatio = (ratio: number) => {
       const next = structuredClone(layouts[GIT_KEY]!)
@@ -289,16 +262,14 @@ describe('the window drawn from layout frames', () => {
     release()
     await flushMicrotasks()
     expect(shellRoot()).toMatchObject({ ratio: 0.7 })
-    reportWindowSessionWriteActivity(false)
     sync.close()
   })
 
-  it('shows main’s pane tree going back to one the window last showed before an owed write', async () => {
+  it('shows main’s pane tree going back to one the window showed before', async () => {
     const { store, sync, layouts } = await bootWithFrames('local', localDesktopSession())
     sync.start()
     const shellRoot = () => store.getState().terminalLayoutsByTabId['tab-shell']!.root
     const original = shellRoot()
-    reportWindowSessionWriteActivity(true)
     const changed = structuredClone(layouts[GIT_KEY]!)
     const root = changed.tabs.find((tab) => tab.id === 'tab-shell')!.terminal!.root!
     if (root.type === 'split') {
@@ -308,11 +279,10 @@ describe('the window drawn from layout frames', () => {
     await flushMicrotasks()
     expect(shellRoot()).toMatchObject({ ratio: 0.15 })
 
-    // Same structure as the frame shown before the write: its pane tree still shows.
+    // Same structure as the frame shown before: its pane tree still shows.
     stream.onFrame!({ type: 'workspace', key: GIT_KEY, layout: structuredClone(layouts[GIT_KEY]!) })
     await flushMicrotasks()
     expect(shellRoot()).toEqual(original)
-    reportWindowSessionWriteActivity(false)
     sync.close()
   })
 
@@ -320,8 +290,7 @@ describe('the window drawn from layout frames', () => {
     const { store, sync, layouts } = await bootWithFrames('local', localDesktopSession())
     sync.start()
     await flushMicrotasks()
-    // A frame queued behind an owed write when the stream ends.
-    reportWindowSessionWriteActivity(true)
+    // A frame still queued when the stream ends.
     stream.onFrame!({ type: 'workspace', key: GIT_KEY, layout: structuredClone(layouts[GIT_KEY]!) })
     stream.onStatus!({ state: 'lost' })
     const drawn = { type: 'leaf' as const, leafId: 'drawn-by-the-window' }
@@ -336,18 +305,42 @@ describe('the window drawn from layout frames', () => {
     await flushMicrotasks()
     expect(store.getState().terminalLayoutsByTabId['tab-shell']!.root).toEqual(drawn)
 
-    // Nor does a later flush, such as an owed write ending.
-    reportWindowSessionWriteActivity(true)
-    reportWindowSessionWriteActivity(false)
-    await flushMicrotasks()
-    expect(store.getState().terminalLayoutsByTabId['tab-shell']!.root).toEqual(drawn)
     sync.close()
   })
 
-  it('shows a live title change of the focused pane at once, even while a write is owed', async () => {
+  it('after a lost stream reopens, its snapshot redraws every workspace from main', async () => {
     const { store, sync, layouts } = await bootWithFrames('local', localDesktopSession())
     sync.start()
-    reportWindowSessionWriteActivity(true)
+    await flushMicrotasks()
+    stream.onStatus!({ state: 'lost' })
+    expect(layoutFramesFlowing()).toBe(false)
+    // Drawn while no frame came; main's snapshot does not have it.
+    const drawn = { type: 'leaf' as const, leafId: 'drawn-by-the-window' }
+    store.setState({
+      terminalLayoutsByTabId: {
+        ...store.getState().terminalLayoutsByTabId,
+        'tab-shell': { ...store.getState().terminalLayoutsByTabId['tab-shell']!, root: drawn }
+      }
+    })
+
+    stream.onStatus!({ state: 'connecting' })
+    expect(layoutFramesFlowing()).toBe(true)
+    const renamed = structuredClone(layouts)
+    renamed[GIT_KEY]!.tabs.find((tab) => tab.id === 'tab-unbound')!.customTitle = 'from main'
+    stream.onFrame!(snapshot(renamed))
+    stream.onStatus!({ state: 'live' })
+    await flushMicrotasks()
+
+    const rows = store.getState().tabsByWorktree[GIT_KEY]!
+    expect(rows.find((tab) => tab.id === 'tab-unbound')!.customTitle).toBe('from main')
+    expect(store.getState().terminalLayoutsByTabId['tab-shell']!.root).not.toEqual(drawn)
+    expect(sync.terminalTab(GIT_KEY, 'tab-shell')).toBeDefined()
+    sync.close()
+  })
+
+  it('shows a live title change of the focused pane without rebuilding structure', async () => {
+    const { store, sync, layouts } = await bootWithFrames('local', localDesktopSession())
+    sync.start()
     const titled = structuredClone(layouts[GIT_KEY]!)
     const shell = titled.tabs.find((tab) => tab.id === 'tab-shell')!
     const focused = store.getState().terminalLayoutsByTabId['tab-shell']!.activeLeafId
@@ -406,6 +399,27 @@ describe('the window drawn from layout frames', () => {
     const tabs = store.getState().unifiedTabsByWorktree[GIT_KEY]!
     expect(tabs.find((tab) => tab.entityId === ownedId)).toMatchObject({ worktreeId: GIT_KEY })
     expect(tabs.every((tab) => tab.worktreeId === GIT_KEY)).toBe(true)
+    sync.close()
+  })
+
+  it('shows a workspace only main held (a CLI-started tab) once the window first opens it', async () => {
+    const store = createTestStore()
+    await bootWindowFromPartitions(store, [{ hostId: 'local', session: emptySession() }])
+    const sync = openWorkspaceLayoutFrameSync(store)
+    const layouts = published('local', localDesktopSession())
+    stream.onFrame!(snapshot(layouts))
+    sync.start()
+    await flushMicrotasks()
+    expect(store.getState().tabsByWorktree[GIT_KEY]).toBeUndefined()
+    // The first visit gives the workspace its empty root group; no frame arrives after it.
+    store.getState().ensureWorktreeRootGroup(GIT_KEY)
+    await flushMicrotasks()
+    // Exactly main's terminal tabs: the visit adds none of its own.
+    const mainTerminals = layouts[GIT_KEY]!.tabs.flatMap((tab) =>
+      tab.terminal ? [tab.entityId] : []
+    )
+    expect(mainTerminals).toContain('tab-shell')
+    expect(store.getState().tabsByWorktree[GIT_KEY]?.map((tab) => tab.id)).toEqual(mainTerminals)
     sync.close()
   })
 

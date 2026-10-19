@@ -88,24 +88,40 @@ function ProviderStatus({
   )
 }
 
-/** An agent whose chats run a program Orca downloads shows that program's install row, since its
- *  CLI's install state says nothing about whether its chats can start. */
+/** The agent's name and status line, plus any install button, which sits beside the switch.
+ *  An agent whose chats run a program Orca downloads shows that program's install state as its
+ *  status line, since its CLI's install state says nothing about whether its chats can start. */
 function ProviderDetail(props: {
   agent: TuiAgent
+  label: string
   installed: readonly TuiAgent[] | null
   enabledInAgents: boolean
-}): React.JSX.Element | null {
+}): React.JSX.Element {
   const runtime = useManagedRuntimeInstall(CHAT_HOST, props.agent, props.enabledInAgents)
+  const summary = (line: React.ReactNode): React.JSX.Element => (
+    <div className="min-w-0 flex-1">
+      <div className="text-sm font-medium leading-none">{props.label}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{line}</div>
+    </div>
+  )
   if (!props.enabledInAgents || runtime.kind !== 'active') {
-    return <ProviderStatus {...props} />
+    return summary(
+      <ProviderStatus
+        agent={props.agent}
+        installed={props.installed}
+        enabledInAgents={props.enabledInAgents}
+      />
+    )
   }
   return (
-    <div className="mt-2">
-      <ManagedRuntimeInstallRow
-        observation={runtime}
-        agentLabel={getAgentLabel(props.agent)}
-      />
-    </div>
+    <ManagedRuntimeInstallRow observation={runtime} agentLabel={props.label}>
+      {(line, button) => (
+        <>
+          {summary(line)}
+          {button}
+        </>
+      )}
+    </ManagedRuntimeInstallRow>
   )
 }
 
@@ -147,16 +163,12 @@ export function NativeChatProvidersSetting({
                   <div className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border/50 bg-background/50">
                     <AgentIcon agent={agent} size={16} />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium leading-none">{label}</div>
-                    <div className="mt-1 text-xs text-muted-foreground">
-                      <ProviderDetail
-                        agent={agent}
-                        installed={detectedIds}
-                        enabledInAgents={enabledInAgents}
-                      />
-                    </div>
-                  </div>
+                  <ProviderDetail
+                    agent={agent}
+                    label={label}
+                    installed={detectedIds}
+                    enabledInAgents={enabledInAgents}
+                  />
                   <SettingsSwitch
                     checked={on}
                     disabled={!enabledInAgents}

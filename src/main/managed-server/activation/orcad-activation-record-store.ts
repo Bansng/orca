@@ -6,7 +6,7 @@
  * activated" would deploy over a live install and lose its rollback target.
  */
 import type { OrcadHostTransport } from '../../ssh/orcad-host-transport'
-import { RELAY_REMOTE_DIR } from '../../ssh/remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../../ssh/remote-exec/remote-frame-protocol'
 import {
   ORCAD_ACTIVATION_FILENAME,
   emptyOrcadActivationRecord,

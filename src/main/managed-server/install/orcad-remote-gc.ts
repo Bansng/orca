@@ -14,7 +14,10 @@
  * pinned too, and an unreadable journal skips the pass entirely.
  */
 import type { OrcadHostTransport } from '../../ssh/orcad-host-transport'
-import { execCommand, isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import {
+  execCommand,
+  isUnconfirmedSshCommandTermination
+} from '../../ssh/remote-exec/remote-exec-command'
 import { ORCAD_INSTALL_MODEL } from './remote-install-model'
 import { gcOldRemoteInstallVersions } from './remote-install-gc'
 import {
@@ -33,9 +36,9 @@ import {
   joinRemotePath,
   type RemoteHostPlatform
 } from '../../ssh/ssh-remote-platform'
-import { RELAY_REMOTE_DIR } from '../../ssh/remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../../ssh/remote-exec/remote-frame-protocol'
 import { orcadWindowsHomeOpCommand } from './orcad-remote-windows-node'
-import { ORCAD_WINDOWS_LIVENESS_MANY_MARKER } from '../../ssh/orcad-windows-host-script'
+import { ORCAD_WINDOWS_LIVENESS_MANY_MARKER } from '../host-state/orcad-windows-host-script'
 
 export type OrcadGcOptions = {
   conn: OrcadHostTransport

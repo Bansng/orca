@@ -102,8 +102,8 @@ describe('a terminal tab’s own changes in a layout-owner build', () => {
   })
 
   it('leaves the window’s color as it is when main refuses', async () => {
-    mocks.callRuntimeRpc.mockResolvedValue({ ok: false, code: 'invalid_params' })
     const { store, tabId, tabBarId } = storeWithTab()
+    mocks.callRuntimeRpc.mockResolvedValue({ ok: false, code: 'invalid_params' })
 
     store.getState().setTabColor(tabId, '#f00')
 

@@ -10,7 +10,7 @@ import type { OrcadHostTransport } from '../ssh/orcad-host-transport'
 import {
   OrcadManagedIdentityError,
   type OrcadTunnelIdentity
-} from '../ssh/orcad-managed-tunnel-identity'
+} from '../managed-server/lifecycle/orcad-managed-tunnel-identity'
 import { tunneledOrcadPairingCode } from '../ssh/orcad-tunneled-pairing'
 import type { StartedPortForward } from '../ssh/port-forwarding/ssh-port-forward-provider'
 import type { WslDistroHolder } from './wsl-distro-holder'

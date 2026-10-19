@@ -196,6 +196,7 @@ describe('SourceControlEntryContextMenu', () => {
       connectionId: null,
       runtimeEnvironmentId: 'env-2',
       ownerUnresolved: false,
+      workspace: { workspaceId: 'worktree-1' },
       command: 'zed'
     })
   })

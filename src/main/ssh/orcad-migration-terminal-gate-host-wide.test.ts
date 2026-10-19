@@ -1,7 +1,7 @@
 // Astra pass 4 §2: desktop A leases nothing, but desktop B's live shell, under another target id on
 // the same account, must never read as exited. COMPAT(legacy-relay-bridge): the host converts anyway
 // and leaves B's relay alone, so the census reads `bridged` with nothing of A's to serve.
-import type * as ExecCommandModule from './remote-exec-command'
+import type * as ExecCommandModule from './remote-exec/remote-exec-command'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SshConnection } from './ssh-connection'
 import { relaySocketNameForInstanceId } from './legacy-relay/ssh-relay-instance-id'
@@ -20,7 +20,7 @@ const {
   countRelayPtysOverBridge: vi.fn()
 }))
 
-vi.mock('./remote-exec-command', async (importOriginal) => ({
+vi.mock('./remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand
 }))

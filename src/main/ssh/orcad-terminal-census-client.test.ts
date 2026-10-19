@@ -13,8 +13,12 @@ const mocks = vi.hoisted(() => ({ send: vi.fn(), ensure: vi.fn(), verify: vi.fn(
 vi.mock('../../shared/remote-runtime-client', () => ({
   sendRemoteRuntimeRequestWithStatusPreflight: mocks.send
 }))
-vi.mock('./orcad-managed-tunnel', () => ({ ensureOrcadManagedTunnel: mocks.ensure }))
-vi.mock('./orcad-managed-serving-verify', () => ({ verifyOrcadManagedServing: mocks.verify }))
+vi.mock('../managed-server/lifecycle/orcad-managed-tunnel', () => ({
+  ensureOrcadManagedTunnel: mocks.ensure
+}))
+vi.mock('../managed-server/lifecycle/orcad-managed-serving-verify', () => ({
+  verifyOrcadManagedServing: mocks.verify
+}))
 
 const { collectManagedTerminalCensus } = await import('./orcad-terminal-census-client')
 const collect = (record: OrcadActivationRecord) =>

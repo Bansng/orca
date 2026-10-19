@@ -2,28 +2,15 @@ import { vi } from 'vitest'
 import { createSystemCommandChannel, createSystemSshProcess } from './ssh-connection-test-fixtures'
 import type { SshConnection } from './ssh-connection'
 import type { MockSystemCommandChannel, MockSystemSshProcess } from './ssh-connection-test-fixtures'
-import type { SshResolvedConfig } from './ssh-g-config-resolution'
-import type { SystemSshBuildArgsOptions } from './system-ssh-args'
+import type { SshResolvedConfig } from './config/ssh-g-config-resolution'
+import type { SystemSshBuildArgsOptions } from './system-transport/system-ssh-args'
 import type { SshTarget } from '../../shared/ssh-types'
-import type * as SystemSshArgs from './system-ssh-args'
-import type * as SystemSshCommand from './system-ssh-command'
-import type * as SystemSshFileBinaryTransfer from './system-ssh-file-binary-transfer'
-import type * as SystemSshFileTransfer from './system-ssh-file-transfer'
-import type * as SshGConfigResolution from './ssh-g-config-resolution'
+import type * as SystemSshArgs from './system-transport/system-ssh-args'
+import type * as SystemSshCommand from './system-transport/system-ssh-command'
+import type * as SystemSshFileBinaryTransfer from './system-transport/system-ssh-file-binary-transfer'
+import type * as SystemSshFileTransfer from './system-transport/system-ssh-file-transfer'
+import type * as SshGConfigResolution from './config/ssh-g-config-resolution'
 import { resetSsh2ClientState, ssh2Mock } from './__tests__/ssh-connection-test-client'
-export {
-  clientInstances,
-  connectAttempts,
-  createSsh2Module,
-  emitSshEvent,
-  eventHandlers,
-  pendingExecCallback,
-  pendingSftpCallback,
-  resetSsh2ClientState,
-  ssh2Mock,
-  VALID_ED25519_HOST_KEY
-} from './__tests__/ssh-connection-test-client'
-export type { MockSshClient, Ssh2ModuleMock } from './__tests__/ssh-connection-test-client'
 
 export type SystemSshBinaryModuleMock = { findSystemSsh: typeof findSystemSshMock }
 

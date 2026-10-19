@@ -10,7 +10,9 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger
 } from '@/components/ui/context-menu'
+import { useShallow } from 'zustand/react/shallow'
 import { useAppStore } from '@/store'
+import { getWorkspaceEditorSshHost } from '@/lib/workspace-editor-ssh-target'
 import { OpenInApplicationIcon } from '@/lib/open-in-app-catalog'
 import { translate } from '@/i18n/i18n'
 import { LocalOnlyMenuHint } from '@/components/local-only-menu-hint'
@@ -68,6 +70,9 @@ export function SourceControlEntryContextMenu({
   )
   const revealBlocked = isRevealOrEditorOpenBlocked(revealOwner)
   const openInRoute = useMemo(() => getRouteForLocalPathOpenOwner(revealOwner), [revealOwner])
+  const runtimeSshHost = useAppStore(
+    useShallow((s) => getWorkspaceEditorSshHost(s, { workspaceId: currentWorktreeId }))
+  )
 
   const handleCopyPath = useCallback(() => {
     if (!absolutePath) {
@@ -105,10 +110,11 @@ export function SourceControlEntryContextMenu({
         target: 'external-editor',
         worktreePath: absolutePath,
         ...openInRoute,
+        workspace: { workspaceId: currentWorktreeId },
         command
       })
     },
-    [absolutePath, openInRoute]
+    [absolutePath, currentWorktreeId, openInRoute]
   )
 
   return (
@@ -146,7 +152,8 @@ export function SourceControlEntryContextMenu({
                 { ...application, target: 'external-editor' },
                 openInRoute.connectionId,
                 openInRoute.runtimeEnvironmentId,
-                openInRoute.ownerUnresolved
+                openInRoute.ownerUnresolved,
+                runtimeSshHost
               )
               return (
                 <ContextMenuItem

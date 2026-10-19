@@ -31,7 +31,7 @@ vi.mock('node:crypto', async (importOriginal) => ({
 const { buildDetectedGitWorktrees } = await import('./ssh-worktree-fallback')
 const { getProjectHostSetupWorktreeMeta } =
   await import('../../../../shared/project-host-setup-lookup')
-const { mergeWorktree } = await import('../../worktree-logic')
+const { mergeWorktree } = await import('../../worktree-metadata-merge')
 const { resolveWorktreeMetaWithDiscoveryBackfill } = await import('./worktree-discovery-metadata')
 const ownership = await import('../../../../shared/worktree/ownership')
 const { projectResolvedWorktreeLineage } =

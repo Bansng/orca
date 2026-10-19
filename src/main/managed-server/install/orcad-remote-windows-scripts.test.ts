@@ -27,7 +27,7 @@ import {
   ORCAD_WINDOWS_RUNTIME_MARKER,
   ORCAD_WINDOWS_ENTRY_MARKER,
   type OrcadWindowsHostOp
-} from '../../ssh/orcad-windows-host-script'
+} from '../host-state/orcad-windows-host-script'
 import { getRemoteHostPlatform } from '../../ssh/ssh-remote-platform'
 
 const FAKE_ADDON_PRELOAD = [

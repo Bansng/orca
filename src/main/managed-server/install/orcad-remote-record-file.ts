@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto'
 import { shellEscape } from '../../ssh/ssh-connection-utils'
 import { removeRemoteFileCommand } from '../../ssh/ssh-remote-commands'
 import { execOrcadRemote, type OrcadRemoteExecTarget } from './orcad-remote-runtime-control'
-import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec/remote-exec-command'
 import { isWindowsRemoteHost } from '../../ssh/ssh-remote-platform'
 import {
   orcadRemoteBaseDir,
@@ -18,7 +18,7 @@ import {
 import {
   ORCAD_RECORD_ABSENT_MARKER as ABSENT_MARKER,
   ORCAD_RECORD_PRESENT_MARKER as PRESENT_MARKER
-} from '../../ssh/orcad-windows-host-script'
+} from '../host-state/orcad-windows-host-script'
 
 /** `present` carries raw bytes; schema checks belong to the caller that owns the format. */
 export type OrcadRemoteRecordRead = { state: 'absent' } | { state: 'present'; raw: string }

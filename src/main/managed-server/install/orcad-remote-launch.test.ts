@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ORCAD_MANAGED_ACTIVATION_ROOT_ENV } from '../../../shared/orcad-idle-exit'
+import { ORCAD_MANAGED_ACTIVATION_ROOT_ENV } from '../../../shared/orcad-managed-launch-env'
 
 import {
   ORCAD_READINESS_FILENAME,

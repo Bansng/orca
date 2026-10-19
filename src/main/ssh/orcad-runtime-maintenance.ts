@@ -15,18 +15,21 @@ import type {
   OrcadManagedRecoveryResult,
   OrcadManagedRollbackResult
 } from '../../shared/orcad-managed-runtime'
-import { runTargetLifecycle } from '../ipc/ssh-target-lifecycle-queue'
+import { runTargetLifecycle } from '../ipc/ssh/ssh-target-lifecycle-queue'
 import type { ServeReadiness } from '../server/serve-readiness'
 import { recoverInterruptedOrcadActivation } from '../managed-server/activation/orcad-activation-recovery'
 import { probeActiveOrcadReadiness } from './orcad-active-readiness'
 import { materializeOrcadArtifact } from '../orcad/orcad-artifact-materializer'
 import { CURRENT_ORCAD_DAEMON_PROTOCOL } from './orcad-daemon-protocol-crossing'
-import { ensureOrcadManagedTunnel, rebuildOrcadManagedTunnel } from './orcad-managed-tunnel'
+import {
+  ensureOrcadManagedTunnel,
+  rebuildOrcadManagedTunnel
+} from '../managed-server/lifecycle/orcad-managed-tunnel'
 import { wakeAlreadyActiveOrcad } from './orcad-already-active-wake'
 import {
   clearManagedOrcadUpdateDeferral,
   recordManagedOrcadUpdateDeferral
-} from './orcad-managed-update-deferrals'
+} from '../managed-server/lifecycle/orcad-managed-update-deferrals'
 import {
   isForceableOrcadDeferral,
   managedOrcadInstallDir,
@@ -34,15 +37,15 @@ import {
   probeManagedOrcadReadiness,
   requireManagedOrcadEnvironment,
   resolveLinkedOrcadContext
-} from './orcad-managed-runtime-context'
+} from '../managed-server/lifecycle/orcad-managed-runtime-context'
 import type { OrcadRemoteContext } from '../managed-server/install/orcad-remote-context'
 import { readRemoteOrcadBuildHash } from '../managed-server/install/orcad-remote-build-hash'
 import { deployOrcad, type OrcadDeployOptions } from './orcad-remote-deploy'
 import { ORCAD_ACTIVATION_POLICY_REFUSED_CODE } from './orcad-installed-activation'
-import { pruneManagedOrcadVersions } from './orcad-managed-version-gc'
+import { pruneManagedOrcadVersions } from '../managed-server/lifecycle/orcad-managed-version-gc'
 import { rollbackOrcad } from '../managed-server/install/orcad-remote-rollback'
 import { collectManagedTerminalCensus } from './orcad-terminal-census-client'
-import { findIncompleteManagedOrcadMigration } from './orcad-managed-migration-status'
+import { findIncompleteManagedOrcadMigration } from '../managed-server/lifecycle/orcad-managed-migration-status'
 import { latestOrcadMigrationInto } from './orcad-migration-rollback-mark'
 import { tunneledOrcadPairingCode } from './orcad-tunneled-pairing'
 

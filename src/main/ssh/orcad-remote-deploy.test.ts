@@ -1,4 +1,4 @@
-import type * as ExecCommandModule from './remote-exec-command'
+import type * as ExecCommandModule from './remote-exec/remote-exec-command'
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import type * as RecordFile from '../managed-server/install/orcad-remote-record-file'
 import { tmpdir } from 'node:os'
@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { runProcess } from '@orca/process-host'
 
-vi.mock('./remote-exec-command', async (importOriginal) => ({
+vi.mock('./remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))
@@ -32,7 +32,7 @@ vi.mock('./orcad-local-build-hash', () => ({
   computeLocalOrcadBuildHash: () => 'abc123def4567890'
 }))
 
-import { execCommand } from './remote-exec-command'
+import { execCommand } from './remote-exec/remote-exec-command'
 import {
   acquireInstallLock,
   isRelayInstallLockStale

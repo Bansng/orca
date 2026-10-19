@@ -4,6 +4,7 @@
 // `startup_agent_conflict` (host support), `file_outside_workspace` (paths) and
 // `terminal_liveness_unavailable` (PTY host).
 
+import type { LiveTerminalAdoption } from './workspace-layout-terminal-adoption'
 import type { SleepingAgentSessionRecord } from '../agent-session-resume'
 import type { AgentType } from '../agent-status-types'
 import type { AiVaultSessionTitle } from '../ai-vault-session-title'
@@ -44,6 +45,8 @@ export type LayoutCommand =
       quickCommandLabel?: string
       creation?: Partial<LayoutTerminalCreation>
       initial?: InitialSurfaceReason
+      /** A live terminal no pane shows: its pane when main holds one, else this tab, bound to it. */
+      adopt?: LiveTerminalAdoption
       split?: NewGroupSplit
     })
   | (On & {

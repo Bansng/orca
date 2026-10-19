@@ -4,7 +4,10 @@ import { orcadAgentBrowserNativeName } from '../../../shared/orcad-agent-browser
 import type { NodeRuntimeTarget } from '../../../shared/node-runtime-pin'
 import { ensureRemoteOrcadNodeRuntime } from './orcad-remote-node-runtime'
 import { recordedRemoteNodeRuntimeProbeCommand } from './orcad-remote-node-runtime-recorded-probe'
-import { execCommand, isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import {
+  execCommand,
+  isUnconfirmedSshCommandTermination
+} from '../../ssh/remote-exec/remote-exec-command'
 import { shellEscape } from '../../ssh/ssh-connection-utils'
 import type { OrcadHostTransport } from '../../ssh/orcad-host-transport'
 import { joinRemotePath, type RemoteHostPlatform } from '../../ssh/ssh-remote-platform'

@@ -607,9 +607,10 @@ describe('MobileNativeChatQueuedMessages', () => {
       const row = mounted.root.findByProps({ testID: 'queued-header' })
       expect(row.props.accessibilityLiveRegion).toBe('polite')
       // Android drops touches outside the parent: nothing may pull a row or a button past its edge.
-      const styled = mounted.root.findAll(
-        (node) => typeof node.type === 'string' && node.props.style !== undefined
-      )
+      // The box itself tucks under the composer, by padding nothing in it can be pressed on.
+      const styled = mounted.root
+        .findByProps({ testID: 'queued-box' })
+        .findAll((node) => typeof node.type === 'string' && node.props.style !== undefined)
       expect(styled.length).toBeGreaterThan(0)
       for (const node of styled) {
         const style = flatStyle(

@@ -32,6 +32,7 @@ import { useSidebarSectionRows } from './worktree-list/listing/use-section-rows'
 import { useSidebarWorktreeFilters } from './worktree-list/listing/use-filters'
 import { useSidebarWorktreeSelection } from './worktree-list/navigation/use-selection'
 import { useSidebarWorktreeSortOrder } from './worktree-list/listing/use-sort-order'
+import { useOrderHeldWhileEngaged } from './worktree-list/listing/use-order-hold'
 import { useVisibleSidebarWorktrees } from './worktree-list/listing/use-visible-worktrees'
 import { useWorktreeStatusMutations } from './worktree-list/drag/use-status-mutations'
 import { shouldFiltersHideAllRows } from './sidebar-empty-state-gate'
@@ -107,7 +108,10 @@ const WorktreeList = React.memo(function WorktreeList({
   const agentSendTargetWorktreeId = useAgentSendTargetWorktreeId()
   const { filterState, hasFilters, clearFilters, revealWorkspaceFilters } =
     useSidebarWorktreeFilters()
-  const sortedIds = useSidebarWorktreeSortOrder({ repoMap, sortBy })
+  const sortedIds = useOrderHeldWhileEngaged(
+    useSidebarWorktreeSortOrder({ repoMap, sortBy }),
+    sortBy
+  )
   const manualOrderCatalog = useMemo(
     () => buildWorktreeManualOrderCatalog({ worktrees: allWorktrees, folderWorkspaces }),
     [allWorktrees, folderWorkspaces]

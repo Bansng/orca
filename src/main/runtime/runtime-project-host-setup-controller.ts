@@ -21,7 +21,7 @@ import {
 } from '../../shared/execution-host'
 import { getProjectIdForProviderIdentity } from '../../shared/project-host-setup-projection'
 import { getProjectHostSetupForRepo } from '../../shared/project-host-setup-lookup'
-import { invalidateAuthorizedRootsCache } from '../ipc/filesystem-auth'
+import { invalidateAuthorizedRootsCache } from '../ipc/registered-worktree-roots-cache'
 import {
   SshHostNotServedError,
   sshTargetNotConnectedMessage

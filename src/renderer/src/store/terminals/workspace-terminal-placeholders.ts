@@ -1,7 +1,12 @@
 import type { Repo } from '../../../../shared/repo-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import { DEFAULT_REPO_BADGE_COLOR } from '../../../../shared/constants'
-import { parseExecutionHostId, type ExecutionHostId } from '../../../../shared/execution-host'
+import {
+  getRepoExecutionHostId,
+  parseExecutionHostId,
+  toSshExecutionHostId,
+  type ExecutionHostId
+} from '../../../../shared/execution-host'
 import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
 import { splitWorktreeIdForFilesystem } from '../../../../shared/worktree/id'
 
@@ -9,6 +14,24 @@ export function getPathDisplayName(path: string, fallback: string): string {
   const normalized = path.trim().replace(/[\\/]+$/g, '')
   const basename = normalized.split(/[\\/]/).findLast(Boolean)?.trim()
   return basename || fallback
+}
+
+/**
+ * A server's repo that nests an SSH target lists its worktrees as `ssh:<target>` reached through
+ * that server; a bare `runtime:` stamp would hide the target from an `ssh:` host selection.
+ */
+function runtimePlaceholderOwner(
+  repos: readonly Repo[],
+  repoId: string,
+  hostId: ExecutionHostId
+): Pick<Worktree, 'hostId' | 'runtimeOwnerEnvironmentId'> {
+  const host = parseExecutionHostId(hostId)
+  const connectionId = repos
+    .find((repo) => repo.id === repoId && getRepoExecutionHostId(repo) === hostId)
+    ?.connectionId?.trim()
+  return connectionId && host?.kind === 'runtime'
+    ? { hostId: toSshExecutionHostId(connectionId), runtimeOwnerEnvironmentId: host.environmentId }
+    : { hostId }
 }
 
 export function buildRuntimeSessionPlaceholders({
@@ -66,7 +89,7 @@ export function buildRuntimeSessionPlaceholders({
     const placeholder: Worktree = {
       id: worktreeId,
       repoId: parsed.repoId,
-      hostId,
+      ...runtimePlaceholderOwner(nextRepos, parsed.repoId, hostId),
       displayName: getPathDisplayName(parsed.worktreePath, parsed.repoId),
       comment: '',
       linkedIssue: null,

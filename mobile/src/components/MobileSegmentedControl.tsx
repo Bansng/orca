@@ -14,12 +14,17 @@ type Props<Value extends string> = {
   fill?: boolean
   /** The track; its default color suits a panel-colored row. */
   style?: StyleProp<ViewStyle>
+  /** Shown but not pickable, e.g. while the value it sets is locked. */
+  disabled?: boolean
 }
 
 /** A pick-one pill control; each segment reads as a radio button. */
 export function MobileSegmentedControl<Value extends string>(props: Props<Value>) {
   return (
-    <View style={[styles.segmented, props.style]} accessibilityRole="radiogroup">
+    <View
+      style={[styles.segmented, props.style, props.disabled && styles.disabled]}
+      accessibilityRole="radiogroup"
+    >
       {props.segments.map((segment) => {
         const active = segment.value === props.selected
         return (
@@ -27,6 +32,8 @@ export function MobileSegmentedControl<Value extends string>(props: Props<Value>
             key={segment.value}
             accessibilityRole="radio"
             aria-checked={active}
+            accessibilityState={{ disabled: props.disabled === true }}
+            disabled={props.disabled}
             accessibilityLabel={segment.label}
             testID={props.testIDPrefix ? `${props.testIDPrefix}${segment.value}` : undefined}
             onPress={() => props.onSelect(segment.value)}
@@ -64,6 +71,7 @@ const styles = StyleSheet.create({
   },
   segmentFill: { flex: 1, alignItems: 'center', paddingHorizontal: spacing.xs },
   segmentActive: { backgroundColor: colors.bgRaised },
+  disabled: { opacity: 0.5 },
   segmentText: { fontSize: typography.metaSize, color: colors.textSecondary, fontWeight: '600' },
   segmentTextActive: { color: colors.textPrimary }
 })

@@ -106,6 +106,8 @@ function applySent(): LayoutCommand[] {
 }
 
 async function showMainFrame(): Promise<void> {
+  // Main has answered the window's commands, so no tab of theirs is still held as drawn.
+  await new Promise((resolve) => setTimeout(resolve, 0))
   const sync = openWorkspaceLayoutFrameSync(useAppStore)
   stream.onFrame!({
     type: 'snapshot',

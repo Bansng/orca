@@ -7,6 +7,7 @@ import { SidebarSessionBeginParams } from '../../../../shared/rpc-contract/sideb
 import { RepoIconDataUrlsParams } from '../../../../shared/sidebar-list/repo-icon-data-urls-contract'
 import { SetCollapsedParams } from '../../../../shared/rpc-contract/workspace-view-collapse-params'
 import { setCollapsedSection } from '../../workspace-view-collapse-writes'
+import { ClientWorkspaceViewParams } from '../../../../shared/rpc-contract/client-workspace-view-params'
 
 // Registered only with ORCA_SIDEBAR_INPUTS=main, so the producers below always exist.
 
@@ -100,6 +101,27 @@ export const SIDEBAR_INPUT_METHODS = [
     params: null,
     handler: async (_params, { runtime }) =>
       requireSwitchedOn(runtime.workspaceCreations).snapshot()
+  }),
+  defineMethod({
+    name: 'sidebarInputs.reportView',
+    permission: 'workspace',
+    params: ClientWorkspaceViewParams,
+    // What a client window shows, so this host raises no unread flag on it; held until it closes.
+    handler: async (params, { runtime, connectionId, signal }) => {
+      const viewers = requireSwitchedOn(runtime.sidebarFacts).workspaceViewers
+      // A view outlives the call, so it needs a connection whose close drops it.
+      if (connectionId === undefined || signal?.aborted) {
+        throw new Error('client_disconnected')
+      }
+      if (viewers.reportClientView(connectionId, params)) {
+        runtime.registerSubscriptionCleanup(
+          `sidebar-view-${connectionId}`,
+          () => viewers.dropClient(connectionId),
+          connectionId
+        )
+      }
+      return { ok: true }
+    }
   }),
   defineMethod({
     name: 'ui.setCollapsed',

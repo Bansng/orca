@@ -204,6 +204,7 @@ describe('the grants this app implements', () => {
       'native.media.pick',
       'native.media.read',
       'native.media.release',
+      'native.media.name',
       'native.audio.start',
       'native.audio.read',
       'native.audio.stop',

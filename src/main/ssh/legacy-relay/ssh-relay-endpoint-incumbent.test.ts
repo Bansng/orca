@@ -1,9 +1,9 @@
-import type * as ExecCommandModule from '../remote-exec-command'
+import type * as ExecCommandModule from '../remote-exec/remote-exec-command'
 import { describe, expect, it, vi } from 'vitest'
 import { RELAY_LSOF_PROBE_JS } from '@orca/process-host/posix-lsof-probe'
 
 const execCommand = vi.fn()
-vi.mock('../remote-exec-command', async (importOriginal) => ({
+vi.mock('../remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: (...args: unknown[]) => execCommand(...args),
   isUnconfirmedSshCommandTermination: (error: unknown) =>
