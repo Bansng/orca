@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { getDefaultWorkspaceSession } from '../shared/constants'
 import type { BrowserPage, BrowserWorkspace } from '../shared/browser-workspace-types'
 
-vi.mock('./ssh/ssh-config-parser', () => ({
+vi.mock('./ssh/config/ssh-config-parser', () => ({
   loadUserSshConfig: vi.fn(),
   sshConfigHostsToTargets: vi.fn()
 }))

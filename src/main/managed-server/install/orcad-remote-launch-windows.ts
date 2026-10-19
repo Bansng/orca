@@ -30,7 +30,7 @@ import {
 import {
   ORCAD_WINDOWS_ENTRY_MARKER,
   ORCAD_WINDOWS_RUNTIME_MARKER
-} from '../../ssh/orcad-windows-host-script'
+} from '../host-state/orcad-windows-host-script'
 import {
   ORCAD_LOG_FILENAME,
   ORCAD_READINESS_FILENAME,

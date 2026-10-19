@@ -16,13 +16,6 @@ import {
   terminalLayoutLeafIds,
   terminalRowsBySurface
 } from './web-session-terminal-orphan-recovery-surface-index'
-export {
-  isRemovedSnapshot,
-  isValidReadySurface,
-  surfaceKey,
-  terminalLayoutLeafIds,
-  terminalRowsBySurface
-} from './web-session-terminal-orphan-recovery-surface-index'
 
 import type { WebTerminalOrphanTopologyState } from './web-session-terminal-orphan-topology'
 

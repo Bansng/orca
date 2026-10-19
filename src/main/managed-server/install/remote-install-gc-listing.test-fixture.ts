@@ -7,7 +7,7 @@ import type { ClientChannel } from 'ssh2'
 import { runProcess, spawnProcess } from '@orca/process-host'
 import type { SshConnection } from '../../ssh/ssh-connection'
 import { shellEscape } from '../../ssh/ssh-connection-utils'
-import { execCommand } from '../../ssh/remote-exec-command'
+import { execCommand } from '../../ssh/remote-exec/remote-exec-command'
 
 export const SSH_EXEC_OUTPUT_CAP_CHARS = 1024 * 1024
 

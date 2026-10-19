@@ -34,8 +34,8 @@ import {
 import { AGENT_SESSION_FOUNDING_FENCE } from './agent-session-record-founding'
 import { isTuiAgent } from '../../shared/tui-agent-config'
 import type { TuiAgent } from '../../shared/tui-agent'
+import { isStructuredWorkerHandle } from '../../shared/structured-worker-handle'
 import {
-  isStructuredWorkerHandle,
   structuredWorkerIdentities,
   structuredWorkerProcessIncarnation,
   type StructuredWorkerIdentity

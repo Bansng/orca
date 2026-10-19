@@ -5,10 +5,10 @@
 import { join } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import type { RemoteInstallTransport } from './remote-install-transport'
-import { execHostCommand } from '../../ssh/remote-host-exec'
-import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import { execHostCommand } from '../../ssh/remote-exec/remote-host-exec'
+import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec/remote-exec-command'
 import { RELAY_INSTALL_LOCK_NAME } from './remote-install-lock'
-import { RELAY_REMOTE_DIR } from '../../ssh/remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../../ssh/remote-exec/remote-frame-protocol'
 import { remoteInstallDirName, type RemoteInstallModel } from './remote-install-model'
 import {
   probeRemoteInstallCompleteCommand,

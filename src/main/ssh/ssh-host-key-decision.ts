@@ -5,7 +5,7 @@
  * rather than importing its sources so a test states its own trust state instead of writing files.
  * See docs/reference/ssh-host-key-verification.md.
  */
-import type { KnownHostsOutcome } from './ssh-known-hosts'
+import type { KnownHostsOutcome } from './config/ssh-known-hosts'
 
 /** Phase 1 ships no dialog; `prompt` is reserved for Phase 2 and never produced today. */
 export type HostKeyAction = 'accept' | 'accept-and-remember' | 'reject' | 'prompt'

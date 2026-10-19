@@ -8,7 +8,7 @@ import {
   launchOrcadAndAwaitReadiness,
   type OrcadRemoteExecTarget
 } from '../managed-server/install/orcad-remote-runtime-control'
-import { isUnconfirmedSshCommandTermination } from './remote-exec-command'
+import { isUnconfirmedSshCommandTermination } from './remote-exec/remote-exec-command'
 
 type CandidateLaunchTarget = Parameters<typeof launchOrcadAndAwaitReadiness>[0] &
   OrcadRemoteExecTarget & {

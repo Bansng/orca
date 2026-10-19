@@ -24,7 +24,7 @@ import {
   writeStringViaExecStdin
 } from './ssh-exec-stdin-file-transfer'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
-import { makePosixWriteFileCommand } from './system-ssh-file-binary-transfer'
+import { makePosixWriteFileCommand } from './system-transport/system-ssh-file-binary-transfer'
 
 const directories: string[] = []
 afterEach(() => {

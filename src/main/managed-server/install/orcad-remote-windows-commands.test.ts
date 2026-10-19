@@ -1,12 +1,12 @@
-import type * as ExecCommandModule from '../../ssh/remote-exec-command'
+import type * as ExecCommandModule from '../../ssh/remote-exec/remote-exec-command'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../ssh/remote-exec-command', async (importOriginal) => ({
+vi.mock('../../ssh/remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))
 
-import { execCommand } from '../../ssh/remote-exec-command'
+import { execCommand } from '../../ssh/remote-exec/remote-exec-command'
 import type { OrcadHostTransport } from '../../ssh/orcad-host-transport'
 import { getRemoteHostPlatform } from '../../ssh/ssh-remote-platform'
 import { orcadLivenessProbeCommand, type OrcadLaunchSpec } from './orcad-remote-launch'
@@ -26,7 +26,7 @@ import {
 } from './orcad-remote-record-file'
 import { launchOrcadAndAwaitReadiness } from './orcad-remote-runtime-control'
 import { probeActiveOrcadReadiness } from '../../ssh/orcad-active-readiness'
-import { completeRemoteOrcadManagedStop } from '../../ssh/orcad-managed-remote-stop'
+import { completeRemoteOrcadManagedStop } from '../lifecycle/orcad-managed-remote-stop'
 import {
   installOrcadWindowsHostScript,
   orcadWindowsNodeCommandLine,
@@ -36,7 +36,7 @@ import {
 import {
   ORCAD_WINDOWS_HOST_SCRIPT,
   ORCAD_WINDOWS_HOST_SCRIPT_FILENAME
-} from '../../ssh/orcad-windows-host-script'
+} from '../host-state/orcad-windows-host-script'
 import type { OrcadSlotOptions } from '../../ssh/orcad-recovery-slot'
 import { NODE_RUNTIME_ASSETS } from '../../../shared/node-runtime-pin'
 

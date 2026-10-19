@@ -22,10 +22,10 @@ import {
   planOrcadDecommissionRecovery,
   type OrcadDecommissionRecoveryPlan,
   type OrcadDecommissionTransaction
-} from '../../ssh/orcad-decommission-transaction'
+} from '../lifecycle/orcad-decommission-transaction'
 import { errorMessage } from '../../../shared/error-message'
 import { RELAY_INSTALL_LOCK_NAME } from '../../../shared/relay-install-lock-name'
-import { RELAY_REMOTE_DIR } from '../../ssh/remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../../ssh/remote-exec/remote-frame-protocol'
 import { joinRemotePath, type RemoteHostPlatform } from '../../ssh/ssh-remote-platform'
 
 export const ORCAD_ACTIVATION_TRANSACTION_FILENAME = 'transaction.json'

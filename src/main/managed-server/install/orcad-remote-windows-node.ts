@@ -10,7 +10,7 @@
  * rather than encoded (docs/reference/windows-edr-posture.md).
  */
 import { currentOrcadFence } from '../activation/orcad-activation-fence-scope'
-import { ORCAD_WINDOWS_FENCE_ARG } from '../../ssh/orcad-windows-host-fence-ops'
+import { ORCAD_WINDOWS_FENCE_ARG } from '../host-state/orcad-windows-host-fence-ops'
 import {
   ORCAD_NODE_RUNTIME_DIR_PREFIX,
   ORCAD_NODE_RUNTIME_WINDOWS_EXECUTABLE,
@@ -19,8 +19,11 @@ import {
 import { pinnedNodeRuntimeAsset, type NodeRuntimeTarget } from '../../../shared/node-runtime-pin'
 import { randomUUID } from 'node:crypto'
 import type { OrcadHostTransport } from '../../ssh/orcad-host-transport'
-import { execCommand, isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
-import { RELAY_REMOTE_DIR } from '../../ssh/remote-frame-protocol'
+import {
+  execCommand,
+  isUnconfirmedSshCommandTermination
+} from '../../ssh/remote-exec/remote-exec-command'
+import { RELAY_REMOTE_DIR } from '../../ssh/remote-exec/remote-frame-protocol'
 import {
   joinRemotePath,
   remoteDirname,
@@ -33,7 +36,7 @@ import {
   ORCAD_WINDOWS_HOST_SCRIPT_FILENAME,
   ORCAD_WINDOWS_HOST_SCRIPT_PRESENT,
   type OrcadWindowsHostOp
-} from '../../ssh/orcad-windows-host-script'
+} from '../host-state/orcad-windows-host-script'
 
 const BARE_EXECUTABLE = /^[A-Za-z]:\\[A-Za-z0-9._+~\\-]*$/u
 // Leading digits are quoted: PowerShell would read `1e5` as a number and pass `100000`.

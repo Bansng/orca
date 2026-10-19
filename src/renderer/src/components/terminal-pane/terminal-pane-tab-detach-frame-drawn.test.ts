@@ -195,6 +195,31 @@ describe('a drag-out whose new tab main’s frame drew first', () => {
     expect(state.activeTabIdByWorktree[WT]).toBe(MOVED)
   })
 
+  it('leaves the tab where main’s frame placed it, asked for an index', async () => {
+    const store = storeWithFrameDrawnMove()
+    mocks.send.mockImplementation((_worktreeId, _command, handlers) => {
+      handlers.apply({ tabId: MOVED, ptyId: 'pty-right' })
+      return true
+    })
+
+    await detachTerminalPaneToTab({
+      getStore: () => store.getState(),
+      manager: {
+        getPanes: () => [{ id: 1 }, { id: 2 }],
+        getLeafId: (paneId: number) => (paneId === 2 ? LEAF_2 : LEAF_1),
+        detachPaneForExternalMove: () => true
+      },
+      persistLayoutSnapshot: vi.fn(),
+      sourcePaneId: 2,
+      sourceTabId: SOURCE,
+      targetGroupId: GROUP,
+      targetIndex: 0,
+      worktreeId: WT
+    })
+
+    expect(store.getState().groupsByWorktree[WT]![0]!.tabOrder).toEqual([SOURCE, MOVED])
+  })
+
   it('opens a dragged-out chat pane’s tab in chat view, as a window-owned build does', async () => {
     const store = storeWithChatSplit()
     mocks.send.mockImplementation((_worktreeId, _command, handlers) => {

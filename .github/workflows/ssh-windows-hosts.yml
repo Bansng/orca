@@ -41,11 +41,11 @@ on:
       - 'config/scripts/windows-process-tree-prepared-addon*.mjs'
       - 'config/scripts/windows-process-tree-gyp-rebuild.mjs'
       - 'src/shared/windows-breakaway-launch*.ts'
-      - 'src/main/ipc/ssh-host-server-*.ts'
+      - 'src/main/ipc/ssh/ssh-host-server-*.ts'
       # The deploy runs over this SSH transport.
       - 'src/main/ssh/ssh-connection*'
       - '!src/**/*.test.ts'
-      - 'src/main/ssh/orcad-windows-host-lane.test.ts'
+      - 'src/main/managed-server/host-state/orcad-windows-host-lane.test.ts'
       - 'tests/e2e/ssh-orcad-auto-convert.spec.ts'
       - 'tests/e2e/helpers/orcad-convert-host.ts'
       - 'tests/e2e/helpers/orcad-convert-flow.ts'

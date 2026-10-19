@@ -3,7 +3,7 @@ import { ORCAD_LAUNCHER_FILENAME } from '../../../shared/orcad-artifacts'
 import { shellEscape } from '../../ssh/ssh-connection-utils'
 import { execOrcadRemote, type OrcadRemoteExecTarget } from './orcad-remote-runtime-control'
 import { orcadWindowsSlotOpCommand } from './orcad-remote-windows-node'
-import { ORCAD_BUILD_HASH_MARKER as BUILD_HASH_MARKER } from '../../ssh/orcad-windows-host-script'
+import { ORCAD_BUILD_HASH_MARKER as BUILD_HASH_MARKER } from '../host-state/orcad-windows-host-script'
 import {
   isWindowsRemoteHost,
   joinRemotePath,

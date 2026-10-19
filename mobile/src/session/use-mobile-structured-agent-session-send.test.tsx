@@ -413,6 +413,27 @@ describe('mobile structured send actions', () => {
     })
   })
 
+  it('sends an attached file as a reference after the text, and only images as image blocks', async () => {
+    sendRequest.mockImplementation(async (method) =>
+      method === 'agentSession.send' ? sendResult('accepted') : ok({ models: [], current: {} })
+    )
+    await mountSession()
+    await act(async () => {
+      await hook!.sendWithOutcome('read these', undefined, undefined, [
+        { path: '/tmp/shot.png', previewUri: 'file:///shot.png' },
+        { kind: 'file', path: '/store/u1/spec.pdf' }
+      ])
+    })
+    expect(calls()[0]?.[1]).toMatchObject({
+      body: {
+        blocks: [
+          { type: 'text', text: 'read these\n@/store/u1/spec.pdf' },
+          { type: 'image-ref', path: '/tmp/shot.png' }
+        ]
+      }
+    })
+  })
+
   it('reports a send stopped before the agent started it without sending it twice', async () => {
     sendRequest.mockImplementation(async (method) =>
       method === 'agentSession.send'

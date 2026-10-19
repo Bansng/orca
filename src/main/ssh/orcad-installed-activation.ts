@@ -8,7 +8,7 @@
 import { orcadRemoteBaseDir } from '../managed-server/install/orcad-remote-windows-node'
 import { randomUUID } from 'node:crypto'
 import type { OrcadDeployOptions, OrcadDeployResult } from './orcad-remote-deploy'
-import { isUnconfirmedSshCommandTermination } from './remote-exec-command'
+import { isUnconfirmedSshCommandTermination } from './remote-exec/remote-exec-command'
 import {
   withActivatedVersion,
   type OrcadActivationRecord,
@@ -27,7 +27,7 @@ import {
   captureOrcadStateSnapshotCommand,
   orcadSnapshotDirName,
   parseOrcadSnapshotCapture
-} from './orcad-state-snapshot'
+} from '../managed-server/host-state/orcad-state-snapshot'
 import { joinRemotePath } from './ssh-remote-platform'
 import { computeLocalOrcadBuildHash } from './orcad-local-build-hash'
 import { preflightInstalledOrcad } from '../managed-server/install/orcad-remote-preflight'
@@ -44,7 +44,7 @@ import {
   execOrcadRemoteOr,
   withoutAbortSignal
 } from '../managed-server/install/orcad-remote-runtime-control'
-import { execOrcadStateMutationOr } from './orcad-state-mutation-exec'
+import { execOrcadStateMutationOr } from '../managed-server/host-state/orcad-state-mutation-exec'
 import {
   initialOrcadActivationAdmissionCommand,
   parseInitialOrcadActivationAdmission

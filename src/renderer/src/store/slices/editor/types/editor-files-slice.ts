@@ -21,11 +21,23 @@ import type {
   EditorTabSelection,
   OpenFile
 } from './open-file'
+import type { EditorOpenLinkIntent, EditorOpenResult } from './editor-open-link-intent'
 import type { OpenFilePathRekey, RekeyOpenFilesResult } from './open-file-path-rekey'
 import type {
   RestoredEditorOwnerMigration,
   RestoredEditorOwnerResult
 } from './restored-editor-owner'
+
+export type OpenFileOptions = {
+  preview?: boolean
+  targetGroupId?: string
+  recordReplacedPreview?: boolean
+  suppressActiveRuntimeFallback?: boolean
+  forceContentReload?: boolean
+  focusEditor?: boolean
+  reopenId?: string
+  selection?: EditorTabSelection
+}
 
 export type EditorFilesSlice = {
   // Open files / editor tabs
@@ -35,19 +47,13 @@ export type EditorFilesSlice = {
   activeTabTypeByWorktree: Record<string, WorkspaceVisibleTabType> // worktreeId -> last active tab type
   activeTabType: WorkspaceVisibleTabType
   setActiveTabType: (type: WorkspaceVisibleTabType, worktreeId: string | null) => void
-  openFile: (
+  openFile: (file: Omit<OpenFile, 'id' | 'isDirty'>, options?: OpenFileOptions) => string
+  /** openFile for a captured link activation; returns the actual view, or null when refused. */
+  openFileForLink: (
     file: Omit<OpenFile, 'id' | 'isDirty'>,
-    options?: {
-      preview?: boolean
-      targetGroupId?: string
-      recordReplacedPreview?: boolean
-      suppressActiveRuntimeFallback?: boolean
-      forceContentReload?: boolean
-      focusEditor?: boolean
-      reopenId?: string
-      selection?: EditorTabSelection
-    }
-  ) => string
+    options: Omit<OpenFileOptions, 'targetGroupId' | 'focusEditor' | 'selection'> | undefined,
+    intent: EditorOpenLinkIntent | null
+  ) => EditorOpenResult | null
   openNewMarkdownInActiveWorkspace: (groupId: string) => Promise<void>
   // Why: sequences openFile/setMarkdownViewMode/reveal around an async Monaco remount. See docs/markdown-internal-link-opening-design.md.
   activateMarkdownLink: (

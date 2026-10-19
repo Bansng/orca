@@ -1,7 +1,7 @@
 import { OrcaRuntimeWithResolveTerminalSplitSourceAuthority } from '../launch/terminal-split-source-authority'
 import type { ResolvedWorktree } from '../../runtime-worktree-path-identity'
 import { worktreeIdentityKey, worktreeIdsEqual } from '../../../../shared/worktree/id'
-import { teardownRpcDeadline } from '../../worktree-teardown'
+import { teardownRpcDeadline } from '../../worktree-teardown-deadline'
 import { WORKTREE_TERMINALS_SLEEPING_ERROR } from '../../worktree-terminals-sleeping-error'
 import type {
   RuntimeWorktreeTerminalCloseResult,

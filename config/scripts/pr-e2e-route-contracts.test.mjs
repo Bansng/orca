@@ -288,7 +288,7 @@ describe('ssh-browser-e2e-routing', () => {
       'src/main/browser/browser-network-deferred-socket.ts',
       'src/main/browser/browser-network-execution-route.ts',
       'src/main/browser/system-ssh-socks-client-socket.ts',
-      'src/main/ssh/system-ssh-dynamic-forward-process.ts',
+      'src/main/ssh/system-transport/system-ssh-dynamic-forward-process.ts',
       'tests/e2e/helpers/docker-ssh-host-target.ts',
       'tests/e2e/helpers/docker-ssh-host-image.ts'
     ]) {
@@ -354,7 +354,7 @@ describe('orcad-e2e-routing', () => {
   it('routes the auto-convert spec from its conversion sources and harness', () => {
     expectRouted(
       [
-        'src/main/ssh/orcad-runtime-conversion.ts',
+        'src/main/managed-server/lifecycle/orcad-runtime-conversion.ts',
         'tests/e2e/helpers/orcad-convert-flow.ts',
         'tests/e2e/helpers/orcad-convert-host.ts',
         'tests/e2e/helpers/orcad-template-variant.ts',
@@ -362,9 +362,9 @@ describe('orcad-e2e-routing', () => {
       ],
       ORCAD_AUTO_CONVERT_E2E_SPEC
     )
-    expect(selectPrE2eSpecs(['src/main/ssh/orcad-runtime-conversion.test.ts'])).not.toContain(
-      ORCAD_AUTO_CONVERT_E2E_SPEC
-    )
+    expect(
+      selectPrE2eSpecs(['src/main/managed-server/lifecycle/orcad-runtime-conversion.test.ts'])
+    ).not.toContain(ORCAD_AUTO_CONVERT_E2E_SPEC)
   })
 
   it('routes the idle-exit spec from its idle sources and the shared convert harness', () => {
@@ -372,7 +372,7 @@ describe('orcad-e2e-routing', () => {
       [
         'src/shared/orcad-idle-exit.ts',
         'src/main/managed-server/install/orcad-remote-runtime-control.ts',
-        'src/main/ssh/orcad-managed-serving.ts',
+        'src/main/managed-server/lifecycle/orcad-managed-serving.ts',
         'tests/e2e/helpers/orcad-convert-flow.ts',
         'tests/e2e/helpers/orcad-convert-host.ts'
       ],
@@ -463,11 +463,11 @@ describe('orcad-e2e-routing', () => {
           'src/renderer/src/components/terminal-pane/terminal-host-file-link-existence.ts',
           'src/renderer/src/runtime/runtime-terminal-artifact-read.ts',
           // #30130's Disconnect sources merged with this lane skipped.
-          'src/main/ipc/ssh-host-user-disconnect.ts',
-          'src/main/ipc/ssh-connect-flow.ts',
-          'src/main/ipc/ssh-connection-handlers.ts',
-          'src/main/ipc/runtime-environment-connectivity-handlers.ts',
-          'src/main/ipc/runtime-environment-manual-disconnect.ts',
+          'src/main/ipc/ssh/ssh-host-user-disconnect.ts',
+          'src/main/ipc/ssh/ssh-connect-flow.ts',
+          'src/main/ipc/ssh/ssh-connection-handlers.ts',
+          'src/main/ipc/runtime-environments/runtime-environment-connectivity-handlers.ts',
+          'src/main/ipc/runtime-environments/runtime-environment-manual-disconnect.ts',
           'src/main/ssh/ssh-connection-manager.ts',
           'src/main/ssh/ssh-user-disconnect.ts',
           'src/renderer/src/runtime/web-session-close-intent.ts',
@@ -500,12 +500,12 @@ describe('managed-SSH remote sources routing', () => {
   it('starts the lane for remote product sources no hand-kept route names', () => {
     for (const file of [
       // #30130 and #30120 merged with the lane skipped.
-      'src/main/ipc/ssh.ts',
+      'src/main/ipc/ssh/ssh.ts',
       'src/cli/runtime/serve-orcad-launch.ts',
       'src/main/orcad/orcad-entry.ts',
       'src/main/ssh/ssh-connection.ts',
-      'src/main/ipc/runtime-environment-status-probe.ts',
-      'src/main/ipc/orcad-runtime-lifecycle-handlers.ts',
+      'src/main/ipc/runtime-environments/runtime-environment-status-probe.ts',
+      'src/main/ipc/runtime-environments/orcad-runtime-lifecycle-handlers.ts',
       'src/shared/protocol-version.ts',
       'src/shared/remote-runtime-client-error-classification.ts',
       // #30047 and #30060: sidebar sleep and project removal.
@@ -521,7 +521,7 @@ describe('managed-SSH remote sources routing', () => {
   it('leaves unit tests and local-only sources alone', () => {
     for (const file of [
       'src/main/ssh/ssh-connection.test.ts',
-      'src/main/ipc/ssh.test.ts',
+      'src/main/ipc/ssh/ssh.test.ts',
       'src/main/daemon/daemon-server.ts',
       'src/main/runtime/rpc/methods/accounts.ts',
       'src/renderer/src/components/sidebar/WorktreeCard.tsx',

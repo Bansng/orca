@@ -21,7 +21,10 @@ import {
   trustFloatingWorkspaceDirectory,
   resolveFloatingTerminalCwd
 } from './floating-workspace-directory'
-import { isMarkdownDocumentName, markdownDocumentFromFilePath } from './markdown-documents'
+import {
+  isMarkdownDocumentName,
+  markdownDocumentFromFilePath
+} from '../../shared/markdown-document-paths'
 import { registerMacSymbolicHotkeysProbeHandler } from './macos-symbolic-hotkeys-probe'
 import { registerRendererShutdownCheckpointHandler } from './renderer-shutdown-checkpoint'
 import { readMacKeyboardLayoutSnapshot } from './macos-keyboard-layout-snapshot'

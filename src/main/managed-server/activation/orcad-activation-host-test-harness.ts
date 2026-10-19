@@ -10,7 +10,7 @@ import {
   type OrcadActivationRecord
 } from './orcad-activation-record'
 import { isSnapshotCaptureCommand } from '../../ssh/orcad-snapshot-capture-command'
-import { sshCommandExitError } from '../../ssh/remote-exec-command'
+import { sshCommandExitError } from '../../ssh/remote-exec/remote-exec-command'
 
 export const OLD = '0.1.0+aa01'
 export const NEW = '0.2.0+bb01'

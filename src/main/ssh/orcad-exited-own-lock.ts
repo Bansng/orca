@@ -27,7 +27,7 @@ import {
 import {
   ORCAD_EXITED_OWN_LOCK_QUIET_SECONDS,
   ORCAD_STATE_MUTATION_LOCK_DIRNAME
-} from './orcad-state-snapshot-members'
+} from '../managed-server/host-state/orcad-state-snapshot-members'
 import { CMD_EXE_COMMAND_LINE_MAX_CHARS } from '../providers/windows-shell-args'
 import { shellEscape } from './ssh-connection-utils'
 import type { InstallLockExitedOwnerProof } from '../managed-server/install/remote-install-lock'

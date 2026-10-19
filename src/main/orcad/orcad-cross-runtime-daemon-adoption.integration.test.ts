@@ -4,7 +4,7 @@
  * are installed side by side as `~/.orca-remote/orcad-<version>/`, launched and stopped with
  * the client's own deploy commands, and share one data root.
  */
-import type * as ExecCommandModule from '../ssh/remote-exec-command'
+import type * as ExecCommandModule from '../ssh/remote-exec/remote-exec-command'
 import { build } from 'esbuild'
 import {
   copyFileSync,
@@ -58,7 +58,7 @@ import {
   parseOrcadStopOutcome,
   stopOrcadCommand
 } from '../managed-server/install/orcad-remote-process-control'
-import { RELAY_REMOTE_DIR } from '../ssh/remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../ssh/remote-exec/remote-frame-protocol'
 import { getRemoteHostPlatform } from '../ssh/ssh-remote-platform'
 import {
   skipForMissingInputs,
@@ -68,7 +68,7 @@ import {
 
 // GC runs its real commands, against this machine instead of an SSH host.
 const { execMock } = vi.hoisted(() => ({ execMock: vi.fn() }))
-vi.mock('../ssh/remote-exec-command', async (importOriginal) => ({
+vi.mock('../ssh/remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: execMock
 }))

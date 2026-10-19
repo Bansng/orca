@@ -1,7 +1,7 @@
-import type * as ExecCommandModule from '../../ssh/remote-exec-command'
+import type * as ExecCommandModule from '../../ssh/remote-exec/remote-exec-command'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../ssh/remote-exec-command', async (importOriginal) => ({
+vi.mock('../../ssh/remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))
@@ -21,7 +21,7 @@ vi.mock('./remote-install-lock', () => ({
   isRelayInstallLockStale: vi.fn().mockResolvedValue(false)
 }))
 
-import { execCommand } from '../../ssh/remote-exec-command'
+import { execCommand } from '../../ssh/remote-exec/remote-exec-command'
 import { gcOldOrcadVersions } from './orcad-remote-gc'
 import { emptyOrcadActivationRecord } from '../activation/orcad-activation-record'
 import { serializeOrcadActivationTransaction } from '../activation/orcad-activation-transaction'

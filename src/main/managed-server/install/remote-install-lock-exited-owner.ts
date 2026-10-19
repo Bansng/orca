@@ -8,7 +8,7 @@ import { quotePowerShellLiteral as powerShellLiteral } from '../../../shared/pow
 import {
   posixStateMutationGroupRecord,
   posixStateMutationPidRecord
-} from '../../ssh/orcad-state-mutation-owner-record'
+} from '../host-state/orcad-state-mutation-owner-record'
 
 /**
  * A lock whose owner file still names `token` once it has been quiet past `quietSeconds`: the

@@ -28,7 +28,7 @@ import {
   RELAY_UNRECOGNIZED_CHILD_COUNT_VAR,
   relayDaemonChildCensusShell
 } from '../relay-daemon-service-children'
-import { execCommand, isUnconfirmedSshCommandTermination } from '../remote-exec-command'
+import { execCommand, isUnconfirmedSshCommandTermination } from '../remote-exec/remote-exec-command'
 import { isWindowsRemoteHost, type RemoteHostPlatform } from '../ssh-remote-platform'
 import { filesystemTypeIsLocalDisk } from '../../orcad/orcad-data-root-locality'
 

@@ -130,7 +130,16 @@ export function useTerminalPaneLayoutPersistence(controller: TerminalPaneStartup
         (ptyId) => typeof ptyId === 'string' && isRemoteRuntimePtyId(ptyId)
       )
       if (hasRemotePane) {
-        remotePaneLayoutPusherRef.current?.push({ worktreeId, tabId, layout, intent })
+        // Why: a host keeps its titles when the field is absent, so clearing the last one sends {}.
+        const clearedEveryTitle =
+          !layout.titlesByLeafId &&
+          [...currentLeafIds].some((leafId) => removedTitleLeafIds.has(leafId))
+        remotePaneLayoutPusherRef.current?.push({
+          worktreeId,
+          tabId,
+          layout: clearedEveryTitle ? { ...layout, titlesByLeafId: {} } : layout,
+          intent
+        })
       }
       for (const leafId of currentLeafIds) {
         clearedScrollbackLeafIds.delete(leafId)

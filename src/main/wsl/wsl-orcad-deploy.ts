@@ -13,22 +13,22 @@ import { materializeOrcadArtifact } from '../orcad/orcad-artifact-materializer'
 import { OrcadHostUnsupportedError } from '../orcad/orcad-host-unavailable'
 import type { OrcadHostTransport } from '../ssh/orcad-host-transport'
 import { ORCAD_ACTIVATION_POLICY_REFUSED_CODE } from '../ssh/orcad-installed-activation'
-import { orcadBoundPort } from '../ssh/orcad-managed-bound-port'
+import { orcadBoundPort } from '../managed-server/lifecycle/orcad-managed-bound-port'
 import {
   isForceableOrcadDeferral,
   managedOrcadDeployPolicy,
   managedOrcadInstallDir,
   managedOrcadSlot,
   probeManagedOrcadReadiness
-} from '../ssh/orcad-managed-runtime-context'
-import { isWaitingOrcadUpdateDeferral } from '../ssh/orcad-managed-auto-update'
-import { pruneManagedOrcadVersions } from '../ssh/orcad-managed-version-gc'
+} from '../managed-server/lifecycle/orcad-managed-runtime-context'
+import { isWaitingOrcadUpdateDeferral } from '../managed-server/lifecycle/orcad-managed-auto-update'
+import { pruneManagedOrcadVersions } from '../managed-server/lifecycle/orcad-managed-version-gc'
 import { wakeAlreadyActiveOrcad } from '../ssh/orcad-already-active-wake'
 import { resolveOrcadRemoteContext } from '../managed-server/install/orcad-remote-context'
 import { deployOrcad } from '../ssh/orcad-remote-deploy'
 import { ORCAD_PID_FILENAME } from '../managed-server/install/orcad-remote-host-support'
 import { shellEscape } from '../ssh/ssh-connection-utils'
-import { execCommand } from '../ssh/remote-exec-command'
+import { execCommand } from '../ssh/remote-exec/remote-exec-command'
 import { joinRemotePath } from '../ssh/ssh-remote-platform'
 import { readLocalFullVersion } from '../managed-server/install/remote-versioned-install'
 import { createWslDistroHolder, type WslDistroHolder } from './wsl-distro-holder'

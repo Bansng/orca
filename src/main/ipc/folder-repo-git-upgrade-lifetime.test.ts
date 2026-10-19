@@ -23,8 +23,11 @@ vi.mock('./registered-worktree-roots-cache', () => ({
 }))
 vi.mock('./repos/repos-changed-notification', () => ({ notifyReposChanged: fake.reposChanged }))
 vi.mock('./worktree-remote', () => ({ notifyWorktreesChanged: fake.worktreesChanged }))
+vi.mock('./worktree-base-directory-marker-poller', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  WORKTREE_BASE_BACKSTOP_TICKS: 15
+}))
 vi.mock('./worktree-base-directory-poller', () => ({
-  WORKTREE_BASE_BACKSTOP_TICKS: 15,
   WORKTREE_BASE_POLL_INTERVAL_MS: 2000,
   createWorktreePollerWindowVisibility: () => ({
     isWindowVisible: () => true,

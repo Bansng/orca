@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClientChannel } from 'ssh2'
-import { execOrcadStateMutation } from './orcad-state-mutation-exec'
+import { execOrcadStateMutation } from '../managed-server/host-state/orcad-state-mutation-exec'
 import {
   execOrcadRemote,
   execOrcadRemoteOr
@@ -13,7 +13,10 @@ import {
   posixOrcadFenceGuard,
   runWithOrcadFence
 } from '../managed-server/activation/orcad-activation-fence-scope'
-import { isUnconfirmedSshCommandTermination, sshCommandExitError } from './remote-exec-command'
+import {
+  isUnconfirmedSshCommandTermination,
+  sshCommandExitError
+} from './remote-exec/remote-exec-command'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
 import type { OrcadHostTransport } from './orcad-host-transport'
 

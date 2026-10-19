@@ -582,7 +582,8 @@
             "76deec8f58": "組織の切り替えに失敗しました",
             "7d4bc516ee": "プロファイルの切り替えに失敗しました",
             "f518e89aa5": "プロジェクトはそのプロファイルに既に存在します",
-            "f03ae7f27b": "プロジェクトの転送に失敗しました"
+            "f03ae7f27b": "プロジェクトの転送に失敗しました",
+            "signInTimedOut": "サインインがタイムアウトしました"
           }
         },
         "runtime": {
@@ -3429,7 +3430,9 @@
             "copiedLink": "コピーされたリンク",
             "copyLinkFailed": "リンクのコピーに失敗しました",
             "downloadOpenWithDefaultApp": "ダウンロードしてデフォルトのアプリで開く",
-            "downloadOpenFailed": "「{{value0}}」のダウンロードに失敗しました。"
+            "downloadOpenFailed": "「{{value0}}」のダウンロードに失敗しました。",
+            "openInThisGroup": "このグループで開く",
+            "openInThisGroupRefused": "{{value0}} をこのグループで開けませんでした"
           },
           "TerminalQuickCommandsSubmenu": {
             "3ccc7981bb": "ホストが利用不可",
@@ -6448,8 +6451,7 @@
         },
         "MarkdownImageLightbox": {
           "image": "画像",
-          "expand": "画像を拡大",
-          "close": "閉じる"
+          "expand": "画像を拡大"
         },
         "WorktreeDeveloperMenu": {
           "developer": "Developer",
@@ -15680,7 +15682,9 @@
           "1829437fce": "新規 Markdown"
         },
         "DiagramViewerModal": {
-          "title": "図",
+          "title": "図"
+        },
+        "PanZoomImageDialog": {
           "zoomOut": "ズームアウト",
           "zoomIn": "ズームイン",
           "fit": "画面に合わせる",
@@ -17945,6 +17949,14 @@
         "a62f9db53d": "Cancel",
         "c77189bc0c": "Update filter",
         "19af906d12": "Save filter"
+      },
+      "OrcaSignInProgress": {
+        "waiting": "ブラウザでのサインインを待っています",
+        "copyLink": "サインインリンクをコピー",
+        "copied": "サインインリンクをコピーしました",
+        "copyFailed": "リンクをコピーできませんでした。",
+        "signingIn": "サインイン中…",
+        "cancel": "キャンセル"
       }
     },
     "i18n": {
@@ -18315,7 +18327,6 @@
         "imageSaving": "貼り付けた画像を保存中…",
         "pendingAttachmentLimit": "待機中の添付ファイルが多すぎます。さらに添付する前に、作成を完了してください。",
         "viewAttachment": "画像を見る",
-        "imagePreview": "フルサイズの画像プレビュー",
         "imagePreviewUnavailable": "プレビューは利用できません",
         "copyImage": "画像をコピー",
         "copyImageFailed": "画像をコピーできませんでした",
@@ -19221,7 +19232,6 @@
       "keywordIssuePicker": "Issue ピッカー"
     },
     "managed-runtime": {
-      "cancel": "インストールをキャンセル",
       "cancelled": "インストールをキャンセルしました。",
       "cancelling": "キャンセルしています…",
       "damaged": "この {{agent}} のコピーは破損しています。",
@@ -19238,10 +19248,17 @@
       "notInstalled": "インストールされていません。",
       "progress": "{{agent}} のダウンロード",
       "readFailed": "このホストの {{agent}} を確認できませんでした。再試行しています。",
-      "reinstall": "{{agent}} を再インストール",
+      "reinstall": "再インストール",
+      "remove": "ダウンロードしたランタイムを削除",
+      "removeConfirm": "削除",
+      "removeDescription": "実行中の {{agent}} チャットは停止します。履歴は保持されます。",
+      "removeKeep": "キャンセル",
+      "removeTitle": "ダウンロードした {{agent}} ランタイムを {{host}} から削除しますか？",
+      "removing": "削除しています…",
       "retry": "インストールを再試行",
+      "thisComputer": "このコンピューター",
       "unavailable": "{{agent}} はこのホストでは利用できません。",
-      "update": "{{agent}} を更新",
+      "update": "更新",
       "verifying": "ダウンロードしたランタイムを確認しています。",
       "installTitle": "チャットを始めるには {{agent}} をインストールしてください",
       "continueTitle": "続けるには {{agent}} をインストールしてください",

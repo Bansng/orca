@@ -1,6 +1,6 @@
 import type { ConnectConfig } from 'ssh2'
 import type { SshTarget, SshConnectionState } from '../../shared/ssh-types'
-import type { SshResolvedConfig } from './ssh-g-config-resolution'
+import type { SshResolvedConfig } from './config/ssh-g-config-resolution'
 import {
   findEncryptedPrivateKeyPath,
   isUnencryptedPrivateKey,
@@ -10,7 +10,7 @@ import {
   resolveUnencryptedExplicitPrivateKeys
 } from './ssh-auth-resolution'
 import { configurePrivateKeyAuthentication } from './ssh-private-key-authentication'
-import { isOpenSshConfigBackedTarget } from './system-ssh-args'
+import { isOpenSshConfigBackedTarget } from './system-transport/system-ssh-args'
 
 export type SshCredentialKind = 'passphrase' | 'password' | 'keyboard-interactive'
 

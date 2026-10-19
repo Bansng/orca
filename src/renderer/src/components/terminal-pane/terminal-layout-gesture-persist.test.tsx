@@ -128,6 +128,22 @@ describe('terminal layout gesture persist', () => {
     expect(pushedIntents()).toEqual(['gesture', 'gesture'])
   })
 
+  it('tells the host to drop every title once the last remote pane title is cleared', () => {
+    const { hook, push } = renderPersistence()
+    hook.result.current.changePaneTitle(2, 'server')
+    expect(push.mock.lastCall?.[0].layout.titlesByLeafId).toEqual({
+      [LEFT]: 'build',
+      [RIGHT]: 'server'
+    })
+
+    hook.result.current.removePaneTitle(2)
+    expect(push.mock.lastCall?.[0].layout.titlesByLeafId).toEqual({ [LEFT]: 'build' })
+
+    // An absent field means "unchanged" to every host, so the last clear must say {}.
+    hook.result.current.removePaneTitle(1)
+    expect(push.mock.lastCall?.[0].layout.titlesByLeafId).toEqual({})
+  })
+
   it('a window-owned build saves a renamed pane at once, without asking main', () => {
     const { hook, pushedIntents, push } = renderPersistence()
     push.mockClear()

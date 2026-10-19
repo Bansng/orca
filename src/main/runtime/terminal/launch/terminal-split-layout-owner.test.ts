@@ -38,6 +38,19 @@ function graph(leafIds: string[], unboundLeafIds: string[] = []) {
 describe('a split of a pane the window draws, in a layout-owner build', () => {
   function setup() {
     const store = makeRuntimeStoreWithWorkspaceSession(makeWorkspaceSessionWithHeadlessTerminal())
+    // The production store's write notice, which the fixture lacks.
+    const written = new Set<() => void>()
+    const setSession = store.runtimeStore.setWorkspaceSession.getMockImplementation()!
+    store.runtimeStore.setWorkspaceSession.mockImplementation((session, hostId) => {
+      setSession(session, hostId)
+      for (const listener of written) {
+        listener()
+      }
+    })
+    Reflect.set(store.runtimeStore, 'onWorkspaceSessionWritten', (listener: () => void) => {
+      written.add(listener)
+      return () => written.delete(listener)
+    })
     const notifier = createMobileCreateTestNotifier(vi.fn())
     const runtime = new OrcaRuntimeService(store.runtimeStore)
     runtime.setNotifier(notifier)
@@ -78,13 +91,13 @@ describe('a split of a pane the window draws, in a layout-owner build', () => {
     }
   })
 
-  it('closes a CLI split before its terminal starts, and nothing brings the pane back', async () => {
+  it('closes a CLI split before its terminal starts, and the CLI hears so at once', async () => {
     const { runtime, handle, splitTerminal, leafIds } = setup()
 
     vi.useFakeTimers()
     try {
       const split = runtime.splitTerminal(handle, { direction: 'vertical' })
-      const rejected = expect(split).rejects.toThrow('Timed out waiting for split pane handle')
+      const rejected = expect(split).rejects.toThrow('split_pane_closed')
       await vi.waitFor(() => expect(splitTerminal).toHaveBeenCalledTimes(1))
       const newLeafId = splitTerminal.mock.calls[0]![2]!.newLeafId!
 
@@ -95,9 +108,52 @@ describe('a split of a pane the window draws, in a layout-owner build', () => {
       })
       expect(leafIds()).toEqual([HEADLESS_LEAF_ID])
 
+      // Settled by the close, well before the 10 s wait.
+      await vi.advanceTimersByTimeAsync(0)
+      await rejected
+      await vi.advanceTimersByTimeAsync(11_000)
+      expect(leafIds()).toEqual([HEADLESS_LEAF_ID])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('settles a CLI split whose tab main closes before its terminal starts', async () => {
+    const { runtime, handle, splitTerminal, getSession } = setup()
+
+    vi.useFakeTimers()
+    try {
+      const split = runtime.splitTerminal(handle, { direction: 'vertical' })
+      const rejected = expect(split).rejects.toThrow('split_pane_closed')
+      await vi.waitFor(() => expect(splitTerminal).toHaveBeenCalledTimes(1))
+
+      await runtime.closeTerminalSurfaceFromRenderer({
+        worktreeId: TEST_WORKTREE_ID,
+        target: { kind: 'tab', tabId: TAB_ID },
+        reason: 'user'
+      })
+      expect(getSession().terminalLayoutsByTabId[TAB_ID]).toBeUndefined()
+
+      await vi.advanceTimersByTimeAsync(0)
+      await rejected
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps waiting through writes that keep the pane', async () => {
+    const { runtime, runtimeStore, handle, splitTerminal } = setup()
+
+    vi.useFakeTimers()
+    try {
+      const split = runtime.splitTerminal(handle, { direction: 'vertical' })
+      const rejected = expect(split).rejects.toThrow('Timed out waiting for split pane handle')
+      await vi.waitFor(() => expect(splitTerminal).toHaveBeenCalledTimes(1))
+      // An unrelated write while the pane waits for its terminal.
+      runtimeStore.setWorkspaceSession(runtimeStore.getWorkspaceSession())
+
       await vi.advanceTimersByTimeAsync(11_000)
       await rejected
-      expect(leafIds()).toEqual([HEADLESS_LEAF_ID])
     } finally {
       vi.useRealTimers()
     }

@@ -208,6 +208,9 @@ export const AGENT_SESSION_QUESTION_ANSWERS_RUNTIME_CAPABILITY =
 // (agentSessionAttachment.*); an older server has no store, so clients must refuse
 // the attach rather than hand the agent a path from this machine.
 export const AGENT_SESSION_ATTACHMENTS_RUNTIME_CAPABILITY = 'agent-session.attachments.v1' as const
+// Why: hosts before this advertise attachments.v1 but refuse the upload methods from a phone.
+export const AGENT_SESSION_PHONE_ATTACHMENTS_RUNTIME_CAPABILITY =
+  'agent-session.attachments.phone.v1' as const
 // Why: the host now publishes rows for work that is live inside a turn, and such
 // a row carries `stoppable: false` because no targeted stop can reach it. A
 // reader that predates the field draws a per-row Stop on every row it is given,

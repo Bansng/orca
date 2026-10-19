@@ -8,7 +8,7 @@ import {
   SshChannelMultiplexer,
   type MultiplexerTransport
 } from '../../../src/main/ssh/ssh-channel-multiplexer'
-import { RELAY_SENTINEL } from '../../../src/main/ssh/remote-frame-protocol'
+import { RELAY_SENTINEL } from '../../../src/main/ssh/remote-exec/remote-frame-protocol'
 
 const SENTINEL = Buffer.from(RELAY_SENTINEL, 'utf-8')
 const OWNER_HELD_DISCONNECTED = -32045

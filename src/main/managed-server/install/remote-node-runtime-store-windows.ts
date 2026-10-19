@@ -22,7 +22,7 @@ import {
   RUNTIME_STORE_TOMBSTONE_PREFIX,
   runtimeStoreInventoryCommand
 } from './remote-node-runtime-store-inventory'
-import { RELAY_REMOTE_DIR } from '../../ssh/remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../../ssh/remote-exec/remote-frame-protocol'
 import {
   isWindowsRemoteHost,
   joinRemotePath,

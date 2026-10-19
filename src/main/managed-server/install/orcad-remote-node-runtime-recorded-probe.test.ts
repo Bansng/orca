@@ -28,11 +28,11 @@ import {
   recordedRemoteNodeRuntimeProbeCommand,
   REMOTE_NODE_RUNTIME_HASHED_STAT_FILENAME
 } from './orcad-remote-node-runtime-recorded-probe'
-import { execCommand } from '../../ssh/remote-exec-command'
-import type * as ExecCommandModule from '../../ssh/remote-exec-command'
+import { execCommand } from '../../ssh/remote-exec/remote-exec-command'
+import type * as ExecCommandModule from '../../ssh/remote-exec/remote-exec-command'
 import { getRemoteHostPlatform } from '../../ssh/ssh-remote-platform'
 
-vi.mock('../../ssh/remote-exec-command', async (importOriginal) => ({
+vi.mock('../../ssh/remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))

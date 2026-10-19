@@ -61,9 +61,7 @@ it('keeps a narrower cached panel off the broader key while a late matching pane
   })
   const local = renderHook(() => useAiVaultScanProgress('local', broader))
   const narrowerPanel = renderHook(() => useAiVaultScanProgress('local', narrower))
-  const remote = renderHook(() =>
-    useAiVaultScanProgress('runtime:server-1', broader)
-  )
+  const remote = renderHook(() => useAiVaultScanProgress('runtime:server-1', broader))
   const allHosts = renderHook(() => useAiVaultScanProgress('all', broader))
   await waitFor(() => expect(local.result.current?.progress).toBe(cachedProgress))
   act(() => push({ scanKey: broader, progress: cachedProgress }))
@@ -160,8 +158,6 @@ it('keeps real rows through partial rescans, detached keys and failed retries', 
     expect(view.queryByText('Scanned', { exact: false })).toBeNull()
     expect(panel.container.querySelector('.animate-spin, .lucide-check')).toBeNull()
   }
-  act(() =>
-    push({ scanKey: 'worktree-c', progress: { ...next, agents: [FINISHED.agents[0]!] } })
-  )
+  act(() => push({ scanKey: 'worktree-c', progress: { ...next, agents: [FINISHED.agents[0]!] } }))
   expect(rowCount()).toBe(1)
 })

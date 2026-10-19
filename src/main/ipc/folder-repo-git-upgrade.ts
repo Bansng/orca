@@ -16,10 +16,10 @@ import { notifyWorktreesChanged } from './worktree-remote'
 import { setFolderRepoGitUpgradeWakeListener } from './folder-repo-git-upgrade-wake'
 import {
   createWorktreePollerWindowVisibility,
-  WORKTREE_BASE_BACKSTOP_TICKS,
   WORKTREE_BASE_POLL_INTERVAL_MS,
   type WorktreePollerWindowVisibility
 } from './worktree-base-directory-poller'
+import { WORKTREE_BASE_BACKSTOP_TICKS } from './worktree-base-directory-marker-poller'
 
 // Why: with no folder project registered there is nothing to stat, so back off until
 // the next catalog mutation wakes the fast cadence.

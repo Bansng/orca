@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import type { RemoteInstallTransport } from './remote-install-transport'
 import { shellEscape } from '../../ssh/ssh-connection-utils'
-import { execHostCommand } from '../../ssh/remote-host-exec'
-import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import { execHostCommand } from '../../ssh/remote-exec/remote-host-exec'
+import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec/remote-exec-command'
 import {
   probeInstallLockExistsCommand,
   tryCreateInstallLockCommand,

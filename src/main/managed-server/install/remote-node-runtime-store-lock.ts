@@ -7,15 +7,15 @@ import { randomUUID } from 'node:crypto'
 import { ORCAD_RUNTIMES_DIRNAME } from '../../../shared/orcad-artifacts'
 import type { RemoteInstallTransport } from './remote-install-transport'
 import { shellEscape } from '../../ssh/ssh-connection-utils'
-import { execHostCommand } from '../../ssh/remote-host-exec'
-import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import { execHostCommand } from '../../ssh/remote-exec/remote-host-exec'
+import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec/remote-exec-command'
 import { acquireInstallLock, INSTALL_LOCK_STALE_SECONDS } from './remote-install-lock'
 import {
   tryCreateInstallLockCommand,
   tryStealInstallLockCommand,
   type InstallLockOwnerFile
 } from './remote-install-lock-commands'
-import { RELAY_REMOTE_DIR } from '../../ssh/remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../../ssh/remote-exec/remote-frame-protocol'
 import { removeRemoteTreeCommand } from '../../ssh/ssh-remote-commands'
 import {
   isWindowsRemoteHost,

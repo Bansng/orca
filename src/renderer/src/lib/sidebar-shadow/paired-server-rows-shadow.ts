@@ -1,5 +1,9 @@
 import { useAppStore, type AppState } from '@/store'
-import { getAllWorktreesFromState } from '@/store/selectors'
+import { getAllWorktreesFromState, getRepoMapFromState } from '@/store/selectors'
+import { DEFAULT_WORKSPACE_STATUS_ID } from '../../../../shared/workspace-statuses'
+import { getWorkspaceRowKindFacts } from '../../../../shared/worktree/workspace-kinds'
+import { projectResolvedWorktreeLineage } from '../../../../shared/resolved-worktree-lineage'
+import type { WorktreeLineage } from '../../../../shared/worktree/lineage-types'
 import {
   folderWorkspaceRepoId,
   folderWorkspaceToWorktree
@@ -17,15 +21,35 @@ import { defineSidebarShadowDomain, type SidebarShadowMainRead } from './sidebar
 
 /** The paired-server rows the window fetched itself, keyed by host-qualified id, for these hosts. */
 export function readWindowPairedServerRows(
-  state: Pick<AppState, 'worktreesByRepo' | 'folderWorkspaces'>,
+  state: Pick<AppState, 'worktreesByRepo' | 'folderWorkspaces' | 'repos' | 'worktreeLineageById'>,
   hostIds: ReadonlySet<string>
 ): Map<string, PairedServerWorkspaceRow> {
   const rows = new Map<string, PairedServerWorkspaceRow>()
+  const repoById = getRepoMapFromState(state)
+  // The server sends only edges its own check keeps, so the window checks its copy the same way.
+  const checkedLineageByKey = new Map<string, WorktreeLineage | null>()
+  for (const hostId of hostIds) {
+    const hostWorktrees = getAllWorktreesFromState(state).filter(
+      (worktree) => worktree.hostId === hostId
+    )
+    for (const worktree of projectResolvedWorktreeLineage(
+      hostWorktrees,
+      state.worktreeLineageById
+    )) {
+      checkedLineageByKey.set(getWorktreeHostIdentity(worktree), worktree.lineage)
+    }
+  }
   const add = (worktree: Worktree, kind: PairedServerWorkspaceRow['kind']): void => {
     if (!worktree.hostId || !hostIds.has(worktree.hostId)) {
       return
     }
     const key = getWorktreeHostIdentity(worktree)
+    const lineage = checkedLineageByKey.get(key)
+    // The server's reply carries no automation name, so the row leaves it out too.
+    const { automationName: _automationName, ...kindFacts } = getWorkspaceRowKindFacts(
+      worktree,
+      repoById.get(worktree.repoId)
+    )
     rows.set(key, {
       key,
       worktreeId: worktree.id,
@@ -35,7 +59,26 @@ export function readWindowPairedServerRows(
       branch: worktree.branch,
       displayName: worktree.displayName,
       isArchived: worktree.isArchived,
-      isPinned: worktree.isPinned
+      isPinned: worktree.isPinned,
+      isMainWorktree: worktree.isMainWorktree,
+      isUnread: worktree.isUnread,
+      instanceId: worktree.instanceId,
+      lineage: lineage
+        ? {
+            parentWorktreeId: lineage.parentWorktreeId,
+            worktreeInstanceId: lineage.worktreeInstanceId,
+            parentWorktreeInstanceId: lineage.parentWorktreeInstanceId
+          }
+        : null,
+      workspaceStatus: worktree.workspaceStatus ?? DEFAULT_WORKSPACE_STATUS_ID,
+      sortOrder: worktree.sortOrder,
+      manualOrder: worktree.manualOrder,
+      createdAt: worktree.createdAt,
+      creatorProvenance: worktree.creatorProvenance,
+      ...kindFacts,
+      recentAt: worktree.lastActivityAt,
+      smartTier: worktree.smartTier,
+      smartAt: worktree.smartAt
     })
   }
   for (const worktree of getAllWorktreesFromState(state)) {
@@ -87,8 +130,26 @@ export const pairedServerRowsShadow = defineSidebarShadowDomain<
     }
   },
   readWindow: (main) => readWindowPairedServerRows(useAppStore.getState(), main.liveHostIds),
-  equals: (window, main) => JSON.stringify(window ?? null) === JSON.stringify(main ?? null)
+  // Stamps and unread move with every server event, so a fetch either side made a moment apart differs.
+  equals: (window, main) =>
+    JSON.stringify(withoutStamps(window)) === JSON.stringify(withoutStamps(main))
 })
+
+function withoutStamps(
+  row: PairedServerWorkspaceRow | undefined
+): Partial<PairedServerWorkspaceRow> | null {
+  if (!row) {
+    return null
+  }
+  const {
+    recentAt: _recentAt,
+    smartTier: _smartTier,
+    smartAt: _smartAt,
+    isUnread: _isUnread,
+    ...rest
+  } = row
+  return rest
+}
 
 /** The window's header facts for these servers, from its own status, environment and label state. */
 export function readWindowPairedServerHosts(

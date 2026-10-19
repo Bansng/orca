@@ -288,18 +288,25 @@ export function AntigravityAccountsSection({
         )}
       </p>
       {chats && chatRuntime.kind === 'active' ? (
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">
-            {translate(
-              'settings.chat.providers.antigravityDescription',
-              'Antigravity chats run a server Orca downloads to this host, separate from the agy CLI.'
-            )}
-          </p>
-          <ManagedRuntimeInstallRow
-            observation={chatRuntime}
-            agentLabel={translate('accounts.antigravity.title', 'Antigravity')}
-          />
-        </div>
+        <ManagedRuntimeInstallRow
+          observation={chatRuntime}
+          agentLabel={translate('accounts.antigravity.title', 'Antigravity')}
+        >
+          {(line, button) => (
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1 space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  {translate(
+                    'settings.chat.providers.antigravityDescription',
+                    'Antigravity chats run a server Orca downloads to this host, separate from the agy CLI.'
+                  )}
+                </p>
+                {line}
+              </div>
+              {button}
+            </div>
+          )}
+        </ManagedRuntimeInstallRow>
       ) : null}
     </section>
   )

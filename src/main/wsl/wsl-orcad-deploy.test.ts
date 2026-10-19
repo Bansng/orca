@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { OrcadHostTransport } from '../ssh/orcad-host-transport'
-import type * as ManagedRuntimeContext from '../ssh/orcad-managed-runtime-context'
+import type * as ManagedRuntimeContext from '../managed-server/lifecycle/orcad-managed-runtime-context'
 import type * as RemoteVersionedInstall from '../managed-server/install/remote-versioned-install'
 import { emptyOrcadActivationRecord } from '../managed-server/activation/orcad-activation-record'
 import { getRemoteHostPlatform } from '../ssh/ssh-remote-platform'
@@ -33,7 +33,7 @@ vi.mock('./wsl-orcad-instance-adoption', () => ({ adoptUnrecordedWslOrcad: mocks
 vi.mock('../../shared/app-environment', () => ({
   getAppEnvironment: () => ({ getVersion: () => '1.5.0', getPath: () => '/user-data' })
 }))
-vi.mock('../ssh/remote-exec-command', () => ({ execCommand: mocks.exec }))
+vi.mock('../ssh/remote-exec/remote-exec-command', () => ({ execCommand: mocks.exec }))
 vi.mock('../managed-server/install/orcad-remote-context', () => ({
   resolveOrcadRemoteContext: mocks.resolveContext
 }))
@@ -44,9 +44,13 @@ vi.mock('../orcad/orcad-artifact-materializer', () => ({
   materializeOrcadArtifact: async () => '/local/orcad'
 }))
 vi.mock('../ssh/orcad-remote-deploy', () => ({ deployOrcad: mocks.deploy }))
-vi.mock('../ssh/orcad-managed-version-gc', () => ({ pruneManagedOrcadVersions: mocks.prune }))
-vi.mock('../ssh/orcad-managed-wake', () => ({ wakeStoppedManagedOrcad: mocks.wake }))
-vi.mock('../ssh/orcad-managed-runtime-context', async (importOriginal) => ({
+vi.mock('../managed-server/lifecycle/orcad-managed-version-gc', () => ({
+  pruneManagedOrcadVersions: mocks.prune
+}))
+vi.mock('../managed-server/lifecycle/orcad-managed-wake', () => ({
+  wakeStoppedManagedOrcad: mocks.wake
+}))
+vi.mock('../managed-server/lifecycle/orcad-managed-runtime-context', async (importOriginal) => ({
   ...(await importOriginal<typeof ManagedRuntimeContext>()),
   probeManagedOrcadReadiness: mocks.probe
 }))

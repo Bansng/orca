@@ -23,6 +23,7 @@ export function MobileNativeChatFloatingControls({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={toolsExpanded ? 'Collapse tool runs' : 'Expand tool runs'}
+          accessibilityState={{ expanded: toolsExpanded }}
           style={({ pressed }) => [styles.toolsPill, pressed && styles.pressed]}
           onPress={onToggleTools}
         >

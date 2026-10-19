@@ -16,7 +16,7 @@ import { evaluateOrcadActivation } from '../managed-server/activation/orcad-acti
 import { withOrcadActivationLock } from '../managed-server/activation/orcad-activation-lock'
 import { sameOrcadActivationRecord } from '../managed-server/activation/orcad-activation-transaction'
 import { readOrcadActivationTransaction } from '../managed-server/activation/orcad-activation-transaction-store'
-import { readRemoteOrcadManagedStopTarget } from '../ssh/orcad-managed-remote-stop'
+import { readRemoteOrcadManagedStopTarget } from '../managed-server/lifecycle/orcad-managed-remote-stop'
 import {
   orcadSlotDir,
   resolveOrcadSlotIdentity,

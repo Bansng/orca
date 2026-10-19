@@ -7,7 +7,7 @@ import { decodeRemotePowerShellScript, powerShellCommand } from './ssh-remote-po
 import {
   makeWindowsPublishStagedFileCommand,
   makeWindowsWriteFileCommand
-} from './system-ssh-windows-file-write'
+} from './system-transport/system-ssh-windows-file-write'
 
 const windows = getRemoteHostPlatform('win32-x64')
 // Why: sshd runs an exec request through its DefaultShell, which is cmd.exe on a

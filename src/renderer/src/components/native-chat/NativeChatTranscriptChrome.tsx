@@ -8,7 +8,7 @@ import { NativeChatCopyButton } from './NativeChatCopyButton'
 import { NativeChatMessageTimestamp } from './NativeChatMessageTimestamp'
 import { nativeChatProviderFrameSummary } from '../../../../shared/native-chat-provider-frame-summary'
 import { withoutNativeChatVisualDirectiveLines } from '../../../../shared/native-chat-visual-directive'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { PanZoomImageDialog } from '@/components/editor/PanZoomImageDialog'
 import {
   getLocalImageCacheKey,
   getLocalImageSrcCacheKey,
@@ -111,7 +111,6 @@ function TranscriptImagePreview({
   const [open, setOpen] = useState(false)
   const [near, setNear] = useState(false)
   const [thumbnailErrorSrc, setThumbnailErrorSrc] = useState<string | null>(null)
-  const [dialogErrorSrc, setDialogErrorSrc] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const source = block.url?.trim() || block.path
   const filePath = block.path ?? source ?? ''
@@ -184,30 +183,16 @@ function TranscriptImagePreview({
           className="size-full object-cover"
         />
       </button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent
-          onInteractOutside={keepPreviewOpenForChatMenu}
-          className="flex max-h-[90vh] max-w-[90vw] flex-col sm:max-w-4xl"
-        >
-          <DialogTitle className="truncate text-sm">{label}</DialogTitle>
-          <DialogDescription className="sr-only">
-            {translate('components.native-chat.composer.imagePreview', 'Full-size image preview')}
-          </DialogDescription>
-          <div className="scrollbar-sleek flex min-h-0 items-center justify-center overflow-auto rounded-md bg-muted/20 p-2">
-            {displaySrc && displaySrc !== dialogErrorSrc ? (
-              <img
-                src={displaySrc}
-                alt={label}
-                data-native-chat-copy-image-src={copySrc}
-                onError={() => setDialogErrorSrc(displaySrc)}
-                className="max-h-[75vh] max-w-full object-contain"
-              />
-            ) : (
-              fallback
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <PanZoomImageDialog
+        open={open}
+        onOpenChange={setOpen}
+        src={displaySrc}
+        title={label}
+        showTitle
+        onInteractOutside={keepPreviewOpenForChatMenu}
+        data-native-chat-copy-image-src={copySrc}
+        fallback={fallback}
+      />
     </div>
   )
 }

@@ -60,6 +60,21 @@ describe('host sort stamps on a headless runtime', () => {
     }
   })
 
+  it('announces a stamp write as a metadata change of the row’s repo', () => {
+    vi.useFakeTimers({ now: 55_000 })
+    try {
+      const { runtime } = createHeadlessRuntime()
+      const events: unknown[] = []
+      runtime.onClientEvent((event) => events.push(event), { consumesTerminalSideEffects: false })
+      runtime.onPtyData('pty-1', '\x07', 1)
+      expect(events).toContainEqual(
+        expect.objectContaining({ type: 'worktreesChanged', repoId: 'repo-1' })
+      )
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('stamps a bell the daemon reports for a parked terminal', () => {
     vi.useFakeTimers({ now: 60_000 })
     try {
@@ -83,7 +98,13 @@ describe('host sort stamps on a headless runtime', () => {
         worktreeId: WT,
         payload: { state: 'waiting', prompt: 'task', agentType: 'claude' }
       })
-      expect(meta[WT]).toEqual({ lastActivityAt: 70_000, smartTier: 'needs-you', smartAt: 70_000 })
+      // No client is looking, so the request for input also raises the unread flag.
+      expect(meta[WT]).toEqual({
+        lastActivityAt: 70_000,
+        smartTier: 'needs-you',
+        smartAt: 70_000,
+        isUnread: true
+      })
     } finally {
       vi.useRealTimers()
     }

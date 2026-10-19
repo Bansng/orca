@@ -8,8 +8,11 @@ import { orcadWindowsHomeOpCommand } from '../managed-server/install/orcad-remot
 import {
   orcadPosixStdioBridgeCommand,
   type OrcadStdioBridgeMode
-} from './orcad-stdio-bridge-script'
-import { OrcadStdioBridgeDecoder, type OrcadStdioBridgeSignal } from './orcad-stdio-bridge-stream'
+} from '../managed-server/lifecycle/orcad-stdio-bridge-script'
+import {
+  OrcadStdioBridgeDecoder,
+  type OrcadStdioBridgeSignal
+} from '../managed-server/lifecycle/orcad-stdio-bridge-stream'
 import { isWslOrcadHostTarget, type OrcadHostTransport } from './orcad-host-transport'
 import type { RemoteCommandChannel } from '../managed-server/install/remote-install-transport'
 import { isWindowsRemoteHost } from './ssh-remote-platform'

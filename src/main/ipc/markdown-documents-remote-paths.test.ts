@@ -6,7 +6,10 @@ vi.mock('node:path', async (importOriginal) => {
   return { ...actual, extname: actual.win32.extname }
 })
 
-import { isMarkdownDocumentName, markdownDocumentFromRelativePath } from './markdown-documents'
+import {
+  isMarkdownDocumentName,
+  markdownDocumentFromRelativePath
+} from '../../shared/markdown-document-paths'
 
 describe('remote Markdown filenames on a Windows client', () => {
   it('keeps the local filename helper on Windows semantics', () => {

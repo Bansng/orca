@@ -12,7 +12,7 @@ import {
   withoutAbortSignal,
   type OrcadRemoteExecTarget
 } from '../install/orcad-remote-runtime-control'
-import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec-command'
+import { isUnconfirmedSshCommandTermination } from '../../ssh/remote-exec/remote-exec-command'
 import { acquireInstallLock, RemoteInstallLockBusyError } from '../install/remote-install-lock'
 import {
   orphanInstallLockCommand,

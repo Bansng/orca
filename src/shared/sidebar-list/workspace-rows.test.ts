@@ -87,17 +87,21 @@ describe('buildWorkspaceRows', () => {
     })
   })
 
-  it('takes the host from the repo when the row has none, and leaves paired-server rows out', () => {
+  it('keys a row whose metadata names no host as the window does, its owner from the repo', () => {
+    const sshOnly = { ...sshRepo, id: 'repo-ssh' }
     const rows = buildWorkspaceRows({
       worktrees: [
         worktree(),
+        // The window stamps a remote repo's host on every row it lists.
+        worktree({ id: 'repo-ssh::/remote/b', repoId: 'repo-ssh' }),
         worktree({ id: 'repo-2::/x', repoId: 'repo-2', hostId: 'runtime:env-1' })
       ],
       folderWorkspaces: [{ ...folder, executionHostId: 'runtime:env-1' }],
-      repos: [localRepo],
+      repos: [localRepo, sshOnly],
       lineageById: {}
     })
-    expect([...rows.keys()]).toEqual(['local|repo-1::/r/a'])
+    expect([...rows.keys()]).toEqual(['|repo-1::/r/a', 'ssh:box|repo-ssh::/remote/b'])
+    expect(rows.get('|repo-1::/r/a')?.hostId).toBe('local')
   })
 
   it('carries the stored lineage edge for the builder to validate', () => {

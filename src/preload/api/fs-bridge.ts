@@ -202,6 +202,7 @@ export const fsApi = {
   ): Promise<{ results: ImportItemResult[] }> => ipcRenderer.invoke('fs:importExternalPaths', args),
   stageExternalPathsForRuntimeUpload: (args: {
     sourcePaths: string[]
+    nameExtensionlessImages?: boolean
   }): Promise<{ sources: StagedExternalImportSource[] }> =>
     ipcRenderer.invoke('fs:stageExternalPathsForRuntimeUpload', args),
   uploadExternalFileToRuntime: (

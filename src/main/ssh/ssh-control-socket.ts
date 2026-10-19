@@ -3,7 +3,7 @@ import { lstatSync, mkdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { isAbsolute, join as pathJoin } from 'node:path'
 import type { SshTarget } from '../../shared/ssh-types'
-import type { SshResolvedConfig } from './ssh-g-config-resolution'
+import type { SshResolvedConfig } from './config/ssh-g-config-resolution'
 
 export type SystemSshResolvedConfig = Pick<
   SshResolvedConfig,

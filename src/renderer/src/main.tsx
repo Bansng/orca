@@ -37,6 +37,7 @@ import { workspaceReviewShadow } from './lib/sidebar-shadow/workspace-review-sha
 import { sidebarTemporalShadow } from './lib/sidebar-shadow/sidebar-temporal-shadow'
 import { workspaceCreationsShadow } from './lib/sidebar-shadow/workspace-creations-shadow'
 import { workspaceRowsShadow } from './lib/sidebar-shadow/workspace-rows-shadow'
+import { workspaceUnreadShadow } from './lib/sidebar-shadow/workspace-unread-shadow'
 
 const disposeOsFileDropGuard = installOsFileDropCancellationGuard()
 import.meta.hot?.dispose(disposeOsFileDropGuard)
@@ -54,7 +55,8 @@ if (ORCA_SIDEBAR_INPUTS_IS_MAIN) {
     workspaceReviewShadow,
     sidebarTemporalShadow,
     workspaceCreationsShadow,
-    workspaceRowsShadow
+    workspaceRowsShadow,
+    workspaceUnreadShadow
   ])
   import.meta.hot?.dispose(disposeSidebarShadow)
 }

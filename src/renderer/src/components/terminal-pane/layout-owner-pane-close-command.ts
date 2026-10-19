@@ -16,7 +16,8 @@ export function sendPaneCloseToLayoutOwner(
     asToday: () => void
     /** Main refused the pane as its last. */
     lastPane: () => void
-    /** Main closed it but no frame is coming (the stream is down): close it here. */
+    /** Main closed it but no frame is coming (the stream is down, or main held no such pane):
+     *  close it here. */
     closeHere: () => void
   }
 ): boolean {
@@ -26,8 +27,9 @@ export function sendPaneCloseToLayoutOwner(
     pane.worktreeId,
     { type: 'closePane', tabId, leafId, ...(pane.kind === 'exit' && { automatic: true }) },
     {
-      apply: () => {
-        if (!layoutFramesFlowing()) {
+      apply: (result) => {
+        // Already gone from main's copy (a workspace it lacks): no frame will drop it.
+        if (result.alreadyClosed || !layoutFramesFlowing()) {
           forget()
           on.closeHere()
         }

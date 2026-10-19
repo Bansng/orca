@@ -7,10 +7,8 @@ import {
   type RuntimeBrowserCommandsFactory,
   type RuntimeBrowserUnavailableCause
 } from '../runtime/runtime-browser-commands-factory'
-import {
-  ExternalChromiumBrowserProcess,
-  type ExternalChromiumLaunch
-} from './external-chromium-browser-process'
+import { ExternalChromiumBrowserProcess } from './external-chromium-browser-process'
+import type { ExternalChromiumLaunch } from './external-chromium-browser-session'
 import { resolveOrcadAgentBrowserBinary } from './orcad-agent-browser-binary'
 import { ElectronServeBrowserProcess } from './electron-serve-browser-process'
 

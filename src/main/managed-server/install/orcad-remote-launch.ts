@@ -25,7 +25,7 @@ import {
   remoteDirname,
   type RemoteHostPlatform
 } from '../../ssh/ssh-remote-platform'
-import { RELAY_REMOTE_DIR } from '../../ssh/remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../../ssh/remote-exec/remote-frame-protocol'
 import { ORCAD_WSL_HOST_ENV } from '../../ipc/wsl-guest-windows-drive-path'
 import {
   assertPosixOrcadHost as assertPosixHost,
@@ -46,9 +46,9 @@ import {
 } from '../../ssh/orcad-launch-ssh-session'
 import {
   ORCAD_E2E_IDLE_TIMEOUT_ENV,
-  ORCAD_MANAGED_ACTIVATION_ROOT_ENV,
   readOrcadE2EIdleTimeoutMs
 } from '../../../shared/orcad-idle-exit'
+import { ORCAD_MANAGED_ACTIVATION_ROOT_ENV } from '../../../shared/orcad-managed-launch-env'
 
 export type OrcadLaunchSpec = {
   remoteInstallDir: string

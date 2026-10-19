@@ -134,3 +134,13 @@ export function classifySortStampEvent(
     ...(smart.smartTier !== undefined ? { smartTier: smart.smartTier, smartAt: smart.smartAt } : {})
   }
 }
+
+/** A finish, a request for input or a bell: news that flags the workspace for whoever isn't looking. */
+export function isUnreadNews(event: SortStampEvent): boolean {
+  return (
+    event.kind === 'bell' ||
+    (event.kind === 'agent' &&
+      event.from !== event.to &&
+      (event.to === 'done' || event.to === 'needs-you'))
+  )
+}

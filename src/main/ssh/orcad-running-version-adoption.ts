@@ -9,7 +9,7 @@ import { orcadActivationFenceRefusal } from '../managed-server/activation/orcad-
 import { OrcadActiveReadinessError, probeActiveOrcadReadiness } from './orcad-active-readiness'
 import type { OrcadActivationRecord } from '../managed-server/activation/orcad-activation-record'
 import { readOrcadActivationRecord } from '../managed-server/activation/orcad-activation-record-store'
-import { wakeStoppedManagedOrcad } from './orcad-managed-wake'
+import { wakeStoppedManagedOrcad } from '../managed-server/lifecycle/orcad-managed-wake'
 import { resolveOrcadSlotIdentity, type OrcadSlotOptions } from './orcad-recovery-slot'
 
 export type OrcadRunningAdoption = {

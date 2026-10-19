@@ -22,12 +22,12 @@ const { stableHashString } = await import('./sync-runtime-graph/editor-draft-has
 const {
   AGENT_STATUS_SYNC_UPDATED_AT_BUCKET_MS_FOR_TESTS: AGENT_STATUS_SYNC_UPDATED_AT_BUCKET_MS,
   buildRuntimeMobileAgentStatusProjectionForTests,
-  getRuntimeMobileSessionSyncKey,
-  resetRuntimeMobileAgentStatusProjectionCacheForTests,
-  resetRuntimeMobileSyncProjectionCachesForTests,
-  runtimeMobileSessionSyncKeysEqual
-} = await import('./sync-runtime-graph')
+  resetRuntimeMobileAgentStatusProjectionCacheForTests
+} = await import('./sync-runtime-graph/agent-status-projection')
+const { getRuntimeMobileSessionSyncKey, runtimeMobileSessionSyncKeysEqual } =
+  await import('./sync-runtime-graph/sync-key')
 const {
+  resetRuntimeMobileSyncProjectionCachesForTests,
   buildRuntimeMobileBrowserProjection,
   buildRuntimeMobileEditorDraftsProjection,
   buildRuntimeMobileOpenFilesProjection

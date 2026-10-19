@@ -308,22 +308,14 @@ describe('splitTerminalPaneWithInheritedCwd', () => {
     expect(takePaneAppearIntent('tab-1', newLeafId)).toBeNull()
   })
 
-  it.each(['unapplied', 'refused'] as const)(
-    'in a layout-owner build, forgets the pane when main answers %s',
-    (outcome) => {
-      splitInLayoutOwnerBuild(makeManager(vi.fn()))
-      const [, command, handlers] = mocks.sendLayoutCommandToOwner.mock.calls[0] ?? []
+  it('in a layout-owner build, forgets the pane when main refuses', () => {
+    splitInLayoutOwnerBuild(makeManager(vi.fn()))
+    const [, command, handlers] = mocks.sendLayoutCommandToOwner.mock.calls[0] ?? []
+    handlers?.refused?.('pane_not_found')
 
-      if (outcome === 'refused') {
-        handlers?.refused?.('pane_not_found')
-      } else {
-        handlers?.unapplied?.()
-      }
-
-      const newLeafId = command?.type === 'splitPane' ? (command.newLeafId ?? '') : ''
-      expect(takePaneAppearIntent('tab-1', newLeafId)).toBeNull()
-    }
-  )
+    const newLeafId = command?.type === 'splitPane' ? (command.newLeafId ?? '') : ''
+    expect(takePaneAppearIntent('tab-1', newLeafId)).toBeNull()
+  })
 
   it('in a layout-owner build, splits here when main answers as today', () => {
     const splitPane = vi.fn(() => ({ id: 2 }))

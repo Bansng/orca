@@ -40,6 +40,8 @@ import {
 import { encodeStructuredAgentSessionOptionValue } from '../../../src/shared/structured-agent-session-option-codec'
 import { useMobileStructuredOptionSurface } from './use-mobile-structured-option-surface'
 
+const NO_COMMANDS: readonly AgentSessionConversationCommand[] = []
+
 export function useMobileStructuredAgentOptions(args: {
   agent: string | null
   client: RpcClient | null
@@ -299,7 +301,7 @@ export function useMobileStructuredAgentOptions(args: {
   return {
     optionPickerRequest,
     conversationCommands:
-      conversationSupport?.sessionId === sessionId ? conversationSupport.commands : [],
+      conversationSupport?.sessionId === sessionId ? conversationSupport.commands : NO_COMMANDS,
     /** The chat takes images, as its options report says; else only Claude and Codex, as before. */
     acceptsImages:
       (imageSupport?.sessionId === sessionId ? imageSupport.acceptsImages : undefined) ??

@@ -1,3 +1,4 @@
+import type { SmartTier } from '../../../src/shared/sidebar-list/sort-stamps'
 import type { ExecutionHostId } from '../../../src/shared/execution-host'
 import type { AgentWorkingMode } from '../../../src/shared/agent-status-types'
 import type {
@@ -29,6 +30,10 @@ export type Worktree = {
   sortOrder?: number
   manualOrder?: number
   lastActivityAt?: number
+  smartTier?: SmartTier
+  smartAt?: number
+  /** The host sorts by its own stamps; see src/shared/sidebar-list/stamp-order.ts. */
+  sortedByStamps?: true
   createdAt?: number
   // Why: on-disk worktree directory path. Needed by NewWorktreeModal so the
   // marine-creature fallback dedupes against filesystem basenames.

@@ -686,7 +686,8 @@
             "76deec8f58": "Échec du changement d'organisation",
             "7d4bc516ee": "Échec du changement de profil",
             "f518e89aa5": "Le projet existe déjà dans ce profil",
-            "f03ae7f27b": "Échec du transfert du projet"
+            "f03ae7f27b": "Échec du transfert du projet",
+            "signInTimedOut": "La connexion a expiré"
           }
         },
         "runtime": {
@@ -3401,7 +3402,9 @@
             "copiedLink": "Lien copié",
             "copyLinkFailed": "Échec de la copie du lien",
             "downloadOpenWithDefaultApp": "Téléchargez et ouvrez avec l'application par défaut",
-            "downloadOpenFailed": "Échec du téléchargement de « {{value0}} »."
+            "downloadOpenFailed": "Échec du téléchargement de « {{value0}} ».",
+            "openInThisGroup": "Ouvrir dans ce groupe",
+            "openInThisGroupRefused": "Impossible d'ouvrir {{value0}} dans ce groupe"
           },
           "TerminalSessionStateSaveFailureDialog": {
             "6bee0c8f17": "Ouvrir l'Analyseur d'espace disque",
@@ -6530,8 +6533,7 @@
         },
         "MarkdownImageLightbox": {
           "image": "Image",
-          "expand": "Développer l'image",
-          "close": "Fermer"
+          "expand": "Développer l'image"
         },
         "WorktreeDeveloperMenu": {
           "developer": "Développeur",
@@ -15788,7 +15790,9 @@
           "1829437fce": "Nouveau Markdown"
         },
         "DiagramViewerModal": {
-          "title": "Diagramme",
+          "title": "Diagramme"
+        },
+        "PanZoomImageDialog": {
           "zoomOut": "Zoom arrière",
           "zoomIn": "Zoom avant",
           "fit": "Ajuster à l'écran",
@@ -18049,6 +18053,14 @@
         "a62f9db53d": "Annuler",
         "c77189bc0c": "Mettre à jour le filtre",
         "19af906d12": "Enregistrer le filtre"
+      },
+      "OrcaSignInProgress": {
+        "waiting": "En attente de la connexion dans votre navigateur",
+        "copyLink": "Copier le lien de connexion",
+        "copied": "Lien de connexion copié",
+        "copyFailed": "Impossible de copier le lien.",
+        "signingIn": "Connexion…",
+        "cancel": "Annuler"
       }
     },
     "i18n": {
@@ -18384,7 +18396,6 @@
         "imageSaving": "Enregistrement de l'image collée…",
         "pendingAttachmentLimit": "Trop de pièces jointes sont en attente. Terminez de composer avant d’en attacher davantage.",
         "viewAttachment": "Voir l'image",
-        "imagePreview": "Aperçu de l'image en taille réelle",
         "imagePreviewUnavailable": "Aperçu indisponible",
         "copyImage": "Copier l’image",
         "copyImageFailed": "Impossible de copier l’image",
@@ -19325,7 +19336,6 @@
       "keywordIssuePicker": "sélecteur d'issues"
     },
     "managed-runtime": {
-      "cancel": "Annuler l'installation",
       "cancelled": "Installation annulée.",
       "cancelling": "Annulation…",
       "damaged": "Cette copie de {{agent}} est endommagée.",
@@ -19342,10 +19352,17 @@
       "notInstalled": "Non installé.",
       "progress": "Téléchargement de {{agent}}",
       "readFailed": "Impossible de vérifier {{agent}} sur cet hôte. Nouvel essai en cours.",
-      "reinstall": "Réinstaller {{agent}}",
+      "reinstall": "Réinstaller",
+      "remove": "Supprimer le runtime téléchargé",
+      "removeConfirm": "Supprimer",
+      "removeDescription": "Les chats {{agent}} en cours s'arrêtent. Leur historique est conservé.",
+      "removeKeep": "Annuler",
+      "removeTitle": "Supprimer le runtime {{agent}} téléchargé de {{host}} ?",
+      "removing": "Suppression…",
       "retry": "Réessayer l'installation",
+      "thisComputer": "cet ordinateur",
       "unavailable": "{{agent}} n'est pas disponible sur cet hôte.",
-      "update": "Mettre à jour {{agent}}",
+      "update": "Mettre à jour",
       "verifying": "Vérification de l’environnement téléchargé.",
       "installTitle": "Installez {{agent}} pour commencer à discuter",
       "continueTitle": "Installez {{agent}} pour continuer",

@@ -10,6 +10,7 @@ import type { RuntimeClientEvent } from '../../../shared/runtime-client-events'
 import {
   classifySortStampEvent,
   hookRowAgentPhase,
+  isUnreadNews,
   nextAgentPaneState,
   REST_PANE,
   titleAgentPhase,
@@ -23,6 +24,7 @@ import {
   listTieredWorkspaces,
   readSortStamps,
   writeSortStamps,
+  writeUnreadFlag,
   type SortStampsStore,
   type WorkspaceRef
 } from './sort-stamp-records'
@@ -50,6 +52,10 @@ export type SortStampsSources = {
     listener: (event: RuntimeClientEvent) => void,
     options: { consumesTerminalSideEffects: true }
   ) => () => void
+  /** Whether a client is looking at the workspace, or at the pane's tab. */
+  isViewing: (worktreeId: string, paneKey: string | null) => boolean
+  /** A record's stamps or unread flag changed; clients re-list it. */
+  onStampsWritten: (worktreeId: string) => void
   now: () => number
 }
 
@@ -68,7 +74,8 @@ function sameWorkspace(a: WorkspaceRef | undefined, b: WorkspaceRef | null): boo
 /**
  * Writes the sort stamps of every workspace this host owns, at the source: hook-store transitions
  * (terminal agents and structured chats), hookless agents' titles, bells, and terminals a CLI
- * starts. Creation stamps itself where the record is made. Rest panes are not kept.
+ * starts. Creation stamps itself where the record is made. Rest panes are not kept. The same news
+ * raises the workspace's unread flag unless a client is looking at it; clients clear it.
  */
 export class SortStampsProducer {
   private readonly panes = new Map<string, TrackedPane>()
@@ -201,7 +208,7 @@ export class SortStampsProducer {
     const workspace = { worktreeId, sshHostId: sshHostOfConnection(batch.connectionId) }
     for (const fact of batch.facts) {
       if (fact.kind === 'bell') {
-        this.stamp(workspace, { kind: 'bell' })
+        this.stamp(workspace, { kind: 'bell' }, this.sources.now(), paneKey ?? null)
       } else if (fact.kind === 'title' && paneKey && !this.latestHookRow(paneKey)) {
         // Hook authority is per pane, as in Smart's attention. A cleared stale working title is a
         // timer's guess, not a finish.
@@ -307,14 +314,15 @@ export class SortStampsProducer {
     } else {
       this.panes.set(paneKey, { ...workspace, state })
     }
-    this.writeAgentChange(workspace, before.phase, state.phase, at)
+    this.writeAgentChange(workspace, before.phase, state.phase, at, paneKey)
   }
 
   private writeAgentChange(
     workspace: WorkspaceRef,
     from: AgentPhase,
     to: AgentPhase,
-    now: number
+    now: number,
+    paneKey: string | null = null
   ): void {
     const panes: AgentPaneState[] = []
     for (const pane of this.panes.values()) {
@@ -322,11 +330,16 @@ export class SortStampsProducer {
         panes.push(pane.state)
       }
     }
-    this.stamp(workspace, { kind: 'agent', from, to, panes }, now)
+    this.stamp(workspace, { kind: 'agent', from, to, panes }, now, paneKey)
   }
 
   // One clock read per event, so a pane's time and its Recent stamp agree.
-  private stamp(workspace: WorkspaceRef, event: SortStampEvent, now = this.sources.now()): void {
+  private stamp(
+    workspace: WorkspaceRef,
+    event: SortStampEvent,
+    now = this.sources.now(),
+    paneKey: string | null = null
+  ): void {
     // A WSL move only takes this machine's projects.
     if (!workspace.sshHostId && this.sources.isWriteFenced(workspace.worktreeId)) {
       return
@@ -335,6 +348,13 @@ export class SortStampsProducer {
     const next = current && classifySortStampEvent(current, event, now)
     if (next) {
       writeSortStamps(this.sources.store(), workspace, next)
+    }
+    const raised =
+      isUnreadNews(event) &&
+      !this.sources.isViewing(workspace.worktreeId, paneKey) &&
+      writeUnreadFlag(this.sources.store(), workspace, true)
+    if (next || raised) {
+      this.sources.onStampsWritten(workspace.worktreeId)
     }
   }
 }

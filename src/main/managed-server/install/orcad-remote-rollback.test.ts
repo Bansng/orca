@@ -1,10 +1,10 @@
-import type * as ExecCommandModule from '../../ssh/remote-exec-command'
+import type * as ExecCommandModule from '../../ssh/remote-exec/remote-exec-command'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as RecordFile from './orcad-remote-record-file'
 import type * as InstallLock from './remote-install-lock'
-import type * as TerminalBarrier from '../../ssh/orcad-rollback-terminal-barrier'
+import type * as TerminalBarrier from '../lifecycle/orcad-rollback-terminal-barrier'
 
-vi.mock('../../ssh/remote-exec-command', async (importOriginal) => ({
+vi.mock('../../ssh/remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))
@@ -30,7 +30,7 @@ const barrier = vi.hoisted(() => {
   return state
 })
 // The managed stop and its terminal barrier are proven in orcad-activation-crash-recovery.test.ts.
-vi.mock('../../ssh/orcad-rollback-terminal-barrier', async (importOriginal) => ({
+vi.mock('../lifecycle/orcad-rollback-terminal-barrier', async (importOriginal) => ({
   ...(await importOriginal<typeof TerminalBarrier>()),
   readOrcadRollbackBarrierTarget: async (_options: unknown, version: string) => ({
     state: 'ready',
@@ -52,7 +52,7 @@ vi.mock('../../ssh/orcad-rollback-terminal-barrier', async (importOriginal) => (
   }
 }))
 
-import { execCommand } from '../../ssh/remote-exec-command'
+import { execCommand } from '../../ssh/remote-exec/remote-exec-command'
 import { writeAtomicOrcadRemoteRecord } from './orcad-remote-record-file'
 import { rollbackOrcad, type OrcadRollbackOptions } from './orcad-remote-rollback'
 import {

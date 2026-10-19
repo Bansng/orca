@@ -220,7 +220,10 @@ it('uses a cold parsed latest Codex cwd after its unlisted row is evicted', asyn
   const scan = () =>
     scanAiVaultSessions({ ...roots, platform: 'linux', limit: 1, scopePaths: ['/repo'] })
   expect((await scan()).sessions.some((row) => row.filePath === path)).toBe(false)
-  const parsed = await parseAgentSessionFileCached({ agent: 'codex', file, codexHome: null }, 'linux')
+  const parsed = await parseAgentSessionFileCached(
+    { agent: 'codex', file, codexHome: null },
+    'linux'
+  )
   expect(rows.get(path)?.session?.cwd).toBe('/repo')
   for (let index = 0; index <= MAX_UNLISTED_ENTRIES; index++) {
     storeSessionParseCacheEntry(`search-${index}`, {

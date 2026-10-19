@@ -11,10 +11,13 @@ import { Readable } from 'node:stream'
 import { parseWslUncPath, toLinuxPath } from '../../shared/wsl-paths'
 import type { RemoteInstallTransport } from '../managed-server/install/remote-install-transport'
 import { shellEscape } from '../ssh/ssh-connection-utils'
-import { execCommand } from '../ssh/remote-exec-command'
+import { execCommand } from '../ssh/remote-exec/remote-exec-command'
 import { RELAY_DEPLOY_TIMEOUT_MS } from '../managed-server/install/remote-deploy-timing'
 import { getRemoteHostPlatform } from '../ssh/ssh-remote-platform'
-import { collectLocalUploadPlan, type LocalUploadPlan } from '../ssh/system-ssh-file-transfer'
+import {
+  collectLocalUploadPlan,
+  type LocalUploadPlan
+} from '../ssh/system-transport/system-ssh-file-transfer'
 import { buildUstarEntryHeader, USTAR_BLOCK_BYTES, ustarPaddingBytes } from '../ustar-entry-header'
 
 export const WSL_GUEST_SOURCE_UNAVAILABLE = 'ORCA_WSL_GUEST_SOURCE_UNAVAILABLE'

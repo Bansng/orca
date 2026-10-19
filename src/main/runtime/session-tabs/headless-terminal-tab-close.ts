@@ -10,7 +10,7 @@ import type {
 } from '../../../shared/runtime-types'
 import { parseAppSshPtyId } from '../../../shared/ssh-pty-id'
 import { buildHeadlessMobileSessionTabGroups } from '../mobile-session-layout-projection'
-import { appendRetiredTerminalSurfaceProofs } from '../mobile-session-terminal-retirement-proof'
+import { appendRetiredTerminalSurfaceProofs } from '../../../shared/terminal-retirement-proof-ledger'
 import type { RuntimePtyWorktreeRecord } from '../runtime-terminal-state-records'
 import type { TerminalPaneLayoutNode } from '../../../shared/terminal-tab-types'
 import type { RuntimeTerminalRename } from '../../../shared/runtime-terminal-contracts'

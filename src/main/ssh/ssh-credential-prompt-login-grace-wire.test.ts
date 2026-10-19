@@ -7,10 +7,10 @@ import { SshConnection } from './ssh-connection'
 import { INITIAL_RETRY_DELAY_MS } from './ssh-connection-utils'
 import { createCallbacks, createResolvedConfig, createTarget } from './ssh-connection-test-fixtures'
 import { initSshHostKeyStoreFile } from './ssh-host-key-store'
-import { resolveWithSshG } from './ssh-g-config-resolution'
-import type * as SshGConfigResolution from './ssh-g-config-resolution'
+import { resolveWithSshG } from './config/ssh-g-config-resolution'
+import type * as SshGConfigResolution from './config/ssh-g-config-resolution'
 
-vi.mock('./ssh-g-config-resolution', async (importOriginal) => ({
+vi.mock('./config/ssh-g-config-resolution', async (importOriginal) => ({
   ...(await importOriginal<typeof SshGConfigResolution>()),
   resolveWithSshG: vi.fn()
 }))

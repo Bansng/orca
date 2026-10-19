@@ -22,7 +22,7 @@ import {
   orcadWindowsSlotOpCommand,
   readOrcadWindowsEncodedAnswer
 } from './orcad-remote-windows-node'
-import { ORCAD_WINDOWS_READINESS_MARKER } from '../../ssh/orcad-windows-host-script'
+import { ORCAD_WINDOWS_READINESS_MARKER } from '../host-state/orcad-windows-host-script'
 
 /** Under the 30 s exec timeout, so one wait never reads as an unanswered host. */
 export const ORCAD_READINESS_WAIT_MAX_SECONDS = 20

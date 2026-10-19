@@ -65,7 +65,6 @@ export function splitTerminalPaneWithInheritedCwd(args: SplitArgs): void {
             forget()
             splitLocally(args, () => cwd)
           },
-          unapplied: forget,
           refused: forget
         }
       )

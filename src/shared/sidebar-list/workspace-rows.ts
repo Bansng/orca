@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import {
+  LOCAL_EXECUTION_HOST_ID,
   getRepoExecutionHostId,
   parseExecutionHostId,
   type ExecutionHostId
@@ -20,7 +21,7 @@ import { SMART_TIERS } from './sort-stamps'
  * One workspace this host lists, as the sidebar reads it: catalog, metadata and the host's sort
  * stamps. Activity and PR state are their own domains, so plain terminal output never changes a row.
  */
-const WorkspaceRowSchema = z.object({
+export const WorkspaceRowSchema = z.object({
   id: z.string(),
   hostId: z.string(),
   kind: z.enum(['git', 'folder']),
@@ -44,6 +45,8 @@ const WorkspaceRowSchema = z.object({
   workspaceStatus: z.string(),
   comment: z.string(),
   manualOrder: z.number().optional(),
+  /** The saved order Manual falls back to where a row has no manualOrder; older hosts omit it. */
+  sortOrder: z.number().optional(),
   createdAt: z.number().optional(),
   creatorProvenance: z
     .union([
@@ -71,7 +74,8 @@ const WorkspaceRowSchema = z.object({
   smartAt: z.number().optional()
 })
 
-/** Keyed by host-qualified id, the form the frozen sort order and paired-server rows use. */
+/** Keyed by the row's identity as every client keys it: a local row whose metadata names no host
+ *  keeps `|id`, while `hostId` still says which host owns it. */
 export const WorkspaceRowsSnapshotSchema = z.object({
   revision: z.number(),
   rows: z.record(z.string(), WorkspaceRowSchema)
@@ -111,6 +115,7 @@ function toWorkspaceRow(
     workspaceStatus: worktree.workspaceStatus ?? DEFAULT_WORKSPACE_STATUS_ID,
     comment: worktree.comment,
     ...(worktree.manualOrder !== undefined ? { manualOrder: worktree.manualOrder } : {}),
+    sortOrder: worktree.sortOrder,
     ...(worktree.createdAt !== undefined ? { createdAt: worktree.createdAt } : {}),
     ...(worktree.creatorProvenance ? { creatorProvenance: worktree.creatorProvenance } : {}),
     linkedIssue: worktree.linkedIssue,
@@ -151,8 +156,11 @@ export function buildWorkspaceRows(catalog: {
   ): void => {
     const hostId = worktree.hostId ?? (repo ? getRepoExecutionHostId(repo) : undefined)
     if (hostId && parseExecutionHostId(hostId)?.kind !== 'runtime') {
+      // As the window stamps rows (worktree-host-ownership.ts): a remote repo's host always, a
+      // local row only the host its metadata names.
+      const identityHostId = hostId === LOCAL_EXECUTION_HOST_ID ? worktree.hostId : hostId
       rows.set(
-        composeWorktreeHostIdentity(hostId, worktree.id),
+        composeWorktreeHostIdentity(identityHostId, worktree.id),
         toWorkspaceRow(worktree, hostId, kind, repo, lineage)
       )
     }

@@ -8,7 +8,7 @@ import {
   ORCAD_RUNTIMES_DIRNAME
 } from '../../../shared/orcad-artifacts'
 import { shellEscape } from '../../ssh/ssh-connection-utils'
-import { RELAY_REMOTE_DIR } from '../../ssh/remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../../ssh/remote-exec/remote-frame-protocol'
 import { joinRemotePath, type RemoteHostPlatform } from '../../ssh/ssh-remote-platform'
 
 /** A version dir names a runtime it needs with an empty file of this prefix + sha (design D5). */

@@ -1,11 +1,12 @@
 // A layout-owner build's tab moves and group sizes. A move: main places the tab first, then the
-// window shows main's answer. Main's frame usually shows the move before main answers; while this
-// window owes main a save the frame waits, so the window then makes the same move itself, with
-// main's new group id. Group sizes: drawn while dragging, main saves them when the drag ends.
+// window shows main's answer. Main's frame shows the move before main answers; only when no frame
+// is coming does the window make the same move itself, with main's new group id. Group sizes:
+// drawn while dragging, main saves them when the drag ends.
 
 import { useAppStore } from '@/store'
 import type { TabSplitDirection } from '@/store/slices/tabs'
 import { sendLayoutCommandToOwner } from '@/runtime/layout-owner-command'
+import { layoutFramesFlowing } from '@/runtime/layout-frame-position'
 import type { WindowLayoutCommand } from '@/runtime/layout-apply-send'
 import { moveGroupLeafBeside } from '../../../../shared/workspace-layout/tab-group-layout-tree'
 import { stableJson } from '../../../../shared/workspace-layout/workspace-layout-load-report'
@@ -134,7 +135,10 @@ function showMainMove(worktreeId: string, drop: TabDrop, mainGroupId: string | u
       moveAsToday(worktreeId, drop)
       return
     }
-    placeGroupBeside(worktreeId, groupId, drop.groupId, drop.direction)
+    // Main's frame placed the group; the window places it only when no frame is coming.
+    if (!layoutFramesFlowing()) {
+      placeGroupBeside(worktreeId, groupId, drop.groupId, drop.direction)
+    }
   }
   state.activateTab(tabId, { worktreeId, preservePreview: true, recordFocus: false })
   useAppStore.getState().focusGroup(worktreeId, groupId)
@@ -170,12 +174,11 @@ export function setGroupRatioThroughLayoutOwner(
   state.setTabGroupSplitRatio(worktreeId, nodePath, ratio)
   const groupLayout = useAppStore.getState().layoutByWorktree[worktreeId]
   if (groupLayout && groupLayout !== state.layoutByWorktree[worktreeId]) {
-    // Why keep on every answer: the window's own save still writes these sizes in this phase.
     const keep = (): void => {}
     sendLayoutCommandToOwner(
       worktreeId,
       { type: 'setGroupRatios', groupLayout },
-      { apply: keep, asToday: keep }
+      { apply: keep, asToday: keep, drawn: true }
     )
   }
 }

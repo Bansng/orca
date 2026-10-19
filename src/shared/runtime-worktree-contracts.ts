@@ -1,3 +1,4 @@
+import type { SmartTier } from './sidebar-list/sort-stamps'
 import type { AgentStatusState, AgentType, AgentWorkingMode } from './agent-status-types'
 import type { AgentMainAgentStatus } from './main-agent-status'
 import type { CheckStatus } from './github/pull-request-types'
@@ -72,6 +73,11 @@ export type RuntimeWorktreePsSummary = {
   sortOrder: number
   manualOrder?: number
   lastActivityAt?: number
+  /** The owning host's Smart stamps (sidebar-list/sort-stamps.ts); absent tier is Rest. */
+  smartTier?: SmartTier
+  smartAt?: number
+  /** Set by a host that writes sort stamps: clients sort Recent and Smart by them alone. */
+  sortedByStamps?: true
   createdAt?: number
   creatorProvenance?: Worktree['creatorProvenance']
   linkedIssue: number | null

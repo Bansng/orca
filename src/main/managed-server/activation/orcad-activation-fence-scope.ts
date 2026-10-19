@@ -9,7 +9,7 @@
  */
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { shellEscape } from '../../ssh/ssh-connection-utils'
-import { isSshCommandExitError } from '../../ssh/remote-exec-command'
+import { isSshCommandExitError } from '../../ssh/remote-exec/remote-exec-command'
 
 export const ORCAD_FENCE_OWNER_FILENAME = '.orca-fence-owner'
 export const ORCAD_FENCE_LOST_MARKER = '__ORCAD_FENCE_LOST__'

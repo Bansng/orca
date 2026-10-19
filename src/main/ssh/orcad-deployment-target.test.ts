@@ -1,4 +1,4 @@
-import type * as ExecCommandModule from './remote-exec-command'
+import type * as ExecCommandModule from './remote-exec/remote-exec-command'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   parseGlibcVersion,
@@ -7,10 +7,10 @@ import {
 } from './orcad-deployment-target'
 import { SshConnection } from './ssh-connection'
 import { createCallbacks, createTarget } from './ssh-connection-test-fixtures'
-import { execCommand } from './remote-exec-command'
+import { execCommand } from './remote-exec/remote-exec-command'
 import { getRemoteHostPlatform } from './ssh-remote-platform'
 
-vi.mock('./remote-exec-command', async (importOriginal) => ({
+vi.mock('./remote-exec/remote-exec-command', async (importOriginal) => ({
   ...(await importOriginal<typeof ExecCommandModule>()),
   execCommand: vi.fn()
 }))

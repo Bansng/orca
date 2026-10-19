@@ -22,7 +22,7 @@ const PANE = 'tab-a:22222222-2222-4222-8222-222222222222'
 const TITLE_PANE = 'tab-t:33333333-3333-4333-8333-333333333333'
 const T0 = 1_000_000
 
-type Stamps = { lastActivityAt: number } & SmartStampFields
+type Stamps = { lastActivityAt: number; isUnread?: boolean } & SmartStampFields
 const SSH_HOST = 'ssh:build-box'
 
 function createHarness() {
@@ -34,22 +34,25 @@ function createHarness() {
   const writes: string[] = []
   const exits = new Map<string, () => void>()
   const fenced = new Set<string>()
+  const notified: string[] = []
   let listener: (event: RuntimeClientEvent) => void = () => {}
+  // Stamping tests watch every workspace, so no unread flag is raised; the unread tests unwatch.
+  const viewing = { isViewing: (_id: string, _pane: string | null): boolean => true }
   const store: SortStampsStore = {
     getWorktreeMeta: (id) => meta.get(id),
     setWorktreeMeta: (id, updates) => {
       writes.push(id)
-      meta.set(id, { ...meta.get(id), ...updates })
+      meta.set(id, { lastActivityAt: 0, ...meta.get(id), ...updates })
     },
     getWorktreeMetaForHost: (id, hostId) => (hostId === SSH_HOST ? sshMeta.get(id) : undefined),
     setWorktreeMetaForHost: (id, hostId, updates) => {
       writes.push(`${hostId}|${id}`)
-      sshMeta.set(id, { ...sshMeta.get(id), ...updates })
+      sshMeta.set(id, { lastActivityAt: 0, ...sshMeta.get(id), ...updates })
     },
     getFolderWorkspace: (id) => folders.get(id),
     updateFolderWorkspace: (id, updates) => {
       writes.push(`folder:${id}`)
-      folders.set(id, { ...folders.get(id), ...updates })
+      folders.set(id, { lastActivityAt: 0, ...folders.get(id), ...updates })
     },
     getAllWorktreeMeta: () => Object.fromEntries(meta),
     getFolderWorkspaces: () => [...folders].map(([id, folder]) => ({ id, ...folder }))
@@ -67,6 +70,8 @@ function createHarness() {
       listener = next
       return () => {}
     },
+    isViewing: (id, pane) => viewing.isViewing(id, pane),
+    onStampsWritten: (id) => notified.push(id),
     now: () => Date.now()
   })
   const server = new AgentHookServer()
@@ -79,6 +84,8 @@ function createHarness() {
     writes,
     exits,
     fenced,
+    notified,
+    viewing,
     sideEffects: (
       facts: TerminalSideEffectFact[],
       extra: { pane?: string; ptyId?: string; connectionId?: string } = {}
@@ -134,6 +141,8 @@ describe('SortStampsProducer: hook agents', () => {
 
     hook(h.server, 'working')
     expect(h.meta.get(WT)).toEqual({ lastActivityAt: T0, smartTier: 'working', smartAt: T0 })
+    // Each write tells clients to re-list the record.
+    expect(h.notified).toEqual([WT])
 
     const finishedAt = advance(20_000)
     hook(h.server, 'done')
@@ -448,5 +457,88 @@ describe('SortStampsProducer: startup reconcile', () => {
     h.producer.attachAgentStatusStore(h.server)
     await h.producer.reconcileStoredTiers(evidence({ isLocalWorkspace: () => false }))
     expect(h.writes).toEqual([])
+  })
+})
+
+describe('SortStampsProducer: unread flag', () => {
+  function unwatched() {
+    const h = createHarness()
+    h.viewing.isViewing = () => false
+    h.producer.attachAgentStatusStore(h.server)
+    return h
+  }
+
+  it('raises the flag on a finish, a request for input and a bell; never on a prompt', () => {
+    const h = unwatched()
+    hook(h.server, 'working')
+    expect(h.meta.get(WT)?.isUnread).toBeUndefined()
+
+    advance(20_000)
+    hook(h.server, 'done')
+    expect(h.meta.get(WT)?.isUnread).toBe(true)
+    // The stamps and the flag are one change to the record.
+    expect(h.notified).toEqual([WT, WT])
+
+    for (const news of [() => hook(h.server, 'blocked'), () => h.sideEffects([{ kind: 'bell' }])]) {
+      h.meta.set(WT, { ...h.meta.get(WT)!, isUnread: false })
+      hook(h.server, 'working')
+      news()
+      expect(h.meta.get(WT)?.isUnread).toBe(true)
+    }
+
+    // A flag already up is not written again.
+    const writes = h.writes.length
+    h.sideEffects([{ kind: 'bell' }])
+    expect(h.writes).toHaveLength(writes)
+  })
+
+  it('leaves the flag down where someone is looking: the pane’s tab, or a bell’s workspace', () => {
+    const h = unwatched()
+    const seen: [string, string | null][] = []
+    h.viewing.isViewing = (id, pane) => {
+      seen.push([id, pane])
+      return pane === PANE
+    }
+    hook(h.server, 'working')
+    advance(20_000)
+    hook(h.server, 'done')
+    expect(h.meta.get(WT)?.isUnread).toBeUndefined()
+
+    h.sideEffects([{ kind: 'bell' }])
+    expect(h.meta.get(WT)?.isUnread).toBe(true)
+    expect(seen).toEqual([
+      [WT, PANE],
+      [WT, TITLE_PANE]
+    ])
+  })
+
+  it('raises an SSH workspace’s flag on its own host’s record, and a folder’s on the folder', () => {
+    const h = unwatched()
+    h.sideEffects([{ kind: 'bell' }], { connectionId: 'build-box' })
+    expect(h.sshMeta.get(WT)?.isUnread).toBe(true)
+    expect(h.meta.get(WT)?.isUnread).toBeUndefined()
+
+    h.server.ingestTerminalStatus({
+      paneKey: PANE,
+      tabId: 'tab-a',
+      worktreeId: FOLDER,
+      payload: { state: 'waiting', prompt: 'task', agentType: 'codex' }
+    })
+    expect(h.folders.get(FOLDER_ID)?.isUnread).toBe(true)
+  })
+
+  it('raises nothing for a restored status, a frozen project or a workspace with no record', () => {
+    const h = createHarness()
+    h.viewing.isViewing = () => false
+    hook(h.server, 'blocked')
+    h.producer.attachAgentStatusStore(h.server)
+    expect(h.meta.get(WT)?.isUnread).toBeUndefined()
+
+    h.fenced.add(WT)
+    h.sideEffects([{ kind: 'bell' }])
+    expect(h.meta.get(WT)?.isUnread).toBeUndefined()
+
+    hook(h.server, 'done', 'repo-1::/tmp/gone')
+    expect(h.writes).not.toContain('repo-1::/tmp/gone')
   })
 })

@@ -11,6 +11,8 @@ import type { AppState } from '../../types'
 import { persistPassiveWorktreeMetaForOwner } from '../worktrees/listing/worktree-owner-settings'
 import type { WorkspaceAttentionGet, WorkspaceAttentionSet } from './workspace-attention-contract'
 import { workspaceHasLiveMarker } from './workspace-live-markers'
+import { ORCA_SIDEBAR_INPUTS_IS_MAIN } from '../../../../../shared/sidebar-inputs-switch'
+import { noteWindowUnreadDecision } from '@/lib/sidebar-shadow/window-unread-decisions'
 
 // The persisted workspace flag `isUnread`. Only the workspace-attention module writes it.
 
@@ -19,7 +21,12 @@ export function markWorkspaceUnreadFlag(
   get: WorkspaceAttentionGet,
   worktreeId: string
 ): void {
-  const now = Date.now()
+  // Switch point: the owning host raises the flag from the same news; the window only records it.
+  if (ORCA_SIDEBAR_INPUTS_IS_MAIN) {
+    noteWindowUnreadDecision(worktreeId, true)
+    return
+  }
+  const stamp = { lastActivityAt: Date.now() }
   const workspaceScope = parseWorkspaceKey(worktreeId)
   if (workspaceScope?.type === 'folder') {
     const folderWorkspaceId = workspaceScope.folderWorkspaceId
@@ -35,14 +42,14 @@ export function markWorkspaceUnreadFlag(
     }
     set((s) => ({
       folderWorkspaces: s.folderWorkspaces.map((workspace) =>
-        workspace === marked ? { ...workspace, isUnread: true, lastActivityAt: now } : workspace
+        workspace === marked ? { ...workspace, isUnread: true, ...stamp } : workspace
       ),
       sortEpoch: s.sortEpoch + 1
     }))
     // Why the row's own host: the row flipped here is the owner updateFolderWorkspace writes.
     void get().updateFolderWorkspace(
       folderWorkspaceId,
-      { isUnread: true, lastActivityAt: now },
+      { isUnread: true, ...stamp },
       { executionHostId: getFolderWorkspaceHostId(marked, state.projectGroups) }
     )
     return
@@ -56,14 +63,14 @@ export function markWorkspaceUnreadFlag(
     shouldPersist = true
     const nextWorktrees = applyWorktreeUpdates(s.worktreesByRepo, worktreeId, {
       isUnread: true,
-      lastActivityAt: now
+      ...stamp
     })
     const nextDetectedWorktrees = applyDetectedWorktreeUpdates(
       s.detectedWorktreesByRepo,
       worktreeId,
       {
         isUnread: true,
-        lastActivityAt: now
+        ...stamp
       }
     )
     return {
@@ -83,7 +90,7 @@ export function markWorkspaceUnreadFlag(
   persistPassiveWorktreeMetaForOwner(
     get,
     worktreeId,
-    { isUnread: true, lastActivityAt: now },
+    { isUnread: true, ...stamp },
     'persist unread worktree state'
   )
 }
@@ -95,6 +102,9 @@ export function clearWorkspaceUnreadFlag(
   /** Folder rows share an id across hosts: the on-screen host's row, or null for every row. */
   executionHostId?: ExecutionHostId | null
 ): void {
+  if (ORCA_SIDEBAR_INPUTS_IS_MAIN) {
+    noteWindowUnreadDecision(worktreeId, false)
+  }
   const workspaceScope = parseWorkspaceKey(worktreeId)
   if (workspaceScope?.type === 'folder') {
     const folderWorkspaceId = workspaceScope.folderWorkspaceId

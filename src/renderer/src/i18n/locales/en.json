@@ -762,7 +762,8 @@
             "76deec8f58": "Failed to switch organization",
             "7d4bc516ee": "Failed to switch profile",
             "f518e89aa5": "Project already exists in that profile",
-            "f03ae7f27b": "Failed to transfer project"
+            "f03ae7f27b": "Failed to transfer project",
+            "signInTimedOut": "Sign-in timed out"
           }
         },
         "runtime": {
@@ -3521,7 +3522,9 @@
             "copiedLink": "Copied link",
             "copyLinkFailed": "Failed to copy link",
             "downloadOpenWithDefaultApp": "Download & open with default app",
-            "downloadOpenFailed": "Failed to download '{{value0}}'."
+            "downloadOpenFailed": "Failed to download '{{value0}}'.",
+            "openInThisGroup": "Open in this group",
+            "openInThisGroupRefused": "Couldn't open {{value0}} in this group"
           },
           "TerminalSessionStateSaveFailureDialog": {
             "6bee0c8f17": "Open Disk Space Analyzer",
@@ -6189,6 +6192,8 @@
           "sshAliasRequiredDetail": "Add a Host alias for {{host}}:{{port}} to your local SSH config, reconnect the workspace, then try again.",
           "remoteEditorUnsupported": "This app cannot open SSH workspaces.",
           "remoteEditorUnsupportedDetail": "Choose VS Code or use the app locally.",
+          "remoteEditorHint": "Only VS Code can open folders on an SSH host.",
+          "remoteRuntimeEditorHint": "Apps on this computer can open this server’s files only when Orca reaches it over SSH.",
           "remotePathInvalid": "Path is not valid for the SSH host.",
           "remotePathInvalidDetail": "Refresh the workspace before trying again.",
           "remoteLaunchFailed": "Could not open the path in VS Code.",
@@ -6664,8 +6669,7 @@
         },
         "MarkdownImageLightbox": {
           "image": "Image",
-          "expand": "Expand image",
-          "close": "Close"
+          "expand": "Expand image"
         },
         "WorktreeDeveloperMenu": {
           "developer": "Developer",
@@ -15943,7 +15947,9 @@
           "1829437fce": "New Markdown"
         },
         "DiagramViewerModal": {
-          "title": "Diagram",
+          "title": "Diagram"
+        },
+        "PanZoomImageDialog": {
           "zoomOut": "Zoom out",
           "zoomIn": "Zoom in",
           "fit": "Fit to screen",
@@ -18160,6 +18166,14 @@
         "a62f9db53d": "Cancel",
         "c77189bc0c": "Update filter",
         "19af906d12": "Save filter"
+      },
+      "OrcaSignInProgress": {
+        "waiting": "Waiting for sign-in in your browser",
+        "copyLink": "Copy sign-in link",
+        "copied": "Sign-in link copied",
+        "copyFailed": "Could not copy the link.",
+        "signingIn": "Signing in…",
+        "cancel": "Cancel"
       }
     },
     "i18n": {
@@ -18582,7 +18596,6 @@
         },
         "pendingAttachmentLimit": "Too many attachments are waiting. Finish composing before attaching more.",
         "viewAttachment": "View image",
-        "imagePreview": "Full-size image preview",
         "imagePreviewUnavailable": "Preview unavailable",
         "copyImage": "Copy image",
         "copyImageFailed": "Couldn't copy image",
@@ -19442,7 +19455,6 @@
       "keywordIssuePicker": "issue picker"
     },
     "managed-runtime": {
-      "cancel": "Cancel installation",
       "cancelled": "Installation cancelled.",
       "cancelling": "Cancelling…",
       "damaged": "This copy of {{agent}} is damaged.",
@@ -19459,10 +19471,17 @@
       "notInstalled": "Not installed.",
       "progress": "{{agent}} download",
       "readFailed": "Could not check {{agent}} on this host. Retrying.",
-      "reinstall": "Reinstall {{agent}}",
+      "reinstall": "Reinstall",
+      "remove": "Remove downloaded runtime",
+      "removeConfirm": "Remove",
+      "removeDescription": "{{agent}} chats that are running stop. Their history is kept.",
+      "removeKeep": "Cancel",
+      "removeTitle": "Remove the downloaded {{agent}} runtime from {{host}}?",
+      "removing": "Removing…",
       "retry": "Retry installation",
+      "thisComputer": "this computer",
       "unavailable": "{{agent}} is not available on this host.",
-      "update": "Update {{agent}}",
+      "update": "Update",
       "verifying": "Checking the downloaded runtime.",
       "installTitle": "Install {{agent}} to start chatting",
       "continueTitle": "Install {{agent}} to continue",

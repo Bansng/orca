@@ -9,7 +9,7 @@
  * convert under it.
  */
 import type { SshConnection } from '../ssh-connection'
-import { RELAY_REMOTE_DIR } from '../remote-frame-protocol'
+import { RELAY_REMOTE_DIR } from '../remote-exec/remote-frame-protocol'
 import { RELAY_INSTALL_MODEL } from '../../managed-server/install/remote-install-model'
 import type { HostRelayEndpointCensus } from './ssh-host-relay-endpoint-census'
 import {
@@ -19,7 +19,7 @@ import {
   windowsRelayInventoryCommand
 } from './ssh-host-relay-windows-inventory'
 import { countRelayPtysOverBridge } from './ssh-relay-endpoint-pty-count'
-import { execCommand } from '../remote-exec-command'
+import { execCommand } from '../remote-exec/remote-exec-command'
 import { relaySocketNameForInstanceId } from './ssh-relay-instance-id'
 import { windowsRelayConnectCommand } from './ssh-relay-windows-launch-command'
 import { listRemoteInstallBaseDirsCommand } from '../ssh-remote-commands'

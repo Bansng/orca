@@ -14,9 +14,12 @@ import {
   downloadFileViaSystemSsh,
   uploadFileViaSystemSsh,
   writeBufferViaSystemSsh
-} from './system-ssh-file-binary-transfer'
-import { uploadDirectoryViaSystemSsh, writeFileViaSystemSsh } from './system-ssh-file-transfer'
-import type { SystemSshBuildArgsOptions } from './system-ssh-args'
+} from './system-transport/system-ssh-file-binary-transfer'
+import {
+  uploadDirectoryViaSystemSsh,
+  writeFileViaSystemSsh
+} from './system-transport/system-ssh-file-transfer'
+import type { SystemSshBuildArgsOptions } from './system-transport/system-ssh-args'
 
 export type SshRemoteFileOptions = {
   hostPlatform?: RemoteHostPlatform

@@ -7,7 +7,7 @@
  * host with no PATH Node from reading every relay as unverifiable.
  */
 import type { SshConnection } from '../ssh-connection'
-import { execCommand } from '../remote-exec-command'
+import { execCommand } from '../remote-exec/remote-exec-command'
 
 const RELAY_DAEMON_MARKER = ' relay.js --detached '
 

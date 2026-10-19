@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   markdownDocumentFromFilePath,
   markdownDocumentFromRelativePath
-} from './markdown-documents'
+} from '../../shared/markdown-document-paths'
 
 describe('markdownDocumentFromFilePath', () => {
   it.skipIf(process.platform === 'win32')('preserves local literal backslash names', () => {

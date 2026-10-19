@@ -1,7 +1,7 @@
 // Tab properties in a layout-owner build: main's pin, color or rename, drawn from its frame, must
 // look as the window's own action does today, and must restart the same.
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type * as AgentStatusModule from '@/lib/agent-status'
 import type { WorkspaceSessionState } from '../../../shared/workspace-session-state-types'
 import { applyLayoutCommand } from '../../../shared/workspace-layout/workspace-layout-commands'
@@ -19,7 +19,6 @@ import {
   bootWindowFromPartitions,
   projectStartupWindowView
 } from '../app-shell/startup-window-view.test-fixture'
-import { reportWindowSessionWriteActivity } from '../lib/window-session-write-activity'
 import { createStoreSessionMockApi } from '../store/slices/store-session-test-harness'
 import { createTestStore } from '../store/slices/store-test-helpers'
 import type { AppState } from '../store/types'
@@ -219,10 +218,6 @@ const CASES: Case[] = [
     }
   }
 ]
-
-beforeEach(() => {
-  reportWindowSessionWriteActivity(false)
-})
 
 describe('tab properties through main', () => {
   it.each(CASES.map((entry) => [entry.name, entry] as const))(

@@ -63,7 +63,6 @@ export function layoutOwnerPaneGestures(pane: {
           apply: () => settle(true),
           asToday: () => settle(true),
           // Main's tree did not change, and frames draw main's tree: the window keeps its shape.
-          unapplied: () => settle(false),
           refused: () => settle(false)
         }
       )

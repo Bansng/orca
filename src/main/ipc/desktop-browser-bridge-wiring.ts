@@ -30,14 +30,14 @@ import { rendererResolveRemoteCliWorkspace } from '../browser/desktop-browser-br
 import type { OrcaRuntimeService } from '../runtime/orca-runtime'
 import { RpcDispatcher } from '../runtime/rpc/dispatcher'
 import { ALL_RPC_METHODS } from '../runtime/rpc/methods'
-import { ensureOrcadManagedTunnel } from '../ssh/orcad-managed-tunnel'
+import { ensureOrcadManagedTunnel } from '../managed-server/lifecycle/orcad-managed-tunnel'
 import { getSshTargetRegistryStore } from '../ssh/ssh-target-registry'
 import type { SshConnectionManager } from '../ssh/ssh-connection-manager'
-import { getRuntimeEnvironmentStatus } from './runtime-environment-status-probe'
-import { isRuntimeEnvironmentManuallyDisconnected } from './runtime-environment-connectivity-handlers'
+import { getRuntimeEnvironmentStatus } from './runtime-environments/runtime-environment-status-probe'
+import { isRuntimeEnvironmentManuallyDisconnected } from './runtime-environments/runtime-environment-connectivity-handlers'
 import { setDesktopBrowserBridgeControl } from './desktop-browser-bridge-reconcile'
 import { markRemoteCliDrivenWorkspace } from '../browser/desktop-browser-bridge/remote-cli-driven-workspaces'
-import { persistedStore } from './ssh-ipc-context'
+import { persistedStore } from './ssh/ssh-ipc-context'
 import { localSshBrowserTargetIdForSession } from '../browser/local-ssh-browser-partitions'
 
 const ATTACH_TIMEOUT_MS = 15_000

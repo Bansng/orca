@@ -24,10 +24,10 @@ vi.mock('fs', () => ({
 
 import { buildConnectConfig } from './ssh-connection-utils'
 import { getPassphrasePrivateKeyPath } from './ssh-private-key-authentication'
-import { buildSshArgs } from './system-ssh-args'
+import { buildSshArgs } from './system-transport/system-ssh-args'
 import { walkInitialAuthLadder } from './ssh-connection-test-fixtures'
 import type { SshTarget } from '../../shared/ssh-types'
-import type { SshResolvedConfig } from './ssh-g-config-resolution'
+import type { SshResolvedConfig } from './config/ssh-g-config-resolution'
 
 function makeTarget(overrides: Partial<SshTarget> = {}): SshTarget {
   return {

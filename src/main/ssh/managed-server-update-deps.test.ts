@@ -5,7 +5,7 @@ import { managedServerUpdateDeps } from './managed-server-update-deps'
 vi.mock('../../shared/app-environment', () => ({
   getAppEnvironment: () => ({ getVersion: () => '1.4.300' })
 }))
-vi.mock('./orcad-managed-runtime-context', () => ({
+vi.mock('../managed-server/lifecycle/orcad-managed-runtime-context', () => ({
   requireManagedOrcadTargetStore: () => ({ updateTarget: vi.fn() })
 }))
 

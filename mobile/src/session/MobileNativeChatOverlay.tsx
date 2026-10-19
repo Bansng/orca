@@ -4,6 +4,7 @@ import { MobileNativeChatView, type MobileNativeChatInputLockReason } from './Mo
 import { foldMobileNativeChatMessages } from './mobile-native-chat-render-data'
 import type { MobileNativeChatImageAttachments } from './use-mobile-native-chat-image-attachments'
 import type { MobileNativeChatController } from './use-mobile-native-chat-controller'
+import type { MobileNativeChatStructuredComposer } from './MobileNativeChatComposer'
 import { useMobileNativeChatStreamingBubble } from './use-mobile-native-chat-streaming-bubble'
 import { useMobileNativeChatComposerTray } from './use-mobile-native-chat-composer-tray'
 import { useMobileNativeChatVisualRenderer } from './MobileNativeChatVisual'
@@ -22,6 +23,8 @@ type Props = {
   /** Native-chat image attachments: picking adds a composer chip, and sending
    *  rides the pending images along with the message text (desktop parity). */
   images: MobileNativeChatImageAttachments
+  /** A structured chat's + sheet, files and skills; null on a terminal-backed chat. */
+  structuredComposer?: MobileNativeChatStructuredComposer | null
   onMicPress: () => void
   micActive: boolean
   dictationMode: string | undefined
@@ -49,6 +52,7 @@ export function MobileNativeChatOverlay({
   controller,
   onOpenFile,
   images,
+  structuredComposer = null,
   onMicPress,
   micActive,
   dictationMode,
@@ -167,6 +171,7 @@ export function MobileNativeChatOverlay({
               filePaths={controller.nativeChatFilePaths}
               onNeedFiles={controller.loadNativeChatFiles}
               sessionOptions={controller.nativeChatSessionOptions}
+              structuredComposer={structuredComposer}
               keyboardInset={keyboardInset}
             />
           </MobileNativeChatReplyRevealsContext.Provider>

@@ -47,6 +47,10 @@ export abstract class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntime
     const title =
       getLatestPtyTitle(this.getPtyDisplayRecord(pty)) ??
       (orphaned ? null : this.getSavedTerminalTabCustomTitle(pty.worktreeId, pty.tabId))
+    const paneTitle =
+      orphaned || !pty.tabId || !pane
+        ? null
+        : this.getSavedPaneTitle(pty.worktreeId, pty.tabId, pane.leafId)
     // A live process awaiting its pane binding is not evidence of an orphan.
     if (
       orphaned &&
@@ -70,6 +74,7 @@ export abstract class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntime
       // SAFETY: A later binding read does not prove the cached pane was present.
       leafId: orphaned ? `pty:${pty.ptyId}` : pane!.leafId,
       title,
+      ...(paneTitle ? { paneTitle } : {}),
       connected: pty.connected,
       writable: pty.connected,
       lastOutputAt: pty.lastOutputAt,

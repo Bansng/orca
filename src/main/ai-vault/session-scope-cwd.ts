@@ -40,8 +40,7 @@ export const AI_VAULT_SCOPE_CWD_SOURCES: Record<AiVaultAgent, SessionScopeCwdSou
   codebuddy: { kind: 'bucket', layout: CODEBUDDY_CWD_BUCKET_LAYOUT },
   codex: {
     kind: 'head',
-    cwdOf: (record) =>
-      record.type === 'session_meta' ? asRecord(record.payload)?.cwd : undefined,
+    cwdOf: (record) => (record.type === 'session_meta' ? asRecord(record.payload)?.cwd : undefined),
     // Its first record carries the base instructions (about 20 KB): one read, not two.
     firstReadBytes: 64 * 1024
   },
@@ -102,7 +101,9 @@ export async function readTranscriptHeadCwd(
   const { cwdOf } = source
   let cwd: string | null = null
   const first = source.firstReadBytes ?? HEAD_READ_BYTES
-  for (const length of first < HEAD_WIDENED_READ_BYTES ? [first, HEAD_WIDENED_READ_BYTES] : [first]) {
+  for (const length of first < HEAD_WIDENED_READ_BYTES
+    ? [first, HEAD_WIDENED_READ_BYTES]
+    : [first]) {
     let head: Buffer
     try {
       head = await readTranscriptSlice(file.path, 0, length, 'scan', signal)
