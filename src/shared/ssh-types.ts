@@ -34,12 +34,15 @@ export type SshRemoteRuntimeResolution = {
   orcaMajor: number
 }
 
+/** Who created a hidden target as an implementation detail, and so owns its lifecycle. */
+export type SshTargetOwner = { type: 'on-demand-runtime'; runtimeId: string }
+
 export type SshTarget = {
   id: string
   label: string
   /** Internal owner for targets that Orca creates as implementation details.
    *  Owned targets are hidden from normal SSH-host management surfaces. */
-  owner?: { type: 'on-demand-runtime'; runtimeId: string }
+  owner?: SshTargetOwner
   /** Host alias to resolve through OpenSSH config (ssh -G). */
   configHost?: string
   host: string

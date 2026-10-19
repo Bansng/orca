@@ -79,7 +79,7 @@ export type DesktopLayoutView = Pick<WorkspaceSessionState, ViewSessionField> & 
   lastFocusedAt: Record<string, Record<string, number>>
   /** Terminal tab id → focused and expanded pane. */
   panes: Record<string, Pick<TerminalLayoutSnapshot, 'activeLeafId' | 'expandedLeafId'>>
-  /** Workspace key → file path → unsaved draft. */
+  /** Workspace key → file key (`editorFileKey`) → unsaved draft. */
   editorDrafts: Record<string, Record<string, EditorDraft>>
 }
 

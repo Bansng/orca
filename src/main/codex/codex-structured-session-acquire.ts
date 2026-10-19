@@ -24,6 +24,7 @@ import {
 } from './codex-structured-owner-identity'
 import { openCodexThread } from './codex-structured-thread-open'
 import { withCodexVisualsThreadConfig } from './codex-structured-visuals'
+import { NATIVE_CHAT_SCRATCH_DIR_ENV } from '../native-chat/native-chat-visuals-delivery'
 import {
   closeCodexPublishedSession,
   handleCodexSessionExit
@@ -193,7 +194,15 @@ export async function acquireCodexStructuredSession(input: {
       ...(deps.logger ? { logger: deps.logger } : {})
     })
     acquisitions.assertCurrent(sessionId, attempt)
-    const opened = await openCodexThread(connection, threadLaunch, deps.requestTimeoutMs)
+    const commandEnv = {
+      ...launch.commandEnv,
+      ...(launch.visuals ? { [NATIVE_CHAT_SCRATCH_DIR_ENV]: launch.visuals.folder } : {})
+    }
+    const opened = await openCodexThread(
+      connection,
+      { ...threadLaunch, commandEnv },
+      deps.requestTimeoutMs
+    )
     acquisitions.assertCurrent(sessionId, attempt)
     primaryThreadId = opened.threadId
     const restoreAdmission = translator?.restoreThread(opened.threadId, opened.thread ?? {})
@@ -227,7 +236,6 @@ export async function acquireCodexStructuredSession(input: {
     // Where this session's child work goes: the host's records, after each frame is journaled.
     const sink = codexChildWorkSink(sessionId, deps, acquireInput.events)
     const session: CodexSession = {
-      events: acquireInput.events,
       account,
       connection,
       ...codexSessionLifecycle(acquireInput.fence, acquired.acquisitionGeneration as string),

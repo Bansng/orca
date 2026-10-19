@@ -146,7 +146,7 @@ export class PiRpcSessionAdapter implements StructuredAgentSessionAdapter {
         )
       }
     }
-    return session.submit(
+    return session.turns.submit(
       input.clientMessageId,
       input.requestedAt ?? Date.now(),
       { ...prompt },
@@ -234,9 +234,6 @@ export class PiRpcSessionAdapter implements StructuredAgentSessionAdapter {
   holdsDispatch(id: string): boolean {
     return this.sessions.get(id)?.turns.holdsDispatch ?? false
   }
-  heldSends(id: string): ReadonlySet<string> | undefined {
-    return this.sessions.get(id)?.heldSends
-  }
   /** Started with no model listed: Pi keeps a placeholder, so every prompt this child takes fails
    *  as not signed in, even after a sign-in, which only a new Pi reads. */
   startUnavailable(id: string): AgentSessionUnavailable | undefined {
@@ -265,6 +262,9 @@ export class PiRpcSessionAdapter implements StructuredAgentSessionAdapter {
   }
   releaseAcquisition(input: { sessionId: string }): Promise<boolean> {
     return this.closeSession(input.sessionId)
+  }
+  hasOwnedAcquisition(sessionId: string): boolean {
+    return this.sessions.has(sessionId)
   }
   forceCloseSession(id: string): Promise<boolean> {
     this.sessions.get(id)?.fail(new Error('Pi event sink failed'))

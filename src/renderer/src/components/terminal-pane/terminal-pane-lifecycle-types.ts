@@ -103,6 +103,7 @@ export type UseTerminalPaneLifecycleDeps = {
   setExpandedPane: (paneId: number | null) => void
   syncExpandedLayout: () => void
   persistLayoutSnapshot: (intent?: PaneLayoutEditIntent) => void
+  showPaneTitle: (paneId: number, title: string | null) => void
   setPaneTitles: React.Dispatch<React.SetStateAction<Record<number, string>>>
   paneTitlesRef: React.RefObject<Record<number, string>>
   setRenamingPaneId: React.Dispatch<React.SetStateAction<number | null>>

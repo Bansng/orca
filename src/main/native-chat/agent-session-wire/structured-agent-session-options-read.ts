@@ -233,10 +233,19 @@ export async function readStructuredAgentSessionOptions(
             })
           )
         : null
+  let rested: RestingOptions | undefined
+  const atRest = async (): Promise<RestingOptions> =>
+    (rested ??= await readStructuredAgentSessionOptionsAtRest(context.deps, sessionId, reader))
   let options: Omit<AgentSessionOptionsResult, 'rewind'>
   if (live) {
     const { catalogListing, ...answer } = live
     options = answer
+    // A child with no listing of its own reads the saved one, as at rest, so a row reads the same.
+    // With no record there is nothing saved to read, and the answer stays the child's own.
+    if (!catalogListing && !answer.listedModelIds && store.getRecord(sessionId)) {
+      const { listedModelIds } = await atRest()
+      options = listedModelIds ? { ...answer, listedModelIds } : answer
+    }
     if (catalogListing) {
       // Check prior membership before saving: a launch-added row cannot verify itself.
       const listedModelIds = context.deps.modelCatalog
@@ -246,7 +255,7 @@ export async function readStructuredAgentSessionOptions(
       options = { ...answer, listedModelIds }
     }
   } else {
-    options = await readStructuredAgentSessionOptionsAtRest(context.deps, sessionId, reader)
+    options = await atRest()
   }
   // Re-acquired after the reads above: the handle they saw may have closed and reopened since.
   const session = await context.conversation(sessionId)
@@ -260,15 +269,17 @@ export async function readStructuredAgentSessionOptions(
   const permissionMode = record
     ? await structuredAgentSessionLaunchPermission(context.deps, record)
     : null
+  // The saved pick shows, except one the running child could not take (a model its provider says
+  // does not exist): that shows what the child runs instead.
+  const refused = live ? (adapter.readOptionRestoreFailures?.(sessionId) ?? []) : []
   const saved = record?.options
-  const selected =
-    live && (saved?.model !== undefined || saved?.effort !== undefined)
-      ? await readStructuredAgentSessionOptionsAtRest(context.deps, sessionId, reader)
-      : options
+  const shownSaved = (key: 'model' | 'effort'): boolean =>
+    saved?.[key] !== undefined && !refused.includes(key)
+  const selected = live && (shownSaved('model') || shownSaved('effort')) ? await atRest() : options
   const current = {
     ...options.current,
-    ...(saved?.model !== undefined ? { model: selected.current.model } : {}),
-    ...(saved?.effort !== undefined ? { effort: selected.current.effort } : {})
+    ...(shownSaved('model') ? { model: selected.current.model } : {}),
+    ...(shownSaved('effort') ? { effort: selected.current.effort } : {})
   }
   const confirmed = current.confirmed?.filter((key) =>
     key === 'model'

@@ -1,20 +1,11 @@
-import { isQueuedAgentJournalSubmission } from '../../../shared/agent-session-queued-submission'
 import { waitForPromiseWithSignal } from '../../../shared/abort-signal-reason'
-import {
-  mergeRetainedHostLifecycleRows,
-  retainedRowReplacement
-} from './structured-rewind-retained-host-rows'
-import { isDeepStrictEqual } from 'node:util'
-import {
-  agentJournalItemKey,
-  agentJournalSubmissionKey,
-  parseAgentJournalItemKey
-} from '../../../shared/agent-session-journal-item-key'
+import { parseAgentJournalItemKey } from '../../../shared/agent-session-journal-item-key'
+import { agentSessionProviderHandleChainHead } from '../../../shared/agent-session-provider-handle'
+import { structuredRewindCut } from './structured-rewind-cut'
 import type { AgentSessionRewindRecord } from '../../../shared/agent-session-rewind'
 import type { AgentSessionRecordStore } from '../../runtime/agent-session-record-store'
 import type { AgentSessionJournal } from '../agent-session-journal/journal-store'
 import type { StructuredAgentSessionAdapter } from './structured-agent-session-adapter'
-import { AGENT_SESSION_HISTORY_MAX_PAGE_BYTES } from './agent-session-history-page-bounds'
 import { rewindRefusal } from './structured-rewind-refusal'
 import type { StructuredAgentSessionLogger } from './structured-agent-session-logger'
 import type { JournalOperationReceipt } from '../agent-session-journal/journal-row-writer'
@@ -28,11 +19,13 @@ export function persistRewindRecord(
   fence: number,
   rewind: AgentSessionRewindRecord
 ): Promise<unknown> {
+  // An older build's record copied the kept history; the journal holds it, so it is never rewritten.
+  const { retained: _retained, hydrationVerified: _hydrationVerified, ...current } = rewind
   return store.transitionHandoff(sessionId, (record) => {
     if (record.lease.runtimeFence !== fence) {
       throw new Error('agent_session_checkpoint_stale')
     }
-    return { ...record, rewind }
+    return { ...record, rewind: current }
   })
 }
 
@@ -51,8 +44,7 @@ async function settleUnsupportedClaudeRewind(
     await persistRewindRecord(store, sessionId, fence, {
       ...rewind,
       phase: 'refused',
-      reason: 'unsupported',
-      retained: []
+      reason: 'unsupported'
     })
     await store.recordOperationOutcome({
       callerKey: rewind.callerKey,
@@ -76,7 +68,6 @@ export async function recoverStructuredRewind(
   journal: AgentSessionJournal,
   fence: number,
   adapter?: StructuredAgentSessionAdapter,
-  now: () => number = Date.now,
   receipt?: (
     rewind: AgentSessionRewindRecord,
     fence: number,
@@ -95,11 +86,31 @@ export async function recoverStructuredRewind(
     await settleUnsupportedClaudeRewind(deps, sessionId, fence, rewind)
     return
   }
-  if (target?.provider === 'codex' && !rewind.hydrationVerified) {
+  // Only this rewind moves a chat to a new epoch once it has history (imports run at creation), so
+  // a moved epoch is its own replacement, committed before the crash.
+  const alreadyReplaced = journal.cursor().epoch !== rewind.expectedEpoch
+  const record = store.getRecord(sessionId)
+  const head = record && agentSessionProviderHandleChainHead(record.providerHandleChain)?.handle
+  const cut =
+    alreadyReplaced || !record || !head
+      ? null
+      : structuredRewindCut(journal, {
+          itemId: rewind.itemId,
+          provider: record.provider,
+          nativeId: head.nativeId
+        })
+  if (!alreadyReplaced && !cut) {
+    throw new Error('agent_session_rewind:invalid-target')
+  }
+  if (rewind.phase === 'prepared') {
+    if (!cut) {
+      throw new Error('agent_session_rewind:outcome-unknown')
+    }
     const read = adapter?.recoverRewind?.({
       sessionId,
       fence,
-      beforeTurnId: target.turnId,
+      beforeTurnId: cut.beforeTurnId,
+      keptTurnId: cut.keptTurnId,
       ...(signal ? { signal } : {})
     })
     const recovered = signal
@@ -109,61 +120,22 @@ export async function recoverStructuredRewind(
     if (!recovered?.ok) {
       // The target is still in the provider's history, and the journal is replaced only once the
       // revert is proven, so both still hold it even when the provider acknowledged the revert.
-      if (recovered?.reason === 'provider-refused' && rewind.phase === 'prepared') {
+      if (recovered?.reason === 'provider-refused') {
         await persistRewindRecord(store, sessionId, fence, {
           ...rewind,
           phase: 'refused',
-          reason: recovered.reason,
-          retained: []
+          reason: recovered.reason
         })
         return
       }
       throw new Error(`agent_session_rewind:${recovered?.reason ?? 'outcome-unknown'}`)
     }
-    const expectedItems = new Set(
-      rewind.retained
-        .filter((item) => {
-          const identity = parseAgentJournalItemKey(item.itemId)
-          return identity?.provider === 'codex' && identity.threadId === target.threadId
-        })
-        .map((item) => item.itemId)
-    )
-    const observedItems = new Set<string>()
-    for (const { identity } of recovered.items) {
-      const itemId = agentJournalItemKey(identity)
-      if (
-        identity.provider !== 'codex' ||
-        identity.threadId !== target.threadId ||
-        !expectedItems.has(itemId)
-      ) {
-        throw new Error('agent_session_rewind:proof-mismatch')
-      }
-      observedItems.add(itemId)
-    }
-    if (observedItems.size !== expectedItems.size) {
-      throw new Error('agent_session_rewind:proof-mismatch')
-    }
-    const retained = mergeRetainedHostLifecycleRows(
-      rewind.retained,
-      recovered.items.map(({ identity, body }) => ({
-        itemId: agentJournalItemKey(identity),
-        body,
-        observedAt: now()
-      }))
-    )
-    if (
-      retained.length > 10_000 ||
-      Buffer.byteLength(JSON.stringify(retained), 'utf8') > AGENT_SESSION_HISTORY_MAX_PAGE_BYTES
-    ) {
-      throw new Error('agent_session_rewind:history-limit')
-    }
-    rewind = { ...rewind, retained, phase: 'provider-succeeded', hydrationVerified: true }
+    rewind = { ...rewind, phase: 'provider-succeeded' }
     await persistRewindRecord(store, sessionId, fence, rewind)
   }
   if (rewind.phase !== 'provider-succeeded') {
     return
   }
-  const replacement = rewind.retained.map(retainedRowReplacement)
   if (rewind.contextClearOperationId && rewind.contextClearSequence) {
     if (
       store.getRecord(sessionId)?.providerContextBoundary?.operationId !==
@@ -177,44 +149,20 @@ export async function recoverStructuredRewind(
     await journal.context.rewind(
       { epoch: completed.expectedEpoch, sequence: completed.contextClearSequence! },
       fence,
-      replacement,
+      cut!.kept,
       (cursor) =>
         receipt?.(completed, fence, cursor) ??
         store.conversationReceipts.rewind(sessionId, fence, completed, cursor)
     )
     return
   }
-  // A crash after the journal transaction must settle its existing epoch, not replace it twice.
-  const alreadyReplaced = journal.cursor().epoch !== rewind.expectedEpoch
-  const queued = new Set(
-    journal
-      .submissions()
-      .filter(isQueuedAgentJournalSubmission)
-      .map((submission) => agentJournalSubmissionKey(submission.clientMessageId))
-  )
-  if (
-    alreadyReplaced &&
-    !isDeepStrictEqual(
-      journal
-        .snapshot()
-        .items.filter(({ itemId }) => !queued.has(itemId))
-        .map(({ itemId }) => ({
-          itemId,
-          body: journal.itemBody(itemId)
-        })),
-      replacement.map(({ identity, body }) => ({ itemId: agentJournalItemKey(identity), body }))
-    )
-  ) {
-    throw new Error('agent_session_rewind:stale-epoch')
-  }
   const cursor = alreadyReplaced
     ? journal.cursor()
-    : await journal.replaceEpochItems('handle_forked', fence, replacement)
+    : await journal.replaceEpochItems('handle_forked', fence, cut!.kept)
   await persistRewindRecord(store, sessionId, fence, {
     ...rewind,
     phase: 'completed',
-    epoch: cursor.epoch,
-    retained: []
+    epoch: cursor.epoch
   })
   await store.recordOperationOutcome({
     callerKey: rewind.callerKey,

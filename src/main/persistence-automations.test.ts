@@ -88,6 +88,31 @@ describe('Store', () => {
     expect(persisted.automations[0].baseBranch).toBeNull()
   })
 
+  it('records the dispatch time a headless launch stamped before prompting its agent', async () => {
+    const store = await createStore()
+    store.addRepo(makeRepo())
+    const automation = store.createAutomation({
+      name: 'Nightly',
+      prompt: 'Run checks',
+      agentId: 'claude',
+      projectId: 'r1',
+      workspaceMode: 'new_per_run',
+      timezone: 'UTC',
+      rrule: 'FREQ=DAILY;BYHOUR=9;BYMINUTE=0',
+      dtstart: new Date('2026-05-13T00:00:00Z').getTime()
+    })
+    const run = store.createAutomationRun(automation, Date.now())
+
+    const dispatched = store.updateAutomationRun({
+      runId: run.id,
+      status: 'dispatched',
+      dispatchedAt: 1_234,
+      error: null
+    })
+
+    expect(dispatched.dispatchedAt).toBe(1_234)
+  })
+
   it('returns the existing automation for a repeated creation key', async () => {
     const store = await createStore()
     store.addRepo(makeRepo())

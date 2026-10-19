@@ -18,12 +18,13 @@ import type { LegacyRelayEndpoint, LegacyRelayEndpointListing } from './legacy-r
 import { LegacyRelayRetry, LegacyRelayWaiters } from './legacy-relay-bridge-timers'
 import {
   ATTACH_WAIT_MS,
-  bridgeableLeasesByRelayId,
   findLivePane,
   leasedAppPtyIds,
+  listedLeasesByRelayId,
   type LegacyRelayPty,
   PROVEN_EXITED,
-  toBridgedPane,
+  servedBridgedPanes,
+  toPane,
   type Pane
 } from './legacy-relay-bridge-leases'
 
@@ -57,9 +58,12 @@ type EndpointState = {
 export class LegacyRelayTargetBridge {
   private readonly endpoints = new Map<string, EndpointState>()
   private readonly panes = new Map<string, Pane>()
-  readonly livePaneForKey = (paneKey: string) => findLivePane(this.panes, paneKey)
+  readonly livePaneForKey = (paneKey: string) =>
+    findLivePane(this.panes, paneKey, this.deps.leases())
   /** The process identity the relay listed for a pane, which fences a stop against a recycled id. */
   readonly listedIncarnation = (ptyId: string) => this.panes.get(ptyId)?.listed?.incarnationId
+  /** Whether a relay lists a pane now, including one whose stop is owed; undefined when untracked. */
+  readonly paneState = (ptyId: string) => this.panes.get(ptyId)?.state
   private readonly attached = new Map<string, Set<number>>()
   private readonly waiters = new LegacyRelayWaiters()
   private readonly retry = new LegacyRelayRetry(() => void this.refresh())
@@ -73,16 +77,12 @@ export class LegacyRelayTargetBridge {
 
   constructor(private readonly deps: LegacyRelayTargetBridgeDeps) {}
 
-  get targetId(): string {
-    return this.deps.targetId
-  }
-
   livePaneCount(): number {
-    return [...this.panes.values()].filter((pane) => pane.state === 'live').length
+    return this.snapshot().filter((pane) => pane.state === 'live').length
   }
 
   snapshot(): LegacyRelayBridgedPane[] {
-    return [...this.panes].map(([ptyId, pane]) => toBridgedPane(this.deps.targetId, ptyId, pane))
+    return servedBridgedPanes(this.deps.targetId, this.panes, this.deps.leases())
   }
 
   /** Re-reads every relay; concurrent callers share one pass. */
@@ -106,9 +106,13 @@ export class LegacyRelayTargetBridge {
       )
       pane = this.panes.get(ptyId)
     }
+    const leased = leasedAppPtyIds(this.deps.targetId, this.deps.leases()).has(ptyId)
     if (!pane) {
-      const leased = leasedAppPtyIds(this.deps.targetId, this.deps.leases()).has(ptyId)
       return leased ? { status: 'unverifiable' } : { status: 'exited' }
+    }
+    // A close recorded while this attach waited: its stop is owed, so the pane is never served.
+    if (!leased) {
+      return { status: 'not-bridged' }
     }
     const client = pane.endpoint ? this.endpoints.get(pane.endpoint)?.client : null
     if (pane.state !== 'live' || !client) {
@@ -173,7 +177,7 @@ export class LegacyRelayTargetBridge {
       return
     }
     this.looked = true
-    const leases = bridgeableLeasesByRelayId(this.deps.leases())
+    const leases = listedLeasesByRelayId(this.deps.leases())
     if (leases.size === 0) {
       this.closeIdleClients(new Set())
       this.replacePanes(new Map())
@@ -185,7 +189,7 @@ export class LegacyRelayTargetBridge {
     for (const [relayPtyId, lease] of leases) {
       const ptyId = toAppSshPtyId(this.deps.targetId, relayPtyId)
       if (!seeded.has(ptyId)) {
-        seeded.set(ptyId, { lease, relayPtyId, endpoint: null, state: 'unverifiable' })
+        seeded.set(ptyId, toPane(lease, relayPtyId, null, 'unverifiable'))
       }
     }
     if (seeded.size !== this.panes.size) {
@@ -212,14 +216,12 @@ export class LegacyRelayTargetBridge {
     }
     const next = new Map<string, Pane>()
     // Why re-read: a lease retired while the relays were asked (an exit) must not come back live.
-    const current = [...bridgeableLeasesByRelayId(this.deps.leases())].filter(([id]) =>
-      leases.has(id)
-    )
+    const current = [...listedLeasesByRelayId(this.deps.leases())].filter(([id]) => leases.has(id))
     for (const [relayPtyId, lease] of current) {
       const ptyId = toAppSshPtyId(this.deps.targetId, relayPtyId)
       const listed = listedBy.get(relayPtyId)
       if (listed) {
-        next.set(ptyId, { lease, relayPtyId, endpoint: listed.endpoint, state: 'live', listed })
+        next.set(ptyId, toPane(lease, relayPtyId, listed.endpoint, 'live', listed))
       } else if (complete) {
         // Every relay this target could have left answered, and none holds it.
         const wasLive = this.panes.get(ptyId)?.endpoint
@@ -227,7 +229,7 @@ export class LegacyRelayTargetBridge {
         this.emitExit(ptyId, -1, Boolean(wasLive))
       } else {
         // Unreachable: loss of contact is never exit, so the pane waits.
-        next.set(ptyId, { lease, relayPtyId, endpoint: null, state: 'unverifiable' })
+        next.set(ptyId, toPane(lease, relayPtyId, null, 'unverifiable'))
       }
     }
     this.closeIdleClients(new Set([...next.values()].map((pane) => pane.endpoint ?? '')))

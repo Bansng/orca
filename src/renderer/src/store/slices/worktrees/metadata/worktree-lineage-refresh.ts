@@ -189,18 +189,16 @@ export function applyWorktreeLineageUpdate(
     } else {
       delete next[worktreeId]
     }
+    // Why the transport's host: focus can name the local twin of a row a server just answered for.
+    const transportHostId = getRuntimeTargetHostId(result.target)
     const worktreesByRepo =
       result.target.kind === 'local'
         ? projectLocalWorktreeLineageUpdate(s.worktreesByRepo, worktreeId, result.lineage)
         : result.updatedRemoteWorktree
-          ? // Why the transport's host: focus can name the local twin of a row a server just answered for.
-            replaceWorktreeInRepoLists(
+          ? replaceWorktreeInRepoLists(
               s,
-              withRepoHostOwnership(
-                result.updatedRemoteWorktree,
-                getRuntimeTargetHostId(result.target)
-              ),
-              getRuntimeTargetHostId(result.target)
+              withRepoHostOwnership(result.updatedRemoteWorktree, transportHostId),
+              transportHostId
             )
           : s.worktreesByRepo
     return {

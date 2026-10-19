@@ -11,7 +11,7 @@ import type { TerminalTab } from '../../../shared/terminal-tab-types'
 import type { PersistedOpenFile } from '../../../shared/workspace-session-state-types'
 import { createOrcadMigrationManifest } from '../../ssh/orcad-migration-manifest-export'
 import { orcadMigrationRefusalReason } from '../../ssh/orcad-migration-refusal-reason'
-import { collectUntransferredDependentBlockers } from '../../ssh/ssh-target-orcad-dependents'
+import { collectUntransferredDependentBlockers } from '../../ssh/targets/ssh-target-orcad-dependents'
 import { collectOrcadMigrationUntransferredDependencyCensus } from './orcad-source-dependency-census'
 import { collectOrcadMigrationSourceDormantState } from './orcad-source-dormant-state'
 

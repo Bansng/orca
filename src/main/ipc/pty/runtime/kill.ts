@@ -11,7 +11,8 @@ import type { PtyRuntimeControllerDeps } from './controller-deps'
 import { errorMessage } from '../../../../shared/error-message'
 import {
   closeLegacyRelayPane,
-  isLegacyRelayBridgedPty
+  isLegacyRelayBridgedPty,
+  stopLegacyRelayPaneAndWait
 } from '../../../ssh/legacy-relay/legacy-relay-bridge-registry'
 
 // Bounds the wait for an observed exit to reach the runtime record when the caller set no deadline.
@@ -28,6 +29,25 @@ function publishSyntheticExit(
   deps.sendPtyExitToRenderer({ id: ptyId, code, ...(incarnationId ? { incarnationId } : {}) })
 }
 
+/**
+ * COMPAT(legacy-relay-bridge, revisit 2027-01-15): an older relay's shell stops through the
+ * bridge, which retires its lease only on the relay's proof; tombstoning it here would orphan it.
+ * Every stop route checks this first, before reading the (absent) SSH provider. A reversible stop
+ * is refused: the bridge's recorded stop would outlive it and kill a shell the pane wakes back to.
+ */
+export function stopLegacyRelayBridgedPty(
+  ptyId: string,
+  connectionId: string | null,
+  reversible = false
+): Promise<unknown> | null {
+  if (!connectionId || !isLegacyRelayBridgedPty(ptyId)) {
+    return null
+  }
+  return reversible
+    ? Promise.reject(new Error('legacy_relay_bridged_pty_cannot_sleep'))
+    : closeLegacyRelayPane(ptyId)
+}
+
 export function killPtyFromRuntimeController(
   deps: PtyRuntimeControllerDeps,
   ptyId: string
@@ -42,10 +62,7 @@ export function killPtyFromRuntimeController(
   } = deps
   runtime?.markPtyStopRequested?.(ptyId)
   const connectionId = getPtySshConnectionId(ptyId)
-  // COMPAT(legacy-relay-bridge, revisit 2027-01-15): an older relay's shell stops through the
-  // bridge, which retires its lease only on the relay's proof; tombstoning it here would orphan it.
-  if (connectionId && isLegacyRelayBridgedPty(ptyId)) {
-    void closeLegacyRelayPane(ptyId)
+  if (stopLegacyRelayBridgedPty(ptyId, connectionId)) {
     return true
   }
   // Why: close runtime tails without clearing provider ownership, so
@@ -134,7 +151,8 @@ export function retireRejectedPtyFromRuntimeController(
 }
 
 /**
- * Deliberately records no undelivered-stop intent, unlike `killPtyFromRuntimeController`.
+ * Deliberately records no undelivered-stop intent, unlike `killPtyFromRuntimeController`, except
+ * the legacy relay bridge's for a non-reversible stop (the tab is given up for good).
  *
  * Only a caller that gives the PTY up for good may leave a replayable kill order behind. This one
  * hands its failures back instead: worktree sleep marks these stops reversible and leaves the pane
@@ -155,6 +173,22 @@ export async function stopAndWaitPtyFromRuntimeController(
   } = deps
   runtime?.markPtyStopRequested?.(ptyId)
   const connectionId = getPtySshConnectionId(ptyId)
+  if (connectionId && isLegacyRelayBridgedPty(ptyId)) {
+    // A reversible stop must not leave the bridge's durable stop behind, so the pane stays live.
+    if (opts?.keepHistory) {
+      return false
+    }
+    const deadline = opts?.deadlineMs ?? Date.now() + OBSERVED_EXIT_RECORD_WAIT_MS
+    const stopped = await Promise.race([
+      stopLegacyRelayPaneAndWait(ptyId, deadline),
+      delay(Math.max(1, deadline - Date.now())).then(() => false)
+    ])
+    if (stopped) {
+      // The bridge already retired the lease on the relay's proof; the runtime learns it here.
+      publishSyntheticExit(deps, ptyId, 0, finishPtyShutdown(ptyId, null, store))
+    }
+    return stopped
+  }
   // Why: destructive teardown threads one absolute deadline through every await
   // below; each RPC leaf converts it to the remaining time when it issues, so
   // sequential RPCs share the budget and cannot overrun the sweep deadline.

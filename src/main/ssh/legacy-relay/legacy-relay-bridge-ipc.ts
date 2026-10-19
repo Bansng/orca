@@ -9,7 +9,7 @@ import { isRemoteCliControlAllowed } from '../../../shared/ssh-remote-cli-contro
 import type { Store } from '../../persistence'
 import type { OrcaRuntimeService } from '../../runtime/orca-runtime'
 import { track } from '../../telemetry/client'
-import type { SshConnection } from '../ssh-connection'
+import type { SshConnection } from '../connection/ssh-connection'
 import { knownSshHostPlatform } from '../ssh-host-platform-memo'
 import { hostProps } from '../ssh-host-server-telemetry'
 import {
@@ -20,9 +20,9 @@ import {
   legacyRelayBridgedPanes,
   resizeLegacyRelayPane,
   setLegacyRelayPaneOutputPaused,
-  terminalsBucket,
   writeLegacyRelayPane
 } from './legacy-relay-bridge-registry'
+import { terminalsBucket } from './legacy-relay-daily-activity'
 
 const PtyIdSchema = z.string().min(1).max(4096)
 const SizeSchema = z.number().int().positive().max(10_000)
@@ -34,7 +34,13 @@ const PausedArgsSchema = z.object({ ptyId: PtyIdSchema, paused: z.boolean() })
 const ResizeArgsSchema = z.object({ ptyId: PtyIdSchema, cols: SizeSchema, rows: SizeSchema })
 
 export function registerLegacyRelayBridgeIpc(args: {
-  store: Pick<Store, 'getSshRemotePtyLeases' | 'markSshRemotePtyLease' | 'getSshTarget'>
+  store: Pick<
+    Store,
+    | 'getSshRemotePtyLeases'
+    | 'markSshRemotePtyLease'
+    | 'setSshRemotePtyLeasePendingKill'
+    | 'getSshTarget'
+  >
   getMainWindow: () => BrowserWindow | null
   connection: (targetId: string) => SshConnection | null
   runtime?: () => OrcaRuntimeService | null
@@ -47,8 +53,13 @@ export function registerLegacyRelayBridgeIpc(args: {
   }
   installLegacyRelayBridge({
     leases: (targetId) => args.store.getSshRemotePtyLeases(targetId),
-    retireLease: (targetId, relayPtyId) =>
-      args.store.markSshRemotePtyLease(targetId, relayPtyId, 'terminated'),
+    retireLease: (targetId, relayPtyId) => {
+      // The exit delivered any recorded stop; cleared first so the retire can prune the tombstone.
+      args.store.setSshRemotePtyLeasePendingKill(targetId, relayPtyId, null)
+      args.store.markSshRemotePtyLease(targetId, relayPtyId, 'terminated')
+    },
+    recordStop: (targetId, relayPtyId, pendingKill) =>
+      args.store.setSshRemotePtyLeasePendingKill(targetId, relayPtyId, pendingKill),
     connection: args.connection,
     ...(args.runtime
       ? {

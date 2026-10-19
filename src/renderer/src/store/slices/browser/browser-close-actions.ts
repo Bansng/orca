@@ -237,7 +237,7 @@ export function createBrowserCloseActions(
       }
     },
 
-    shutdownWorktreeBrowsers: async (worktreeId) => {
+    shutdownWorktreeBrowsers: (worktreeId) => {
       const workspaces = get().browserTabsByWorktree[worktreeId] ?? []
       // Why: snapshot before the loop — closeBrowserTab empties the array, so set() below couldn't recompute hadBrowserTabs.
       const hadBrowserTabs = workspaces.length > 0

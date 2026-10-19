@@ -1,9 +1,10 @@
 import type { PersistedState } from '../../../shared/persisted-state-types'
+import type { SshPendingPtyKill } from '../../../shared/ssh-pending-pty-kill'
 import type { SshRemotePtyLease } from '../../../shared/ssh-types'
 import { invalidateLocalWorktreeMetadataPruneInputs } from '../../local-worktree-metadata-prune-gate'
 import { pruneRetiredSshRemotePtyLeaseTombstones } from './ssh-pty-lease-tombstone-retention'
 
-// Leases come only from relay-era profiles; this build retires them and never writes new ones.
+// Leases come only from relay-era profiles; this build retires them and never creates new ones.
 export type SshPtyLeaseOperations = {
   state: PersistedState
   toStoredPtyId: (targetId: string, ptyId: string) => string
@@ -47,6 +48,29 @@ export function markSshRemotePtyLease(
   if (stateChanged || bindingsCleared || tombstonesPruned) {
     operations.flush()
   }
+}
+
+/** The legacy relay bridge's record of a closed tab's undelivered stop; null clears it. */
+export function setSshRemotePtyLeasePendingKill(
+  operations: SshPtyLeaseOperations,
+  targetId: string,
+  ptyId: string,
+  pendingKill: SshPendingPtyKill | null
+): void {
+  const relayPtyId = operations.toStoredPtyId(targetId, ptyId)
+  const lease = operations.state.sshRemotePtyLeases?.find(
+    (entry) => entry.targetId === targetId && entry.ptyId === relayPtyId
+  )
+  if (!lease || (!pendingKill && !lease.pendingKill)) {
+    return
+  }
+  if (pendingKill) {
+    lease.pendingKill = pendingKill
+  } else {
+    delete lease.pendingKill
+  }
+  lease.updatedAt = Date.now()
+  operations.flush()
 }
 
 export function removeSshRemotePtyLeases(

@@ -8,6 +8,7 @@ import {
   type SubmissionRejectionFact
 } from '../../../shared/agent-session-failure'
 import { PROVIDER_EXIT_ROW_PREFIX } from '../../../shared/agent-session-stop-row-identity'
+import { isQueuedAgentJournalSubmission } from '../../../shared/agent-session-queued-submission'
 import { structuredAgentSessionFailureWordsContext } from './structured-agent-session-send-preparation'
 import type { StructuredAgentSessionEndedEvent } from './structured-agent-session-adapter'
 import type {
@@ -38,7 +39,6 @@ import type { StructuredAgentSessionStartupAttempts } from './structured-agent-s
 
 /** How the child's root went: the close this host asked for, or a death of its own. */
 export type StructuredAgentSessionChildExit = {
-  heldSends?: ReadonlySet<string>
   expected: boolean
   /** Log text only; the chat's words come from `failure`. */
   reason: string
@@ -132,8 +132,7 @@ export async function endExitedStructuredAgentSessionChildUnderSerialize<
   const { expected } = exit
   const close = child.close
   // Receipt of the exit is the one end time the host may record for a running turn.
-  const observation = child.exitObservation?.()
-  const observedAt = observation?.observedAt ?? exit.observedAt ?? context.now()
+  const observedAt = exit.observedAt ?? context.now()
   // The host's own phase decides, so a provider that omits the flag still gets a start that
   // failed told as one: the row says so.
   const exitedDuringStartup = exit.startupUnproven === true || child.phase === 'starting'
@@ -187,11 +186,19 @@ export async function endExitedStructuredAgentSessionChildUnderSerialize<
     }
     context.publishStatus?.(sessionId)
   }
+  const wakeQueuedDelivery = (): void => {
+    if (
+      !session.journal.submissions ||
+      session.journal.submissions().some(isQueuedAgentJournalSubmission)
+    ) {
+      context.wakeDelivery?.(sessionId)
+    }
+  }
   const record = context.store.getRecord(sessionId)
   if (!record || record.lease.handoffStage !== null) {
     // An acquisition or recovery already owns this lease's transition.
     endChild()
-    context.wakeDelivery?.(sessionId)
+    wakeQueuedDelivery()
     return
   }
   let settlement: StructuredAgentSessionExitSettlement | null = null
@@ -239,8 +246,7 @@ export async function endExitedStructuredAgentSessionChildUnderSerialize<
             unfinishedWork,
             session.journal,
             observedAt,
-            watched,
-            observation?.heldSends ?? exit.heldSends
+            watched
           )),
       ...(startFailure ? { exitFailure: startFailure } : {}),
       ...(startFailed && child.generation
@@ -296,7 +302,7 @@ export async function endExitedStructuredAgentSessionChildUnderSerialize<
     // Stop's own) issued at the fence before. Either way every reader learns the generation ended
     // and the queued-card drain runs, whether or not the release or the settlement was written.
     context.generationEnded(sessionId, { restate: released && !expected })
-    context.wakeDelivery?.(sessionId)
+    wakeQueuedDelivery()
   }
 }
 

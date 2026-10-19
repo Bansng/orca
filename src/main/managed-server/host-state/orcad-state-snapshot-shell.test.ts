@@ -21,7 +21,12 @@ import {
 } from './orcad-state-snapshot'
 import { posixProcessGroupCommand } from './orcad-state-mutation-owner-record'
 import { getRemoteHostPlatform } from '../../ssh/ssh-remote-platform'
-import { shellEscape } from '../../ssh/ssh-connection-utils'
+import { quotePosixShell } from '../../../shared/shell-argument-quoting'
+import { wrapRemoteCommandForPosixShell } from '../../ssh/ssh-posix-command-wrapper'
+import {
+  ORCAD_FENCE_OWNER_FILENAME,
+  runWithOrcadFence
+} from '../activation/orcad-activation-fence-scope'
 
 const posix = getRemoteHostPlatform('linux-x64')
 
@@ -52,6 +57,37 @@ describe.skipIf(process.platform === 'win32')('snapshot commands on a real shell
 
   afterEach(() => {
     rmSync(base, { recursive: true, force: true })
+  })
+
+  it('captures and restores fenced state through a gateway with a 10 KiB exec limit', async () => {
+    const fence = { lockDir: join(remoteBase, 'activation.lock'), token: 'snapshot-test-owner' }
+    mkdirSync(fence.lockDir, { recursive: true })
+    writeFileSync(join(fence.lockDir, ORCAD_FENCE_OWNER_FILENAME), fence.token)
+    const throughGateway = (command: string): Promise<string> => {
+      const wrapped = wrapRemoteCommandForPosixShell(command)
+      const forwarded = Buffer.from(wrapped)
+        .subarray(0, 10 * 1_024)
+        .toString()
+      // The affected gateway both truncates exec requests and merges stderr into stdout.
+      return sh(`${forwarded} 2>&1`)
+    }
+
+    await runWithOrcadFence(fence, async () => {
+      expect(
+        parseOrcadSnapshotCapture(
+          await throughGateway(captureOrcadStateSnapshotCommand(posix, root, snapshot, remoteBase))
+        )
+      ).toBe('captured')
+      writeFileSync(join(root, 'profiles', 'p.json'), 'migrated')
+      expect(
+        parseOrcadSnapshotRestore(
+          await throughGateway(restoreOrcadStateSnapshotCommand(posix, root, snapshot, remoteBase))
+        )
+      ).toBe('restored')
+    })
+
+    expect(readFileSync(join(root, 'profiles', 'p.json'), 'utf8')).toBe('old')
+    expect(existsSync(join(remoteBase, 'orcad-state-mutation.lock'))).toBe(false)
   })
 
   it('restores members, drops files the newer build added, and leaves the daemon alone', async () => {
@@ -207,8 +243,8 @@ describe.skipIf(process.platform === 'win32')('snapshot commands on a real shell
   it('keeps the lock while a killed shell’s child still runs, and frees it once the group is gone', async () => {
     const lock = join(remoteBase, 'orcad-state-mutation.lock')
     const childReceipt = join(base, 'child-pid')
-    const childScript = `echo $$ > ${shellEscape(childReceipt)}; exec sleep 30`
-    const workload = `sh -c ${shellEscape(childScript)} & wait "$!"; echo DONE`
+    const childScript = `echo $$ > ${quotePosixShell(childReceipt)}; exec sleep 30`
+    const workload = `sh -c ${quotePosixShell(childScript)} & wait "$!"; echo DONE`
     const isLive = (pid: number): boolean => {
       try {
         process.kill(pid, 0)
