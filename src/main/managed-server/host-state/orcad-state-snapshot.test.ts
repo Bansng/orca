@@ -4,9 +4,7 @@ import {
   captureOrcadStateSnapshotCommand,
   clearOrcadStateSnapshotMembersCommand,
   compareOrcadStateSnapshotCommand,
-  newestStateMtimeCommand,
   orcadSnapshotDirName,
-  parseNewestStateMtimeSeconds,
   parseOrcadSnapshotCapture,
   parseOrcadSnapshotPresence,
   parseOrcadSnapshotRestore,
@@ -14,6 +12,7 @@ import {
   restoreOrcadStateSnapshotCommand,
   ORCAD_STATE_MUTATION_DEADLINE_SECONDS
 } from './orcad-state-snapshot'
+import { newestStateMtimeCommand, parseNewestStateMtimeSeconds } from './orcad-state-newest-mtime'
 import { getRemoteHostPlatform } from '../../ssh/ssh-remote-platform'
 import { ORCAD_SNAPSHOT_EXCLUDED, ORCAD_SNAPSHOT_MEMBERS } from './orcad-state-snapshot-members'
 
@@ -56,8 +55,11 @@ describe('capturing the pre-activation snapshot', () => {
     ['CAPTURED', 'captured'],
     ['EMPTY', 'empty'],
     ['tar: broken', 'failed'],
-    ['', 'failed']
-  ])('parses %s as %s', (output, expected) => {
+    ['', 'failed'],
+    // A gateway that merges stderr into stdout appends bash's job notice after the verdict (#30491).
+    ['CAPTURED\r\nsh: line 1:  2468 Terminated   ( while sleep 60 ... )\n', 'captured'],
+    ['FAILED\nCAPTURED-looking noise', 'failed']
+  ])('parses %j as %s', (output, expected) => {
     expect(parseOrcadSnapshotCapture(output)).toBe(expected)
   })
 
@@ -94,6 +96,7 @@ describe('restoring the snapshot', () => {
     expect(parseOrcadSnapshotRestore('MISSING')).toBe('missing')
     expect(parseOrcadSnapshotRestore('RESTORED')).toBe('restored')
     expect(parseOrcadSnapshotRestore('FAILED')).toBe('failed')
+    expect(parseOrcadSnapshotRestore('RESTORED\nsh: line 1: 13 Terminated')).toBe('restored')
   })
 
   it.each([

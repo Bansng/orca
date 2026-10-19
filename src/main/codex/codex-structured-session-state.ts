@@ -29,7 +29,6 @@ import type {
   AgentModelCatalogStore
 } from '../native-chat/agent-model-catalog/agent-model-catalog-store'
 import type { NativeChatVisualsLaunch } from '../native-chat/native-chat-visuals-delivery'
-import type { StructuredAgentSessionEventSink } from '../native-chat/agent-session-wire/structured-agent-session-event-sink'
 
 export type CodexSessionCatalogAccess = AgentModelCatalogSessionAccess
 
@@ -49,6 +48,8 @@ export type CodexStructuredLaunch = {
   /** The child's sealed environment, and the inherited keys it must not keep. */
   env?: Record<string, string>
   envToDelete?: readonly string[]
+  /** The session values each command must see, whatever the user's shell environment policy. */
+  commandEnv?: Record<string, string>
   /** This chat's scratch folder and visuals skill; absent when the chat has no visuals. */
   visuals?: NativeChatVisualsLaunch
 }
@@ -127,7 +128,6 @@ export type CodexStructuredSessionAdapterDeps = {
 }
 
 export type CodexSession = {
-  events?: StructuredAgentSessionEventSink
   account?: AgentSessionAccountKind
   connection: CodexAppServerConnection
   ended: boolean

@@ -102,7 +102,6 @@ async function recoverRewindAtStart(
       session.journal,
       structuredAgentSessionConversationFence(context.deps.store, sessionId),
       context.deps.adapter,
-      context.now,
       undefined,
       signal
     )

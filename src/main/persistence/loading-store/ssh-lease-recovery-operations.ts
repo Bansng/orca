@@ -1,8 +1,10 @@
+import type { SshPendingPtyKill } from '../../../shared/ssh-pending-pty-kill'
 import type { SshRemotePtyLease } from '../../../shared/ssh-types'
 import {
   getSshRemotePtyLeases as getSshRemotePtyLeasesOperation,
   markSshRemotePtyLease as markSshRemotePtyLeaseOperation,
   removeSshRemotePtyLeases as removeSshRemotePtyLeasesOperation,
+  setSshRemotePtyLeasePendingKill as setSshRemotePtyLeasePendingKillOperation,
   type SshPtyLeaseOperations
 } from '../leasing-ssh-ptys/ssh-pty-lease-operations'
 import {
@@ -56,6 +58,19 @@ export class SshLeaseRecoveryOperations {
 
   markSshRemotePtyLease(targetId: string, ptyId: string, state: 'terminated'): void {
     markSshRemotePtyLeaseOperation(getSshPtyLeaseOperations(this), targetId, ptyId, state)
+  }
+
+  setSshRemotePtyLeasePendingKill(
+    targetId: string,
+    ptyId: string,
+    pendingKill: SshPendingPtyKill | null
+  ): void {
+    setSshRemotePtyLeasePendingKillOperation(
+      getSshPtyLeaseOperations(this),
+      targetId,
+      ptyId,
+      pendingKill
+    )
   }
 
   removeSshRemotePtyLeases(targetId: string): void {

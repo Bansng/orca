@@ -1,9 +1,24 @@
 import { OrcaRuntimeWithStopExactTerminalsForWorktree } from './worktree-terminal-stop-targets'
-import { getRepoExecutionHostId, getRepoSshConnectionId } from '../../../../shared/execution-host'
+import {
+  getRepoExecutionHostId,
+  getRepoSshConnectionId,
+  normalizeHostPart
+} from '../../../../shared/execution-host'
 import { getRepoIdFromWorktreeId } from '../../../../shared/worktree/id'
 import type { Repo } from '../../../../shared/repo-types'
+import { getRuntimeBrowserPageRegistry } from '../../runtime-browser-page-registry'
+import { listFailedAgentLaunchWorktreeIds } from '../../../agent-launch/agent-launch-pane-attachment'
+import {
+  closeStructuredSessionsForWorktree,
+  createStructuredSweepProgress,
+  listStructuredSessionsForProject,
+  retireStructuredSessionTabsForWorktree,
+  unclosedStructuredSessions
+} from '../../structured-session-worktree-teardown'
 
 const PROJECT_INVENTORY_REFRESH_BUDGET_MS = 3_000
+// Inside repo.rm's 15 s client timeout after the 10 s terminal budget.
+const PROJECT_CHAT_CLOSE_FLOOR_MS = 3_000
 
 /** The value, or null once the deadline passes first. */
 async function raceDeadline<T>(value: Promise<T>, deadline: number | undefined): Promise<T | null> {
@@ -44,17 +59,23 @@ export function listProjectTerminalWorktreeIds(
 }
 
 export abstract class OrcaRuntimeWithStopTerminalsForProject extends OrcaRuntimeWithStopExactTerminalsForWorktree {
-  /** Projects this host removed; ids are UUIDs, so a remaining row means a same-id sibling. */
-  private readonly removedProjectIds = new Set<string>()
+  /** Removed projects' PTY fences by id; ids are UUIDs, so a remaining row means a same-id sibling. */
+  private readonly removedProjectFences = new Map<string, Set<string | null>>()
 
   override async acquireWorktreeTerminalSpawn(
     worktreeId?: string,
-    opts: { refuseSleptWorktree?: boolean } = {}
+    opts: { refuseSleptWorktree?: boolean; connectionId?: string | null } = {}
   ): Promise<() => void> {
     const release = await super.acquireWorktreeTerminalSpawn(worktreeId, opts)
     const repoId = worktreeId ? getRepoIdFromWorktreeId(worktreeId) : null
+    const removedFences = repoId ? this.removedProjectFences.get(repoId) : undefined
     // Why under the lease: a spawn that resolved its workspace before removal queues behind the sweep.
-    if (repoId && this.removedProjectIds.has(repoId) && !this.store?.getRepo?.(repoId)) {
+    // Why the fence: a surviving same-id row on another host must not admit the removed host's spawn.
+    if (
+      repoId &&
+      removedFences &&
+      !this.removedProjectAdmitsSpawn(repoId, removedFences, opts.connectionId)
+    ) {
       release()
       throw new Error('repo_not_found')
     }
@@ -67,8 +88,59 @@ export abstract class OrcaRuntimeWithStopTerminalsForProject extends OrcaRuntime
    */
   async stopTerminalsForProject(
     repo: Pick<Repo, 'id' | 'connectionId' | 'executionHostId'>,
-    options: { deadline?: number } = {}
+    options: { deadline?: number; closeStructuredSessions?: boolean } = {}
   ): Promise<{ stopped: number }> {
+    const { closeStructuredSessions, ...stopOptions } = options
+    // Why alongside, with its own floor: a failed or budget-spent terminal stop must not skip the
+    // chat closes, since their tabs are retired either way.
+    const chats = closeStructuredSessions
+      ? this.closeStructuredSessionsForProject(
+          repo,
+          options.deadline === undefined
+            ? undefined
+            : Math.max(options.deadline, Date.now() + PROJECT_CHAT_CLOSE_FLOOR_MS)
+        ).catch((error: unknown) => {
+          console.warn('[runtime] project agent session close failed', error)
+        })
+      : null
+    let worktreeIds: readonly string[] = []
+    try {
+      const result = await this.stopProjectPtys(repo, stopOptions)
+      worktreeIds = result.worktreeIds
+      return { stopped: result.stopped }
+    } finally {
+      await chats
+      if (closeStructuredSessions) {
+        this.releaseProjectHostSessions(repo.id, worktreeIds)
+      }
+    }
+  }
+
+  /** Browser pages and failed-launch records of a removed project's workspaces on this host. */
+  private releaseProjectHostSessions(repoId: string, knownWorktreeIds: readonly string[]): void {
+    // Why: page records carry no host, so a surviving same-id row's pages are indistinguishable.
+    if ((this.store?.getRepos?.() ?? []).some((row) => row.id === repoId)) {
+      return
+    }
+    const pageOwners = [
+      ...getRuntimeBrowserPageRegistry(this)
+        .listPages()
+        .map((page) => page.workspaceId),
+      ...listFailedAgentLaunchWorktreeIds(),
+      ...(this.agentBrowserBridge?.tabWorktreeIds?.() ?? []).map((id) => id ?? '')
+    ]
+    const worktreeIds = new Set(
+      [...knownWorktreeIds, ...pageOwners].filter((id) => getRepoIdFromWorktreeId(id) === repoId)
+    )
+    for (const worktreeId of worktreeIds) {
+      this.releaseRemovedWorktreeHostSessions(worktreeId, 'project-removal')
+    }
+  }
+
+  private async stopProjectPtys(
+    repo: Pick<Repo, 'id' | 'connectionId' | 'executionHostId'>,
+    options: { deadline?: number }
+  ): Promise<{ stopped: number; worktreeIds: readonly string[] }> {
     // Why: after a restart, surviving daemon sessions are in the provider inventory before ptysById.
     // Bounded so a slow worktree scan cannot spend the budget the known PTYs' stops need.
     const refreshDeadline = Math.min(
@@ -91,16 +163,11 @@ export abstract class OrcaRuntimeWithStopTerminalsForProject extends OrcaRuntime
     // Why not the row's stamp: a `runtime:` stamp is how paired clients address a project that runs
     // here, natively or over its nested SSH connection.
     const fence = { resolvedConnectionId: getRepoSshConnectionId(repo) }
-    this.removedProjectIds.add(repo.id)
-    // Why: a same-id sibling row with the same fence owns PTYs this table cannot tell apart.
-    const siblingSharesFence = (this.store?.getRepos?.() ?? []).some(
-      (row) =>
-        row.id === repo.id &&
-        getRepoExecutionHostId(row) !== getRepoExecutionHostId(repo) &&
-        getRepoSshConnectionId(row) === fence.resolvedConnectionId
-    )
-    if (siblingSharesFence) {
-      return { stopped: 0 }
+    const removedFences = this.removedProjectFences.get(repo.id) ?? new Set<string | null>()
+    removedFences.add(fence.resolvedConnectionId)
+    this.removedProjectFences.set(repo.id, removedFences)
+    if (this.projectSiblingSharesFence(repo)) {
+      return { stopped: 0, worktreeIds: [] }
     }
     let stopped = 0
     for (const id of listProjectTerminalWorktreeIds(repo.id, this.leaves, this.ptysById)) {
@@ -127,6 +194,62 @@ export abstract class OrcaRuntimeWithStopTerminalsForProject extends OrcaRuntime
         release?.()
       }
     }
-    return { stopped }
+    return { stopped, worktreeIds: [...projectWorktreeIds] }
+  }
+
+  /**
+   * Closes a removed project's native chats on this host and retires their chat tabs. They have
+   * no PTY or pane, so the terminal sweep never reaches them. Best-effort: the project is gone.
+   */
+  private async closeStructuredSessionsForProject(
+    repo: Pick<Repo, 'id' | 'connectionId' | 'executionHostId'>,
+    deadline: number | undefined
+  ): Promise<void> {
+    if (this.projectSiblingSharesFence(repo)) {
+      return
+    }
+    const { members, live } = listStructuredSessionsForProject(repo.id, {
+      resolvedConnectionId: getRepoSshConnectionId(repo)
+    })
+    const progress = createStructuredSweepProgress(live)
+    await raceDeadline(
+      closeStructuredSessionsForWorktree(progress, deadline ?? Infinity, { runtime: this }),
+      deadline
+    )
+    const liveIds = new Set(live.map((session) => session.sessionId))
+    await retireStructuredSessionTabsForWorktree(
+      [
+        ...members.filter((session) => !liveIds.has(session.sessionId)),
+        ...unclosedStructuredSessions(progress)
+      ],
+      this
+    )
+  }
+
+  /** Only a surviving row on the spawn's own host, or any row when no removal touched it. */
+  private removedProjectAdmitsSpawn(
+    repoId: string,
+    removedFences: ReadonlySet<string | null>,
+    spawnConnectionId: string | null | undefined
+  ): boolean {
+    const connectionId = normalizeHostPart(spawnConnectionId)
+    const survivors = (this.store?.getRepos?.() ?? []).filter((row) => row.id === repoId)
+    if (!removedFences.has(connectionId)) {
+      return survivors.length > 0
+    }
+    return survivors.some((row) => getRepoSshConnectionId(row) === connectionId)
+  }
+
+  /** A same-id sibling row with the same fence owns sessions this host cannot tell apart. */
+  private projectSiblingSharesFence(
+    repo: Pick<Repo, 'id' | 'connectionId' | 'executionHostId'>
+  ): boolean {
+    const connectionId = getRepoSshConnectionId(repo)
+    return (this.store?.getRepos?.() ?? []).some(
+      (row) =>
+        row.id === repo.id &&
+        getRepoExecutionHostId(row) !== getRepoExecutionHostId(repo) &&
+        getRepoSshConnectionId(row) === connectionId
+    )
   }
 }

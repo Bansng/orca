@@ -73,6 +73,40 @@ describe('options at rest', () => {
     expect(read).toHaveBeenLastCalledWith({ agent: 'codex', sessionId: SESSION, savedOnly: true })
   })
 
+  it("names the saved listing's ids for a live child with no listing of its own, as at rest", async () => {
+    const record = { ...restingRecord(), options: { model: 'gpt-unlisted', effort: 'high' } }
+    const listed = { id: 'gpt-5.5', label: 'GPT-5.5', isDefault: true, efforts: [] }
+    let live = false
+    const conversation = () => ({
+      child: live ? { fence: 7 } : null,
+      params: { provider: 'codex' },
+      journal: { threadGoal: () => null, context: { floor: () => null } }
+    })
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this read touches only the declared context fields.
+    const context = {
+      deps: {
+        adapter: {
+          readOptions: async () => ({
+            models: [listed, { ...listed, id: 'gpt-unlisted', isDefault: false }],
+            current: { model: 'gpt-unlisted', effort: 'high' }
+          })
+        },
+        agents: NO_STRUCTURED_AGENTS,
+        store: { getRecord: () => record },
+        modelCatalog: { read: async () => ({ origin: 'probe', models: [listed], fetchedAt: 1 }) }
+      },
+      serialize: (_sessionId: string, task: () => Promise<unknown>) => task(),
+      openConversation: async () => conversation(),
+      conversation: async () => conversation()
+    } as unknown as StructuredAgentSessionMutationContext
+    const read = () =>
+      readStructuredAgentSessionOptions(context, SESSION, { readsWithoutModel: true })
+    const resting = await read()
+    live = true
+    expect((await read()).listedModelIds).toEqual(resting.listedModelIds)
+    expect(resting.listedModelIds).toEqual(['gpt-5.5'])
+  })
+
   it.each(['codex', 'omp', 'grok', 'opencode'] as const)(
     '%s keeps an unknown model and learns menus from later options',
     async (provider) => {

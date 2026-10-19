@@ -243,7 +243,6 @@ it('pins every foreground and background step to its selected phase', () => {
     ['Enforce runtime Electron-import ratchet', staticPhase],
     ['Enforce focus-read ratchet', staticPhase],
     ['Enforce layout-writer ratchets', staticPhase],
-    ['Enforce deprecated runtime-owner importer ratchet', staticPhase],
     ['Enforce path-literal ratchet', staticPhase],
     ['Enforce worktree-id composer ratchet', staticPhase],
     ['Enforce e2e typecheck ratchet', staticPhase],

@@ -14,6 +14,7 @@ import {
   type ResolvedPtyHost
 } from '../provider/registry'
 import { finishPtyShutdown, isPtyAlreadyGoneError } from '../provider/liveness'
+import { stopLegacyRelayBridgedPty } from '../runtime/kill'
 
 export type PtyKillIpcDeps = {
   store?: Store
@@ -90,6 +91,11 @@ async function stopRendererOwnedPtyProcess(
   } = deps
   runtime?.markPtyStopRequested?.(args.id)
   const connectionId = getPtySshConnectionId(args.id)
+  const bridgedStop = stopLegacyRelayBridgedPty(args.id, connectionId, args.keepHistory === true)
+  if (bridgedStop) {
+    await bridgedStop
+    return
+  }
   // Why: wait for daemon startup before selecting the local provider, else a fallback shutdown falsely succeeds and orphans a restored daemon PTY (#7742).
   const startupPromise = getLocalPtyProviderStartupPromise(resolvePtyExecutionHost(args.id))
   if (startupPromise) {

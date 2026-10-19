@@ -18,15 +18,15 @@ import {
   retireProvenExitedLeases,
   type HostRelayTerminalProof
 } from './orcad-migration-terminal-gate'
-import { SshTargetOrcadClaims } from './ssh-target-orcad-claims'
+import { SshTargetOrcadClaims } from './targets/ssh-target-orcad-claims'
 import { getManagedOrcadFenceEnvironmentId } from '../../shared/managed-orcad-ssh-owner'
 import { listOrcadMigrationSourceCutovers } from './orcad-migration-cutover-journal'
 import {
   leaveBehindClearsOrcadMigrationBlockers,
   onlyLeavableOrcadMigrationBlockers
-} from './ssh-target-orcad-preflight'
+} from './targets/ssh-target-orcad-preflight'
 import { ownedEditorFileId } from '../../shared/workspace-session-pane-ownership'
-import { allowsDirectSshRelay } from './ssh-connection-store'
+import { allowsDirectSshRelay } from './connection/ssh-connection-store'
 
 // Relay-era profiles as the reporters' builds left them, loaded by the real Store and taken through
 // the conversion's source steps: terminal proof, lease retirement, then the fence and its preflight.

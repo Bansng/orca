@@ -61,15 +61,19 @@ export const SIDEBAR_INPUT_METHODS = [
     name: 'sidebarInputs.read',
     permission: 'workspace',
     params: SidebarInputsReadParams,
-    // The feed is this host's own view. A delegated phone lists through its own desktop's feed,
-    // which carries this host's rows; other desktops and web clients build their own view.
+    // The feed is this host's own view: its desktop window and its own phone read it. A delegated
+    // phone lists through its own desktop's feed; other desktops and web clients build their own.
     handler: async (params, context) => {
       const feed = requireSwitchedOn(context.runtime.sidebarInputsFeed)
       const { connectionId } = context
-      if (!isHostOwnPhone(context) || connectionId === undefined) {
-        throw Object.assign(new Error('Only this host’s own phone reads its sidebar feed.'), {
-          code: 'forbidden'
-        })
+      const ownView = isHostOwnPhone(context) || context.caller?.kind === 'desktop'
+      if (!ownView || connectionId === undefined) {
+        throw Object.assign(
+          new Error('Only this host’s own window and phone read its sidebar feed.'),
+          {
+            code: 'forbidden'
+          }
+        )
       }
       // A connection already closed has run its cleanups; subscribing it now would never release.
       if (context.signal?.aborted) {

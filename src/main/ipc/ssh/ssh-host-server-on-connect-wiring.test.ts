@@ -6,7 +6,7 @@ import type { SshTarget } from '../../../shared/ssh-types'
 import { closeTestStores, createSqliteTestStore } from '../../persistence-test-harness'
 import { Store } from '../../persistence/loading-store/store'
 import { OrcadHostUnsupportedError } from '../../orcad/orcad-host-unavailable'
-import { allowsDirectSshRelay, SshConnectionStore } from '../../ssh/ssh-connection-store'
+import { allowsDirectSshRelay, SshConnectionStore } from '../../ssh/connection/ssh-connection-store'
 import { resolveHostServerOnConnect } from '../../ssh/ssh-host-server-on-connect'
 
 const mocks = vi.hoisted(() => {
@@ -22,7 +22,7 @@ const mocks = vi.hoisted(() => {
 vi.mock('../../../shared/app-environment', () => ({
   getAppEnvironment: () => ({ getVersion: () => '1.5.0', getPath: () => '/tmp/unused' })
 }))
-vi.mock('../../ssh/ssh-target-registry', () => ({
+vi.mock('../../ssh/targets/ssh-target-registry', () => ({
   getSshTargetRegistryStore: () => mocks.registry.current
 }))
 vi.mock('../../managed-server/lifecycle/orcad-runtime-deployment', () => ({

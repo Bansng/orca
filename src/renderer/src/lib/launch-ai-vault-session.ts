@@ -1,7 +1,7 @@
 import { useAppStore } from '@/store'
 import { persistAgentLaunchTabOrder } from '@/lib/launch-agent-tab-order'
 import { tuiAgentToAgentKind } from '@/lib/telemetry'
-import { getRuntimeEnvironmentIdForWorktree } from '@/lib/worktree-runtime-owner'
+import { runtimeEnvironmentIdWithLegacyFallbackUnlessTwin } from '@/lib/worktree-runtime-owner'
 import { createWebRuntimeSessionTerminal } from '@/runtime/web-runtime-terminal-creation'
 import { isWebRuntimeSessionActive } from '@/runtime/web-runtime-session-environment'
 import type { AiVaultAgent } from '../../../shared/ai-vault-types'
@@ -34,7 +34,10 @@ export function launchAiVaultSessionInNewTab(args: {
     args.splitDirection && args.targetGroupId
       ? { sourceGroupId: args.targetGroupId, splitDirection: args.splitDirection }
       : undefined
-  const runtimeEnvironmentId = getRuntimeEnvironmentIdForWorktree(store, args.worktreeId)
+  const runtimeEnvironmentId = runtimeEnvironmentIdWithLegacyFallbackUnlessTwin(
+    store,
+    args.worktreeId
+  )
   if (isWebRuntimeSessionActive(runtimeEnvironmentId)) {
     // Why an empty group first: the paired host creates the tab after a round trip.
     const splitGroupId = split

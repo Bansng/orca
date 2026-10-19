@@ -281,7 +281,6 @@ export async function acquireAcpStructuredSession(input: {
       ...takeover
     }
     session = {
-      events,
       sessionId,
       fence: acquire.fence,
       acquisitionGeneration: generation,
@@ -306,13 +305,16 @@ export async function acquireAcpStructuredSession(input: {
       exitObservedAt: null
     }
     const reading = liveLane
-    session.unbindReadingControl = events?.bindReadingControl?.({
+    const unbind = events?.bindReadingControl?.({
       pauseReading: () => connection.pauseReading(),
       resumeReading: () => {
         connection.resumeReading()
         reading.retry()
       }
     })
+    if (unbind) {
+      session.unbindReadingControl = unbind
+    }
     if (connection.exited || connection.closed) {
       throw new Error(connection.stderrTail() || `${spec.command} exited while starting`)
     }

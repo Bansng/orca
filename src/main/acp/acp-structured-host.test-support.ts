@@ -103,12 +103,7 @@ export async function openHostRig(
       onEvent: (event) => void hosted.host?.handleAdapterEvent(event),
       onChildWorkEvidence: (sessionId, evidence) =>
         hosted.host?.publishChildWorkEvidence(sessionId, evidence),
-      onDispatchSettledLate: (settlement) =>
-        void hosted.host
-          ?.settleLateDispatch(settlement)
-          .catch((error: unknown) =>
-            state.log.logger.warn('late settlement failed', { scope: 'late-settlement', error })
-          ),
+      onDispatchSettledLate: (settlement) => void hosted.host?.settleLateDispatch(settlement),
       now: () => HOST_TEST_NOW,
       readProcessStartTime: async () => 1_700_000_000_000 + ++generation,
       mintGeneration: () => `generation-${generation}`,

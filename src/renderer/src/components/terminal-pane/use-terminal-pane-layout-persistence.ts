@@ -15,6 +15,7 @@ import type { TerminalPaneStartupController } from './use-terminal-pane-startup-
 import type { PaneLayoutEditIntent } from '../../../../shared/rpc-contract/session-tabs-schemas-params'
 import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../shared/layout-owner-switch'
 import { sendLayoutCommandToOwner } from '@/runtime/layout-owner-command'
+import { notePendingPaneTitleRename } from '@/runtime/pending-pane-title-renames'
 
 export function useTerminalPaneLayoutPersistence(controller: TerminalPaneStartupController) {
   const {
@@ -206,12 +207,21 @@ export function useTerminalPaneLayoutPersistence(controller: TerminalPaneStartup
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- Refs are stable.
     [persistLayoutSnapshot]
   )
+  /** Shows a title main already holds, without asking main again. */
+  const showPaneTitle = useCallback(
+    (paneId: number, title: string | null): void =>
+      title === null ? removePaneTitleLocally(paneId) : setPaneTitleLocally(paneId, title),
+    [removePaneTitleLocally, setPaneTitleLocally]
+  )
   /** A user's title for a pane, trimmed and non-empty; null clears it. */
   const changePaneTitle = useCallback(
     (paneId: number, title: string | null) => {
-      const showTitle = (): void =>
-        title === null ? removePaneTitleLocally(paneId) : setPaneTitleLocally(paneId, title)
+      const showTitle = (): void => showPaneTitle(paneId, title)
       const leafId = managerRef.current?.getPanes().find((pane) => pane.id === paneId)?.leafId
+      if (leafId) {
+        const layout = useAppStore.getState().terminalLayoutsByTabId[tabId]
+        notePendingPaneTitleRename({ leafId, title, layout })
+      }
       // Switch point: main renames the pane first; the window then shows the title.
       if (
         ORCA_LAYOUT_OWNER_IS_MAIN &&
@@ -227,7 +237,7 @@ export function useTerminalPaneLayoutPersistence(controller: TerminalPaneStartup
       showTitle()
     },
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- Refs are stable.
-    [removePaneTitleLocally, setPaneTitleLocally, tabId, worktreeId]
+    [showPaneTitle, tabId, worktreeId]
   )
   const removePaneTitle = useCallback(
     (paneId: number) => changePaneTitle(paneId, null),
@@ -290,6 +300,7 @@ export function useTerminalPaneLayoutPersistence(controller: TerminalPaneStartup
     persistLayoutSnapshot,
     clearPaneScrollback,
     changePaneTitle,
+    showPaneTitle,
     removePaneTitle,
     handleClearPaneTitleShortcut
   }

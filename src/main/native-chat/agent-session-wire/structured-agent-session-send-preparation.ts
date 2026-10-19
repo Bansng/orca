@@ -119,8 +119,7 @@ async function recoverRewindOnLiveChild(
       sessionId,
       journal,
       structuredAgentSessionConversationFence(context.deps.store, sessionId),
-      context.deps.adapter,
-      context.now
+      context.deps.adapter
     )
   } catch (error) {
     context.deps.logger.warn('settling a rewind in doubt before a send failed', {

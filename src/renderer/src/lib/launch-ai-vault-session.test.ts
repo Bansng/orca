@@ -11,7 +11,7 @@ const mockSetActiveTabType = vi.fn()
 const mockSetTabBarOrder = vi.fn()
 const runtimeMocks = vi.hoisted(() => ({
   createWebRuntimeSessionTerminal: vi.fn(),
-  getRuntimeEnvironmentIdForWorktree: vi.fn<() => string | null>(() => null),
+  runtimeEnvironmentIdWithLegacyFallbackUnlessTwin: vi.fn<() => string | null>(() => null),
   isWebRuntimeSessionActive: vi.fn(() => false)
 }))
 
@@ -47,7 +47,8 @@ vi.mock('@/lib/telemetry', () => ({
 }))
 
 vi.mock('@/lib/worktree-runtime-owner', () => ({
-  getRuntimeEnvironmentIdForWorktree: runtimeMocks.getRuntimeEnvironmentIdForWorktree
+  runtimeEnvironmentIdWithLegacyFallbackUnlessTwin:
+    runtimeMocks.runtimeEnvironmentIdWithLegacyFallbackUnlessTwin
 }))
 
 vi.mock('@/runtime/web-runtime-terminal-creation', () => ({
@@ -62,7 +63,7 @@ import { launchAiVaultSessionInNewTab } from './launch-ai-vault-session'
 describe('launchAiVaultSessionInNewTab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    runtimeMocks.getRuntimeEnvironmentIdForWorktree.mockReturnValue(null)
+    runtimeMocks.runtimeEnvironmentIdWithLegacyFallbackUnlessTwin.mockReturnValue(null)
     runtimeMocks.isWebRuntimeSessionActive.mockReturnValue(false)
     runtimeMocks.createWebRuntimeSessionTerminal.mockResolvedValue({ status: 'created' })
     mockState.tabsByWorktree = {}
@@ -158,7 +159,7 @@ describe('launchAiVaultSessionInNewTab', () => {
   })
 
   it('creates runtime-hosted resume terminals through the paired host', async () => {
-    runtimeMocks.getRuntimeEnvironmentIdForWorktree.mockReturnValue('env-1')
+    runtimeMocks.runtimeEnvironmentIdWithLegacyFallbackUnlessTwin.mockReturnValue('env-1')
     runtimeMocks.isWebRuntimeSessionActive.mockReturnValue(true)
 
     const result = launchAiVaultSessionInNewTab({
@@ -206,7 +207,7 @@ describe('launchAiVaultSessionInNewTab', () => {
 
   // #22791: a drop on a pane edge in a paired-runtime worktree opened a tab instead of a split.
   it('splits the pane before a runtime-hosted resume and targets the new group', async () => {
-    runtimeMocks.getRuntimeEnvironmentIdForWorktree.mockReturnValue('env-1')
+    runtimeMocks.runtimeEnvironmentIdWithLegacyFallbackUnlessTwin.mockReturnValue('env-1')
     runtimeMocks.isWebRuntimeSessionActive.mockReturnValue(true)
 
     const result = launchAiVaultSessionInNewTab({
@@ -228,7 +229,7 @@ describe('launchAiVaultSessionInNewTab', () => {
   })
 
   it('removes the still-empty split group when the runtime create does not succeed', async () => {
-    runtimeMocks.getRuntimeEnvironmentIdForWorktree.mockReturnValue('env-1')
+    runtimeMocks.runtimeEnvironmentIdWithLegacyFallbackUnlessTwin.mockReturnValue('env-1')
     runtimeMocks.isWebRuntimeSessionActive.mockReturnValue(true)
     runtimeMocks.createWebRuntimeSessionTerminal.mockResolvedValue({
       status: 'failed',
