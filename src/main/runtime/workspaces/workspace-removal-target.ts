@@ -9,8 +9,10 @@ import { resolveRuntimeWorktreeRemovalTarget } from '../runtime-worktree-removal
 import type { RuntimeStore } from '../runtime-store-contract'
 import { splitWorktreeId, worktreeIdsEqual } from '../../../shared/worktree/id'
 import { hasWorktreeRemovalRepoOwnerOnOtherHost } from '../../worktree-removal-repo-owner'
-import { advertisedUrlWatcher } from '../../ports/advertised-url-watcher'
-import { deleteWorktreeHistoryDir } from '../../terminal-history-deletion'
+import {
+  dropRemovedWorktreeProcessState,
+  pruneRemovedWorktreeSnapshots
+} from '../../worktree-removal-process-cleanup'
 import { forgetFailedAgentLaunches } from '../../agent-launch/agent-launch-pane-attachment'
 import { closeClientHostedBrowserPagesForWorktree } from '../worktree-browser-client-page-close'
 import { teardownStops } from '../owned-session-teardown-policy'
@@ -42,6 +44,7 @@ import {
   resolveAgentTerminalCreateOptions,
   withHostAccountLaunchEnv
 } from '../runtime-agent-terminal-startup'
+import { removeWorktreeMetaRow } from '../../persistence/host-qualified-worktree-meta'
 
 export abstract class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRuntimeWithRemoveManagedWorktree {
   protected abstract resolveExplicitWorktreeIdScoped(
@@ -158,11 +161,7 @@ export abstract class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRu
     )
     const acceptedRendererSnapshot = this.acceptedRendererMobileSnapshotByWorktree.get(worktreeId)
     const storedSnapshot = this.mobileSessionTabsByWorktree.get(worktreeId)
-    if (hostId) {
-      store.removeWorktreeMeta(worktreeId, hostId)
-    } else {
-      store.removeWorktreeMeta(worktreeId)
-    }
+    removeWorktreeMetaRow(store, worktreeId, hostId)
     // Why outside the same-id gate: retirement is per host and per pane, so a surviving owner keeps its own.
     this.dropAgentStatusForRemovedWorktreeFn?.(worktreeId, hostId ?? persistedHostId)
     if (!preservesSameIdOwner) {
@@ -188,9 +187,12 @@ export abstract class OrcaRuntimeWithResolveWorktreeRemovalTarget extends OrcaRu
       this.acceptedRendererMobileSnapshotByWorktree.delete(worktreeId)
       this.cancelScheduledMobileSessionTabsChanged(worktreeId)
       this.notifyMobileSessionTabsRemoved(worktreeId)
-      advertisedUrlWatcher.forgetWorktree(worktreeId)
-      deleteWorktreeHistoryDir(worktreeId)
+      dropRemovedWorktreeProcessState(worktreeId)
       this.releaseRemovedWorktreeHostSessions(worktreeId, 'worktree-removal')
+    }
+    const snapshotDirectory = store.getProfileStorageDirectory?.()
+    if (snapshotDirectory) {
+      pruneRemovedWorktreeSnapshots(snapshotDirectory, worktreeId, hostId)
     }
   }
 

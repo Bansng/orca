@@ -8,6 +8,8 @@ import {
 import type { SshTarget } from '../../../shared/ssh-types'
 import type { SshConnection } from '../../ssh/connection/ssh-connection'
 import { adoptSshConnection } from '../../ssh/connection/ssh-connection-attribution'
+import type { SshConnectionManager } from '../../ssh/connection/ssh-connection-manager'
+import type { getSshTargetRegistryStore } from '../../ssh/targets/ssh-target-registry'
 import type {
   PortForwardEntry,
   SshPortForwardManager
@@ -52,6 +54,38 @@ export function managedTunnelAccess(
     : null
 }
 
+/** The SSH target and transport a managed environment's tunnel must use, or why it cannot. */
+export function resolveManagedTunnelBinding(
+  environment: KnownRuntimeEnvironment,
+  dependencies: {
+    getConnectionManager: () => SshConnectionManager | null
+    getTargetStore: () => ReturnType<typeof getSshTargetRegistryStore>
+  }
+): {
+  deployment: RuntimeSshTunnelLink
+  targetStore: NonNullable<ReturnType<typeof getSshTargetRegistryStore>>
+  connectionManager: SshConnectionManager
+  target: SshTarget
+} {
+  const deployment = getRuntimeSshAccess(environment)
+  if (!deployment || environment.connectionDependency !== 'ssh-tunnel') {
+    throw new Error('Managed orcad environment is missing its SSH tunnel dependency.')
+  }
+  const targetStore = dependencies.getTargetStore()
+  const connectionManager = dependencies.getConnectionManager()
+  if (!targetStore || !connectionManager) {
+    throw new Error('SSH is unavailable on this client; the managed Orca server is unverifiable.')
+  }
+  const target = targetStore.getTarget(deployment.sshTargetId)
+  if (!target || target.generation !== deployment.sshTargetGeneration) {
+    throw new Error('The SSH registration for this managed Orca server was removed or re-created.')
+  }
+  if (getManagedOrcadFenceEnvironmentId(target) !== environment.id) {
+    throw new Error('The SSH target is no longer owned by this managed Orca server.')
+  }
+  return { deployment, targetStore, connectionManager, target }
+}
+
 /** Removes `entry`'s forward, and the record only if nothing replaced it meanwhile. */
 export async function dropActiveOrcadTunnel(
   active: Map<string, ActiveOrcadTunnel>,
@@ -63,6 +97,26 @@ export async function dropActiveOrcadTunnel(
   if (active.get(environmentId) === entry) {
     active.delete(environmentId)
   }
+}
+
+/** The recorded tunnel already rides this transport to this deployment, so a build can reuse it. */
+export function activeTunnelMatches(
+  active: ActiveOrcadTunnel | undefined,
+  current: {
+    connection: SshConnection
+    transportGeneration: number
+    target: SshTarget
+    deployment: RuntimeSshTunnelLink
+  }
+): boolean {
+  return (
+    active?.connection === current.connection &&
+    active.transportGeneration === current.transportGeneration &&
+    active.targetId === current.target.id &&
+    active.sshTargetGeneration === current.target.generation &&
+    active.localPort === current.deployment.localPort &&
+    active.preferredPort === current.deployment.remotePort
+  )
 }
 
 export function recordActiveOrcadTunnel(

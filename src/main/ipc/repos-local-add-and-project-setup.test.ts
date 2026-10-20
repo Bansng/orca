@@ -338,7 +338,9 @@ describe('repos:add + repos:clone', () => {
       })
     ).rejects.toThrow('Imported folder does not match the selected project identity.')
 
-    expect(mockStore.removeProjectForHost).toHaveBeenCalledWith(added[0]?.id, 'local')
+    expect(mockStore.removeProjectForHost).toHaveBeenCalledWith(
+      expect.objectContaining({ id: added[0]?.id })
+    )
     expect(invalidateAuthorizedRootsCacheMock).toHaveBeenCalled()
   })
 
@@ -370,7 +372,9 @@ describe('repos:add + repos:clone', () => {
     }
 
     expect(mockStore.updateRepo).not.toHaveBeenCalled()
-    expect(mockStore.removeProjectForHost).toHaveBeenCalledWith(added[0]?.id, 'local')
+    expect(mockStore.removeProjectForHost).toHaveBeenCalledWith(
+      expect.objectContaining({ id: added[0]?.id })
+    )
   })
 
   it('re-reads an already-registered folder whose stored remote is still pending (#30663)', async () => {

@@ -154,10 +154,8 @@ jobs:
       - uses: ./.github/actions/build-mobile-web-bundle
         if: hashFiles('.github/actions/build-mobile-web-bundle/action.yml') != ''
 
-      # Only the completed output upload overlaps the change from Node to Electron ABI.
+      # Foreground: a background JavaScript action reads the event payload while later steps rewrite it.
       - name: Upload E2E build output
-        id: e2e-build-upload
-        background: true
         uses: actions/upload-artifact@v7
         with:
           name: e2e-build-out${{ inputs.artifact_suffix }}
@@ -179,8 +177,6 @@ jobs:
         uses: ./.github/actions/install-node-dependencies
         with:
           native-runtime: electron
-
-      - wait: e2e-build-upload
 
   e2e:
     name: e2e ${{ matrix.shard_name }}

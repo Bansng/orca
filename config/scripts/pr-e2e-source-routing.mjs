@@ -151,7 +151,7 @@ export const PR_E2E_SOURCE_ROUTES = [
     specs: ['tests/e2e/ssh-orcad-browser-capabilities.spec.ts'],
     matches: (file) =>
       isProductSource(file) &&
-      /^src\/main\/(?:runtime\/(?:runtime-browser-commands-factory|orca-runtime-get-status)|host\/electron-browser-commands|orcad\/orcad-browser-)/.test(
+      /^src\/main\/(?:runtime\/(?:runtime-browser-commands-factory|orca-runtime-get-status|browser\/browser-client-page-opening)|host\/electron-browser-commands|orcad\/orcad-browser-)/.test(
         file
       )
   },
@@ -268,6 +268,18 @@ export const PR_E2E_SOURCE_ROUTES = [
       /^src\/(?:main\/(?:ssh|orcad|managed-server)\/|main\/ipc\/(?:ssh|runtime-environment|orcad-)|cli\/runtime\/(?:launch-)?serve|shared\/(?:remote-runtime|orcad-|protocol-version\.ts$|runtime-capability)|renderer\/src\/store\/repos\/(?:repo-removal|runtime-project-terminal-stop)|renderer\/src\/components\/sidebar\/(?:sleep-|SleepTwin|WorkspaceSleep|use-worktree-sleep|ssh-host-remove|host-rename-remove|HostRemove))/.test(
         file
       )
+  },
+  {
+    // The spec runs only in a switch-on build; it guards the phone's list against the desktop's.
+    id: 'ssh.orcad-phone-feed-list',
+    specs: ['tests/e2e/ssh-orcad-phone-feed-list.spec.ts'],
+    matches: (file) =>
+      MANAGED_SSH_HARNESS.test(file) ||
+      /^tests\/e2e\/helpers\/(?:phone-feed-list|sidebar-inputs-build)\.ts$/.test(file) ||
+      (isProductSource(file) &&
+        /^(?:src\/shared\/sidebar-list\/sidebar-(?:feed|inputs)-|mobile\/src\/host-screen\/host-sidebar-feed-)/.test(
+          file
+        ))
   },
   {
     id: 'browser-network.ssh-docker-route',

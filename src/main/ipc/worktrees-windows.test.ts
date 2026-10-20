@@ -149,6 +149,7 @@ vi.mock('./worktree-logic', async (importOriginal) => {
 
 import { registerWorktreeHandlers } from './worktrees'
 import { resetRetirementCollisionKeyCacheForTests } from '../worktree-name-retirement'
+import { hostWorktreeTarget } from '../../shared/worktree/host-qualified-identity'
 
 type HandlerMap = Record<string, (_event: unknown, args: unknown) => unknown>
 
@@ -349,7 +350,7 @@ describe('registerWorktreeHandlers – Windows path handling', () => {
     // A name the user typed is never retired — the pool holds ordinary words people choose.
     expect(store.addRetiredWorktreeName).not.toHaveBeenCalled()
     expect(store.setWorktreeMeta).toHaveBeenCalledWith(
-      'repo-1::C:/workspaces/improve-dashboard',
+      hostWorktreeTarget({ id: 'repo-1::C:/workspaces/improve-dashboard', hostId: 'local' }),
       expect.objectContaining({
         lastActivityAt: expect.any(Number)
       })
@@ -598,8 +599,7 @@ describe('registerWorktreeHandlers – Windows path handling', () => {
       })
     )
     expect(store.removeWorktreeMeta).toHaveBeenCalledWith(
-      'repo-1::C:/workspaces/improve-dashboard',
-      'local'
+      hostWorktreeTarget({ id: 'repo-1::C:/workspaces/improve-dashboard', hostId: 'local' })
     )
     // Windows history lives under a path-derived hash, so scheduling must not regress on this path only.
     expect(deleteWorktreeHistoryDirMock).toHaveBeenCalledWith(

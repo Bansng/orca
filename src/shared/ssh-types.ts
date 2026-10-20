@@ -352,6 +352,8 @@ export type SshManagedServerStatus =
       canLeaveBehind?: true
       /** A move to the managed server stopped short and keeps the host locked until it resumes. */
       held?: true
+      /** Setup lost contact with the host, so nothing proves it failed there. */
+      contactLost?: true
       /** COMPAT(legacy-relay-bridge): the connect stayed up so the bridge serves those terminals. */
       bridged?: true
     }

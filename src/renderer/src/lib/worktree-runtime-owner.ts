@@ -17,6 +17,7 @@ import {
   resolveIndexedWorktreeOwner
 } from './worktree-runtime-owner-index'
 import { getSingleFocusedRuntimeEnvironmentId } from './single-runtime-legacy-owner'
+import { getActiveWorkspaceExecutionHostId } from './active-workspace-host'
 import { getPairedWebClientEnvironmentId } from './paired-web-client-host'
 import {
   findFolderWorkspaceOwner,
@@ -48,15 +49,6 @@ function getExecutionHostIdFromWorktreeHost(
   hostId: string | null | undefined
 ): ExecutionHostId | null {
   return parseExecutionHostId(hostId)?.id ?? null
-}
-
-function getActiveWorkspaceExecutionHostId(
-  state: WorktreeRuntimeOwnerState,
-  worktreeId: string
-): ExecutionHostId | null {
-  return state.activeWorktreeId === worktreeId
-    ? (state.activeWorkspaceExecutionHostId ?? null)
-    : null
 }
 
 /**

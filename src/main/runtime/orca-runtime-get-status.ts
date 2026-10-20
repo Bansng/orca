@@ -242,7 +242,7 @@ export abstract class OrcaRuntimeWithGetStatus extends OrcaRuntimeWithGetRuntime
   getTerminalSleepClientEventSnapshot(): RuntimeClientEvent[] {
     const statusHost = this.asRuntimeStatusHost()
     const events: RuntimeClientEvent[] = []
-    const sleepStates = [...this.terminalSleepStateByWorktreeId.values()].sort((a, b) =>
+    const sleepStates = [...this.terminalSleepStateByHostWorktree.values()].sort((a, b) =>
       a.worktreeId.localeCompare(b.worktreeId)
     )
     for (const state of sleepStates) {

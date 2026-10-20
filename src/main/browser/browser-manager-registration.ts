@@ -3,6 +3,7 @@ import { browserDownloadDestinationReservations } from './browser-download-desti
 import { isWorkspaceDocPageId } from './doc-preview-guest-policy'
 import type { BrowserGuestRegistration } from './browser-manager-types'
 import { BrowserManagerGuestPolicy } from './browser-manager-guest-policy'
+import { cancelBrowserExternalAppRequests } from './browser-external-app-launch'
 
 export abstract class BrowserManagerRegistration extends BrowserManagerGuestPolicy {
   registerGuest(
@@ -92,6 +93,7 @@ export abstract class BrowserManagerRegistration extends BrowserManagerGuestPoli
     }
     // Why: teardown mid-grab must cancel it so the renderer gets a signal, not a dangling Promise.
     this.cancelGrabOp(browserTabId, 'evicted')
+    cancelBrowserExternalAppRequests(browserTabId)
 
     // Why: remove attachGuestPolicies listeners so their guest-WebContents closures don't block GC.
     const guestWebContentsId = this.webContentsIdByTabId.get(browserTabId)

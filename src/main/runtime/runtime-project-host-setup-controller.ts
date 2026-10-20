@@ -19,9 +19,8 @@ import {
   parseExecutionHostId,
   type ExecutionHostId
 } from '../../shared/execution-host'
-import { getProjectIdForProviderIdentity } from '../../shared/project-host-setup-projection'
 import { getProjectHostSetupForRepo } from '../../shared/project-host-setup-lookup'
-import { assertImportedFolderRemoteMatchesProject } from '../../shared/imported-folder-project-identity'
+import { resolveImportedFolderProjectLink } from '../../shared/imported-folder-project-identity'
 import { invalidateAuthorizedRootsCache } from '../ipc/registered-worktree-roots-cache'
 import {
   SshHostNotServedError,
@@ -132,7 +131,10 @@ export class RuntimeProjectHostSetupController {
     const repo = await this.deps.addRepo(args.path, kind, args.hostId)
     const repoWasCreated = !knownRepoIds.has(repo.id)
     // Why: a registered row's stored remote can predate a remote the user has since added.
-    const folderRemote = repoWasCreated ? repo : await readCurrentGitRemoteIdentity(repo)
+    const folderRemote =
+      repoWasCreated && repo.gitRemoteIdentity !== undefined
+        ? repo
+        : await readCurrentGitRemoteIdentity(repo)
     return this.completeSetup(args, repo, repoWasCreated, folderRemote)
   }
 
@@ -155,7 +157,8 @@ export class RuntimeProjectHostSetupController {
       { ...args, path: repo.path, kind: 'git', setupMethod: 'cloned' },
       repo,
       !knownRepoIds.has(repo.id),
-      repo
+      // Why: a fresh clone's remote is not probed yet, and a Git-remote project links through it.
+      repo.gitRemoteIdentity === undefined ? await readCurrentGitRemoteIdentity(repo) : repo
     )
   }
 
@@ -264,9 +267,7 @@ export class RuntimeProjectHostSetupController {
     } catch (error) {
       if (repoWasCreated) {
         // Why: host-scoped so a rollback never takes a same-id row on another host.
-        this.deps
-          .getStore()
-          ?.removeProjectForHost?.(initialRepo.id, getRepoExecutionHostId(initialRepo))
+        this.deps.getStore()?.removeProjectForHost?.(initialRepo)
         this.deps.invalidateResolvedWorktrees()
         this.deps.invalidateWorktreeScan(initialRepo.id)
         invalidateAuthorizedRootsCache()
@@ -294,18 +295,14 @@ export class RuntimeProjectHostSetupController {
     let setup = getProjectHostSetupForRepo(this.listSetups(), repo)
     if (setup.projectId !== args.projectId) {
       const existingProject = this.listProjects().find((project) => project.id === args.projectId)
-      const identity = existingProject?.providerIdentity ?? args.projectProviderIdentity
-      if (!identity || getProjectIdForProviderIdentity(identity) !== args.projectId) {
-        throw new Error('Imported folder does not match the selected project identity.')
-      }
-      assertImportedFolderRemoteMatchesProject(folderRemote, identity)
-      const updated = store.updateRepo(repo, {
-        upstream: {
-          owner: identity.owner,
-          repo: identity.repo,
-          ...(identity.host ? { host: identity.host } : {})
-        }
-      })
+      const updated = store.updateRepo(
+        repo,
+        resolveImportedFolderProjectLink(
+          folderRemote,
+          args.projectId,
+          existingProject?.providerIdentity ?? args.projectProviderIdentity
+        )
+      )
       if (!updated) {
         throw new Error(`Project setup repo disappeared before it could be linked: ${repo.id}`)
       }

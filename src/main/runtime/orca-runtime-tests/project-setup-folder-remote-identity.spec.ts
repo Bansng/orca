@@ -30,7 +30,7 @@ function createRuntime(repos: Repo[]): OrcaRuntimeService {
       Object.assign(repo, updates)
       return { ...repo }
     },
-    removeProjectForHost: (id: string) => {
+    removeProjectForHost: ({ id }: { id: string }) => {
       const index = repos.findIndex((repo) => repo.id === id)
       if (index !== -1) {
         repos.splice(index, 1)

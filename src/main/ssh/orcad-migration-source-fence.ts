@@ -14,7 +14,10 @@ import {
   type OrcadMigrationSourceCutover
 } from '../../shared/orcad-migration/orcad-migration-source-cutover'
 import type { SshTarget } from '../../shared/ssh-types'
-import { createOrcadMigrationManifest } from './orcad-migration-manifest-export'
+import {
+  assertOrcadMigrationRequestFits,
+  createOrcadMigrationManifest
+} from './orcad-migration-manifest-export'
 import {
   findOrcadMigrationSourceCutoverForTarget,
   removeOrcadMigrationSourceCutover,
@@ -147,6 +150,8 @@ export async function fenceOrcadMigrationSource(args: {
     { ...target, generation },
     { migrationId: randomUUID(), destinationEnvironmentId: args.destinationEnvironmentId }
   )
+  // Before the journal: a fence on a manifest no request can carry could never be released.
+  assertOrcadMigrationRequestFits({ manifest })
   const cutover: OrcadMigrationSourceCutover = {
     version: ORCAD_MIGRATION_SOURCE_CUTOVER_VERSION,
     migrationId: manifest.migrationId,

@@ -5,6 +5,7 @@ import type { WorktreeMeta } from '../../../shared/worktree/meta-types'
 import { AgentHookServer } from '../../agent-hooks/server'
 import { OrcaRuntimeService } from '../orca-runtime'
 import type { RuntimeStore } from '../runtime-store-contract'
+import type { HostWorktreeTarget } from '../../../shared/worktree/host-qualified-identity'
 
 vi.mock('../../../shared/sidebar-inputs-switch', () => ({ ORCA_SIDEBAR_INPUTS_IS_MAIN: true }))
 
@@ -17,12 +18,13 @@ function createHeadlessRuntime(
     [WT]: stored
   }
   const store = {
-    getRepos: () => [],
+    // An unstamped row's writes resolve their host from its repo's only registration.
+    getRepos: () => [{ id: 'repo-1', connectionId: null }],
     getRepo: (id: string) => (id === 'repo-1' ? { id, connectionId: null } : undefined),
     getSettings: () => ({}),
     getWorktreeMeta: (id: string) => meta[id],
     getAllWorktreeMeta: () => meta,
-    setWorktreeMeta: (id: string, updates: Partial<WorktreeMeta>) => {
+    setWorktreeMeta: ({ id }: HostWorktreeTarget, updates: Partial<WorktreeMeta>) => {
       meta[id] = { ...meta[id], ...updates }
       return meta[id]
     }
@@ -60,16 +62,21 @@ describe('host sort stamps on a headless runtime', () => {
     }
   })
 
-  it('announces a stamp write as a metadata change of the row’s repo', () => {
+  it('announces a burst of stamp writes once, as a metadata change of the row’s repo', () => {
     vi.useFakeTimers({ now: 55_000 })
     try {
-      const { runtime } = createHeadlessRuntime()
-      const events: unknown[] = []
+      const { runtime, meta } = createHeadlessRuntime()
+      const events: { type: string }[] = []
       runtime.onClientEvent((event) => events.push(event), { consumesTerminalSideEffects: false })
-      runtime.onPtyData('pty-1', '\x07', 1)
-      expect(events).toContainEqual(
+      runtime.onPtyData('pty-1', '\x1b]0;⠂ Working\x07', 1)
+      runtime.onPtyData('pty-1', '\x1b]0;bash\x07', 2)
+      runtime.onPtyData('pty-1', '\x1b]0;⠂ Working\x07', 3)
+      expect(meta[WT].smartTier).toBe('working')
+      expect(events.filter((event) => event.type === 'worktreesChanged')).toEqual([])
+      vi.advanceTimersByTime(50)
+      expect(events.filter((event) => event.type === 'worktreesChanged')).toEqual([
         expect.objectContaining({ type: 'worktreesChanged', repoId: 'repo-1' })
-      )
+      ])
     } finally {
       vi.useRealTimers()
     }

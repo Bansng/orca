@@ -1,4 +1,3 @@
-import { getRepoExecutionHostId } from '../../shared/execution-host'
 import { isFolderRepo } from '../../shared/repo-kind'
 import { commitProvenRepoKindChange } from '../folder-repo-git-conversion'
 import type { Repo } from '../../shared/repo-types'
@@ -123,13 +122,13 @@ export class RuntimeRepositorySettingsController {
     return updated
   }
 
-  async remove(repoSelector: string): Promise<{ removed: true }> {
+  /** `repo.rm` names a selector; this desktop's own removal names the exact host row. */
+  async remove(target: string | Repo): Promise<{ removed: true }> {
     const store = this.deps.getStore()
     if (!store?.removeProjectForHost) {
       throw new Error('runtime_unavailable')
     }
-    const repo = await this.deps.resolveRepo(repoSelector)
-    const hostId = getRepoExecutionHostId(repo)
+    const repo = typeof target === 'string' ? await this.deps.resolveRepo(target) : target
     assertWslMoveRepoWritable(store, repo)
     // Why here: the host owns these shells; a client only stops the workspaces it has loaded,
     // and older clients stop none. Bounded so repo.rm still answers inside the client's timeout.
@@ -144,7 +143,7 @@ export class RuntimeRepositorySettingsController {
     await stopProjectTerminals(false)
     // Why again: a WSL move may have fenced the project while the stop was awaited.
     assertWslMoveRepoWritable(store, repo)
-    store.removeProjectForHost(repo.id, hostId)
+    store.removeProjectForHost(repo)
     // Why again: a terminal spawned while the first stop ran is past that sweep's snapshot, and
     // nothing can spawn into the project once it is gone. Chats only now: retiring their tabs is
     // irreversible, and the WSL fence above can still refuse the removal.
