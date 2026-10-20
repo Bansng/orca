@@ -58,6 +58,7 @@ jobs:
       test_files: ${{ steps.e2e_filter.outputs.test_files }}
       e2e_run_changed: ${{ steps.e2e_filter.outputs.e2e_run_changed }}
       e2e_needs_build: ${{ steps.e2e_filter.outputs.e2e_needs_build }}
+      e2e_ssh_shards: ${{ steps.e2e_filter.outputs.e2e_ssh_shards }}
       native_ime_source_changed: ${{ steps.e2e_filter.outputs.native_ime_source_changed }}
       wsl_source_changed: ${{ steps.e2e_filter.outputs.wsl_source_changed }}
     steps:
@@ -1558,6 +1559,7 @@ jobs:
       test_files: ${{ needs.code_paths.outputs.test_files }}
       run_changed_e2e: ${{ needs.code_paths.outputs.e2e_run_changed != 'false' }}
       needs_build: ${{ needs.code_paths.outputs.e2e_needs_build != 'false' }}
+      managed_ssh_shards: ${{ needs.code_paths.outputs.e2e_ssh_shards || '["1/2","2/2"]' }}
 
   # Why its own required job, apart from `e2e`: the rest of the suite is red on main, but the
   # layout oracle is green there, and its known-on-main list absorbs today's findings. Only the two

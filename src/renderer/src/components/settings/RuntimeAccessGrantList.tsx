@@ -152,6 +152,10 @@ export function RuntimeAccessGrantList({
           {translate(
             'auto.components.settings.RuntimeAccessGrantList.8b82879581',
             'Anyone with an active grant can connect until you revoke it. Revoking shared access disconnects active clients immediately.'
+          )}{' '}
+          {translate(
+            'auto.components.settings.RuntimeAccessGrantList.sshAccessCaveat',
+            "Revoking here doesn't stop someone with SSH access to this computer from pairing again. To cut them off, remove their SSH access."
           )}
         </p>
       ) : null}

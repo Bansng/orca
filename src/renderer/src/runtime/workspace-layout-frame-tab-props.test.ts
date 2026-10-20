@@ -22,7 +22,15 @@ import {
 import { createStoreSessionMockApi } from '../store/slices/store-session-test-harness'
 import { createTestStore } from '../store/slices/store-test-helpers'
 import type { AppState } from '../store/types'
+import { layoutApplyTestTransport } from './layout-apply-test-transport.test-fixture'
 import { openWorkspaceLayoutFrameSync } from './workspace-layout-frame-sync'
+
+// Main's answer to the window's layout commands, as a switch-on build sends them.
+vi.mock('@/runtime/runtime-rpc-client', async (importOriginal) =>
+  (
+    await import('@/runtime/layout-apply-test-transport.test-fixture')
+  ).runtimeRpcClientWithLayoutApply(await importOriginal())
+)
 
 vi.mock('sonner', () => ({ toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() } }))
 vi.mock('@/lib/agent-status', async (importOriginal) => {
@@ -228,6 +236,7 @@ describe('tab properties through main', () => {
       // Today: the window acts on its own copy.
       const today = await boot(stored)
       entry.windowAction(today.getState())
+      await layoutApplyTestTransport.settle()
       const todayTabs = shownTabs(today.getState())
       expect(todayTabs).not.toEqual(shownTabs((await boot(stored)).getState()))
       const expected = { ...todayTabs, ...entry.mainShows }
@@ -245,6 +254,7 @@ describe('tab properties through main', () => {
 
       // Main's answer then runs the window's own action, which leaves what today's action shows.
       entry.windowAction(drawn.getState())
+      await layoutApplyTestTransport.settle()
       expect(shownTabs(drawn.getState())).toEqual(expected)
       sync.close()
 

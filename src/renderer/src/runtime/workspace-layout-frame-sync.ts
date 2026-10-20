@@ -10,7 +10,7 @@ import { useAppStore } from '@/store'
 import type { AppState } from '@/store/types'
 import { applyLayoutFrame, EMPTY_WORKSPACE_LAYOUT_CACHE } from '@/store/workspace-layout-cache'
 import type { WorkspaceLayoutCache } from '@/store/workspace-layout-cache'
-import { buildLayoutFrameSlices, shownLiveTitle } from '@/store/workspace-layout-frame-slices'
+import { buildLayoutFrameSlices } from '@/store/workspace-layout-frame-slices'
 import {
   buildLayoutFrameStorePatch,
   terminalLayoutsPatch
@@ -28,6 +28,12 @@ import { loadWorkspaceLayoutWithoutReport } from '../../../shared/workspace-layo
 import { stableJson } from '../../../shared/workspace-layout/workspace-layout-load-report'
 import { nameBasedLoadContext } from '../../../shared/workspace-layout/workspace-layout-minted-ids'
 import type { PublishedWorkspaceLayout } from '../../../shared/workspace-layout/workspace-layout-published'
+import {
+  liveTitleUpdates,
+  structureJson,
+  unboundStructureJson
+} from './workspace-layout-frame-changes'
+import { terminalLayoutsWithFrameBindings } from './workspace-layout-frame-bindings'
 import {
   beginLayoutFramePositions,
   endLayoutFramePositions,
@@ -63,57 +69,6 @@ export type WorkspaceLayoutFrameSync = LayoutFrameTerminalQueries & {
 
 /** A bucket, not a host: the view read-back routes the workspaces a rebuild skips here. */
 const OTHER_WORKSPACES: ExecutionHostId = 'runtime:frame-sync-other-workspaces'
-
-const structureJsonByLayout = new WeakMap<PublishedWorkspaceLayout, string>()
-
-/** A frame's JSON without live titles, kept per frame: title frames arrive at spinner rate. */
-function structureJson(layout: PublishedWorkspaceLayout): string {
-  let json = structureJsonByLayout.get(layout)
-  if (json === undefined) {
-    json = withoutLiveTitles(layout)
-    structureJsonByLayout.set(layout, json)
-  }
-  return json
-}
-
-function withoutLiveTitles(layout: PublishedWorkspaceLayout): string {
-  return stableJson({
-    ...layout,
-    tabs: layout.tabs.map((tab) =>
-      tab.terminal
-        ? {
-            ...tab,
-            terminal: {
-              ...tab.terminal,
-              panes: tab.terminal.panes.map(({ liveTitle: _liveTitle, ...pane }) => pane)
-            }
-          }
-        : tab
-    )
-  })
-}
-
-/** Title changes between two frames of one workspace, for the pane each tab shows. */
-function liveTitleUpdates(
-  shown: PublishedWorkspaceLayout,
-  next: PublishedWorkspaceLayout,
-  focusedLeafId: (tabId: string) => string | null | undefined
-): TerminalTabTitleUpdate[] {
-  const shownById = new Map(shown.tabs.map((tab) => [tab.id, tab]))
-  const updates: TerminalTabTitleUpdate[] = []
-  for (const tab of next.tabs) {
-    const shownTab = shownById.get(tab.id)
-    if (!tab.terminal || !shownTab) {
-      continue
-    }
-    const focused = focusedLeafId(tab.entityId)
-    const title = shownLiveTitle(tab, focused)
-    if (title !== undefined && title !== shownLiveTitle(shownTab, focused)) {
-      updates.push({ tabId: tab.entityId, title })
-    }
-  }
-  return updates
-}
 
 export function openWorkspaceLayoutFrameSync(store: FrameSyncStore): WorkspaceLayoutFrameSync {
   let cache: WorkspaceLayoutCache = EMPTY_WORKSPACE_LAYOUT_CACHE
@@ -188,6 +143,24 @@ export function openWorkspaceLayoutFrameSync(store: FrameSyncStore): WorkspaceLa
     }
   }
 
+  // Only panes' bindings changed: the pane trees take them, unless only a rebuild shows them so.
+  const showFrameBindings = (keys: string[]): void => {
+    const state = store.getState()
+    let layouts = state.terminalLayoutsByTabId
+    const unshown = keys.filter((key) => {
+      const next = terminalLayoutsWithFrameBindings(layouts, key, cache[key]!)
+      layouts = next ?? layouts
+      return next === null
+    })
+    const patch = terminalLayoutsPatch(state, layouts)
+    if (Object.keys(patch).length > 0) {
+      store.setState(patch)
+    }
+    if (unshown.length > 0) {
+      rebuild(store.getState(), unshown)
+    }
+  }
+
   const flush = (): void => {
     flushQueued = false
     if (!live) {
@@ -197,6 +170,7 @@ export function openWorkspaceLayoutFrameSync(store: FrameSyncStore): WorkspaceLa
     const drawn = framesDrawWorkspace(state)
     const nextShown: Record<string, PublishedWorkspaceLayout> = {}
     const structural: string[] = []
+    const rebound: string[] = []
     const titleUpdates: TerminalTabTitleUpdate[] = []
     for (const [key, layout] of Object.entries(cache)) {
       const previous = shown[key]
@@ -208,7 +182,11 @@ export function openWorkspaceLayoutFrameSync(store: FrameSyncStore): WorkspaceLa
       }
       // Against the store, not `shown`: a held frame leaves `shown` behind the pane trees drawn since.
       paneTreeKeys.add(key)
-      if (previous && structureJson(previous) === structureJson(layout)) {
+      const sameStructure = previous && structureJson(previous) === structureJson(layout)
+      if (
+        sameStructure ||
+        (previous && unboundStructureJson(previous) === unboundStructureJson(layout))
+      ) {
         titleUpdates.push(
           ...liveTitleUpdates(
             previous,
@@ -216,16 +194,21 @@ export function openWorkspaceLayoutFrameSync(store: FrameSyncStore): WorkspaceLa
             (tabId) => state.terminalLayoutsByTabId[tabId]?.activeLeafId
           )
         )
-        nextShown[key] = layout
+        if (!sameStructure) {
+          rebound.push(key)
+        }
       } else {
         structural.push(key)
-        nextShown[key] = layout
       }
+      nextShown[key] = layout
     }
     // A workspace main stopped publishing keeps what the window shows; main has nothing to say.
     shown = nextShown
     if (structural.length > 0) {
       rebuild(state, structural)
+    }
+    if (rebound.length > 0) {
+      showFrameBindings(rebound)
     }
     if (titleUpdates.length > 0) {
       store.getState().updateTabTitles(titleUpdates)

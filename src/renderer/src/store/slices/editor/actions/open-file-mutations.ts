@@ -9,6 +9,13 @@ import {
   recordPromotedEditorTabsInLayoutOwner
 } from '../tabs/editor-tab-layout-owner'
 import { writeEditorBuffer } from '../buffers/editor-buffer-record'
+import { getDiskBaselineSignature } from '../../../../../../shared/disk-baseline-signature'
+
+function withoutKey<T>(record: Record<string, T>, key: string): Record<string, T> {
+  const next = { ...record }
+  delete next[key]
+  return next
+}
 
 export function createOpenFileMutations(
   set: EditorSet,
@@ -79,7 +86,16 @@ export function createOpenFileMutations(
           return s
         }
         const needsPreviewClear = dirty && file.isPreview
-        if (file.isDirty === dirty && !needsPreviewClear) {
+        // Why: a clean tab holds no draft of the disk text; a kept one could later restore stale
+        // text into a shared model. A draft that differs from disk (whitespace a Markdown view
+        // does not count as an edit) is a real unsaved edit and stays.
+        const draft = s.editorDrafts[fileId]
+        const dropDraft =
+          !dirty &&
+          draft !== undefined &&
+          (file.lastKnownDiskSignature === undefined ||
+            getDiskBaselineSignature(draft) === file.lastKnownDiskSignature)
+        if (file.isDirty === dirty && !needsPreviewClear && !dropDraft) {
           return s
         }
         if (ORCA_LAYOUT_OWNER_IS_MAIN && needsPreviewClear) {
@@ -92,6 +108,7 @@ export function createOpenFileMutations(
             { isDirty: dirty },
             needsPreviewClear ? { isPreview: undefined } : undefined
           ),
+          ...(dropDraft ? { editorDrafts: withoutKey(s.editorDrafts, fileId) } : {}),
           ...(needsPreviewClear
             ? {
                 unifiedTabsByWorktree: Object.fromEntries(

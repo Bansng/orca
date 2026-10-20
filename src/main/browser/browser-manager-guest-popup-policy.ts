@@ -143,8 +143,8 @@ export abstract class BrowserManagerGuestPopupPolicy extends BrowserManagerNavig
   ): boolean {
     // Why: the top page's URL would credit an embedded frame's request to the site the user trusts.
     return requestBrowserExternalAppLaunch({
-      context: this.getRendererContextForGuest(guest.id),
       requester: guest,
+      target: this.resolvePagePromptTarget(guest),
       rawUrl,
       requestingUrl
     })

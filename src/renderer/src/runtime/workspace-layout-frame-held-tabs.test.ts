@@ -32,7 +32,7 @@ vi.mock('@/lib/agent-status', async (importOriginal) => {
 })
 
 type Call = {
-  command: { type: string; tabId?: string; title?: string }
+  command: { type: string; tabId?: string; title?: string; renames?: { title: string }[] }
   answer: (r: LayoutApplyReply) => void
   fail: (error: Error) => void
 }
@@ -404,9 +404,9 @@ describe('a change main applies first, with frames flowing', () => {
     const leafId = store.getState().terminalLayoutsByTabId['tab-unbound']!.activeLeafId!
     const paneKey = makePaneKey('tab-unbound', leafId)
     store.getState().setGeneratedTabTitleFromAgentPrompt(paneKey, 'Refactor the auth middleware')
-    const renames = () => callsOf('renameTab')
+    const renames = () => callsOf('renameTabs')
     expect(renames()).toHaveLength(1)
-    const title = renames()[0]!.command.title!
+    const title = renames()[0]!.command.renames![0]!.title
     // Unanswered: a later prompt for the same tab waits for the first.
     store.getState().setGeneratedTabTitleFromAgentPrompt(paneKey, 'Fix the flaky login test')
     expect(renames()).toHaveLength(1)

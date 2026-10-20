@@ -62,7 +62,7 @@ describe('Restart managed server', () => {
   it('confirms first, then restarts and refreshes', async () => {
     const onChanged = vi.fn()
     const container = await render(ended, onChanged)
-    await act(async () => button(container, 'Restart managed server…').click())
+    await act(async () => button(container, 'Restart Orca’s server…').click())
     expect(restart).not.toHaveBeenCalled()
     expect(container.textContent).toContain('no terminals are running')
     await act(async () => button(container, 'Restart').click())
@@ -78,7 +78,7 @@ describe('Restart managed server', () => {
     restart.mockResolvedValueOnce(result)
     const onChanged = vi.fn()
     const container = await render(ended, onChanged)
-    await act(async () => button(container, 'Restart managed server…').click())
+    await act(async () => button(container, 'Restart Orca’s server…').click())
     await act(async () => button(container, 'Restart').click())
     expect(container.textContent).toContain(text)
     expect(onChanged).not.toHaveBeenCalled()

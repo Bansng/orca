@@ -80,7 +80,7 @@ export function SshHostChangedActions({
             <DialogDescription>
               {translate(
                 'auto.components.settings.keepServer.description',
-                'This host goes back to its managed server as it is. What the older version of Orca added or changed here is not moved; it stays only in this computer’s saved settings until they are cleaned up.'
+                'This host keeps using its Orca server as it is. What the older version of Orca added or changed here is not moved; it stays only in this computer’s saved settings until they are cleaned up.'
               )}
             </DialogDescription>
           </DialogHeader>

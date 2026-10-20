@@ -10,6 +10,7 @@ import type { RuntimeHostDetails } from './runtime-environment-host-details'
 import { RuntimeHostAccessForm } from './RuntimeHostAccessForm'
 import type { RuntimeHostAccessFailure } from './RuntimeHostAccessFailureAlert'
 import { RuntimeServerRow } from './runtime-server-row'
+import { duplicatePairedServerNames } from '@/lib/duplicate-paired-servers'
 
 type RuntimeServersConnectSectionProps = {
   visible: boolean
@@ -165,6 +166,7 @@ export function RuntimeServersConnectSection({
               <RuntimeServerRow
                 key={environment.id}
                 environment={environment}
+                duplicateOfNames={duplicatePairedServerNames(environments, environment.id)}
                 details={detailsByEnvironmentId[environment.id]}
                 isActive={activeRuntimeEnvironmentId === environment.id}
                 remoteUpdate={remoteServerUpdates.get(environment.id)}

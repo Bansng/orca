@@ -74,9 +74,14 @@ export const getRuntimeEnvironmentsSearchEntry = createLocalizedCatalog(
       ),
       ...translateSearchKeyword(
         'auto.components.settings.managedServers.search.title',
-        'Managed servers'
+        'Orca on your SSH hosts'
       ),
       ...translateSearchKeyword('auto.components.settings.managedServers.search.keywordSsh', 'ssh'),
+      // Why: the section's former name, so users who knew it can still find it.
+      ...translateSearchKeyword(
+        'auto.components.settings.managedServers.search.keywordFormerName',
+        'managed servers'
+      ),
       // Why: Share this host mounts the machine name field, so its keywords open this pane.
       ...getMachineNameSearchKeywords()
     ]

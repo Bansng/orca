@@ -6,6 +6,7 @@ import { isTuiAgent } from '../tui-agent-config'
 import { TerminalPaneLayoutNodeSchema } from './session-tabs-schemas-params'
 import { TerminalOrphanGroupLayout } from './terminal-orphan-params'
 import { SleepCommand, WakeCommand } from './workspace-layout-sleep-wake-params'
+import { RenameTabsCommand } from './workspace-layout-rename-tabs-params'
 
 export const LayoutSubscribeParams = z
   .object({
@@ -155,7 +156,11 @@ const MovePaneToNewTabCommand = z.object({
   groupId: z.string().min(1),
   index: z.number().int().nonnegative().optional(),
   /** The terminal the window's pane shows now, when it has one. */
-  windowDetach: z.object({ ptyId: z.string().min(1).max(512).nullable() })
+  windowDetach: z.object({
+    ptyId: z.string().min(1).max(512).nullable(),
+    /** The pane's folder, where an unbound pane's new shell starts. */
+    startupCwd: z.string().min(1).optional()
+  })
 })
 
 /**
@@ -365,6 +370,7 @@ export const LayoutApplyParams = z.object({
     SetGroupRatiosCommand,
     CloseTabsCommand,
     RenameTabCommand,
+    RenameTabsCommand,
     SetTabPropsCommand,
     MovePaneToNewTabCommand,
     OpenBrowserTabCommand,

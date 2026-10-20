@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle, Link2, Loader2, Server, ServerOff, Trash2 } from 'lucide-react'
 import {
-  isUserManagedRuntimeEnvironment,
+  runtimePairingRepairRoute,
   type PublicKnownRuntimeEnvironment
 } from '../../../../shared/runtime-environments'
 import type { RemoteServerUpdateEntry } from '@/runtime/remote-server-update-coordinator'
@@ -35,6 +35,8 @@ import {
 
 type RuntimeServerRowProps = {
   environment: PublicKnownRuntimeEnvironment
+  /** Other saved servers with this one's host key: the same machine paired twice. */
+  duplicateOfNames: readonly string[]
   details: RuntimeHostDetails | undefined
   isActive: boolean
   remoteUpdate: RemoteServerUpdateEntry | undefined
@@ -52,6 +54,7 @@ type RuntimeServerRowProps = {
 
 export function RuntimeServerRow({
   environment,
+  duplicateOfNames,
   details,
   isActive,
   remoteUpdate,
@@ -100,15 +103,28 @@ export function RuntimeServerRow({
     snapshot?.verification === 'blocked' &&
     !snapshot.retired &&
     snapshot.blockedReason === 'access-revoked'
-  // Why: managed and cloud-workspace servers are paired by the service that owns them.
-  const repairable = !environment.orcadDeployment && isUserManagedRuntimeEnvironment(environment)
-  const detailsDescription = accessRevoked
-    ? translate(
-        'auto.components.settings.RuntimeEnvironmentsPane.accessRevoked',
-        '{{value0}} no longer accepts this computer. Re-pair it with a new access link.',
-        { value0: environment.name }
-      )
-    : getHostDetailsDescription(effectiveDetails)
+  const repairRoute = runtimePairingRepairRoute(environment)
+  const repairable = repairRoute === 'access-link'
+  const detailsDescription = !accessRevoked
+    ? getHostDetailsDescription(effectiveDetails)
+    : repairRoute === 'ssh'
+      ? // Why: Orca pairs a managed server over SSH by itself; it reaches here only when that failed.
+        translate(
+          'auto.components.settings.RuntimeEnvironmentsPane.managedAccessRevoked',
+          "{{value0}} no longer accepts this computer, and Orca couldn't pair with it again over SSH. Connect to try again.",
+          { value0: environment.name }
+        )
+      : repairRoute === 'connect'
+        ? translate(
+            'auto.components.settings.RuntimeEnvironmentsPane.connectAccessRevoked',
+            '{{value0}} no longer accepts this computer. Connect to try again.',
+            { value0: environment.name }
+          )
+        : translate(
+            'auto.components.settings.RuntimeEnvironmentsPane.accessRevoked',
+            '{{value0}} no longer accepts this computer. Re-pair it with a new access link.',
+            { value0: environment.name }
+          )
   const connectionState =
     details?.status === 'loading' && !runtimeStatusEntry?.status
       ? 'checking'
@@ -170,6 +186,15 @@ export function RuntimeServerRow({
           <p className="truncate text-xs text-muted-foreground">{hostDescriptorText}</p>
         ) : null}
         {rowSummary ? <p className="truncate text-xs text-muted-foreground">{rowSummary}</p> : null}
+        {duplicateOfNames.length > 0 ? (
+          <p className="mt-0.5 text-xs text-destructive">
+            {translate(
+              'auto.components.settings.RuntimeEnvironmentsPane.pairedTwice',
+              'Same server as {{value0}}, paired twice. Remove one so its projects can be edited.',
+              { value0: duplicateOfNames[0] }
+            )}
+          </p>
+        ) : null}
         {detailsDescription ? (
           <p
             className={cn(

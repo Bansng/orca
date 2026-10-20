@@ -54,6 +54,20 @@ export function managedTunnelAccess(
     : null
 }
 
+/** The build's environment is still the same pairing, with an SSH tunnel it may use. */
+export function managedTunnelStillPaired(
+  built: KnownRuntimeEnvironment,
+  current: KnownRuntimeEnvironment | null,
+  target: SshTarget | null | undefined,
+  expected: ManagedTunnelExpectation
+): boolean {
+  return (
+    current?.runtimeId === built.runtimeId &&
+    (current.pairingRevision ?? current.createdAt) === (built.pairingRevision ?? built.createdAt) &&
+    managedTunnelAccess(current, target, expected) !== null
+  )
+}
+
 /** The SSH target and transport a managed environment's tunnel must use, or why it cannot. */
 export function resolveManagedTunnelBinding(
   environment: KnownRuntimeEnvironment,
@@ -74,14 +88,14 @@ export function resolveManagedTunnelBinding(
   const targetStore = dependencies.getTargetStore()
   const connectionManager = dependencies.getConnectionManager()
   if (!targetStore || !connectionManager) {
-    throw new Error('SSH is unavailable on this client; the managed Orca server is unverifiable.')
+    throw new Error('SSH is unavailable on this client; this host’s Orca server is unverifiable.')
   }
   const target = targetStore.getTarget(deployment.sshTargetId)
   if (!target || target.generation !== deployment.sshTargetGeneration) {
-    throw new Error('The SSH registration for this managed Orca server was removed or re-created.')
+    throw new Error('The SSH registration for this host’s Orca server was removed or re-created.')
   }
   if (getManagedOrcadFenceEnvironmentId(target) !== environment.id) {
-    throw new Error('The SSH target is no longer owned by this managed Orca server.')
+    throw new Error('The SSH target is no longer owned by this host’s Orca server.')
   }
   return { deployment, targetStore, connectionManager, target }
 }
