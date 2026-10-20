@@ -127,14 +127,6 @@ export function NativeChatStructuredSession(
   const hostHeld = hostPermission.sendBlockedReason !== null
   const submits = useStructuredNativeChatSubmitReveal(controller, provisionalLaunch.retry, hostHeld)
   const promptResponse = useStructuredPromptResponseHold(submits.respond)
-  const continuation = useNativeChatInterruptedContinuation({
-    target: props.target,
-    sessionId: props.sessionId,
-    journalItems: controller.journalItems,
-    submissions: controller.submissions,
-    isWorking: controller.isWorking || hostHeld,
-    reportComposerError
-  })
   const needsFailureFacts =
     submits.queuedMessages.cards.some((card) => card.state === 'returned') ||
     controller.submissions.some(
@@ -162,16 +154,9 @@ export function NativeChatStructuredSession(
   // already on screen: nothing in it can act, and its words say why once.
   const readFailedFinally = readFailure?.final === true
   const viewState = selectNativeChatViewState(session, { readRetries: !readFailedFinally })
-  useNativeChatFontSize(
-    viewState.kind === 'ready' && props.isVisible && props.isFocusedGroup,
-    rootRef
-  )
-  const find = useNativeChatFind(
-    props.isVisible && props.isFocusedGroup,
-    rootRef,
-    composerRef,
-    submits.messageListRef
-  )
+  const paneActive = props.isVisible && props.isFocusedGroup
+  useNativeChatFontSize(viewState.kind === 'ready' && paneActive, rootRef)
+  const find = useNativeChatFind(paneActive, rootRef, composerRef, submits.messageListRef)
   const appearanceStyle = useNativeChatStoreAppearanceStyle()
   const imageRuntimeContext = useNativeChatImageRuntimeContext(props.tabId)
   const { onLinkClick, linkActionRequest, closeLinkActions } = useNativeChatLinkActions(
@@ -233,6 +218,16 @@ export function NativeChatStructuredSession(
     onError: reportComposerError,
     onSubmitted: submits.revealLatest,
     sendBlockedReason: hostPermission.sendBlockedReason ?? install.sendBlockedReason
+  })
+  const continuation = useNativeChatInterruptedContinuation({
+    ...controller,
+    target: props.target,
+    agent: props.agent,
+    sessionId: props.sessionId,
+    isWorking: controller.isWorking || hostHeld,
+    reportComposerError,
+    focusComposer,
+    transport: structuredTransport
   })
 
   // Said once: on the pane when the failure took it, else in the composer's notices.

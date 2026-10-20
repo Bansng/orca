@@ -13,6 +13,11 @@ import type {
   BrowserWebAuthnAccountResponse
 } from '../../shared/browser-webauthn-account'
 import type {
+  BrowserExternalAppRequest,
+  BrowserExternalAppResponse,
+  BrowserExternalAppResponseResult
+} from '../../shared/browser-external-app'
+import type {
   BrowserSetGrabModeArgs,
   BrowserSetGrabModeResult,
   BrowserAwaitGrabSelectionArgs,
@@ -78,6 +83,11 @@ export type BrowserApi = {
   ) => () => void
   onWebAuthnAccountRequestClosed: (callback: (event: { requestId: string }) => void) => () => void
   respondWebAuthnAccount: (response: BrowserWebAuthnAccountResponse) => Promise<boolean>
+  onExternalAppRequest: (callback: (request: BrowserExternalAppRequest) => void) => () => void
+  onExternalAppRequestClosed: (callback: (event: { requestId: string }) => void) => () => void
+  respondExternalApp: (
+    response: BrowserExternalAppResponse
+  ) => Promise<BrowserExternalAppResponseResult>
   openDevTools: (args: { browserPageId: string }) => Promise<boolean>
   setViewportOverride: (args: {
     browserPageId: string

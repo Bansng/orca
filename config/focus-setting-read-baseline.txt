@@ -391,7 +391,7 @@
 3 src/renderer/src/store/github/work-item-fetch-actions.ts
 2 src/renderer/src/store/github/work-item-routing.ts
 9 src/renderer/src/store/index.ts
-3 src/renderer/src/store/project-groups/project-group-mutations.ts
+2 src/renderer/src/store/project-groups/project-group-mutations.ts
 1 src/renderer/src/store/repos/all-host-repo-catalog-actions.ts
 1 src/renderer/src/store/repos/converted-ssh-browser-pages.ts
 2 src/renderer/src/store/repos/repo-add-actions.ts

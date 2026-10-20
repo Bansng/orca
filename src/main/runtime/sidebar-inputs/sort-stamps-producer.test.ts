@@ -5,6 +5,8 @@ import type { AgentSessionStatusSummary } from '../../../shared/agent-session-wi
 import { makeStructuredAgentStatusSubject } from '../../../shared/agent-status-subject'
 import type { RuntimeClientEvent } from '../../../shared/runtime-client-events'
 import type { TerminalSideEffectFact } from '../../../shared/terminal-side-effect-facts'
+import type { ExecutionHostId } from '../../../shared/execution-host'
+import type { Repo } from '../../../shared/repo-types'
 import {
   RECENT_STAMP_THROTTLE_MS,
   type SmartStampFields
@@ -32,9 +34,16 @@ const T0 = 1_000_000
 
 type Stamps = { lastActivityAt: number; isUnread?: boolean } & SmartStampFields
 const SSH_HOST = 'ssh:build-box'
+const LOCAL_REPO: Repo = {
+  id: 'repo-1',
+  path: '/tmp',
+  displayName: 'repo-1',
+  badgeColor: '#000',
+  addedAt: 0
+}
 
 function createHarness() {
-  const meta = new Map<string, Stamps & { hostId?: string }>([[WT, { lastActivityAt: 0 }]])
+  const meta = new Map<string, Stamps & { hostId?: ExecutionHostId }>([[WT, { lastActivityAt: 0 }]])
   const sshMeta = new Map<string, Stamps>([[WT, { lastActivityAt: 0 }]])
   const folders = new Map<string, Stamps & { connectionId?: string }>([
     [FOLDER_ID, { lastActivityAt: 0 }]
@@ -48,15 +57,17 @@ function createHarness() {
   const viewing = { isViewing: (_id: string, _pane: string | null): boolean => true }
   const store: SortStampsStore = {
     getWorktreeMeta: (id) => meta.get(id),
-    setWorktreeMeta: (id, updates) => {
+    setWorktreeMeta: ({ id, hostId }, updates) => {
+      if (hostId === SSH_HOST) {
+        writes.push(`${hostId}|${id}`)
+        sshMeta.set(id, { lastActivityAt: 0, ...sshMeta.get(id), ...updates })
+        return
+      }
       writes.push(id)
       meta.set(id, { lastActivityAt: 0, ...meta.get(id), ...updates })
     },
+    getRepos: () => [LOCAL_REPO],
     getWorktreeMetaForHost: (id, hostId) => (hostId === SSH_HOST ? sshMeta.get(id) : undefined),
-    setWorktreeMetaForHost: (id, hostId, updates) => {
-      writes.push(`${hostId}|${id}`)
-      sshMeta.set(id, { lastActivityAt: 0, ...sshMeta.get(id), ...updates })
-    },
     getFolderWorkspace: (id) => folders.get(id),
     updateFolderWorkspace: (id, updates) => {
       writes.push(`folder:${id}`)

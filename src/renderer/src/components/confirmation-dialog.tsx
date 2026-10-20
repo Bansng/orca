@@ -61,12 +61,30 @@ export function ConfirmationDialogProvider({
 
   const confirm = useCallback<ConfirmationDialogContextValue>((options) => {
     return new Promise((resolve) => {
+      const { signal } = options
+      if (signal?.aborted) {
+        resolve(false)
+        return
+      }
       const request: ConfirmationDialogRequest = {
         id: nextIdRef.current,
         options,
         resolve
       }
       nextIdRef.current += 1
+      signal?.addEventListener(
+        'abort',
+        () => {
+          if (activeRequestRef.current?.id === request.id) {
+            setDontAskAgain(false)
+          }
+          resolve(false)
+          setQueue((currentQueue) =>
+            currentQueue.filter((queuedRequest) => queuedRequest.id !== request.id)
+          )
+        },
+        { once: true }
+      )
       setQueue((currentQueue) => [...currentQueue, request])
     })
   }, [])

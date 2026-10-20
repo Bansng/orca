@@ -212,9 +212,10 @@ describe('SSH certificate org remotes (#30601)', () => {
 
   it('does not need an SSH config expansion for an org-id github.com remote', () => {
     expect(gitHubSshConfigHostAlias(certRemote)).toBeNull()
-    expect(
-      parseGitHubOwnerRepoWithResolvedSshHostname(certRemote, null)
-    ).toEqual({ owner: 'Acme', repo: 'app' })
+    expect(parseGitHubOwnerRepoWithResolvedSshHostname(certRemote, null)).toEqual({
+      owner: 'Acme',
+      repo: 'app'
+    })
   })
 
   it('still ignores non-GitHub hosts carrying an org-id user', () => {

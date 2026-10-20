@@ -465,7 +465,7 @@ describe('one target’s legacy relay bridge', () => {
     relay.ptys = new Set(['pty2:epoch:1'])
     const subject = bridge()
     await subject.refresh()
-    await expect(stops.stopAndWait(epochPty, subject, Date.now() + 5_000)).resolves.toBe(true)
+    await expect(stops.stopAndWait(epochPty, subject, Date.now() + 5_000)).resolves.toBe('reported')
   })
 
   it('settles on the relay’s exit report even when the stop’s own reply is lost', async () => {
@@ -484,7 +484,7 @@ describe('one target’s legacy relay bridge', () => {
     }
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: stop() reads only these members.
     const target = lostReply as unknown as LegacyRelayTargetBridge
-    await expect(stops.stopAndWait(epochPty, target, Date.now() + 5_000)).resolves.toBe(true)
+    await expect(stops.stopAndWait(epochPty, target, Date.now() + 5_000)).resolves.toBe('reported')
   })
 
   it('still settles on an exit report that trails a failed stop reply', async () => {
@@ -497,7 +497,7 @@ describe('one target’s legacy relay bridge', () => {
     const settled = stops.stopAndWait(epochPty, subject, Date.now() + 5_000)
     await vi.advanceTimersByTimeAsync(100)
     relay.clients[0].emitExit('pty2:epoch:1', 0)
-    await expect(settled).resolves.toBe(true)
+    await expect(settled).resolves.toBe('reported')
   })
 
   it('still sees an unfenced stop’s exit report that trails its reply, never re-serving the pane', async () => {
@@ -509,7 +509,7 @@ describe('one target’s legacy relay bridge', () => {
     expect(relay.shutdowns).toEqual(['pty-1'])
     expect(subject.snapshot()).toEqual([])
     relay.clients[0].emitExit('pty-1', 0)
-    await expect(settled).resolves.toBe(true)
+    await expect(settled).resolves.toBe('reported')
   })
 
   it('still sees an unfenced stop’s exit report after its reply timed out', async () => {
@@ -520,7 +520,7 @@ describe('one target’s legacy relay bridge', () => {
     await vi.advanceTimersByTimeAsync(100)
     expect(subject.snapshot()).toEqual([])
     relay.clients[0].emitExit('pty-1', 0)
-    await expect(settled).resolves.toBe(true)
+    await expect(settled).resolves.toBe('reported')
   })
 
   it('leaves a taken stop unproven while no exit report or complete listing confirms it', async () => {
@@ -534,7 +534,7 @@ describe('one target’s legacy relay bridge', () => {
     await subject.refresh()
     const settled = stops.stopAndWait(epochPty, subject, Date.now() + 1_000)
     await vi.advanceTimersByTimeAsync(1_000)
-    await expect(settled).resolves.toBe(false)
+    await expect(settled).resolves.toBeNull()
     expect(relay.shutdowns).toEqual(['pty2:epoch:1'])
   })
 

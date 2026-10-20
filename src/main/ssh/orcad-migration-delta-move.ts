@@ -35,6 +35,7 @@ import {
   unfinishedOrcadDelta,
   type OrcadDeltaMovePlan
 } from './orcad-migration-delta-plan'
+import { assertOrcadMigrationRequestFits } from './orcad-migration-manifest-export'
 import { retainOrcadMigrationSource } from './orcad-migration-source-retention'
 import {
   assessOrcadMigrationTerminals,
@@ -76,6 +77,10 @@ export async function runOrcadDeltaMove(args: OrcadDeltaMoveArgs): Promise<Orcad
       ...refuse('orcad_migration_preflight_blocked', orcadMigrationRefusalReason(plan.blockers)),
       blockers: plan.blockers
     }
+  }
+  if (!plan.resumes) {
+    // Before the journal: a delta no request can carry would pin the host's fence for good.
+    assertOrcadMigrationRequestFits({ manifest: plan.manifest })
   }
   const terminals = await assessOrcadMigrationTerminals(store, target.id, args.censusHost)
   if (terminals.verdict !== 'exited' && terminals.verdict !== 'bridged') {

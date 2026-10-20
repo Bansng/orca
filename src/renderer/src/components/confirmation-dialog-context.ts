@@ -20,6 +20,8 @@ export type ConfirmationDialogOptions = {
   ignoresOpeningGesture?: boolean
   /** Renders a "Don't ask again" checkbox. `onConfirmed` runs only when the user confirms with it checked. */
   dontAskAgain?: { label?: string; onConfirmed: () => void }
+  /** Aborting dismisses the prompt, queued or showing, and resolves it as cancelled. */
+  signal?: AbortSignal
 }
 
 export type ConfirmationDialogContextValue = (
