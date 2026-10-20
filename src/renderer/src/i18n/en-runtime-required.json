@@ -422,6 +422,16 @@
         },
         "RichMarkdownSlashMenu": {
           "e2e12b0e98": "component"
+        },
+        "editor": {
+          "save": {
+            "sectionStale": {
+              "notice": "This file changed on disk since this section loaded."
+            },
+            "stale": {
+              "notice": "This file changed on disk since your edits. Use the banner to compare, reload, or overwrite."
+            }
+          }
         }
       },
       "emulator": {
@@ -1085,7 +1095,6 @@
           "b10cb4f696": "adding",
           "b11078a9c2": "wsl",
           "b2b1aa936d": "Paste your opencode.ai session cookie for rate limit fetching.",
-          "b43e761fe5": "MiniMax cookie update failed.",
           "b8c2905c2b": "Could not load Codex accounts.",
           "f5d8d2a6a1": "Open platform.minimax.io/console/usage in your browser and sign in.",
           "remoteScopeLocalAccountsKept": "Accounts managed on this desktop are unchanged. Switch the default runtime back to Local desktop to view them."
@@ -2892,7 +2901,7 @@
         "agentCommandNotSignedIn": "Sign in to {{agent}} with `{{loginCommand}}` on the computer running this chat.",
         "agentNotSignedIn": "Sign in to {{agent}}.",
         "answerUnconfirmed": "Your answer was recorded but the agent did not confirm it.",
-        "antigravityNotSignedIn": "Antigravity isn't signed in. Sign in under Settings → Accounts → Antigravity.",
+        "antigravityNotSignedIn": "Antigravity isn't signed in. Sign in under Settings → Accounts → Antigravity. Then send your message again.",
         "argumentsMissingValue": "Saved Arguments need a value for {{option}}.",
         "argumentsMultipleValues": "Saved Arguments give {{option}} more than one value.",
         "argumentsPositionalPrompt": "Saved Arguments include a prompt.",
@@ -2975,11 +2984,12 @@
         "signInFirst": "Sign in first.",
         "signInThenRunCommand": "Sign in, then run /{{command}} again.",
         "signInThenSend": "Sign in, then send your message again.",
+        "startTimedOut": "{{agent}} took too long to start (no response to {{method}} after {{seconds}}s).",
+        "startTimedOutKeepsHappening": "If this keeps happening, the computer running this chat may be overloaded.",
         "stopRefused": "{{agent}} didn't stop.",
         "stopRefusedQuoted": "{{agent}} didn't stop: {{detail}}.",
         "theAgent": "The agent",
         "thenSendAgain": "Then send your message again.",
-        "writeFailed": "Orca couldn't hand this message to the agent, so it was not sent.",
         "usageLimitReached": "{{agent}} hit its usage limit.",
         "usageLimitReachedNamed": "{{agent}} hit its {{window}} limit.",
         "usageLimitResetsAt": "It resets at {{when}}.",
@@ -2987,7 +2997,8 @@
         "usageLimitWindowCredits": "extra usage",
         "usageLimitWindowSession": "session",
         "usageLimitWindowWeekly": "weekly",
-        "usageLimitWindowWeeklyModel": "weekly model"
+        "usageLimitWindowWeeklyModel": "weekly model",
+        "writeFailed": "Orca couldn't hand this message to the agent, so it was not sent."
       },
       "notices": {
         "compaction": "Context compacted",
@@ -3082,9 +3093,6 @@
         "usedManySummary": "Used {{toolCount}} tools",
         "usedOneSummary": "Used 1 tool"
       },
-      "interruptedContinue": {
-        "unconfirmed": "Couldn't confirm whether {{agent}} received Continue. Check the chat before trying again."
-      },
       "writeNotice": {
         "agentRefused": "The agent turned this down.",
         "agentStarting": "The agent is still starting.",
@@ -3105,6 +3113,7 @@
         "compactAfterAnswer": "Answer the agent's question or approval, then run /compact.",
         "compactAfterRetry": "Retry your earlier message, then run /compact.",
         "compactAfterSending": "Your earlier message is still being sent. Run /compact once it has gone.",
+        "continuationSuperseded": "This chat has moved on. Check the latest messages before continuing.",
         "conversationCleared": "This conversation has been cleared.",
         "goalsUnsupported": "This agent doesn't support goals.",
         "historyUnavailable": "Orca couldn't open this chat's history right now.",
@@ -3128,7 +3137,6 @@
         "outcomeUnknown": "Orca couldn't confirm what happened. Check the chat.",
         "ownerUnproven": "The previous agent in this chat may still be running.",
         "promptPending": "The agent is waiting for an answer to a question or approval.",
-        "continuationSuperseded": "This chat has moved on. Check the latest messages before continuing.",
         "questionChanged": "This question was already answered or has changed.",
         "queueTooLarge": "Too much text is waiting in the queue.",
         "quitTerminalAgent": "Quit that agent to continue the chat here.",

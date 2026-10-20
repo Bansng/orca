@@ -31,6 +31,8 @@ type ServerEntry = {
   fence: string
   identity: Pick<MobileDesktopRelayHostListing, 'pairingRevision' | 'runtimeId'>
   inContact: boolean
+  /** Moves on every contact change, so an answer can tell it predates a gap. */
+  contactGeneration: number
   /** Null until a fetch under this pairing answered. */
   rows: MobileRelayServerWorktreeRow[] | null
   /** The rows are the server's answer since it last came into contact; else unverifiable. */
@@ -44,7 +46,7 @@ type ServerEntry = {
  * The desktop's one live set of paired-server workspace rows, needing no window. A server is
  * refetched when it comes into contact, on each of its change events, when a reader asks, and
  * every 30 s while the list is showing. A server's last rows read unverifiable once it loses
- * contact, until a fetch answers again. Only removing or re-pairing a server drops them; a fetch
+ * contact, until a fetch started since it came back answers. Only removing or re-pairing a server drops them; a fetch
  * that answers replaces them, deletions included.
  */
 export class PairedServerRowsProducer implements ServerWorktreeRows {
@@ -112,6 +114,7 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
           fence: relayHostFence(host.identity),
           identity: host.identity,
           inContact: false,
+          contactGeneration: 0,
           rows: null,
           confirmed: false,
           watch: null,
@@ -125,6 +128,7 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
       const inContact = shown.get(entry.environmentId)?.health === 'available'
       if (inContact !== entry.inContact) {
         entry.inContact = inContact
+        entry.contactGeneration += 1
         entry.confirmed = false
         this.revision.bump()
       }
@@ -222,6 +226,7 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
   }
 
   private async fetch(hosts: MobileDesktopRelayHosts, entry: ServerEntry): Promise<void> {
+    const { contactGeneration } = entry
     let response: Awaited<ReturnType<MobileDesktopRelayHosts['call']>> | null = null
     try {
       response = await hosts.call(
@@ -244,7 +249,8 @@ export class PairedServerRowsProducer implements ServerWorktreeRows {
       return
     }
     entry.rows = stampServerWorktreeRows(entry.environmentId, reply.data.worktrees)
-    entry.confirmed = entry.inContact
+    // An answer from before a contact gap may keep its rows, but cannot vouch for them now.
+    entry.confirmed = entry.inContact && entry.contactGeneration === contactGeneration
     // Every answer moves the revision: rows carry activity that changes without a catalog event.
     this.revision.bump()
   }

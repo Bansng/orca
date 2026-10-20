@@ -1086,6 +1086,9 @@
         "preparingWorkspace": "Preparando el espacio de trabajo…",
         "creatingWorktree": "Creando el worktree…",
         "fetchingBaseBranch": "Obteniendo la rama base…"
+      },
+      "duplicatePairedServers": {
+        "ambiguousSameServer": "{{value0}} y {{value1}} son el mismo servidor emparejado dos veces. Quita uno en Configuración > Servidores remotos de Orca."
       }
     },
     "hooks": {
@@ -1266,7 +1269,7 @@
       },
       "ipcEvents": {
         "sshManagedServer": {
-          "refusedBlocked": "Este host SSH no pudo moverse a un servidor Orca gestionado. Hosts SSH en Ajustes muestra por qué."
+          "refusedBlocked": "Orca no pudo instalarse en este host SSH. Hosts SSH en Ajustes muestra por qué."
         }
       }
     },
@@ -2128,6 +2131,8 @@
         "851017590d": "Agregar acceso Linear",
         "228b25028f": "Explora y empieza a trabajar en tus issues asignados de Linear directamente desde aquí.",
         "6d56559467": "Conecta tu cuenta Linear",
+        "linearLoginUnreadableTitle": "Vuelve a conectar Linear",
+        "linearLoginUnreadableBody": "No se puede leer el inicio de sesión guardado de Linear. Vuelve a conectarlo en Configuración.",
         "eee68073b2": "Abrir en Jira",
         "9497f2787c": "Iniciar espacio de trabajo",
         "eba87f2edb": "No se encontraron issues de Jira",
@@ -2887,6 +2892,7 @@
               "93e1f6bfca": "Cargando",
               "98730088a6": ". Busca o abre Linear para ver el conjunto completo.",
               "06b887d622": "Mostrando primero",
+              "linearLoginUnreadable": "No se puede leer el inicio de sesión guardado de Linear. Vuelve a conectarlo en Configuración.",
               "2c4b1c2c08": "número",
               "f2cc1e0ff6": "Linear / Proyectos",
               "906b5e4cb8": "Linear / Proyectos / {{value0}}",
@@ -3407,6 +3413,8 @@
           },
           "TerminalRemoteRuntimeReconnectBanner": {
             "retryingTitle": "Reconnecting to remote runtime",
+            "pairingRefusedTitle": "Este host ya no acepta este equipo",
+            "pairingRefusedBody": "Orca no pudo volver a emparejarse con él por SSH. No se detuvo nada en el host. Vuelve a conectar para intentarlo de nuevo.",
             "disconnectedTitle": "Remote runtime disconnected",
             "retryingBody": "Orca está reintentando automáticamente. Este terminal se reanudará si vuelve la conexión.",
             "disconnectedBody": "Automatic retries stopped. Reconnect to resume this terminal session.",
@@ -3897,7 +3905,11 @@
             "97957ad3a3": "Conecta tus cuentas de proveedores de IA para ver su uso en tiempo real y cambiar fácilmente entre cuentas.",
             "9a542f46c7": "Ocultar de la barra de estado",
             "84c3b15dca": "Límites de uso de agentes",
-            "d663430cf9": "Configurar seguimiento de uso"
+            "d663430cf9": "Configurar seguimiento de uso",
+            "remoteLabel": "Sin uso en {{host}}",
+            "remoteTitle": "Uso en {{host}}",
+            "remoteBody": "Este espacio de trabajo se ejecuta en {{host}}, por lo que la barra muestra el uso de ese host. Inicia sesión en un agente allí o enfoca un espacio de trabajo local para ver el uso de este equipo.",
+            "remoteOpenAccounts": "Abrir cuentas de {{host}}"
           },
           "UpdateStatusSegment": {
             "5cd13105a3": "La actualización falló. Haz clic para expandir.",
@@ -4084,7 +4096,11 @@
                 "label": "Inicio de sesión caducado",
                 "message": "El uso de Claude ha caducado. Inicia Claude en esta cuenta para actualizarlo."
               }
-            }
+            },
+            "remoteOwnerNotConfigured": "No configurado en {{server}}",
+            "remoteOwnerSignInSavedHere": "Su inicio de sesión solo está guardado en este equipo.",
+            "claudeNoUsageFromHost": "Sin uso desde {{server}}",
+            "claudeUnknownOnHost": "El uso de Claude no está disponible desde {{server}}. Puede que no haya una sesión iniciada allí o que use facturación por clave de API."
           },
           "SshTargetStatusRow": {
             "sshHost": "Host SSH"
@@ -4213,6 +4229,8 @@
             "access_revoked": "Access revoked",
             "access_revoked_summary": "This server revoked access for this computer",
             "access_revoked_explanation": "Re-pair with a new pairing link from the server to reconnect.",
+            "managed_access_revoked_explanation": "Orca no pudo volver a emparejarse con él por SSH. Conéctate para intentarlo de nuevo.",
+            "connect_access_revoked_explanation": "Conéctate para intentarlo de nuevo.",
             "update_required": "Update required",
             "update_required_summary": "Orca versions are not compatible",
             "update_required_explanation": "Update Orca on this computer or on the server, then connect again.",
@@ -6374,6 +6392,7 @@
           "sshSaveFailed": "No se pudo agregar el host SSH.",
           "serverFieldsRequired": "Se requieren el nombre del servidor y el código de emparejamiento.",
           "serverSaved": "Se agregó servidor remoto.",
+          "serverAlreadyPaired": "Este servidor ya está emparejado como {{value0}}; se actualizó su conexión.",
           "serverSaveFailed": "No se pudo agregar el servidor remoto.",
           "serverTitle": "Agregar servidor remoto",
           "sshTitle": "Agregar host SSH",
@@ -6865,7 +6884,8 @@
           "copySelectedConsoleCookie": "Abra la consola seleccionada, inicie sesión y luego copie el encabezado de solicitud de cookies de DevTools (Red → cualquier solicitud restante → Cookie).",
           "apiKeySelectedEndpoint": "Pegue la clave API desde su consola MiniMax → Claves API. Almacenado localmente y enviado al punto final MiniMax seleccionado para actualizaciones de uso. La clave API tiene prioridad sobre la cookie.",
           "apiKeyInstructions": "Copie la clave API desde su consola MiniMax → Claves API. Una clave API guardada tiene prioridad sobre la cookie; Utilice la tecla Olvidar para volver a la cookie.",
-          "remoteScopeLocalAccountsKeptHostPicker": "Las cuentas gestionadas en este escritorio no cambian. Elige este equipo en el menú Host de la parte superior de Ajustes para verlas."
+          "remoteScopeLocalAccountsKeptHostPicker": "Las cuentas gestionadas en este escritorio no cambian. Elige este equipo en el menú Host de la parte superior de Ajustes para verlas.",
+          "apiKeyUpdateFailed": "No se pudo actualizar la clave de API de MiniMax."
         },
         "AdvancedPane": {
           "40b29e0bf3": "Reiniciar",
@@ -6932,8 +6952,6 @@
           "0d9e293a02": "Refrescar",
           "c9b33eb5c0": "Actualizando…",
           "13647f9f80": "Vuelve a leer PATH de tu shell y vuelve a detectar los Agents instalados",
-          "dc4a2ffdc0": "Expandir override del comando",
-          "cea7d97be1": "Contraer override del comando",
           "db9e9e5887": "Personalizar comando",
           "959b67385b": "Establecer predeterminado",
           "24e032fa34": "Predeterminado",
@@ -6943,9 +6961,6 @@
           "8fbe1f37c1": "Entorno",
           "2d133152fa": "Sin entorno predeterminado",
           "agentPermissions": "Permisos de Agents",
-          "agentPermissionsInfo": "Información de permisos de Agents",
-          "agentPermissionsTooltip": "No se aplica a agents con argumentos de lanzamiento sobrescritos.",
-          "agentPermissionsDescription": "Elige si Orca lanza agents con menos prompts de permisos o con checks manuales.",
           "agentPermissionsYolo": "Yolo",
           "agentPermissionsManual": "Manual",
           "3f1bdf3cb4": "El texto de entorno es demasiado grande para analizarlo de forma segura.",
@@ -8291,6 +8306,7 @@
           "e57dde9d93": "Cambios no guardados"
         },
         "RuntimeAccessGrantList": {
+          "sshAccessCaveat": "Revocar el acceso aquí no impide que alguien con acceso SSH a este equipo vuelva a emparejarse. Para bloquearlo, retira su acceso SSH.",
           "8b82879581": "Cualquier persona con una concesión activa puede conectarse hasta que la revoques. Revocar el acceso compartido desconecta a los clientes activos inmediatamente.",
           "68ec21309f": "Revocar acceso",
           "6f6d5188ed": "Revocar {{value0}}",
@@ -8330,7 +8346,7 @@
           "b5b5114cb0": "Se eliminó {{value0}}.",
           "6cb6eae14f": "No se pudo guardar el runtime.",
           "7b5986c8df": "Conectado a {{value0}}. Para crear proyectos nuevos allí de forma predeterminada, elígelo en Avanzado > Host predeterminado para proyectos nuevos.",
-          "5ef712f407": "Ya existe un servidor llamado \"{{value0}}\".",
+          "serverAlreadyPaired": "Este servidor ya está emparejado como {{value0}}; se actualizó su conexión.",
           "0c55a47480": "Se requieren nombre y código de emparejamiento.",
           "e6410d72c3": "No se pudieron cargar los runtimes.",
           "6ef71985da": "Sin punto final",
@@ -8401,9 +8417,12 @@
           "serverRuntimeUnavailableDescription": "El transporte SSH está conectado, pero el tiempo de ejecución de Orca no respondió. Es posible que el host todavía esté ejecutándose.",
           "serverReconnecting": "Reconectando",
           "accessRevoked": "{{value0}} no longer accepts this computer. Re-pair it with a new access link.",
+          "managedAccessRevoked": "{{value0}} ya no acepta este equipo y Orca no pudo volver a emparejarse con él por SSH. Conéctate para intentarlo de nuevo.",
+          "connectAccessRevoked": "{{value0}} ya no acepta este equipo. Conéctate para intentarlo de nuevo.",
           "repair": "Re-pair…",
           "serverAccessRevoked": "Access revoked",
-          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)"
+          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)",
+          "pairedTwice": "Mismo servidor que {{value0}}, emparejado dos veces. Quita uno para poder editar sus proyectos."
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "Copiar {{value0}}"
@@ -9301,7 +9320,6 @@
             "a79d266f71": "sesión",
             "afbf35be68": "sesión estable",
             "agentPermissions": "Permisos de agentes",
-            "agentPermissionsDescription": "Cambia los permisos predeterminados de los agentes entre Yolo y Manual.",
             "agentRuntime": "Runtime del agente",
             "agentRuntimeDescription": "Elige si los agentes se detectan y ejecutan en Windows o en WSL de forma predeterminada.",
             "7e15b89f6e": "servidor",
@@ -12395,7 +12413,11 @@
           "planLevel": "Plano: {{value0}}",
           "hostOnly": "Cambie el sitio del plan y la clave API en la aplicación de escritorio de la computadora que ejecuta Orca.",
           "detailsUnavailable": "Los detalles de las credenciales del plan solo se pueden leer en la computadora que ejecuta Orca.",
-          "siteUnavailable": "El sitio del plan de host no está disponible"
+          "siteUnavailable": "El sitio del plan de host no está disponible",
+          "keyStoredOnHostHelp": "Guardada en {{host}} y enviada desde allí solo al sitio seleccionado para actualizar el uso. Tiene prioridad sobre el inicio de sesión de la CLI de ZCode.",
+          "usingCliOnHostHelp": "Orca lee el Coding Plan seleccionado del almacén de credenciales de la CLI de ZCode en {{host}}. Guarda una clave de API abajo para vincular el plan allí.",
+          "notConfiguredOnHostHelp": "Guarda la clave de API del plan abajo o inicia sesión con la CLI de ZCode en {{host}}.",
+          "keyOnHostDescription": "Pega la clave de API desde la página API Keys de la consola seleccionada. Se guarda en {{host}} y se envía desde allí solo a ese sitio para actualizar el uso."
         },
         "VoiceMicrophoneSetting": {
           "label": "Micrófono",
@@ -12460,8 +12482,8 @@
           "body": "{{credential}} se almacena sin cifrar: este sistema no tiene ningún conjunto de claves del sistema operativo que Orca pueda usar. Cualquiera que pueda leer su disco o una copia de seguridad del mismo puede leer la credencial. Instale y desbloquee gnome-keyring o kwallet, luego guárdelo nuevamente para sellarlo."
         },
         "sshManagedHostRemove": {
-          "description": "{{label}} ejecuta un servidor Orca gestionado. En Servidores gestionados, usa Detener… para quitar el servidor del host, u Olvidar… si el host ya no existe. Después podrás eliminar este host SSH.",
-          "open": "Abrir Servidores gestionados"
+          "description": "Orca se ejecuta en {{label}}. En Orca en tus hosts SSH, usa Detener… para quitar Orca del host, u Olvidar… si el host ya no existe. Después podrás eliminar este host SSH.",
+          "open": "Abrir Orca en tus hosts SSH"
         },
         "managedServers": {
           "row": {
@@ -12483,10 +12505,11 @@
             "forget": "Olvidar…",
             "confirmForget": "Olvidar en este escritorio",
             "keepLinked": "Mantener vinculado",
-            "forgetDescription": "Desvincula este servidor aquí sin contactar con su host. Si el host vuelve, es posible que el servidor siga ejecutándose allí."
+            "forgetDescription": "Desvincula este servidor aquí sin contactar con su host. Si el host vuelve, es posible que el servidor siga ejecutándose allí.",
+            "title": "Orca en {{host}}"
           },
-          "title": "Servidores gestionados",
-          "description": "Orca instala y ejecuta un servidor en un host SSH vacío y lo mantiene actualizado.",
+          "title": "Orca en tus hosts SSH",
+          "description": "Orca se instala en un host SSH vacío y se mantiene actualizado.",
           "deploy": {
             "host": "Host SSH",
             "hostPlaceholder": "Elige un host SSH vacío",
@@ -12511,8 +12534,9 @@
             "cancelLink": "Cancelar"
           },
           "search": {
-            "title": "Servidores gestionados",
-            "keywordSsh": "ssh"
+            "title": "Orca en tus hosts SSH",
+            "keywordSsh": "ssh",
+            "keywordFormerName": "servidores gestionados"
           },
           "phase": {
             "fenced": "Host bloqueado",
@@ -12531,7 +12555,7 @@
           },
           "blocker": {
             "notFound": "El host SSH ya no existe.",
-            "owned": "Este host SSH ya pertenece a un servidor gestionado.",
+            "owned": "Orca ya se ejecuta en este host SSH.",
             "catalog": "Los proyectos de este host aún no se pueden mover.",
             "terminals": "Los terminales de este host siguen en ejecución ({{count}}). Ciérralos primero.",
             "portForwards": "Los reenvíos de puertos guardados se quedan con el host SSH.",
@@ -12561,17 +12585,18 @@
             "migration": "No se hizo: un movimiento a este servidor quedó sin terminar. Reanúdalo primero.",
             "deferred": "Aún no se hizo: el servidor no está listo para esto. Inténtalo más tarde.",
             "failed": "Orca no pudo completar esto en el servidor. Inténtalo de nuevo."
-          }
+          },
+          "reassurance": "Se ejecuta en cada host y se accede a través de tu propia conexión SSH. Tu código y tus archivos se quedan donde están. Solo la lista de proyectos, pestañas y terminales de Orca pasa al host."
         },
         "sshHostServer": {
-          "sourceChanged": "Una versión anterior de Orca cambió los proyectos de este host. Mueve esos cambios a su servidor gestionado o conserva la versión del servidor para volver a conectarte.",
-          "deploying": "Configurando un servidor Orca gestionado…",
-          "converting": "Moviendo los proyectos de este host a su servidor Orca gestionado…",
-          "connecting": "Conectando al servidor Orca gestionado…",
-          "updating": "Actualizando el servidor gestionado…",
-          "starting": "Iniciando el servidor gestionado…",
-          "notServing": "Orca no pudo confirmar que el servidor gestionado esté respondiendo.",
-          "hostNewer": "Ejecuta un servidor Orca gestionado de una versión más reciente de Orca; conserva esa versión.",
+          "sourceChanged": "Una versión anterior de Orca cambió los proyectos de este host. Mueve esos cambios al servidor de Orca de este host o conserva la versión del servidor para volver a conectarte.",
+          "deploying": "Configurando Orca en {{host}}…",
+          "converting": "Pasando a Orca en {{host}}…",
+          "connecting": "Conectando con Orca en {{host}}…",
+          "updating": "Actualizando Orca en {{host}}…",
+          "starting": "Iniciando Orca en {{host}}…",
+          "notServing": "Orca no pudo confirmar que su servidor en {{host}} esté respondiendo.",
+          "hostNewer": "Ejecuta una versión del servidor de Orca más reciente que esta app; conserva esa versión.",
           "failureDetails": "Detalles",
           "cause": {
             "unsupportedHost": "Orca no tiene una compilación de servidor para este sistema",
@@ -12581,15 +12606,15 @@
             "securitySoftware": "el software de seguridad modificó el runtime del servidor",
             "nativePreflight": "al host le faltan bibliotecas del sistema que el servidor necesita"
           },
-          "updateDeferredLater": "Ejecuta un servidor Orca gestionado; se actualizará en una conexión posterior.",
-          "updateFailedPrevious": "Ejecuta un servidor Orca gestionado en su versión anterior; no se pudo actualizar.",
-          "refusedBlocked": "No se movió a un servidor gestionado: algo en este host impide el movimiento.",
+          "updateDeferredLater": "Ejecuta el servidor de Orca; se actualizará en una conexión posterior.",
+          "updateFailedPrevious": "Ejecuta el servidor de Orca en su versión anterior; no se pudo actualizar.",
+          "refusedBlocked": "Orca aún no está configurado en este host: algo en el host impide el traslado.",
           "unsupported": "Esta versión de Orca no admite este host ({{reason}}). Para seguir usándolo, instala una versión anterior de Orca.",
           "unsupportedUnknown": "Esta versión de Orca no admite este host. Para seguir usándolo, instala una versión anterior de Orca.",
           "tunnelUnsupported": "Esta versión de Orca no admite este host: su servidor SSH no permite el reenvío de puertos y Orca tampoco pudo llegar a su servidor a través de la sesión SSH. Para seguir usándolo, instala una versión anterior de Orca.",
           "setupRetry": "Orca no pudo iniciar su servidor en este host. Intenta conectarte de nuevo.",
-          "moveHeld": "Orca pausó el traslado de los proyectos de este host a su servidor gestionado porque no pudo confirmar la copia del servidor. No se pierde nada: el host conserva sus proyectos y queda bloqueado hasta que termine el traslado. Conéctate de nuevo para reanudarlo. Si el servidor no puede volver, detenlo u olvídalo en Configuración > Servidores gestionados.",
-          "olderTerminalsBridged": "Aún no se ha movido a un servidor administrado: los terminales iniciados por una versión anterior de Orca siguen ejecutándose en los proyectos de este host. Siguen funcionando aquí. Ciérralos o termínalos en el host y vuelve a conectarte.",
+          "moveHeld": "Orca pausó el traslado de los proyectos de este host al servidor de Orca del host porque no pudo confirmar la copia del servidor. No se pierde nada: el host conserva sus proyectos y queda bloqueado hasta que termine el traslado. Conéctate de nuevo para reanudarlo. Si el servidor no puede volver, detenlo u olvídalo en Ajustes > Orca en tus hosts SSH.",
+          "olderTerminalsBridged": "Orca aún no está configurado en este host: los terminales iniciados por una versión anterior de Orca siguen ejecutándose en los proyectos de este host. Siguen funcionando aquí. Ciérralos o termínalos en el host y vuelve a conectarte.",
           "olderTerminalsUncounted": "Los terminales iniciados por una versión anterior de Orca siguen ejecutándose en este host y no se detienen solos. Ciérralos en esa versión de Orca o termínalos en el host y vuelve a conectarte.",
           "olderTerminalsUnverifiable": "Orca no pudo confirmar que los terminales iniciados por una versión anterior de Orca hayan terminado. Vuelve a conectarte para intentarlo de nuevo.",
           "olderTerminals_one": "{{count}} terminal iniciado por una versión anterior de Orca sigue ejecutándose en este host y no se detiene solo. Ciérralo en esa versión de Orca o termínalo en el host y vuelve a conectarte.",
@@ -12598,12 +12623,21 @@
           "linkedProjects_one": "El servidor Orca de este host ya tenía {{paths}}, así que este escritorio ahora usa la copia del servidor. Las pestañas de este escritorio y {{count}} automatización allí no se movieron, y los worktrees que creó allí aparecen como worktrees externos.",
           "linkedProjects_other": "El servidor Orca de este host ya tenía {{paths}}, así que este escritorio ahora usa la copia del servidor. Las pestañas de este escritorio y {{count}} automatizaciones allí no se movieron, y los worktrees que creó allí aparecen como worktrees externos.",
           "linkedProjects": "El servidor Orca de este host ya tenía {{paths}}, así que este escritorio ahora usa la copia del servidor. Las pestañas de este escritorio y {{count}} automatizaciones allí no se movieron, y los worktrees que creó allí aparecen como worktrees externos.",
-          "linkedProjectsNoAutomations": "El servidor Orca de este host ya tenía {{paths}}, así que este escritorio ahora usa la copia del servidor. Las pestañas de este escritorio allí no se movieron, y los worktrees que creó allí aparecen como worktrees externos."
+          "linkedProjectsNoAutomations": "El servidor Orca de este host ya tenía {{paths}}, así que este escritorio ahora usa la copia del servidor. Las pestañas de este escritorio allí no se movieron, y los worktrees que creó allí aparecen como worktrees externos.",
+          "nodeDownloadBlocked": "Ni este equipo ni este host pudieron descargar Node.js, que el servidor de Orca necesita. Usa un mirror de Node.js o revisa la red en ambas máquinas.",
+          "nodeDownloadBlockedNoMirror": "Ni este equipo ni este host pudieron descargar Node.js, que el servidor de Orca necesita. Revisa la red o el proxy en ambas máquinas y vuelve a conectar.",
+          "nodeDownloadBlockedMirrorTried": "Ni este equipo ni este host pudieron descargar Node.js, tampoco desde el mirror de descarga de Node.js. Revisa el ajuste del mirror y vuelve a conectar.",
+          "reassurance": "Se ejecuta en {{host}} y se accede a través de tu propia conexión SSH. Tu código y tus archivos se quedan donde están. Solo la lista de proyectos, pestañas y terminales de Orca pasa a {{host}}.",
+          "launchSessionEnded": "Es posible que los terminales de este Mac hayan perdido el acceso a la red local porque terminó la sesión SSH que inició el servidor de Orca de este host. Reinicia el servidor de Orca para restaurarlo.",
+          "behindRolledBack": "Ejecuta una versión del servidor de Orca más antigua que esta app; la última actualización se revirtió. Usa Actualizar servidor para intentarlo de nuevo.",
+          "behindNoTemplate": "Ejecuta una versión del servidor de Orca que esta app no puede actualizar; esta compilación no incluye un servidor para este host.",
+          "behindMigrating": "Ejecuta el servidor de Orca, que se actualizará cuando termine el traslado de sus proyectos.",
+          "behindCheckFailed": "Ejecuta el servidor de Orca; Orca no pudo comprobar si está por detrás de esta app."
         },
         "deltaMove": {
           "action": "Mover los proyectos nuevos…",
           "title": "Mover los proyectos nuevos",
-          "description": "Una versión anterior de Orca modificó este host después de que se moviera a su servidor gestionado. Esto agrega al servidor lo que creó; nunca sobrescribe lo que el servidor ya tiene.",
+          "description": "Una versión anterior de Orca modificó este host después de que sus proyectos pasaran al servidor de Orca del host. Esto agrega al servidor lo que creó; nunca sobrescribe lo que el servidor ya tiene.",
           "added": "Agregado al servidor",
           "nothingNew": "No hay nada nuevo que agregar.",
           "notReflected": "Modificado o eliminado en la versión anterior; el servidor conserva su propia copia",
@@ -12618,14 +12652,14 @@
         "keepServer": {
           "action": "Conservar la versión del servidor…",
           "title": "Conservar la versión del servidor",
-          "description": "Este host vuelve a su servidor gestionado tal como está. Lo que la versión anterior de Orca agregó o cambió aquí no se mueve; permanece solo en los ajustes guardados de esta computadora hasta que se limpien.",
+          "description": "Este host sigue usando su servidor de Orca tal como está. Lo que la versión anterior de Orca agregó o cambió aquí no se mueve; permanece solo en los ajustes guardados de esta computadora hasta que se limpien.",
           "cancel": "Cancelar",
           "confirm": "Conservar la versión del servidor"
         },
         "moveAnyway": {
           "action": "Mover de todos modos…",
           "title": "Mover este host de todos modos",
-          "description": "Orca mueve este host a su servidor gestionado sin los elementos guardados que aparecen abajo. Se quedan en este equipo y no aparecen en el servidor gestionado. Las ediciones sin guardar se conservan; nunca se eliminan.",
+          "description": "Orca se instala en {{host}} sin los elementos guardados que aparecen abajo. Se quedan en este equipo y no aparecen en {{host}}. Las ediciones sin guardar se conservan; nunca se eliminan.",
           "cancel": "Cancelar",
           "confirm": "Mover de todos modos"
         },
@@ -12673,6 +12707,48 @@
           "submit": "Re-pair",
           "success": "Re-paired with {{name}}",
           "failed": "Re-pair failed"
+        },
+        "usageCredentialHost": {
+          "outdated": "Actualiza Orca en {{host}} para guardar esta clave allí.",
+          "unreachable": "No se pudo conectar con {{host}}, así que no se sabe si hay una clave guardada allí.",
+          "storedOnHost": "Guardada en {{host}}",
+          "miniMaxStorage": "Guardada en {{host}} y enviada desde allí al endpoint de MiniMax seleccionado para actualizar el uso.",
+          "cookieNeedsDesktop": "{{host}} no tiene la app de escritorio de Orca para enviar una cookie de sesión. Guarda una clave de API en su lugar.",
+          "checking": "Comprobando {{host}}…",
+          "sealedElsewhereForgettable": "Guardada por otra app de Orca en {{host}}, que esta no puede leer. Cámbiala en esa app u olvídala aquí.",
+          "unreadableKey": "Orca en {{host}} no puede leer la clave guardada. Reemplázala u olvídala.",
+          "miniMaxApiKeyDescription": "Pega la clave de API desde tu consola de MiniMax → API keys. Se guarda en {{host}} y se envía desde allí al endpoint de MiniMax seleccionado para actualizar el uso. La clave de API tiene prioridad sobre la cookie."
+        },
+        "useUsageHostSettings": {
+          "updateFailed": "No se pudo actualizar el ajuste en {{host}}."
+        },
+        "nodeDistMirrorDialog": {
+          "action": "Usar un mirror de Node.js…",
+          "openSetting": "Abrir ajuste del mirror",
+          "title": "Usar un mirror de Node.js",
+          "description": "El servidor de Orca necesita Node.js, y ni este equipo ni este host pudieron descargarlo de nodejs.org. Un mirror es una copia de nodejs.org/dist que Orca prueba primero en ambas máquinas.",
+          "urlLabel": "URL del mirror",
+          "checksum": "Cada descarga se sigue comprobando con el checksum que Orca fija para esta versión de Node.js. Se guarda en Ajustes > Avanzado > Red.",
+          "cancel": "Cancelar",
+          "save": "Guardar y reintentar",
+          "saveFailed": "Orca no pudo guardar el mirror.",
+          "retryFailed": "Error de conexión",
+          "refusal": {
+            "tooLong": "La URL del mirror es demasiado larga.",
+            "protocol": "Usa una URL de mirror http o https.",
+            "credentials": "La URL del mirror no puede incluir un nombre de usuario ni una contraseña.",
+            "query": "La URL del mirror no puede tener una consulta ni un fragmento.",
+            "invalid": "Introduce una URL de mirror válida."
+          }
+        },
+        "restartServer": {
+          "action": "Reiniciar el servidor de Orca…",
+          "title": "Reiniciar el servidor de Orca",
+          "description": "Orca reinicia su servidor en este host desde tu conexión actual. Solo se reinicia cuando no hay terminales en ejecución en el host, porque los terminales que siguen abiertos se quedan sin acceso. Ciérralos primero.",
+          "terminalsUnknown": "Orca no pudo confirmar si hay terminales en ejecución en este host, así que no reinició el servidor de Orca.",
+          "terminalsRunning": "{{count}} terminales siguen en ejecución en este host. Ciérralos y luego reinicia el servidor de Orca.",
+          "cancel": "Cancelar",
+          "confirm": "Reiniciar"
         }
       },
       "right": {
@@ -14491,7 +14567,9 @@
             "jiraMode": "Jira",
             "jiraSelectBindFailed": "Couldn’t link this Jira issue. Pick the matching site or reconnect Jira, then try again.",
             "emoji": "Emoji",
-            "loadingLinearIssue": "Cargando problema Linear..."
+            "loadingLinearIssue": "Cargando problema Linear...",
+            "linearLoginUnreadableTitle": "Vuelve a conectar Linear",
+            "linearLoginUnreadableBody": "No se puede leer el inicio de sesión guardado de Linear. Vuelve a conectarlo en Configuración."
           },
           "ProjectCombobox": {
             "empty": "Ningún proyecto coincide con tu búsqueda.",
@@ -16018,9 +16096,11 @@
           "copy": "Tareas de copia"
         },
         "ExternalFileChangeBanner": {
-          "7c41e90d12": "Este archivo cambió en el disco mientras tenías ediciones sin guardar. Guardar sobrescribirá el contenido más reciente del disco.",
+          "7c41e90d12": "This file changed on disk while you have unsaved edits. Overwrite replaces the newer disk content.",
           "3fa2b8d417": "Recargar desde disco",
           "a95d02c644": "Mantener mis ediciones",
+          "overwrite": "Overwrite",
+          "keepHint": "Keeps your version. Your next save replaces the version on disk.",
           "5c02de9b31": "Recargado desde disco",
           "d1e830fa22": "Deshacer",
           "90b2ce7d43": "Comparar"
@@ -16059,6 +16139,12 @@
               "notice": {
                 "8c59ce5075": "Failed to save the file. Please try again."
               }
+            },
+            "stale": {
+              "notice": "This file changed on disk since your edits. Use the banner to compare, reload, or overwrite."
+            },
+            "sectionStale": {
+              "notice": "This file changed on disk since this section loaded."
             }
           }
         },
@@ -18041,13 +18127,15 @@
         "couldNotStart": "{{agent}} no pudo iniciarse.",
         "editSavedArguments": "Edítalos en Ajustes > Agentes > Argumentos.",
         "couldNotRestart": "{{agent}} no pudo reiniciarse.",
+        "startTimedOut": "{{agent}} tardó demasiado en iniciarse (sin respuesta a {{method}} después de {{seconds}} s).",
+        "startTimedOutKeepsHappening": "Si esto sigue ocurriendo, es posible que el equipo que ejecuta este chat esté sobrecargado.",
         "codexCliTooOld": "Codex {{installedVersion}} es demasiado antiguo para los chats. Actualiza a {{minimumVersion}} o una versión posterior.",
         "notSignedIn": "{{agent}} no ha iniciado sesión.",
         "claudeSystemNotSignedIn": "Claude no ha iniciado sesión. Ejecuta `{{loginCommand}}` o elige una cuenta en los ajustes de Cuentas de Claude.",
         "claudeManagedNotSignedIn": "Esta cuenta de Claude no ha iniciado sesión. Vuelve a iniciar sesión en la configuración de Cuentas de Claude.",
         "codexSystemNotSignedIn": "Codex no ha iniciado sesión. Ejecuta `{{loginCommand}}`.",
         "codexManagedNotSignedIn": "Esta cuenta de Codex no ha iniciado sesión. Vuelve a iniciar sesión en la configuración de Cuentas de Codex.",
-        "antigravityNotSignedIn": "Antigravity no ha iniciado sesión. Inicia sesión en Ajustes → Cuentas → Antigravity.",
+        "antigravityNotSignedIn": "Antigravity no ha iniciado sesión. Inicia sesión en Ajustes → Cuentas → Antigravity. Después, vuelve a enviar tu mensaje.",
         "cliMissing": "No se encontró {{agent}} en el equipo que ejecuta este chat. Instálelo o revise su Comando en Ajustes → Agentes.",
         "signInFirst": "Inicie sesión primero.",
         "signInThenRunCommand": "Inicie sesión y vuelva a ejecutar /{{command}}.",
@@ -18764,6 +18852,9 @@
         "replaceTitle": "¿Reemplazar este chat?",
         "replaceDescription": "Reanudar “{{title}}” aquí detendrá lo que {{agent}} está haciendo en este chat.",
         "replace": "Reemplazar"
+      },
+      "antigravitySignIn": {
+        "sentence": "Antigravity no ha iniciado sesión. Inicia sesión en <settings>Ajustes → Cuentas → Antigravity</settings>. Después, vuelve a enviar tu mensaje."
       },
       "claudeSignIn": {
         "signingIn": "Iniciando sesión…"

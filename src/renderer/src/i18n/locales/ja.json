@@ -1087,6 +1087,9 @@
         "preparingWorkspace": "ワークスペースを準備中…",
         "creatingWorktree": "ワークツリーを作成中…",
         "fetchingBaseBranch": "ベースブランチを取得中…"
+      },
+      "duplicatePairedServers": {
+        "ambiguousSameServer": "{{value0}} と {{value1}} は二重にペアリングされた同じサーバーです。[設定] > [リモート Orca サーバー] でどちらかを削除してください。"
       }
     },
     "hooks": {
@@ -1267,7 +1270,7 @@
       },
       "ipcEvents": {
         "sshManagedServer": {
-          "refusedBlocked": "この SSH ホストを管理対象の Orca サーバーに移動できませんでした。理由は設定の [SSH ホスト] で確認できます。"
+          "refusedBlocked": "この SSH ホストに Orca をセットアップできませんでした。理由は設定の [SSH ホスト] で確認できます。"
         }
       }
     },
@@ -2129,6 +2132,8 @@
         "851017590d": "Linear アクセスを追加",
         "228b25028f": "ここから直接、割り当てられた Linear Issue を参照して作業を開始できます。",
         "6d56559467": "Linear アカウントを接続する",
+        "linearLoginUnreadableTitle": "Linear を再接続",
+        "linearLoginUnreadableBody": "保存された Linear のログイン情報を読み取れません。設定で再接続してください。",
         "eee68073b2": "Jira で開く",
         "9497f2787c": "ワークスペースを開始",
         "eba87f2edb": "Jira Issue が見つかりません",
@@ -2888,6 +2893,7 @@
               "93e1f6bfca": "読み込み中",
               "98730088a6": "。フルセットについては、Linear を検索するか開きます。",
               "06b887d622": "最初に表示しています",
+              "linearLoginUnreadable": "保存された Linear のログイン情報を読み取れません。設定で再接続してください。",
               "2c4b1c2c08": "番号",
               "f2cc1e0ff6": "Linear / プロジェクト",
               "906b5e4cb8": "Linear / プロジェクト / {{value0}}",
@@ -3412,6 +3418,8 @@
           },
           "TerminalRemoteRuntimeReconnectBanner": {
             "retryingTitle": "リモートランタイムに再接続中",
+            "pairingRefusedTitle": "このホストはこのコンピューターを受け付けなくなりました",
+            "pairingRefusedBody": "Orca は SSH 経由で再ペアリングできませんでした。ホスト上では何も停止していません。再接続してもう一度お試しください。",
             "disconnectedTitle": "リモートランタイムが切断されました",
             "retryingBody": "Orca は自動的に再試行します。接続が復元されると、このターミナルが再開されます。",
             "disconnectedBody": "自動再試行が停止しました。このターミナルセッションを再開するには再接続してください。",
@@ -3902,7 +3910,11 @@
             "97957ad3a3": "AI プロバイダーアカウントに接続すると、その使用状況をリアルタイムで確認し、アカウント間を簡単に切り替えることができます。",
             "9a542f46c7": "ステータスバーから隠す",
             "84c3b15dca": "Agent の使用量制限",
-            "d663430cf9": "使用状況の追跡を設定"
+            "d663430cf9": "使用状況の追跡を設定",
+            "remoteLabel": "{{host}} の使用量はありません",
+            "remoteTitle": "{{host}} の使用量",
+            "remoteBody": "このワークスペースは {{host}} で実行されているため、バーにはそのホストの使用量が表示されます。そのホストで Agent にサインインするか、ローカルのワークスペースにフォーカスすると、このコンピュータの使用量が表示されます。",
+            "remoteOpenAccounts": "{{host}} のアカウントを開く"
           },
           "UpdateStatusSegment": {
             "5cd13105a3": "アップデートに失敗しました。クリックして展開します。",
@@ -4089,7 +4101,11 @@
                 "label": "サインインの有効期限切れ",
                 "message": "Claude の使用状況が期限切れです。このアカウントで Claude を起動して更新してください。"
               }
-            }
+            },
+            "remoteOwnerNotConfigured": "{{server}} では未構成",
+            "remoteOwnerSignInSavedHere": "サインイン情報はこのコンピュータにのみ保存されています。",
+            "claudeNoUsageFromHost": "{{server}} から使用状況なし",
+            "claudeUnknownOnHost": "{{server}} から Claude の使用状況を取得できません。そこでサインインしていないか、API キー課金を使用している可能性があります。"
           },
           "SshTargetStatusRow": {
             "sshHost": "SSH ホスト"
@@ -4193,6 +4209,8 @@
             "access_revoked": "Access revoked",
             "access_revoked_summary": "This server revoked access for this computer",
             "access_revoked_explanation": "Re-pair with a new pairing link from the server to reconnect.",
+            "managed_access_revoked_explanation": "Orca は SSH 経由で再ペアリングできませんでした。接続してもう一度お試しください。",
+            "connect_access_revoked_explanation": "接続してもう一度お試しください。",
             "update_required": "Update required",
             "update_required_summary": "Orca versions are not compatible",
             "update_required_explanation": "Update Orca on this computer or on the server, then connect again.",
@@ -6379,6 +6397,7 @@
           "sshSaveFailed": "SSH ホストの追加に失敗しました。",
           "serverFieldsRequired": "サーバー名とペアリングコードは必須です。",
           "serverSaved": "リモートサーバーが追加されました。",
+          "serverAlreadyPaired": "このサーバーは {{value0}} としてペアリング済みです。接続情報を更新しました。",
           "serverSaveFailed": "リモートサーバーの追加に失敗しました。",
           "serverTitle": "リモートサーバーを追加する",
           "sshTitle": "SSH ホストを追加",
@@ -6855,7 +6874,8 @@
               "help": "ステータスバーの OpenCode Go 使用状況表示に使います。下のセッション Cookie はレガシーコンソール (OpenCode Black) アカウントでのみ必要です。"
             }
           },
-          "remoteScopeLocalAccountsKeptHostPicker": "このデスクトップで管理されているアカウントは変更されていません。表示するには、設定の上部にあるホストメニューでこのコンピュータを選択してください。"
+          "remoteScopeLocalAccountsKeptHostPicker": "このデスクトップで管理されているアカウントは変更されていません。表示するには、設定の上部にあるホストメニューでこのコンピュータを選択してください。",
+          "apiKeyUpdateFailed": "MiniMax API キーを更新できませんでした。"
         },
         "AdvancedPane": {
           "40b29e0bf3": "再起動",
@@ -6922,8 +6942,6 @@
           "0d9e293a02": "更新",
           "c9b33eb5c0": "更新中…",
           "13647f9f80": "シェルの PATH を再読み取り、インストールされている Agent を再検出します",
-          "dc4a2ffdc0": "展開コマンドのオーバーライド",
-          "cea7d97be1": "コマンドのオーバーライドを折りたたむ",
           "db9e9e5887": "カスタマイズコマンド",
           "959b67385b": "デフォルトを設定する",
           "24e032fa34": "デフォルト",
@@ -6933,9 +6951,6 @@
           "8fbe1f37c1": "環境",
           "2d133152fa": "デフォルト環境なし",
           "agentPermissions": "Agent の権限",
-          "agentPermissionsInfo": "Agent 権限情報",
-          "agentPermissionsTooltip": "起動引数を上書きしている Agent には適用されません。",
-          "agentPermissionsDescription": "Orca が権限プロンプトの少ない Agent を起動するか、手動チェックを含む Agent を起動するかを選択します。",
           "agentPermissionsYolo": "Yolo",
           "agentPermissionsManual": "手動",
           "3f1bdf3cb4": "環境テキストが大きすぎるため安全に解析できません。",
@@ -8318,6 +8333,7 @@
           "e57dde9d93": "未保存の変更"
         },
         "RuntimeAccessGrantList": {
+          "sshAccessCaveat": "ここで取り消しても、このコンピューターへの SSH アクセスを持つ人は再びペアリングできます。完全に遮断するには、その SSH アクセスを削除してください。",
           "8b82879581": "アクティブな許可を持っている人は誰でも、許可を取り消すまで接続できます。共有アクセスを取り消すと、アクティブなクライアントはただちに切断されます。",
           "68ec21309f": "アクセスを取り消す",
           "6f6d5188ed": "{{value0}}を取り消す",
@@ -8357,7 +8373,7 @@
           "b5b5114cb0": "{{value0}} を削除しました。",
           "6cb6eae14f": "実行環境の保存に失敗しました。",
           "7b5986c8df": "{{value0}} に接続しました。新規プロジェクトを既定でそこに作成するには、[詳細設定] > [新規プロジェクトの既定ホスト] で選択してください。",
-          "5ef712f407": "「{{value0}}」という名前のサーバーはすでに存在します。",
+          "serverAlreadyPaired": "このサーバーは {{value0}} としてペアリング済みです。接続情報を更新しました。",
           "0c55a47480": "名前とペアリングコードは必須です。",
           "e6410d72c3": "ランタイム環境の読み込みに失敗しました。",
           "6ef71985da": "エンドポイントなし",
@@ -8428,9 +8444,12 @@
           "serverRuntimeUnavailableDescription": "SSH トランスポートは接続されていますが、Orca ランタイムが応答しませんでした。ホストがまだ実行中の可能性があります。",
           "serverReconnecting": "再接続中",
           "accessRevoked": "{{value0}} no longer accepts this computer. Re-pair it with a new access link.",
+          "managedAccessRevoked": "{{value0}} はこのコンピューターを受け付けなくなり、Orca は SSH 経由で再ペアリングできませんでした。接続してもう一度お試しください。",
+          "connectAccessRevoked": "{{value0}} はこのコンピューターを受け付けなくなりました。接続してもう一度お試しください。",
           "repair": "Re-pair…",
           "serverAccessRevoked": "Access revoked",
-          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)"
+          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)",
+          "pairedTwice": "{{value0}} と同じサーバーが二重にペアリングされています。プロジェクトを編集できるよう、どちらかを削除してください。"
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "{{value0}}をコピー"
@@ -9328,7 +9347,6 @@
             "a79d266f71": "セッション",
             "afbf35be68": "安定したセッション",
             "agentPermissions": "Agent の権限",
-            "agentPermissionsDescription": "Agent の権限の既定値を Yolo と Manual で切り替えます。",
             "agentRuntime": "Agent のランタイム",
             "agentRuntimeDescription": "デフォルトで Agent を Windows または WSL のどちらで検出および起動するかを選択します。",
             "runtime": "ランタイム",
@@ -12462,11 +12480,15 @@
           "planLevel": "計画: {{value0}}",
           "hostOnly": "Orca を実行しているコンピュータ上のデスクトップアプリでプランサイトと API キーを変更します。",
           "detailsUnavailable": "プランの認証情報の詳細は、Orca を実行しているコンピュータでのみ読み取ることができます。",
-          "siteUnavailable": "ホストプランサイトが利用できない"
+          "siteUnavailable": "ホストプランサイトが利用できない",
+          "keyStoredOnHostHelp": "{{host}} に保存され、使用量の更新時にそこから選択したサイトにのみ送信されます。ZCode CLI のサインインより優先されます。",
+          "usingCliOnHostHelp": "Orca は {{host}} の ZCode CLI 認証情報ストアから選択した Coding Plan を読み取ります。そこでプランを紐付けるには、下で API キーを保存してください。",
+          "notConfiguredOnHostHelp": "下でプランの API キーを保存するか、{{host}} で ZCode CLI にサインインしてください。",
+          "keyOnHostDescription": "選択したコンソールの API Keys ページから API キーを貼り付けてください。{{host}} に保存され、使用量の更新時にそこからそのサイトにのみ送信されます。"
         },
         "sshManagedHostRemove": {
-          "description": "{{label}} では管理対象の Orca サーバーが実行されています。管理対象サーバーで「停止…」を使ってホストからサーバーを削除するか、ホストがもう存在しない場合は「登録を解除…」を使ってください。その後、この SSH ホストを削除できます。",
-          "open": "管理対象サーバーを開く"
+          "description": "{{label}} では Orca が動作しています。[SSH ホスト上の Orca] で「停止…」を使ってホストから Orca を削除するか、ホストがもう存在しない場合は「登録を解除…」を使ってください。その後、この SSH ホストを削除できます。",
+          "open": "SSH ホスト上の Orca を開く"
         },
         "managedServers": {
           "row": {
@@ -12488,10 +12510,11 @@
             "forget": "登録を解除…",
             "confirmForget": "このデスクトップから登録を解除",
             "keepLinked": "リンクを維持",
-            "forgetDescription": "ホストに接続せずに、このサーバーのリンクをここで解除します。ホストが復帰した場合、サーバーはまだそこで動作している可能性があります。"
+            "forgetDescription": "ホストに接続せずに、このサーバーのリンクをここで解除します。ホストが復帰した場合、サーバーはまだそこで動作している可能性があります。",
+            "title": "{{host}} 上の Orca"
           },
-          "title": "管理対象サーバー",
-          "description": "Orca は空の SSH ホストにサーバーをインストールして実行し、最新の状態に保ちます。",
+          "title": "SSH ホスト上の Orca",
+          "description": "Orca は空の SSH ホストに自身をインストールし、常に最新の状態を保ちます。",
           "deploy": {
             "host": "SSH ホスト",
             "hostPlaceholder": "空の SSH ホストを選択",
@@ -12516,8 +12539,9 @@
             "cancelLink": "キャンセル"
           },
           "search": {
-            "title": "管理対象サーバー",
-            "keywordSsh": "ssh"
+            "title": "SSH ホスト上の Orca",
+            "keywordSsh": "ssh",
+            "keywordFormerName": "管理対象サーバー"
           },
           "phase": {
             "fenced": "ホストのロック完了",
@@ -12536,7 +12560,7 @@
           },
           "blocker": {
             "notFound": "SSH ホストが存在しません。",
-            "owned": "この SSH ホストはすでに管理対象サーバーに属しています。",
+            "owned": "この SSH ホストではすでに Orca が動作しています。",
             "catalog": "このホスト上のプロジェクトはまだ移動できません。",
             "terminals": "このホスト上のターミナルがまだ実行中です（{{count}}）。先に閉じてください。",
             "portForwards": "保存済みのポート転送は SSH ホストに残ります。",
@@ -12566,17 +12590,18 @@
             "migration": "未完了: このサーバーへの移動が終わっていません。先に再開してください。",
             "deferred": "まだ未完了です: サーバーはこの操作の準備ができていません。しばらくしてから、もう一度お試しください。",
             "failed": "Orca はサーバー上でこれを完了できませんでした。もう一度お試しください。"
-          }
+          },
+          "reassurance": "各ホスト上で動作し、あなた自身の SSH 接続を通じて利用します。コードやファイルは今の場所から動きません。ホストに移るのは、Orca のプロジェクト、タブ、ターミナルの一覧だけです。"
         },
         "sshHostServer": {
-          "sourceChanged": "古いバージョンの Orca がこのホストのプロジェクトを変更しました。再接続するには、その変更を管理対象サーバーに移動するか、サーバーのバージョンを維持してください。",
-          "deploying": "管理対象の Orca サーバーをセットアップ中…",
-          "converting": "このホストのプロジェクトを管理対象の Orca サーバーに移動中…",
-          "connecting": "管理対象の Orca サーバーに接続中…",
-          "updating": "管理対象サーバーを更新中…",
-          "starting": "管理対象サーバーを起動中…",
-          "notServing": "Orca は管理対象サーバーが応答していることを確認できませんでした。",
-          "hostNewer": "より上位バージョンの Orca で管理対象 Orca サーバーを実行しています。そのバージョンが維持されます。",
+          "sourceChanged": "古いバージョンの Orca がこのホストのプロジェクトを変更しました。再接続するには、その変更をこのホストの Orca サーバーに移動するか、サーバーのバージョンを維持してください。",
+          "deploying": "{{host}} に Orca をセットアップ中…",
+          "converting": "{{host}} 上の Orca に移行中…",
+          "connecting": "{{host}} 上の Orca に接続中…",
+          "updating": "{{host}} 上の Orca を更新中…",
+          "starting": "{{host}} 上の Orca を起動中…",
+          "notServing": "Orca は {{host}} 上のサーバーが応答していることを確認できませんでした。",
+          "hostNewer": "このアプリより新しい Orca サーバーを実行しています。そのバージョンが維持されます。",
           "failureDetails": "詳細",
           "cause": {
             "unsupportedHost": "Orca にはこのシステム用のサーバービルドがありません",
@@ -12586,15 +12611,15 @@
             "securitySoftware": "セキュリティソフトウェアがサーバーのランタイムを変更しました",
             "nativePreflight": "ホストにサーバーが必要とするシステムライブラリがありません"
           },
-          "updateDeferredLater": "管理対象の Orca サーバーを実行しています。次回の接続時に更新されます。",
-          "updateFailedPrevious": "管理対象の Orca サーバーを以前のバージョンで実行しています。更新に失敗しました。",
-          "refusedBlocked": "管理対象サーバーに移動されませんでした: このホスト上の何かが移動を妨げています。",
+          "updateDeferredLater": "Orca サーバーを実行しています。次回の接続時に更新されます。",
+          "updateFailedPrevious": "Orca サーバーを以前のバージョンで実行しています。更新に失敗しました。",
+          "refusedBlocked": "このホストにはまだ Orca がセットアップされていません: ホスト上の何かが移動を妨げています。",
           "unsupported": "このバージョンの Orca はこのホストをサポートしていません（{{reason}}）。引き続き使用するには、以前のバージョンの Orca をインストールしてください。",
           "unsupportedUnknown": "このバージョンの Orca はこのホストをサポートしていません。引き続き使用するには、以前のバージョンの Orca をインストールしてください。",
           "tunnelUnsupported": "このバージョンの Orca はこのホストをサポートしていません。ホストの SSH サーバーがポート転送を許可しておらず、SSH セッション経由でも Orca のサーバーに接続できませんでした。引き続き使用するには、以前のバージョンの Orca をインストールしてください。",
           "setupRetry": "Orca はこのホストでサーバーを起動できませんでした。もう一度接続してください。",
-          "moveHeld": "サーバー側のコピーを確認できなかったため、Orca はこのホストのプロジェクトを管理対象サーバーへ移動する処理を一時停止しました。データは失われていません。移動が完了するまで、ホストはプロジェクトを保持したままロックされます。再接続すると再開します。サーバーが復帰できない場合は、設定 > 管理対象サーバーで停止するか登録を解除してください。",
-          "olderTerminalsBridged": "まだ管理サーバーに移行していません。以前のバージョンの Orca で開始されたターミナルがこのホストのプロジェクトでまだ実行中です。ターミナルはここで引き続き使えます。閉じるかホスト上で終了してから再接続してください。",
+          "moveHeld": "サーバー側のコピーを確認できなかったため、Orca はこのホストのプロジェクトをホスト上の Orca サーバーへ移動する処理を一時停止しました。データは失われていません。移動が完了するまで、ホストはプロジェクトを保持したままロックされます。再接続すると再開します。サーバーが復帰できない場合は、設定 > SSH ホスト上の Orca で停止するか登録を解除してください。",
+          "olderTerminalsBridged": "このホストにはまだ Orca がセットアップされていません。以前のバージョンの Orca で開始されたターミナルがこのホストのプロジェクトでまだ実行中です。ターミナルはここで引き続き使えます。閉じるかホスト上で終了してから再接続してください。",
           "olderTerminalsUncounted": "以前のバージョンの Orca で開始されたターミナルがこのホストでまだ実行中で、自動では終了しません。そのバージョンの Orca で閉じるか、ホスト上で終了してから再接続してください。",
           "olderTerminalsUnverifiable": "以前のバージョンの Orca で開始されたターミナルが終了したことを確認できませんでした。再接続してもう一度お試しください。",
           "olderTerminals_one": "以前のバージョンの Orca で開始された {{count}} 個のターミナルがこのホストでまだ実行中で、自動では終了しません。そのバージョンの Orca で閉じるか、ホスト上で終了してから再接続してください。",
@@ -12603,12 +12628,21 @@
           "linkedProjects_one": "このホストの Orca サーバーには {{paths}} が既にあったため、このデスクトップはサーバーのコピーを使用します。このデスクトップのタブと {{count}} 件のオートメーションは移動されず、ここで作成したワークツリーは外部ワークツリーとして表示されます。",
           "linkedProjects_other": "このホストの Orca サーバーには {{paths}} が既にあったため、このデスクトップはサーバーのコピーを使用します。このデスクトップのタブと {{count}} 件のオートメーションは移動されず、ここで作成したワークツリーは外部ワークツリーとして表示されます。",
           "linkedProjects": "このホストの Orca サーバーには {{paths}} が既にあったため、このデスクトップはサーバーのコピーを使用します。このデスクトップのタブと {{count}} 件のオートメーションは移動されず、ここで作成したワークツリーは外部ワークツリーとして表示されます。",
-          "linkedProjectsNoAutomations": "このホストの Orca サーバーには {{paths}} が既にあったため、このデスクトップはサーバーのコピーを使用します。このデスクトップのタブは移動されず、ここで作成したワークツリーは外部ワークツリーとして表示されます。"
+          "linkedProjectsNoAutomations": "このホストの Orca サーバーには {{paths}} が既にあったため、このデスクトップはサーバーのコピーを使用します。このデスクトップのタブは移動されず、ここで作成したワークツリーは外部ワークツリーとして表示されます。",
+          "nodeDownloadBlocked": "Orca のサーバーに必要な Node.js を、このコンピュータとこのホストのどちらもダウンロードできませんでした。Node.js のミラーを使うか、両方のマシンのネットワークを確認してください。",
+          "nodeDownloadBlockedNoMirror": "Orca のサーバーに必要な Node.js を、このコンピュータとこのホストのどちらもダウンロードできませんでした。両方のマシンのネットワークまたはプロキシを確認してから、もう一度接続してください。",
+          "nodeDownloadBlockedMirrorTried": "このコンピュータとこのホストのどちらも、Node.js のダウンロードミラーを含めて Node.js をダウンロードできませんでした。ミラーの設定を確認してから、もう一度接続してください。",
+          "reassurance": "{{host}} 上で動作し、あなた自身の SSH 接続を通じて利用します。コードやファイルは今の場所から動きません。{{host}} に移るのは、Orca のプロジェクト、タブ、ターミナルの一覧だけです。",
+          "launchSessionEnded": "このホストの Orca サーバーを起動した SSH セッションが終了したため、この Mac のターミナルがローカルネットワークにアクセスできなくなっている可能性があります。Orca サーバーを再起動すると復元されます。",
+          "behindRolledBack": "このアプリより古い Orca サーバーを実行しています。前回の更新はロールバックされました。[サーバーを更新] で再試行してください。",
+          "behindNoTemplate": "このアプリでは更新できない Orca サーバーを実行しています。このビルドにはこのホスト用のサーバーが含まれていません。",
+          "behindMigrating": "Orca サーバーを実行しています。プロジェクトの移動が完了した後に更新されます。",
+          "behindCheckFailed": "Orca サーバーを実行しています。Orca はこのアプリより古いかどうかを確認できませんでした。"
         },
         "deltaMove": {
           "action": "新規プロジェクトを移動…",
           "title": "新規プロジェクトを移動",
-          "description": "このホストは、管理対象サーバーに移動したあとに古いバージョンの Orca によって変更されました。これは作成されたものをサーバーに追加するもので、サーバーにすでにあるものをマージして上書きすることはありません。",
+          "description": "このホストのプロジェクトがホスト上の Orca サーバーに移動したあとに、古いバージョンの Orca がこのホストを変更しました。これは作成されたものをサーバーに追加するもので、サーバーにすでにあるものをマージして上書きすることはありません。",
           "added": "サーバーに追加されました",
           "nothingNew": "新規に追加するものはありません。",
           "notReflected": "古いバージョンで変更または削除されました。サーバーは自身のコピーを保持します",
@@ -12623,14 +12657,14 @@
         "keepServer": {
           "action": "サーバーのバージョンを保持…",
           "title": "サーバーのバージョンを保持",
-          "description": "このホストはそのまま管理対象サーバーに戻ります。古いバージョンの Orca がここに追加または変更したものは移動されず、クリーンアップされるまでこのコンピュータの保存済み設定にのみ残ります。",
+          "description": "このホストは現在の Orca サーバーをそのまま使い続けます。古いバージョンの Orca がここに追加または変更したものは移動されず、クリーンアップされるまでこのコンピュータの保存済み設定にのみ残ります。",
           "cancel": "キャンセル",
           "confirm": "サーバーのバージョンを保持"
         },
         "moveAnyway": {
           "action": "それでも移行…",
           "title": "このホストをそれでも移行",
-          "description": "Orca はこのホストを管理サーバーへ移行しますが、以下の保存済み項目は含めません。これらはこのコンピューターに残り、管理サーバーには表示されません。未保存の編集は保持され、削除されることはありません。",
+          "description": "Orca は以下の保存済み項目を含めずに {{host}} に自身をセットアップします。これらはこのコンピューターに残り、{{host}} には表示されません。未保存の編集は保持され、削除されることはありません。",
           "cancel": "キャンセル",
           "confirm": "それでも移行"
         },
@@ -12678,6 +12712,48 @@
           "submit": "Re-pair",
           "success": "Re-paired with {{name}}",
           "failed": "Re-pair failed"
+        },
+        "usageCredentialHost": {
+          "outdated": "このキーを {{host}} に保存するには、そのホストの Orca を更新してください。",
+          "unreachable": "{{host}} に接続できないため、キーが保存されているかどうかは不明です。",
+          "storedOnHost": "{{host}} に保存済み",
+          "miniMaxStorage": "{{host}} に保存され、使用量の更新時にそこから選択した MiniMax エンドポイントへ送信されます。",
+          "cookieNeedsDesktop": "{{host}} にはセッション Cookie を送信する Orca デスクトップアプリがありません。代わりに API キーを保存してください。",
+          "checking": "{{host}} を確認しています…",
+          "sealedElsewhereForgettable": "{{host}} の別の Orca アプリで保存されており、このアプリでは読み取れません。そのアプリで変更するか、ここで削除してください。",
+          "unreadableKey": "{{host}} の Orca は保存済みのキーを読み取れません。置き換えるか削除してください。",
+          "miniMaxApiKeyDescription": "MiniMax コンソールの API keys から API キーを貼り付けてください。{{host}} に保存され、使用量の更新時にそこから選択した MiniMax エンドポイントへ送信されます。API キーは Cookie より優先されます。"
+        },
+        "useUsageHostSettings": {
+          "updateFailed": "{{host}} の設定を更新できませんでした。"
+        },
+        "nodeDistMirrorDialog": {
+          "action": "Node.js のミラーを使う…",
+          "openSetting": "ミラーの設定を開く",
+          "title": "Node.js のミラーを使う",
+          "description": "Orca のサーバーには Node.js が必要ですが、このコンピュータとこのホストのどちらも nodejs.org からダウンロードできませんでした。ミラーは nodejs.org/dist のコピーで、Orca は両方のマシンでまずミラーを試します。",
+          "urlLabel": "ミラーの URL",
+          "checksum": "ダウンロードしたファイルは、引き続き Orca がこの Node.js リリースに固定しているチェックサムで検証されます。設定 > 詳細設定 > ネットワーク に保存されます。",
+          "cancel": "キャンセル",
+          "save": "保存して再試行",
+          "saveFailed": "Orca はミラーを保存できませんでした。",
+          "retryFailed": "接続に失敗しました",
+          "refusal": {
+            "tooLong": "ミラーの URL が長すぎます。",
+            "protocol": "http または https のミラー URL を使ってください。",
+            "credentials": "ミラーの URL にユーザー名やパスワードは含められません。",
+            "query": "ミラーの URL にクエリやフラグメントは含められません。",
+            "invalid": "有効なミラーの URL を入力してください。"
+          }
+        },
+        "restartServer": {
+          "action": "Orca サーバーを再起動…",
+          "title": "Orca サーバーを再起動",
+          "description": "Orca は現在の接続からこのホストの Orca サーバーを再起動します。開いたままのターミナルはアクセスが切れたままになるため、ホスト上でターミナルが実行されていない場合にのみ再起動します。先に閉じてください。",
+          "terminalsUnknown": "このホストでターミナルが実行中かどうかを確認できなかったため、Orca サーバーを再起動しませんでした。",
+          "terminalsRunning": "このホストでは {{count}} 個のターミナルがまだ実行中です。閉じてから Orca サーバーを再起動してください。",
+          "cancel": "キャンセル",
+          "confirm": "再起動"
         }
       },
       "right": {
@@ -14496,7 +14572,9 @@
             "jiraMode": "Jira",
             "jiraSelectBindFailed": "この Jira Issue をリンクできませんでした。該当するサイトを選択するか Jira に再接続してから、もう一度お試しください。",
             "emoji": "絵文字",
-            "loadingLinearIssue": "Linear Issue を読み込み中…"
+            "loadingLinearIssue": "Linear Issue を読み込み中…",
+            "linearLoginUnreadableTitle": "Linear を再接続",
+            "linearLoginUnreadableBody": "保存された Linear のログイン情報を読み取れません。設定で再接続してください。"
           },
           "ProjectCombobox": {
             "empty": "検索条件に一致するプロジェクトはありません。",
@@ -16023,9 +16101,11 @@
           "copy": "コピージョブ"
         },
         "ExternalFileChangeBanner": {
-          "7c41e90d12": "未保存の編集がある状態で、このファイルがディスク上で変更されました。保存すると、ディスク上の最新の内容を上書きします。",
+          "7c41e90d12": "This file changed on disk while you have unsaved edits. Overwrite replaces the newer disk content.",
           "3fa2b8d417": "ディスクから再読み込み",
           "a95d02c644": "編集内容を保持",
+          "overwrite": "Overwrite",
+          "keepHint": "Keeps your version. Your next save replaces the version on disk.",
           "5c02de9b31": "ディスクから再読み込みしました",
           "d1e830fa22": "元に戻す",
           "90b2ce7d43": "比較"
@@ -16064,6 +16144,12 @@
               "notice": {
                 "8c59ce5075": "ファイルの保存に失敗しました。もう一度お試しください。"
               }
+            },
+            "stale": {
+              "notice": "This file changed on disk since your edits. Use the banner to compare, reload, or overwrite."
+            },
+            "sectionStale": {
+              "notice": "This file changed on disk since this section loaded."
             }
           }
         },
@@ -18081,13 +18167,15 @@
         "couldNotStart": "{{agent}} を起動できませんでした。",
         "editSavedArguments": "設定 > Agent > 引数で編集してください。",
         "couldNotRestart": "{{agent}} を再起動できませんでした。",
+        "startTimedOut": "{{agent}} の起動に時間がかかりすぎました ({{seconds}} 秒経っても {{method}} に応答がありません)。",
+        "startTimedOutKeepsHappening": "これが繰り返し起こる場合は、このチャットを実行しているコンピューターが過負荷になっている可能性があります。",
         "codexCliTooOld": "Codex {{installedVersion}} はチャットには古すぎます。{{minimumVersion}} 以降に更新してください。",
         "notSignedIn": "{{agent}} にサインインしていません。",
         "claudeSystemNotSignedIn": "Claude にサインインしていません。`{{loginCommand}}` を実行するか、Claude アカウント設定でアカウントを選択してください。",
         "claudeManagedNotSignedIn": "この Claude アカウントにサインインしていません。設定の Claude アカウントで再度サインインしてください。",
         "codexSystemNotSignedIn": "Codex にサインインしていません。`{{loginCommand}}` を実行してください。",
         "codexManagedNotSignedIn": "この Codex アカウントにサインインしていません。設定の Codex アカウントで再度サインインしてください。",
-        "antigravityNotSignedIn": "Antigravity にサインインしていません。[設定] → [アカウント] → [Antigravity] でサインインしてください。",
+        "antigravityNotSignedIn": "Antigravity にサインインしていません。設定 → アカウント → Antigravityでサインインしてから、メッセージをもう一度送信してください。",
         "cliMissing": "このチャットを実行しているコンピューターで {{agent}} が見つかりませんでした。インストールするか、[設定] → [Agent] の [コマンド] を確認してください。",
         "signInFirst": "先にサインインしてください。",
         "signInThenRunCommand": "サインインしてから、/{{command}} をもう一度実行してください。",
@@ -18804,6 +18892,9 @@
         "replaceTitle": "このチャットを置き換えますか？",
         "replaceDescription": "ここで「{{title}}」を再開すると、このチャットで {{agent}} が行っている処理が停止します。",
         "replace": "置き換える"
+      },
+      "antigravitySignIn": {
+        "sentence": "Antigravity にサインインしていません。<settings>設定 → アカウント → Antigravity</settings>でサインインしてから、メッセージをもう一度送信してください。"
       },
       "claudeSignIn": {
         "signingIn": "サインイン中…"

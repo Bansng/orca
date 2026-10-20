@@ -1087,6 +1087,9 @@
         "preparingWorkspace": "正在准备工作区…",
         "creatingWorktree": "正在创建工作树…",
         "fetchingBaseBranch": "正在获取基础分支…"
+      },
+      "duplicatePairedServers": {
+        "ambiguousSameServer": "{{value0}} 和 {{value1}} 是同一台服务器被配对了两次。请在“设置 > 远程 Orca 服务器”中移除其中一个。"
       }
     },
     "hooks": {
@@ -1267,7 +1270,7 @@
       },
       "ipcEvents": {
         "sshManagedServer": {
-          "refusedBlocked": "此 SSH 主机无法迁移到受管的 Orca 服务器。设置中的“SSH 主机”会显示原因。"
+          "refusedBlocked": "无法在此 SSH 主机上设置 Orca。设置中的“SSH 主机”会显示原因。"
         }
       }
     },
@@ -2129,6 +2132,8 @@
         "851017590d": "添加 Linear 访问",
         "228b25028f": "直接从这里浏览并开始处理分配给您的 Linear 议题。",
         "6d56559467": "连接您的 Linear 账户",
+        "linearLoginUnreadableTitle": "重新连接 Linear",
+        "linearLoginUnreadableBody": "无法读取已保存的 Linear 登录信息。请在设置中重新连接。",
         "eee68073b2": "在 Jira 中打开",
         "9497f2787c": "启动工作区",
         "eba87f2edb": "未发现 Jira 议题",
@@ -2888,6 +2893,7 @@
               "93e1f6bfca": "加载中",
               "98730088a6": "。在 Linear 中搜索或打开以查看完整列表。",
               "06b887d622": "首先显示",
+              "linearLoginUnreadable": "无法读取已保存的 Linear 登录信息。请在设置中重新连接。",
               "2c4b1c2c08": "数字",
               "f2cc1e0ff6": "Linear/项目",
               "906b5e4cb8": "Linear/项目/{{value0}}",
@@ -3412,6 +3418,8 @@
           },
           "TerminalRemoteRuntimeReconnectBanner": {
             "retryingTitle": "正在重新连接到远程运行时",
+            "pairingRefusedTitle": "此主机不再接受这台电脑",
+            "pairingRefusedBody": "Orca 无法通过 SSH 重新与其配对。主机上没有任何内容被停止。请重新连接以重试。",
             "disconnectedTitle": "远程运行时已断开连接",
             "retryingBody": "Orca 正在自动重试。如果连接恢复，此终端将恢复。",
             "disconnectedBody": "自动重试已停止。重新连接以恢复此终端会话。",
@@ -3902,7 +3910,11 @@
             "97957ad3a3": "连接 AI 提供商账户，即可实时查看使用量并在账户间快速切换。",
             "9a542f46c7": "从状态栏隐藏",
             "84c3b15dca": "智能体用量限制",
-            "d663430cf9": "设置用量跟踪"
+            "d663430cf9": "设置用量跟踪",
+            "remoteLabel": "{{host}} 上没有用量",
+            "remoteTitle": "{{host}} 上的用量",
+            "remoteBody": "此工作区运行在 {{host}} 上，因此状态栏显示的是该主机的用量。请在该主机上登录智能体，或切换到本地工作区以查看这台电脑的用量。",
+            "remoteOpenAccounts": "打开 {{host}} 的账户"
           },
           "UpdateStatusSegment": {
             "5cd13105a3": "更新失败。单击以展开。",
@@ -4089,7 +4101,11 @@
                 "label": "登录已过期",
                 "message": "Claude 用量已过期。请在此账户中启动 Claude 以刷新。"
               }
-            }
+            },
+            "remoteOwnerNotConfigured": "未在 {{server}} 上配置",
+            "remoteOwnerSignInSavedHere": "其登录信息仅保存在此电脑上。",
+            "claudeNoUsageFromHost": "{{server}} 无用量数据",
+            "claudeUnknownOnHost": "无法从 {{server}} 获取 Claude 用量。可能未在那里登录，或使用的是 API 密钥计费。"
           },
           "SshTargetStatusRow": {
             "sshHost": "SSH 主机"
@@ -4193,6 +4209,8 @@
             "access_revoked": "Access revoked",
             "access_revoked_summary": "This server revoked access for this computer",
             "access_revoked_explanation": "Re-pair with a new pairing link from the server to reconnect.",
+            "managed_access_revoked_explanation": "Orca 无法通过 SSH 重新与其配对。请连接以重试。",
+            "connect_access_revoked_explanation": "请连接以重试。",
             "update_required": "Update required",
             "update_required_summary": "Orca versions are not compatible",
             "update_required_explanation": "Update Orca on this computer or on the server, then connect again.",
@@ -6379,6 +6397,7 @@
           "sshSaveFailed": "添加 SSH 主机失败。",
           "serverFieldsRequired": "必须填写服务器名称和配对码。",
           "serverSaved": "已添加远程服务器。",
+          "serverAlreadyPaired": "此服务器已作为 {{value0}} 配对；已更新其连接。",
           "serverSaveFailed": "添加远程服务器失败。",
           "serverTitle": "添加远程服务器",
           "sshTitle": "添加 SSH 主机",
@@ -6855,7 +6874,8 @@
               "help": "用于在状态栏中显示 OpenCode Go 使用情况。下面的会话 Cookie 仅旧版控制台 (OpenCode Black) 账号需要。"
             }
           },
-          "remoteScopeLocalAccountsKeptHostPicker": "在此桌面上管理的账户保持不变。请在设置顶部的“主机”菜单中选择此计算机以查看它们。"
+          "remoteScopeLocalAccountsKeptHostPicker": "在此桌面上管理的账户保持不变。请在设置顶部的“主机”菜单中选择此计算机以查看它们。",
+          "apiKeyUpdateFailed": "MiniMax API 密钥更新失败。"
         },
         "AdvancedPane": {
           "40b29e0bf3": "重新启动",
@@ -6922,8 +6942,6 @@
           "0d9e293a02": "刷新",
           "c9b33eb5c0": "刷新中…",
           "13647f9f80": "重新读取 shell PATH 并重新检测已安装的智能体",
-          "dc4a2ffdc0": "扩展命令覆盖",
-          "cea7d97be1": "折叠命令覆盖",
           "db9e9e5887": "自定义命令",
           "959b67385b": "设置默认值",
           "24e032fa34": "默认",
@@ -6933,9 +6951,6 @@
           "8fbe1f37c1": "环境",
           "2d133152fa": "无默认环境",
           "agentPermissions": "智能体权限",
-          "agentPermissionsInfo": "智能体权限信息",
-          "agentPermissionsTooltip": "切换模式时，自定义智能体参数保持不变。",
-          "agentPermissionsDescription": "选择 Orca 是以更少的权限提示启动智能体，还是手动检查。",
           "agentPermissionsYolo": "Yolo",
           "agentPermissionsManual": "手动",
           "3f1bdf3cb4": "环境文本过长，无法安全解析。",
@@ -8281,6 +8296,7 @@
           "e57dde9d93": "未保存的更改"
         },
         "RuntimeAccessGrantList": {
+          "sshAccessCaveat": "在此撤销并不能阻止拥有这台电脑 SSH 访问权限的人重新配对。要彻底阻止，请移除其 SSH 访问权限。",
           "8b82879581": "任何拥有有效授权的人都可以连接，直到您撤销授权为止。撤销共享访问会立即断开活动客户端的连接。",
           "68ec21309f": "撤销访问权限",
           "6f6d5188ed": "撤销 {{value0}}",
@@ -8320,7 +8336,7 @@
           "b5b5114cb0": "删除了 {{value0}}。",
           "6cb6eae14f": "无法保存运行时环境。",
           "7b5986c8df": "已连接到 {{value0}}。若要默认在其上创建新项目，请在“高级 > 新项目的默认主机”中选择它。",
-          "5ef712f407": "名为“{{value0}}”的服务器已存在。",
+          "serverAlreadyPaired": "此服务器已作为 {{value0}} 配对；已更新其连接。",
           "0c55a47480": "需要名称和配对代码。",
           "e6410d72c3": "无法加载运行时环境。",
           "6ef71985da": "无终点",
@@ -8391,9 +8407,12 @@
           "serverRuntimeUnavailableDescription": "SSH 传输已连接，但 Orca 运行时未应答。主机可能仍在运行。",
           "serverReconnecting": "重新连接",
           "accessRevoked": "{{value0}} no longer accepts this computer. Re-pair it with a new access link.",
+          "managedAccessRevoked": "{{value0}} 不再接受这台电脑，且 Orca 无法通过 SSH 重新与其配对。请连接以重试。",
+          "connectAccessRevoked": "{{value0}} 不再接受这台电脑。请连接以重试。",
           "repair": "Re-pair…",
           "serverAccessRevoked": "Access revoked",
-          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)"
+          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)",
+          "pairedTwice": "与 {{value0}} 是同一台服务器，被配对了两次。请移除其中一个，以便编辑其项目。"
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "复制 {{value0}}"
@@ -9291,7 +9310,6 @@
             "a79d266f71": "会话",
             "afbf35be68": "稳定会话",
             "agentPermissions": "智能体权限",
-            "agentPermissionsDescription": "在 Yolo 和手动之间切换智能体权限默认值。",
             "agentRuntime": "智能体运行时",
             "agentRuntimeDescription": "选择默认在 Windows 还是 WSL 中检测并启动智能体。",
             "runtime": "运行时",
@@ -12468,7 +12486,11 @@
           "planLevel": "套餐：{{value0}}",
           "hostOnly": "请在运行 Orca 的电脑上的桌面应用中更改套餐站点和 API 密钥。",
           "detailsUnavailable": "计划凭据详细信息只能在运行 Orca 的计算机上读取。",
-          "siteUnavailable": "主机计划网站不可用"
+          "siteUnavailable": "主机计划网站不可用",
+          "keyStoredOnHostHelp": "保存在 {{host}}，刷新用量时仅从那里发送到所选站点。它优先于 ZCode CLI 登录。",
+          "usingCliOnHostHelp": "Orca 从 {{host}} 上的 ZCode CLI 凭据存储读取所选的 Coding Plan。在下方保存 API 密钥即可在那里关联该套餐。",
+          "notConfiguredOnHostHelp": "在下方保存套餐 API 密钥，或在 {{host}} 上使用 ZCode CLI 登录。",
+          "keyOnHostDescription": "从所选控制台的 API Keys 页面粘贴 API 密钥。保存在 {{host}}，刷新用量时仅从那里发送到该站点。"
         },
         "NotificationHostToggles": {
           "offCount": "{{count}} 台已关闭",
@@ -12479,8 +12501,8 @@
           "body": "{{credential}} 未加密存储 — 该系统没有 Orca 可以使用的操作系统密钥环。任何可以读取您的磁盘或其备份的人都可以读取该凭据。安装并解锁 gnome-keyring 或 kwallet，然后再次保存以密封它。"
         },
         "sshManagedHostRemove": {
-          "description": "{{label}} 运行着一个受管的 Orca 服务器。请在“受管服务器”中使用“停止…”从主机移除该服务器；如果主机已不存在，请使用“忘记…”。之后即可移除此 SSH 主机。",
-          "open": "打开受管服务器"
+          "description": "Orca 正在 {{label}} 上运行。请在“SSH 主机上的 Orca”中使用“停止…”从主机移除 Orca；如果主机已不存在，请使用“忘记…”。之后即可移除此 SSH 主机。",
+          "open": "打开“SSH 主机上的 Orca”"
         },
         "managedServers": {
           "row": {
@@ -12502,10 +12524,11 @@
             "forget": "忘记…",
             "confirmForget": "在此桌面上忘记",
             "keepLinked": "保持关联",
-            "forgetDescription": "在此处取消关联此服务器，而不联系其主机。如果主机恢复，服务器可能仍在那里运行。"
+            "forgetDescription": "在此处取消关联此服务器，而不联系其主机。如果主机恢复，服务器可能仍在那里运行。",
+            "title": "{{host}} 上的 Orca"
           },
-          "title": "受管服务器",
-          "description": "Orca 会在空的 SSH 主机上安装并运行服务器，并使其保持最新。",
+          "title": "SSH 主机上的 Orca",
+          "description": "Orca 会将自身安装到空的 SSH 主机上，并自动保持最新。",
           "deploy": {
             "host": "SSH 主机",
             "hostPlaceholder": "选择一个空的 SSH 主机",
@@ -12530,8 +12553,9 @@
             "cancelLink": "取消"
           },
           "search": {
-            "title": "受管服务器",
-            "keywordSsh": "ssh"
+            "title": "SSH 主机上的 Orca",
+            "keywordSsh": "ssh",
+            "keywordFormerName": "受管服务器"
           },
           "phase": {
             "fenced": "主机已锁定",
@@ -12550,7 +12574,7 @@
           },
           "blocker": {
             "notFound": "该 SSH 主机已不存在。",
-            "owned": "此 SSH 主机已属于一个受管服务器。",
+            "owned": "Orca 已在此 SSH 主机上运行。",
             "catalog": "此主机上的项目尚无法迁移。",
             "terminals": "此主机上的终端仍在运行（{{count}}）。请先关闭它们。",
             "portForwards": "已保存的端口转发会保留在 SSH 主机上。",
@@ -12580,17 +12604,18 @@
             "migration": "未完成：迁移到此服务器的操作尚未完成。请先继续该操作。",
             "deferred": "尚未完成：服务器尚未准备好执行此操作。请稍后重试。",
             "failed": "Orca 无法在服务器上完成此操作。请重试。"
-          }
+          },
+          "reassurance": "在各个主机上运行，通过你自己的 SSH 连接访问。你的代码和文件留在原处。只有 Orca 的项目、标签页和终端列表会移到该主机。"
         },
         "sshHostServer": {
-          "sourceChanged": "较旧版本的 Orca 更改了此主机的项目。要重新连接，请将这些更改迁移到其受管服务器，或保留服务器版本。",
-          "deploying": "正在设置受管的 Orca 服务器…",
-          "converting": "正在将此主机的项目迁移到其受管的 Orca 服务器…",
-          "connecting": "正在连接到受管的 Orca 服务器…",
-          "updating": "正在更新受管服务器…",
-          "starting": "正在启动受管服务器…",
-          "notServing": "Orca 无法确认受管服务器是否正在响应。",
-          "hostNewer": "运行来自较新版本 Orca 的受管 Orca 服务器；它会保留该版本。",
+          "sourceChanged": "较旧版本的 Orca 更改了此主机的项目。要重新连接，请将这些更改迁移到此主机上的 Orca 服务器，或保留服务器版本。",
+          "deploying": "正在 {{host}} 上设置 Orca…",
+          "converting": "正在迁移到 {{host}} 上的 Orca…",
+          "connecting": "正在连接到 {{host}} 上的 Orca…",
+          "updating": "正在更新 {{host}} 上的 Orca…",
+          "starting": "正在启动 {{host}} 上的 Orca…",
+          "notServing": "Orca 无法确认其在 {{host}} 上的服务器是否正在响应。",
+          "hostNewer": "运行的 Orca 服务器比此应用新；它会保留该版本。",
           "failureDetails": "详情",
           "cause": {
             "unsupportedHost": "Orca 没有适用于此系统的服务器构建",
@@ -12600,15 +12625,15 @@
             "securitySoftware": "安全软件更改了服务器的运行时",
             "nativePreflight": "主机缺少服务器所需的系统库"
           },
-          "updateDeferredLater": "运行受管的 Orca 服务器；它会在下次连接时更新。",
-          "updateFailedPrevious": "在其先前版本上运行受管的 Orca 服务器；更新失败。",
-          "refusedBlocked": "未迁移到受管服务器：此主机上的某些因素阻止了迁移。",
+          "updateDeferredLater": "运行 Orca 服务器；它会在下次连接时更新。",
+          "updateFailedPrevious": "在其先前版本上运行 Orca 服务器；更新失败。",
+          "refusedBlocked": "此主机尚未设置 Orca：主机上的某些因素阻止了迁移。",
           "unsupported": "此版本的 Orca 不支持此主机（{{reason}}）。如需继续使用，请安装旧版本的 Orca。",
           "unsupportedUnknown": "此版本的 Orca 不支持此主机。如需继续使用，请安装旧版本的 Orca。",
           "tunnelUnsupported": "此版本的 Orca 不支持此主机：其 SSH 服务器不允许端口转发，Orca 也无法通过 SSH 会话连接到其服务器。如需继续使用，请安装旧版本的 Orca。",
           "setupRetry": "Orca 无法在此主机上启动其服务器。请重新连接。",
-          "moveHeld": "由于无法确认服务器上的副本，Orca 已暂停将此主机的项目迁移到其受管服务器。没有任何数据丢失：在迁移完成之前，主机会保留其项目并保持锁定。重新连接即可继续。如果服务器无法恢复，请在“设置 > 受管服务器”中停止或忘记它。",
-          "olderTerminalsBridged": "尚未迁移到托管服务器：由旧版本 Orca 启动的终端仍在此主机的项目中运行。它们在这里仍可正常使用。请关闭它们或在主机上结束它们，然后重新连接。",
+          "moveHeld": "由于无法确认服务器上的副本，Orca 已暂停将此主机的项目迁移到主机上的 Orca 服务器。没有任何数据丢失：在迁移完成之前，主机会保留其项目并保持锁定。重新连接即可继续。如果服务器无法恢复，请在“设置 > SSH 主机上的 Orca”中停止或忘记它。",
+          "olderTerminalsBridged": "此主机尚未设置 Orca：由旧版本 Orca 启动的终端仍在此主机的项目中运行。它们在这里仍可正常使用。请关闭它们或在主机上结束它们，然后重新连接。",
           "olderTerminalsUncounted": "由旧版本 Orca 启动的终端仍在此主机上运行，且不会自行停止。请在该版本的 Orca 中关闭它们，或在主机上结束它们，然后重新连接。",
           "olderTerminalsUnverifiable": "Orca 无法确认由旧版本 Orca 启动的终端是否已退出。请重新连接后重试。",
           "olderTerminals_one": "由旧版本 Orca 启动的 {{count}} 个终端仍在此主机上运行，且不会自行停止。请在该版本的 Orca 中关闭它们，或在主机上结束它们，然后重新连接。",
@@ -12617,12 +12642,21 @@
           "linkedProjects_one": "此主机的 Orca 服务器已有 {{paths}}，因此此桌面现在使用服务器的副本。此桌面在那里的标签页和 {{count}} 个自动化未被迁移，它在那里创建的工作树会显示为外部工作树。",
           "linkedProjects_other": "此主机的 Orca 服务器已有 {{paths}}，因此此桌面现在使用服务器的副本。此桌面在那里的标签页和 {{count}} 个自动化未被迁移，它在那里创建的工作树会显示为外部工作树。",
           "linkedProjects": "此主机的 Orca 服务器已有 {{paths}}，因此此桌面现在使用服务器的副本。此桌面在那里的标签页和 {{count}} 个自动化未被迁移，它在那里创建的工作树会显示为外部工作树。",
-          "linkedProjectsNoAutomations": "此主机的 Orca 服务器已有 {{paths}}，因此此桌面现在使用服务器的副本。此桌面在那里的标签页未被迁移，它在那里创建的工作树会显示为外部工作树。"
+          "linkedProjectsNoAutomations": "此主机的 Orca 服务器已有 {{paths}}，因此此桌面现在使用服务器的副本。此桌面在那里的标签页未被迁移，它在那里创建的工作树会显示为外部工作树。",
+          "nodeDownloadBlocked": "这台电脑和这台主机都无法下载 Orca 服务器所需的 Node.js。请使用 Node.js 镜像，或检查两台机器的网络。",
+          "nodeDownloadBlockedNoMirror": "这台电脑和这台主机都无法下载 Orca 服务器所需的 Node.js。请检查两台机器的网络或代理，然后重新连接。",
+          "nodeDownloadBlockedMirrorTried": "这台电脑和这台主机都无法下载 Node.js，包括从 Node.js 下载镜像下载。请检查镜像设置，然后重新连接。",
+          "reassurance": "在 {{host}} 上运行，通过你自己的 SSH 连接访问。你的代码和文件留在原处。只有 Orca 的项目、标签页和终端列表会移到 {{host}}。",
+          "launchSessionEnded": "启动此主机上 Orca 服务器的 SSH 会话已结束，因此这台 Mac 上的终端可能已失去本地网络访问权限。重启 Orca 服务器即可恢复。",
+          "behindRolledBack": "运行的 Orca 服务器比此应用旧；上次更新已回滚。请使用“更新服务器”重试。",
+          "behindNoTemplate": "运行的 Orca 服务器无法由此应用更新；此版本没有适用于此主机的服务器。",
+          "behindMigrating": "运行 Orca 服务器，它会在项目迁移完成后更新。",
+          "behindCheckFailed": "运行 Orca 服务器；Orca 无法检查它是否落后于此应用。"
         },
         "deltaMove": {
           "action": "迁移新项目…",
           "title": "迁移新项目",
-          "description": "较旧版本的 Orca 在此主机迁移到其受管服务器后对其进行了更改。这会将它所创建的内容添加到服务器；绝不会覆盖服务器已有的内容。",
+          "description": "此主机的项目迁移到主机上的 Orca 服务器后，较旧版本的 Orca 又更改了此主机。这会将它所创建的内容添加到服务器；绝不会覆盖服务器已有的内容。",
           "added": "已添加到服务器",
           "nothingNew": "没有可添加的新内容。",
           "notReflected": "在较旧版本上已更改或移除；服务器会保留自己的副本",
@@ -12637,14 +12671,14 @@
         "keepServer": {
           "action": "保留服务器的版本…",
           "title": "保留服务器的版本",
-          "description": "此主机将按原样恢复为使用其受管服务器。较旧版本的 Orca 在此处添加或更改的内容不会被迁移；它们只会保留在这台电脑保存的设置中，直到被清理。",
+          "description": "此主机将按原样继续使用其 Orca 服务器。较旧版本的 Orca 在此处添加或更改的内容不会被迁移；它们只会保留在这台电脑保存的设置中，直到被清理。",
           "cancel": "取消",
           "confirm": "保留服务器的版本"
         },
         "moveAnyway": {
           "action": "仍要迁移…",
           "title": "仍要迁移此主机",
-          "description": "Orca 会将此主机迁移到其受管服务器，但不包含下列已保存的项目。它们会保留在这台电脑上，不会出现在受管服务器上。未保存的编辑会被保留，绝不会被删除。",
+          "description": "Orca 会在 {{host}} 上完成设置，但不包含下列已保存的项目。它们会保留在这台电脑上，不会出现在 {{host}} 上。未保存的编辑会被保留，绝不会被删除。",
           "cancel": "取消",
           "confirm": "仍要迁移"
         },
@@ -12678,6 +12712,48 @@
           "submit": "Re-pair",
           "success": "Re-paired with {{name}}",
           "failed": "Re-pair failed"
+        },
+        "usageCredentialHost": {
+          "outdated": "请更新 {{host}} 上的 Orca，才能将此密钥保存在那里。",
+          "unreachable": "无法连接 {{host}}，因此不确定那里是否已保存密钥。",
+          "storedOnHost": "已保存在 {{host}}",
+          "miniMaxStorage": "保存在 {{host}}，并在刷新用量时从那里发送到所选的 MiniMax 端点。",
+          "cookieNeedsDesktop": "{{host}} 上没有可发送会话 Cookie 的 Orca 桌面应用。请改为保存 API 密钥。",
+          "checking": "正在检查 {{host}}…",
+          "sealedElsewhereForgettable": "由 {{host}} 上的另一个 Orca 应用保存，此应用无法读取。请在该应用中更改，或在此处忘记它。",
+          "unreadableKey": "{{host}} 上的 Orca 无法读取已保存的密钥。请替换或忘记它。",
+          "miniMaxApiKeyDescription": "从 MiniMax 控制台 → API keys 粘贴 API 密钥。保存在 {{host}}，并在刷新用量时从那里发送到所选的 MiniMax 端点。API 密钥优先于 Cookie。"
+        },
+        "useUsageHostSettings": {
+          "updateFailed": "无法更新 {{host}} 上的设置。"
+        },
+        "nodeDistMirrorDialog": {
+          "action": "使用 Node.js 镜像…",
+          "openSetting": "打开镜像设置",
+          "title": "使用 Node.js 镜像",
+          "description": "Orca 服务器需要 Node.js，但这台电脑和这台主机都无法从 nodejs.org 下载。镜像是 nodejs.org/dist 的副本，Orca 会在两台机器上优先尝试镜像。",
+          "urlLabel": "镜像 URL",
+          "checksum": "每次下载仍会按 Orca 为此 Node.js 版本固定的校验和进行验证。保存在 设置 > 高级 > 网络 中。",
+          "cancel": "取消",
+          "save": "保存并重试",
+          "saveFailed": "Orca 无法保存镜像。",
+          "retryFailed": "连接失败",
+          "refusal": {
+            "tooLong": "镜像 URL 过长。",
+            "protocol": "请使用 http 或 https 镜像 URL。",
+            "credentials": "镜像 URL 不能包含用户名或密码。",
+            "query": "镜像 URL 不能包含查询或片段。",
+            "invalid": "请输入有效的镜像 URL。"
+          }
+        },
+        "restartServer": {
+          "action": "重启 Orca 服务器…",
+          "title": "重启 Orca 服务器",
+          "description": "Orca 会通过你当前的连接重启此主机上的 Orca 服务器。只有在主机上没有正在运行的终端时才会重启，因为仍然打开的终端会一直无法访问。请先关闭它们。",
+          "terminalsUnknown": "Orca 无法确认此主机上是否有终端正在运行，因此没有重启 Orca 服务器。",
+          "terminalsRunning": "此主机上仍有 {{count}} 个终端在运行。请关闭它们，然后重启 Orca 服务器。",
+          "cancel": "取消",
+          "confirm": "重启"
         }
       },
       "right": {
@@ -14496,7 +14572,9 @@
             "jiraMode": "Jira",
             "jiraSelectBindFailed": "无法关联此 Jira 议题。请选择匹配的站点或重新连接 Jira，然后重试。",
             "emoji": "Emoji",
-            "loadingLinearIssue": "正在加载 Linear 议题..."
+            "loadingLinearIssue": "正在加载 Linear 议题...",
+            "linearLoginUnreadableTitle": "重新连接 Linear",
+            "linearLoginUnreadableBody": "无法读取已保存的 Linear 登录信息。请在设置中重新连接。"
           },
           "ProjectCombobox": {
             "empty": "没有匹配搜索的项目。",
@@ -16023,9 +16101,11 @@
           "copy": "复制作业"
         },
         "ExternalFileChangeBanner": {
-          "7c41e90d12": "此文件在您有未保存编辑时在磁盘上发生了更改。保存将覆盖较新的磁盘内容。",
+          "7c41e90d12": "This file changed on disk while you have unsaved edits. Overwrite replaces the newer disk content.",
           "3fa2b8d417": "从磁盘重新加载",
           "a95d02c644": "保留我的编辑",
+          "overwrite": "Overwrite",
+          "keepHint": "Keeps your version. Your next save replaces the version on disk.",
           "5c02de9b31": "已从磁盘重新加载",
           "d1e830fa22": "撤销",
           "90b2ce7d43": "比较"
@@ -16064,6 +16144,12 @@
               "notice": {
                 "8c59ce5075": "保存文件失败。请重试。"
               }
+            },
+            "stale": {
+              "notice": "This file changed on disk since your edits. Use the banner to compare, reload, or overwrite."
+            },
+            "sectionStale": {
+              "notice": "This file changed on disk since this section loaded."
             }
           }
         },
@@ -18046,13 +18132,15 @@
         "couldNotStart": "{{agent}} 无法启动。",
         "editSavedArguments": "请在设置 > 智能体 > 参数中编辑。",
         "couldNotRestart": "{{agent}} 无法重新启动。",
+        "startTimedOut": "{{agent}} 启动时间过长（{{seconds}} 秒后 {{method}} 仍无响应）。",
+        "startTimedOutKeepsHappening": "如果此问题持续出现，运行此聊天的计算机可能负载过重。",
         "codexCliTooOld": "Codex {{installedVersion}} 版本过旧，无法用于聊天。请更新到 {{minimumVersion}} 或更高版本。",
         "notSignedIn": "{{agent}} 尚未登录。",
         "claudeSystemNotSignedIn": "Claude 尚未登录。请运行 `{{loginCommand}}`，或在 Claude 账户设置中选择账户。",
         "claudeManagedNotSignedIn": "此 Claude 账户尚未登录。请在 Claude 账户设置中重新登录。",
         "codexSystemNotSignedIn": "Codex 尚未登录。请运行 `{{loginCommand}}`。",
         "codexManagedNotSignedIn": "此 Codex 账户尚未登录。请在 Codex 账户设置中重新登录。",
-        "antigravityNotSignedIn": "Antigravity 尚未登录。请在设置 → 账户 → Antigravity 中登录。",
+        "antigravityNotSignedIn": "尚未登录 Antigravity。请在设置 → 账户 → Antigravity中登录，然后重新发送消息。",
         "cliMissing": "在运行此聊天的计算机上找不到 {{agent}}。请安装它，或检查设置 → 智能体中的命令。",
         "signInFirst": "请先登录。",
         "signInThenRunCommand": "请登录，然后重新运行 /{{command}}。",
@@ -18769,6 +18857,9 @@
         "replaceTitle": "替换此聊天？",
         "replaceDescription": "在此恢复“{{title}}”将停止 {{agent}} 在此聊天中正在进行的工作。",
         "replace": "替换"
+      },
+      "antigravitySignIn": {
+        "sentence": "尚未登录 Antigravity。请在<settings>设置 → 账户 → Antigravity</settings>中登录，然后重新发送消息。"
       },
       "claudeSignIn": {
         "signingIn": "正在登录…"

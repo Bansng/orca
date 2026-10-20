@@ -13,14 +13,27 @@ export type CachedCombinedDiffViewState = {
 
 type CombinedDiffViewMemory = {
   worktreeId: string
+  succession?: CombinedDiffViewSuccessionTag
   view?: CachedCombinedDiffViewState
   scrollTop?: number
   scrollAnchor?: NonNullable<VirtualizedScrollAnchor>
 }
 
+/** The diff a tab-scoped key shows and the tab it belongs to. */
+export type CombinedDiffViewSuccessionTag = {
+  contentKey: string
+  scopeId: string
+}
+
+/** Lets a fresh tab inherit the view its closed predecessor left for the same diff. */
+export type CombinedDiffViewSuccession = CombinedDiffViewSuccessionTag & {
+  isScopeOpen: (scopeId: string) => boolean
+}
+
 /** A mounted viewer's write access to its key; revoked only when its workspace is forgotten. */
 export type CombinedDiffViewLease = {
   readonly viewKey: string
+  readonly succession?: CombinedDiffViewSuccessionTag
   worktreeId: string
   revoked: boolean
 }
@@ -28,17 +41,79 @@ export type CombinedDiffViewLease = {
 const memoryByViewKey = new Map<string, CombinedDiffViewMemory>()
 const mountedLeases = new Set<CombinedDiffViewLease>()
 
-export function readCombinedDiffViewMemory(
-  viewKey: string
-): Readonly<CombinedDiffViewMemory> | undefined {
-  return memoryByViewKey.get(viewKey)
+function isMountedViewKey(viewKey: string): boolean {
+  for (const lease of mountedLeases) {
+    if (lease.viewKey === viewKey) {
+      return true
+    }
+  }
+  return false
 }
 
-export function claimCombinedDiffView(viewKey: string, worktreeId: string): CombinedDiffViewLease {
+// Why: tab ids are fresh per opened tab, so a reopened tab only finds its view through the closed tab's entry.
+// Open-but-inactive tabs are unmounted too, so the scope check keeps another live tab's view from being taken.
+function findInheritableViewKeys(
+  viewKey: string,
+  worktreeId: string,
+  succession: CombinedDiffViewSuccession
+): string[] {
+  const keys: string[] = []
+  for (const [candidateKey, memory] of memoryByViewKey) {
+    if (
+      candidateKey !== viewKey &&
+      memory.worktreeId === worktreeId &&
+      memory.succession?.contentKey === succession.contentKey &&
+      !succession.isScopeOpen(memory.succession.scopeId) &&
+      !isMountedViewKey(candidateKey)
+    ) {
+      keys.push(candidateKey)
+    }
+  }
+  // Map order is LRU order, so the last key is the most recently written view.
+  return keys
+}
+
+/** Without `inherit` this reads only `viewKey`; with it, a key that has no view yet previews what it would inherit. */
+export function readCombinedDiffViewMemory(
+  viewKey: string,
+  inherit?: { worktreeId: string; succession: CombinedDiffViewSuccession }
+): Readonly<CombinedDiffViewMemory> | undefined {
+  const own = memoryByViewKey.get(viewKey)
+  if (own || !inherit) {
+    return own
+  }
+  const inheritedKey = findInheritableViewKeys(viewKey, inherit.worktreeId, inherit.succession).at(
+    -1
+  )
+  return inheritedKey === undefined ? undefined : memoryByViewKey.get(inheritedKey)
+}
+
+export function claimCombinedDiffView(
+  viewKey: string,
+  worktreeId: string,
+  succession?: CombinedDiffViewSuccession
+): CombinedDiffViewLease {
   if (memoryByViewKey.get(viewKey)?.worktreeId !== worktreeId) {
     memoryByViewKey.delete(viewKey)
   }
-  const lease = { viewKey, worktreeId, revoked: false }
+  const tag = succession ? { contentKey: succession.contentKey, scopeId: succession.scopeId } : null
+  if (succession && tag && !memoryByViewKey.has(viewKey)) {
+    const inheritableKeys = findInheritableViewKeys(viewKey, worktreeId, succession)
+    const inherited = memoryByViewKey.get(inheritableKeys.at(-1) ?? '')
+    // Why: move rather than copy, and drop older closed tabs' views of this diff — they hold file bodies nothing can reach.
+    for (const key of inheritableKeys) {
+      memoryByViewKey.delete(key)
+    }
+    if (inherited) {
+      setWithLRU(memoryByViewKey, viewKey, { ...inherited, succession: tag })
+    }
+  }
+  const lease: CombinedDiffViewLease = {
+    viewKey,
+    ...(tag ? { succession: tag } : {}),
+    worktreeId,
+    revoked: false
+  }
   mountedLeases.add(lease)
   return lease
 }
@@ -57,7 +132,11 @@ export function rememberCombinedDiffView(
   }
   const memory = memoryByViewKey.get(lease.viewKey)
   const owned = memory?.worktreeId === lease.worktreeId ? memory : { worktreeId: lease.worktreeId }
-  setWithLRU(memoryByViewKey, lease.viewKey, { ...owned, ...patch })
+  setWithLRU(memoryByViewKey, lease.viewKey, {
+    ...owned,
+    ...patch,
+    ...(lease.succession ? { succession: lease.succession } : {})
+  })
 }
 
 export function forgetCombinedDiffViewsShowingPath(relativePath: string): void {

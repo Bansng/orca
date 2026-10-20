@@ -73,6 +73,7 @@ describe('Move anyway', () => {
     await act(async () => button(container, 'Move anyway…').click())
     expect(container.textContent).toContain('unsaved changes to /etc/hosts')
     expect(container.textContent).toContain('Unsaved edits are kept, never deleted.')
+    expect(container.textContent).toContain('Your code and files stay where they are.')
     await act(async () => button(container, 'Move anyway').click())
     expect(allowMoveLeavingBehind).toHaveBeenCalledWith({ sshTargetId: 'ssh-1' })
     expect(connect).toHaveBeenCalledWith({ targetId: 'ssh-1' })

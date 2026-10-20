@@ -29,6 +29,8 @@ type ManagedServerAction =
 type ManagedServerRowProps = {
   api: ManagedOrcadPreloadApi
   environment: PublicKnownRuntimeEnvironment
+  /** The SSH host's current label; a manually deployed server's own name can differ from it. */
+  hostLabel?: string
   onChanged: () => void
 }
 
@@ -60,6 +62,7 @@ function versionLabel(
 export function ManagedServerRow({
   api,
   environment,
+  hostLabel,
   onChanged
 }: ManagedServerRowProps): React.JSX.Element {
   const mountedRef = useMountedRef()
@@ -141,7 +144,11 @@ export function ManagedServerRow({
   return (
     <div className="space-y-2 px-4 py-3">
       <div className="flex min-w-0 items-center gap-2">
-        <div className="truncate text-sm font-medium">{environment.name}</div>
+        <div className="truncate text-sm font-medium">
+          {translate('auto.components.settings.managedServers.row.title', 'Orca on {{host}}', {
+            host: hostLabel ?? environment.name
+          })}
+        </div>
         <span className="shrink-0 text-[11px] text-muted-foreground">
           {versionLabel(status, statusError)}
         </span>

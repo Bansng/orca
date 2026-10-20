@@ -120,7 +120,6 @@ export function RuntimeEnvironmentsPane({
     addEnvironment,
     removeEnvironment
   } = useRuntimeEnvironmentMutationActions({
-    environments,
     settings,
     allowLocalRuntime,
     mountedRef,

@@ -458,6 +458,40 @@ describe('PairedServerRowsProducer', () => {
     expect(rowsOf(producer, 'runtime:box')?.freshness).toBe('live')
   })
 
+  it('never certifies rows live from a fetch that started before a contact gap', async () => {
+    const { hosts, call, watches, state, publishStatus } = fakeHosts([{ id: 'box', live: true }])
+    let answerBefore: (response: RuntimeRpcResponse<unknown>) => void = () => {}
+    let answerAfter: (response: RuntimeRpcResponse<unknown>) => void = () => {}
+    call.mockReturnValueOnce(new Promise((resolve) => (answerBefore = resolve)))
+    call.mockReturnValueOnce(new Promise((resolve) => (answerAfter = resolve)))
+    const producer = new PairedServerRowsProducer({
+      hasDemand: () => true,
+      hostLabelOverrides: () => new Map()
+    })
+    producer.attach(hosts)
+    watches.get('box')?.onChange()
+
+    state.servers = [{ id: 'box', live: false }]
+    publishStatus()
+    state.servers = [{ id: 'box', live: true }]
+    publishStatus()
+    watches.get('box')?.onChange()
+    answerBefore(psReply([row('deleted-during-gap')]))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(call).toHaveBeenCalledTimes(2)
+    expect(rowsOf(producer, 'runtime:box')).toMatchObject({
+      freshness: 'unverifiable',
+      rows: [{ worktreeId: 'deleted-during-gap' }]
+    })
+
+    answerAfter(psReply([row('current')]))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(rowsOf(producer, 'runtime:box')).toMatchObject({
+      freshness: 'live',
+      rows: [{ worktreeId: 'current' }]
+    })
+  })
+
   it('opens a new watch once the old one ends with its transport, even without a close notice', () => {
     const { hosts, watches, publishStatus } = fakeHosts([{ id: 'box', live: true }])
     const producer = new PairedServerRowsProducer({

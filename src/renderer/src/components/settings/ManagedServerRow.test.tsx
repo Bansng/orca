@@ -73,6 +73,7 @@ const button = (container: HTMLElement, label: string) =>
 describe('managed server row', () => {
   it('reports unknown terminals, the running migration and the deferred update', async () => {
     const { container } = await render()
+    expect(container.textContent).toContain('Orca on Builder')
     expect(container.textContent).toContain('Running terminals: unknown')
     expect(container.textContent).toContain('Migration: Copy staged')
     expect(container.textContent).toContain('Update to 1.3.0 deferred.')

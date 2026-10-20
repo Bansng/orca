@@ -68,7 +68,7 @@ export function conversionBlockerLabel(blocker: OrcadMigrationBlocker): string {
     case 'orcad_migration_owner_unrecorded':
       return translate(
         'auto.components.settings.managedServers.blocker.owned',
-        'This SSH host already belongs to a managed server.'
+        'Orca already runs on this SSH host.'
       )
     case 'orcad_migration_direct_ssh_repositories':
     case 'orcad_migration_direct_ssh_folder_workspaces':

@@ -43,7 +43,7 @@ describe('getRuntimeEnvironmentIdForRepo', () => {
     ).toBeNull()
   })
 
-  it('falls back to the focused runtime for legacy repos without an owner', () => {
+  it('keeps legacy repos without an owner local while a runtime is focused', () => {
     expect(
       getRuntimeEnvironmentIdForRepo(
         {
@@ -52,7 +52,7 @@ describe('getRuntimeEnvironmentIdForRepo', () => {
         },
         'repo-1'
       )
-    ).toBe('focused-runtime')
+    ).toBeNull()
   })
 
   it('uses the focused host row when duplicate repo ids exist', () => {
@@ -102,7 +102,7 @@ describe('getRuntimeEnvironmentIdForRepo owner matrix', () => {
     ['local row', [row('local')], 'focused', null],
     ['direct SSH row', [row(null, 'ssh-1')], 'focused', null],
     ['nested runtime row', [row('runtime:owner', 'ssh-1')], 'focused', 'owner'],
-    ['unstamped row', [row(null)], 'focused', 'focused'],
+    ['unstamped row', [row(null)], 'focused', null],
     ['missing row', [], 'focused', 'focused'],
     ['duplicates, local focus', [row('local'), row('runtime:owner')], null, null],
     ['duplicates, matching focus', [row('local'), row('runtime:owner')], 'owner', 'owner'],

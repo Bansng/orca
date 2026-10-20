@@ -32,6 +32,7 @@ import type { ResolvedWorktree } from '../runtime-worktree-path-identity'
 import type { Repo } from '../../../shared/repo-types'
 import { isWslMoveWorktreeBlocked } from '../../persistence/moving-wsl-projects/wsl-move-background-backoff'
 import { worktreeRowTarget } from '../../persistence/host-qualified-worktree-meta'
+import type { RuntimeRepoSelector } from '../runtime-repo-selector'
 
 export abstract class OrcaRuntimeWithFileCommands extends OrcaRuntimeWithPreservedBranchCleanup {
   abstract resolveRuntimeFileTarget(worktreeSelector: string): Promise<{
@@ -93,7 +94,7 @@ export abstract class OrcaRuntimeWithFileCommands extends OrcaRuntimeWithPreserv
 
   protected abstract resolveWorktreeSelector(selector: string): Promise<ResolvedWorktree>
 
-  protected abstract resolveRepoSelector(selector: string): Promise<Repo>
+  protected abstract resolveRepoSelector(selector: RuntimeRepoSelector): Promise<Repo>
 
   protected readonly fileCommands = new RuntimeFileCommands({
     getRuntimeId: () => this.runtimeId,

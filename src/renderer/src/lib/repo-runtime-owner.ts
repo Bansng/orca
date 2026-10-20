@@ -53,8 +53,8 @@ export function getRuntimeEnvironmentIdForRepo(
     return null
   }
   const repo = findRepoOwner(state, repoId)
-  const hasExplicitOwner = Boolean(repo?.executionHostId?.trim() || repo?.connectionId?.trim())
-  if (repo && hasExplicitOwner) {
+  if (repo) {
+    // Why: an unstamped row is local; the client stamps every server row on arrival.
     const parsed = parseExecutionHostId(getRepoExecutionHostId(repo))
     return parsed?.kind === 'runtime' ? parsed.environmentId : null
   }
