@@ -56,7 +56,9 @@ function resolved(id: string, repo: Repo, hostId: ResolvedWorktree['hostId']): R
 
 function setup(repos: Repo[] = [localRepo, sshRepo]) {
   let settings: Partial<ReturnType<RuntimeStore['getSettings']>> = {}
-  let onWrite: (domains: readonly string[] | undefined) => void = () => {}
+  const writeListeners = new Set<(domains: readonly string[] | undefined) => void>()
+  const onWrite = (domains: readonly string[] | undefined): void =>
+    writeListeners.forEach((listener) => listener(domains))
   const store: Pick<
     RuntimeStore,
     | 'getRepos'
@@ -81,8 +83,8 @@ function setup(repos: Repo[] = [localRepo, sshRepo]) {
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the visibility filter reads only absent fields as defaults.
     getSettings: () => settings as ReturnType<RuntimeStore['getSettings']>,
     onStateWritten: (listener) => {
-      onWrite = listener
-      return () => {}
+      writeListeners.add(listener)
+      return () => writeListeners.delete(listener)
     }
   }
   const listing: ResolvedWorktreeSnapshot = {

@@ -3,7 +3,7 @@
 // browser tab. A change frame carries only the records an operation changed (design E1); splitting
 // and joining keep every field, so a field added to a published type rides its record unchanged.
 
-import { editorFileKey } from './workspace-layout-editor-tab-file'
+import { ownedEditorFileId } from '../workspace-session-pane-ownership'
 import { stableJson } from './workspace-layout-load-report'
 import type {
   PublishedBrowserTab,
@@ -26,7 +26,10 @@ export type PublishedTabRow = Omit<PublishedTab, 'terminal'> & {
 }
 
 /** A pane as its tab's tree holds it: all but its terminal binding. */
-export type PublishedTreePane = Omit<PublishedPane, 'ptyId' | 'ptyGeneration'>
+export type PublishedTreePane = Omit<
+  PublishedPane,
+  'ptyId' | 'ptyGeneration' | 'status' | 'statusReason'
+>
 
 /** A terminal tab's pane tree, keyed by the tab's id. */
 export type PublishedPaneTree = Pick<PublishedTerminal, 'root' | 'chatLeafId'> & {
@@ -35,8 +38,12 @@ export type PublishedPaneTree = Pick<PublishedTerminal, 'root' | 'chatLeafId'> &
   panes: PublishedTreePane[]
 }
 
-/** A pane's terminal binding, apart from its tree so a respawn changes only this record. */
-export type PublishedPaneBinding = Pick<PublishedPane, 'leafId' | 'ptyId' | 'ptyGeneration'>
+/** A pane's terminal binding, apart from its tree so a respawn changes only this record. Its start
+ *  status rides here too: a start ends in a binding or a failure, never in a tree change. */
+export type PublishedPaneBinding = Pick<
+  PublishedPane,
+  'leafId' | 'ptyId' | 'ptyGeneration' | 'status' | 'statusReason'
+>
 
 type RecordKinds = {
   tabs: PublishedTabRow
@@ -69,7 +76,8 @@ const RECORD_KEYS: { [Kind in RecordKind]: (record: RecordKinds[Kind]) => string
   tabs: (row) => row.id,
   paneTrees: (tree) => tree.tabId,
   bindings: (binding) => binding.leafId,
-  editorFiles: (file) => editorFileKey(file),
+  // Path and owner, whatever the reader's build: a frame's order names records by these keys.
+  editorFiles: (file) => ownedEditorFileId(file.filePath, '', file.runtimeEnvironmentId),
   browserTabs: (tab) => tab.id
 }
 
@@ -90,12 +98,19 @@ export function splitPublishedLayout(layout: PublishedWorkspaceLayout): Publishe
       tabId: tab.id,
       root,
       ...(chatLeafId !== undefined ? { chatLeafId } : {}),
-      panes: panes.map(({ ptyId, ptyGeneration, ...pane }) => {
-        if (ptyId !== undefined || ptyGeneration !== undefined) {
+      panes: panes.map(({ ptyId, ptyGeneration, status, statusReason, ...pane }) => {
+        if (
+          ptyId !== undefined ||
+          ptyGeneration !== undefined ||
+          status !== undefined ||
+          statusReason !== undefined
+        ) {
           bindings.push({
             leafId: pane.leafId,
             ...(ptyId !== undefined ? { ptyId } : {}),
-            ...(ptyGeneration !== undefined ? { ptyGeneration } : {})
+            ...(ptyGeneration !== undefined ? { ptyGeneration } : {}),
+            ...(status !== undefined ? { status } : {}),
+            ...(statusReason !== undefined ? { statusReason } : {})
           })
         }
         return pane

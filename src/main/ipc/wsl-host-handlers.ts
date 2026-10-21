@@ -193,7 +193,7 @@ export function registerWslHostHandlers(args: WslHostHandlerArgs): void {
   ipcMain.handle('wslHosts:remove', async (_event, request: { environmentId: string }) => {
     if (args.store.getSettings().activeRuntimeEnvironmentId === request.environmentId) {
       throw new Error(
-        'This server is the default host for new projects. Choose another one in Advanced before removing it.'
+        'This server is the default host for new projects. Choose another one under New projects open on before removing it.'
       )
     }
     return wsl.remove(request.environmentId)

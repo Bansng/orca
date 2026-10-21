@@ -23,6 +23,8 @@ import { recordOpenedSimulatorTabInLayoutOwner } from '@/lib/simulator-tab-layou
 import { withLayoutOwnerTabProps } from '@/components/tab-bar/tab-bar-layout-owner-props'
 import { endLayoutFramePositions } from './layout-frame-position'
 import { openWorkspaceLayoutFrameSync } from './workspace-layout-frame-sync'
+import { installLayoutFrameApplyCheck } from './workspace-layout-frame-apply-check.test-fixture'
+import { mainLayoutFrameSender } from './main-loaded-layout-frames.test-fixture'
 
 vi.mock('../../../shared/layout-owner-switch', () => ({ ORCA_LAYOUT_OWNER_IS_MAIN: true }))
 vi.mock('sonner', () => ({ toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() } }))
@@ -91,11 +93,12 @@ function publishedOf(session: WorkspaceSessionState): PublishedWorkspaceLayout {
 const settle = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
 let seq = 0
+let frames = mainLayoutFrameSender()
 /** A frame main sent before it had the window's change: another tab got renamed. */
 function sendStaleFrame(layout: PublishedWorkspaceLayout): void {
   const stale = structuredClone(layout)
   stale.tabs.find((tab) => tab.id === 'tab-unbound')!.customTitle = `renamed ${++seq}`
-  stream.onFrame!({ type: 'workspace', key: GIT_KEY, layout: stale, seq })
+  stream.onFrame!(frames.records(GIT_KEY, stale, seq))
   stream.onPosition!(seq)
 }
 
@@ -105,7 +108,8 @@ async function boot() {
   await bootWindowFromPartitions(store, [{ hostId: 'local', session }])
   const sync = openWorkspaceLayoutFrameSync(store)
   const before = publishedOf(session)
-  stream.onFrame!({ type: 'snapshot', workspaces: [{ key: GIT_KEY, layout: before }], seq: ++seq })
+  frames = mainLayoutFrameSender()
+  stream.onFrame!(frames.snapshot({ [GIT_KEY]: before }, ++seq))
   stream.onPosition!(seq)
   sync.start()
   await settle()
@@ -119,7 +123,7 @@ async function boot() {
     const frame = publishedOf(buildWorkspaceSessionPayload(store.getState()))
     mainChange(frame)
     seq += 1
-    stream.onFrame!({ type: 'workspace', key: GIT_KEY, layout: frame, seq })
+    stream.onFrame!(frames.records(GIT_KEY, frame, seq))
     stream.onPosition!(seq)
     rpc.calls[index]!.answer({ ...reply, frameSeq: seq })
     await settle()
@@ -168,11 +172,17 @@ function drawTab(
   return drawn
 }
 
+let check: ReturnType<typeof installLayoutFrameApplyCheck>
 beforeEach(() => {
   rpc.calls = []
   vi.clearAllMocks()
+  check = installLayoutFrameApplyCheck()
 })
-afterEach(() => endLayoutFramePositions())
+afterEach(() => {
+  endLayoutFramePositions()
+  check.uninstall()
+  expect(check.failures).toEqual([])
+})
 
 describe('a tab the window drew, closed or moved, with a frame from before main had it', () => {
   it('keeps a just-created terminal tab, then shows main’s copy', async () => {

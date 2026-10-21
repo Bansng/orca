@@ -109,6 +109,22 @@ describe('layout.apply', () => {
     ).toBe(false)
   })
 
+  it('takes no live-terminal adoption from the window: only main places a running terminal', () => {
+    const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
+      (method) => method.name === 'layout.apply'
+    )
+    const create = {
+      type: 'createTerminalTab',
+      workspace: WORKTREE,
+      tabId: 'tab-2',
+      leafId: '44444444-4444-4444-8444-444444444444'
+    } as const
+
+    expect(apply?.params?.parse({ command: { ...create, adopt: { ptyId: 'pty-1' } } })).toEqual({
+      command: create
+    })
+  })
+
   it('takes no close semantics or blank title from the window', async () => {
     const apply = eraseRpcMethods(LAYOUT_APPLY_METHODS).find(
       (method) => method.name === 'layout.apply'

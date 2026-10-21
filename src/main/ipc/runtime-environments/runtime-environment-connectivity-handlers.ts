@@ -126,7 +126,7 @@ export function registerRuntimeEnvironmentConnectivityHandlers({
       const environment = resolveEnvironment(getUserDataPath(), args.selector)
       if (store.getSettings().activeRuntimeEnvironmentId === environment.id) {
         throw new Error(
-          'This server is the default host for new projects. Choose another one in Advanced before removing it.'
+          'This server is the default host for new projects. Choose another one under New projects open on before removing it.'
         )
       }
       // A closed gate leaves persisted WSL hosts untouched on disk.

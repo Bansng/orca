@@ -17,10 +17,23 @@ import type {
   LayoutCommandResult
 } from '../../../shared/workspace-layout/workspace-layout-command-types'
 import type { WorkspaceLayoutModel } from '../../../shared/workspace-layout/workspace-layout-model'
-import { publishWorkspaceLayout } from '../../../shared/workspace-layout/workspace-layout-published'
+import {
+  publishWorkspaceLayout,
+  type PublishedWorkspaceLayout
+} from '../../../shared/workspace-layout/workspace-layout-published'
+import {
+  diffPublishedLayouts,
+  indexPublishedLayout,
+  type WorkspaceLayoutRecordChange
+} from '../../../shared/workspace-layout/workspace-layout-records'
 import type { WorkspaceLayoutChangeFrame } from '../../../shared/workspace-layout/workspace-layout-stream-frames'
 import type { RuntimeClientTarget } from '../../../shared/runtime-client-target'
 import { layoutSnapshotFrame, publishedLayoutsOf } from './main-loaded-layout-frames.test-fixture'
+import { throwLayoutFrameApplyErrors } from './workspace-layout-frame-apply-check.test-fixture'
+import {
+  layoutFrameApplyObserver,
+  observeLayoutFrameApply
+} from './workspace-layout-frame-apply-observer'
 import type * as LayoutClient from './runtime-layout-client'
 import type * as RpcClient from './runtime-rpc-client'
 
@@ -125,6 +138,23 @@ function emit(frame: WorkspaceLayoutChangeFrame): void {
   }
 }
 
+const TEST_EPOCH = 'layout-apply-test-epoch'
+
+/** One workspace's records an operation changed, as main's stream publishes them. */
+function recordChanges(
+  key: string,
+  before: PublishedWorkspaceLayout | undefined,
+  after: PublishedWorkspaceLayout | undefined
+): WorkspaceLayoutRecordChange[] {
+  if (!after) {
+    return [{ key, change: 'removed' }]
+  }
+  const change = before
+    ? diffPublishedLayouts(key, indexPublishedLayout(before), indexPublishedLayout(after), after)
+    : { key, change: 'layout' as const, layout: after }
+  return change ? [change] : []
+}
+
 /** Main's apply without its routing: no host partitions, `host_not_owned`, forced closes, or a
  *  frame position on refusals. */
 function applyToMainModel(command: LayoutCommand): LayoutApplyReply {
@@ -144,13 +174,19 @@ function applyToMainModel(command: LayoutCommand): LayoutApplyReply {
   state.seq += 1
   const seq = state.seq
   const key = command.workspace
+  const before = model.workspaces[key]
   const workspace = applied.model.workspaces[key]
-  // Main publishes before it replies.
-  emit(
-    workspace
-      ? { type: 'workspace', key, layout: publishWorkspaceLayout(workspace, model.hostId), seq }
-      : { type: 'removed', key, seq }
-  )
+  // Main publishes the operation's records before it replies.
+  emit({
+    type: 'records',
+    epoch: TEST_EPOCH,
+    seq,
+    workspaces: recordChanges(
+      key,
+      before && publishWorkspaceLayout(before, model.hostId),
+      workspace && publishWorkspaceLayout(workspace, model.hostId)
+    )
+  })
   return { ok: true, result: applied.result, frameSeq: seq }
 }
 
@@ -284,6 +320,11 @@ export function runtimeLayoutClientWithTestFrames(actual: LayoutClientModule): L
     }
     const sink: FrameSink = { onFrame, onPosition }
     state.sinks.add(sink)
+    // Every flush of the window's frames must show what the full build shows; a test's own
+    // installed check keeps reporting it.
+    const previousCheck = layoutFrameApplyObserver()
+    const installedCheck = previousCheck ?? throwLayoutFrameApplyErrors
+    observeLayoutFrameApply(installedCheck)
     onStatus({ state: 'connecting' })
     queueMicrotask(() => {
       if (!state.sinks.has(sink)) {
@@ -296,6 +337,10 @@ export function runtimeLayoutClientWithTestFrames(actual: LayoutClientModule): L
     return {
       close: () => {
         state.sinks.delete(sink)
+        // A check installed after this one (another stream or test) stays in place.
+        if (layoutFrameApplyObserver() === installedCheck) {
+          observeLayoutFrameApply(previousCheck)
+        }
         onStatus({ state: 'closed' })
       }
     }

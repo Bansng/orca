@@ -8,17 +8,15 @@ const appState = vi.hoisted(() => ({
   remove: vi.fn()
 }))
 
-vi.mock('react-native', () => ({
-  AppState: {
-    get currentState() {
-      return appState.currentState
-    },
-    addEventListener: (_event: string, listener: (state: string) => void) => {
-      appState.listener = listener
-      return { remove: appState.remove }
-    }
+const AppState = {
+  get currentState() {
+    return appState.currentState
+  },
+  addEventListener: (_event: string, listener: (state: string) => void) => {
+    appState.listener = listener
+    return { remove: appState.remove }
   }
-}))
+}
 
 describe('startHostWorktreeRefresh', () => {
   let eventListener: ((payload: unknown) => void) | null
@@ -57,7 +55,8 @@ describe('startHostWorktreeRefresh', () => {
       fetchWorktrees,
       fetchRepoMetadata,
       syncViewSettings,
-      sidebarFeed
+      sidebarFeed,
+      appState: AppState
     })
   }
 

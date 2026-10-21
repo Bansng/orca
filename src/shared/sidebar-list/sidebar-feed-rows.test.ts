@@ -61,6 +61,7 @@ function domains(overrides: Partial<SidebarFeedDomains>): SidebarFeedDomains {
     pairedServerRows: new Map(),
     repoIcons: new Map(),
     desktop: null,
+    projectCatalog: null,
     retention: null,
     ...overrides
   }

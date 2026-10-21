@@ -1186,6 +1186,13 @@
           "a58ba464ad": "Skill location",
           "f00d6aa9b5": "WSL is not available on this machine."
         },
+        "CloudVmSetupGuide": {
+          "createWorkspace": "Create a workspace and select that recipe under Run on.",
+          "description": "Cloud VMs are created from environment recipes when you create a workspace.",
+          "openSetup": "Set up environment recipes",
+          "setupRecipe": "Set up an environment recipe for your cloud provider.",
+          "title": "Create a Cloud VM"
+        },
         "CommitMessageAiPane": {
           "841ed9884a": "Used by repositories that have not customized Source Control AI."
         },
@@ -1199,6 +1206,10 @@
         "EphemeralVmRuntimesSection": {
           "cleaned": "Cleaned up temporary VM runtime.",
           "cleanupFailedToast": "Couldn’t clean up temporary VM runtime.",
+          "cloudVmEmptyWithSetup": "No Cloud VM runtimes yet. Create one from a workspace using an environment recipe.",
+          "cloudVmLoading": "Checking Cloud VM runtimes…",
+          "cloudVmTitle": "Cloud VM runtimes",
+          "description": "Recipe-created runtimes are workspace-owned. Clean up stale entries after crashes, failed creates, or manual recovery.",
           "empty": "No temporary VM runtimes need cleanup.",
           "loadFailed": "Couldn’t load temporary VM runtimes.",
           "loading": "Checking temporary VM runtimes…",
@@ -1459,28 +1470,107 @@
           "ccb07dd027": "Saved",
           "e57dde9d93": "Unsaved changes"
         },
+        "RuntimeAccessGrantList": {
+          "27cf8507ad": "Refresh shared access",
+          "68ec21309f": "Revoke access",
+          "87b16cd11d": "Created",
+          "8b82879581": "Anyone with an active grant can connect until you revoke it. Revoking shared access disconnects active clients immediately.",
+          "f031182867": "Shared Server Access",
+          "fd83b94095": "No shared server access yet."
+        },
         "RuntimeEnvironmentsPane": {
+          "0ef838094a": "Protocol {{value0}}",
           "163671f7b5": "Run",
           "1826bd0608": "Saved Servers",
+          "2c85efb3e8": "Selecting a saved server makes this browser use that paired Orca runtime as its default Host.",
+          "3595fd1948": "New Link",
+          "3f67e8078a": "New projects are created on this computer unless you choose a saved server here. Existing projects, files and terminals stay on their own host.",
+          "54dee18f5c": "Hide Form",
           "54ebacc600": "Server name",
           "55fcc964cd": "on the server and paste the printed pairing URL.",
+          "64b6bea541": "Default host for new projects",
+          "6ce4664003": "Refresh servers",
+          "6e1280ca55": "Share this Orca server",
+          "78692becbd": "Local desktop",
+          "7b5986c8df": "Connected to {{value0}}. To create new projects there by default, choose it under Advanced > Default host for new projects.",
+          "84b9b2be05": "Create a revocable access grant so a browser or another Orca client can connect.",
           "8cf8790697": "Saved servers route this browser through a paired Orca runtime.",
           "960e901ae4": "orca serve --pairing-address <host>",
+          "9a3758d983": "No saved servers.",
           "9bc9b83474": "Pairing code",
+          "9bee6bbeeb": "Add Server",
           "9f7665a01b": "Removing the active server first switches Orca back to Local desktop. Existing host sessions are left alone.",
+          "activeServerRowHelp": "Default host for new projects. Existing projects stay on their own host.",
+          "advanced": "Advanced",
+          "advertiseThisApp": "Advertise this app as a server",
+          "advertiseThisAppHelp": "Create access links for browsers, mobile clients, or another Orca client to connect back to this running app.",
+          "aeb26635d2": "Remove {{value0}}",
           "b2fda48c39": "Removing the active server disconnects this browser from that host. Existing host sessions are left alone.",
           "c3d772c514": "orca://pair?code=...",
+          "cloudVmWorkflow": "Cloud VM",
+          "cloudVmWorkflowHelp": "Manage recipe-created cloud machines",
+          "connectToRemoteServers": "Connect to remote servers",
+          "connectToRemoteServersHelp": "Pair another Orca runtime, then connect or disconnect it here.",
+          "connectWorkflow": "Connect to a host",
+          "connectWorkflowHelp": "This app joins another machine",
           "e038625857": "Dev box",
           "f3a3d6d834": "{{value0}} capabilities",
           "f75ce1c7a5": "Local keeps today's desktop behavior. Saved servers route supported client calls through the remote runtime.",
+          "orcaVersion": "Orca v{{value0}}",
+          "orcaVersionLastSeen": "Orca v{{value0}} (last seen)",
+          "removeActiveServerBlocked": "This server is the default host for new projects. Choose another one in Advanced before removing it.",
+          "removeActiveServerDescription": "This server is the default host for new projects. Choose another one in Advanced before removing it. Existing host sessions are left alone.",
+          "reviewServerUpdates": "Check for Server Updates",
+          "serverDetails": "Server details",
+          "shareWorkflow": "Share this host",
+          "shareWorkflowHelp": "Other devices join this machine",
+          "troubleshootDescription": "A link that uses 127.0.0.1 points back to the device opening it, not the computer that created it.",
+          "troubleshootStepAddress": "Choose Another device and select its Tailscale or LAN address.",
+          "troubleshootStepRegenerate": "Generate a new access link and use only the newest link here.",
+          "troubleshootStepShare": "On the other computer, open Share this host.",
+          "troubleshootTitle": "Create a new link on the other host",
+          "troubleshootTunnel": "Using an SSH local forward? Return to Connect to a host, paste the loopback link, then enable “I am using an SSH tunnel” under Advanced.",
+          "troubleshootWorkflow": "Connection troubleshooting",
           "updateAvailableOne": "1 update available",
-          "updatesAvailable": "{{value0}} updates available"
+          "updatesAvailable": "{{value0}} updates available",
+          "versionUnavailable": "Orca version unavailable",
+          "workflow": "Remote server workflow"
+        },
+        "RuntimeHostAccessForm": {
+          "addHost": "Add host",
+          "addWithTunnel": "Add host using tunnel",
+          "advanced": "Advanced",
+          "connectionDetails": "Connection details",
+          "endpointKind": "Endpoint kind",
+          "getLink": "Get an access link from the other host",
+          "headlessHelp": "Using headless orca serve? Run orca serve --pairing-address <reachable-host> on the other computer.",
+          "loopbackRecovery": "On the other computer, create a new link using Another device and choose its Tailscale or LAN address.",
+          "name": "Name in Orca",
+          "nameHelp": "This only changes how the computer appears in Orca.",
+          "networkConnection": "Network connection",
+          "notAttempted": "Not attempted",
+          "sshTunnel": "I am using an SSH tunnel to this local address",
+          "stepChooseAddress": "Choose Another device and select a reachable address.",
+          "stepCopyLink": "Generate the link, then copy the “Pair another Orca client” link.",
+          "stepOpenShare": "Open Settings → Remote Orca Servers → Share this host."
         },
         "RuntimePairingUrlGenerator": {
           "279e0dcb57": "127.0.0.1 only works on this computer. Use a LAN, Tailscale, or custom address for another device.",
+          "2e5c4e3c93": "Pair another Orca client",
+          "6b9ca3e69b": "Open in browser",
+          "849825e829": "Paste this pairing URL into another Orca client.",
+          "8de0f84fff": "Generate Access Link",
           "add-custom": "Add custom address…",
           "b91e36a986": "web",
-          "de6d5cff95": "This computer ("
+          "de6d5cff95": "This computer (",
+          "intentQuestion": "Where will this link be opened?",
+          "localOnly": "This computer only",
+          "pairedRunsAsYou": "A paired client can run commands as you on this computer.",
+          "recommended": "Recommended",
+          "staleAddress": "The connection address changed. Generate a new link for {{address}}."
+        },
+        "RuntimeRepairDialog": {
+          "description": "{{name}} no longer accepts this computer. On {{name}}, open Settings → Remote Orca Servers → Share this host, create a link for another Orca client, then paste it here."
         },
         "Settings": {
           "084d8fac5b": "Privacy & Security",
@@ -1489,6 +1579,7 @@
           "23c6874fdf": "AI Capabilities",
           "8bd117d669": "Interface",
           "9abb9be3bc": "Set Up",
+          "b5ee17826b": "Pair remote Orca runtimes for persistent sessions, richer remote state, and web or mobile handoff.",
           "dd72ed437a": "Choose which task providers appear in the Tasks page and sidebar.",
           "e1578cd4bc": "Workflows",
           "mobile_group": "Mobile"
@@ -1516,13 +1607,19 @@
           "fde7ff2cc3": "packages/web shared/ui"
         },
         "SshPane": {
+          "51d7dba44d": "Import",
+          "639ceb3698": "Add Target",
           "94c5284560": "Targets",
           "a7d28dff81": "Add a remote host to connect to it in Orca.",
           "syncedServerPlural": "Synced {{count}} servers",
           "syncedServerSingular": "Synced {{count}} server"
         },
         "SshTargetCard": {
+          "0e53e9f8e8": "Test",
+          "3d21a22d0e": "Removing target",
+          "3d8af2949f": "Edit target",
           "47e94bd6ba": "connected",
+          "7f7b3d7ab4": "Remove target",
           "f0871e6bfb": "connect"
         },
         "SshTargetForm": {
@@ -1530,8 +1627,12 @@
           "29af933cd5": "New SSH Target",
           "4a342f44c1": "Advanced Connection",
           "92f80edbfd": "Remote Terminal Persistence",
+          "9518545cb6": "Add Target",
           "e9609ddca6": "Proxy, jump host, and connection reuse",
           "f2331ce599": "Edit SSH Target"
+        },
+        "SshTargetList": {
+          "selectGroup": "Select all in this group"
         },
         "TerminalAppearanceSection": {
           "16c471ee03": "on",
@@ -1788,6 +1889,24 @@
             }
           }
         },
+        "managedServers": {
+          "access": {
+            "link": "Use SSH",
+            "linked": "{{name}} via SSH",
+            "target": "Reach through SSH host",
+            "title": "SSH access for paired servers"
+          },
+          "deploy": {
+            "hostPlaceholder": "Choose an empty SSH host",
+            "running": "Deploying…",
+            "submit": "Deploy server"
+          },
+          "outcome": {
+            "activeServer": "Not done: this server is the default host for new projects. Choose another one in Advanced before stopping it."
+          },
+          "row": {},
+          "title": "Orca on your SSH hosts"
+        },
         "mobile": {
           "settings": {
             "search": {
@@ -1796,7 +1915,9 @@
           }
         },
         "providerAccountScope": {
-          "localMac": "Local Mac"
+          "localCredentials": "Credentials and account checks for this provider are owned by this desktop client. To use a server, change Settings > Remote Orca Servers > Advanced > Default host for new projects.",
+          "localMac": "Local Mac",
+          "remoteServerCredentials": "Credentials and account checks for this provider are owned by this remote server. To use another host, change Settings > Remote Orca Servers > Advanced > Default host for new projects."
         },
         "repository": {
           "search": {
@@ -1808,6 +1929,14 @@
             "vm": "vm"
           }
         },
+        "runtime": {
+          "environments": {
+            "search": {
+              "4575341c77": "Add a saved remote Orca server, generate a pairing URL, or choose the default host for new projects."
+            }
+          }
+        },
+        "serverList": {},
         "settingOwnership": {
           "clientDefaultProjectScopes": "Client default + project scopes",
           "terminalQuickCommands": "Commands are saved on this client, then scoped globally or to a project setup so they run from the selected terminal context."
@@ -1827,6 +1956,10 @@
           "linkedProjects_other": "This host’s Orca server already had {{paths}}, so this desktop now uses the server’s copy. This desktop’s tabs and {{count}} automations there were not moved, and worktrees it created there show as external worktrees.",
           "olderTerminals_one": "{{count}} terminal started by an older version of Orca is still running on this host, and it doesn’t stop on its own. Close it in that version of Orca or end it on the host, then reconnect.",
           "olderTerminals_other": "{{count}} terminals started by an older version of Orca are still running on this host, and they don’t stop on their own. Close them in that version of Orca or end them on the host, then reconnect."
+        },
+        "sshManagedHostRemove": {
+          "description": "Orca runs on {{label}}. Under Orca on your SSH hosts, use Stop… to remove Orca from the host, or Forget… if the host is gone. Then you can remove this SSH host.",
+          "open": "Open Orca on your SSH hosts"
         },
         "task": {
           "tracker": {
@@ -1892,6 +2025,9 @@
           "imported_other": "Imported {{value0}} themes",
           "over_limit_one": "Importing these themes would exceed the {{value0}} custom terminal theme limit. Deselect 1 new theme and try again.",
           "over_limit_other": "Importing these themes would exceed the {{value0}} custom terminal theme limit. Deselect {{value1}} new themes and try again."
+        },
+        "wslHosts": {
+          "remove": "Remove"
         }
       },
       "shared": {
@@ -3126,6 +3262,7 @@
         "notDoneAnswer": "Your answer was not sent.",
         "notDoneCommand": "The command didn't run.",
         "notDoneGoal": "The goal wasn't changed.",
+        "notDoneQueuedEdit": "Your edit wasn't saved.",
         "notDoneOption": "The setting wasn't changed.",
         "notDoneReadHistory": "This chat's history couldn't be loaded.",
         "notDoneSend": "Your message was not sent.",
