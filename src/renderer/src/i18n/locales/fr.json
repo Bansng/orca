@@ -132,7 +132,7 @@
       "description": "Choisissez l’apparence et le comportement des chats.",
       "names": {
         "title": "Noms des chats",
-        "description": "Utilisez un agent pour nommer les nouveaux chats à partir de leur premier message. Sans nom généré, ils restent Claude Chat ou Codex Chat.",
+        "description": "Utilisez un agent pour nommer les nouveaux chats à partir de leur premier message. En attendant un nom généré, le chat affiche son premier message.",
         "enable": "Nommer automatiquement les chats",
         "recipe": "Nom du chat",
         "recipeDescription": "Génère un nom court à partir du premier message d’un nouveau chat.",
@@ -5552,7 +5552,8 @@
         },
         "PendingWorktreeRow": {
           "af21e953d1": "Annuler la création du worktree",
-          "188f6922a0": "Annuler"
+          "188f6922a0": "Annuler",
+          "creatingWorkspace": "Création de l'espace de travail…"
         },
         "ProjectGroupDeleteDialog": {
           "ca65b78f78": "Annuler",
@@ -6542,7 +6543,8 @@
           "sshConfigPickerAddAllEmpty": "Tout ajouter à Orca",
           "identityFileFromConfigHint": "Volontairement laissé vide : Orca utilise toutes les clés résolues par ~/.ssh/config pour {{value0}}. Saisissez un chemin pour n'utiliser que cette clé.",
           "sshConfigPickerRetry": "Réessayer",
-          "sshConfigPickerResolving": "Lecture…"
+          "sshConfigPickerResolving": "Lecture…",
+          "pairingHelpShareComputer": "Créez-le dans Réglages → Serveurs Orca distants → Partager cet ordinateur sur l’autre ordinateur."
         },
         "ForgetSshWorkspaceDialog": {
           "reconnectFailed": "Échec de la reconnexion",
@@ -8467,7 +8469,12 @@
           "27cf8507ad": "Actualiser l'accès partagé",
           "f031182867": "Accès serveur partagé",
           "df142657a5": "Pas encore utilisé",
-          "b18d1764ef": "Dernière utilisation {{value0}}"
+          "b18d1764ef": "Dernière utilisation {{value0}}",
+          "linkName": "Lien · {{value0}}",
+          "activeLinks": "Liens actifs",
+          "noActiveLinks": "Aucun lien actif.",
+          "createdAt": "Créé le {{value0}}",
+          "revoke": "Révoquer"
         },
         "RuntimeEnvironmentsPane": {
           "aeb26635d2": "Supprimer {{value0}}",
@@ -8573,7 +8580,10 @@
           "repair": "Re-pair…",
           "serverAccessRevoked": "Access revoked",
           "orcaVersionLastSeen": "Orca v{{value0}} (last seen)",
-          "pairedTwice": "Même serveur que {{value0}}, associé deux fois. Supprimez-en un pour pouvoir modifier ses projets."
+          "pairedTwice": "Même serveur que {{value0}}, associé deux fois. Supprimez-en un pour pouvoir modifier ses projets.",
+          "removeDefaultServerDescription": "Ce serveur est l’hôte par défaut des nouveaux projets. Choisissez-en un autre dans « Les nouveaux projets s’ouvrent sur » avant de le supprimer. Les sessions existantes ne sont pas touchées.",
+          "connectedNewProjectsHint": "Connecté à {{value0}}. Pour y créer les nouveaux projets par défaut, choisissez-le dans « Les nouveaux projets s’ouvrent sur ».",
+          "removeDefaultServerBlocked": "Ce serveur est l’hôte par défaut des nouveaux projets. Choisissez-en un autre dans « Les nouveaux projets s’ouvrent sur » avant de le supprimer."
         },
         "RuntimePairingGeneratedUrlRows": {
           "0495f68959": "Copier {{value0}}"
@@ -8626,7 +8636,15 @@
           "localLinkHelp": "Ce lien ne fonctionne que dans un navigateur ou un client Orca exécuté sur cet ordinateur.",
           "noExternalAddress": "Aucune adresse pour un autre appareil n'a été trouvée. Connectez cet ordinateur à un LAN ou à Tailscale, actualisez, ou choisissez « Adresse personnalisée ».",
           "staleAddress": "L'adresse de connexion a changé. Générez un nouveau lien pour {{address}}.",
-          "customInvalid": "Saisissez un hôte, un hôte:port, une adresse IPv6 ou une URL ws(s):// valide."
+          "customInvalid": "Saisissez un hôte, un hôte:port, une adresse IPv6 ou une URL ws(s):// valide.",
+          "thisComputer": "Cet ordinateur",
+          "whoOpens": "Qui ouvrira le lien",
+          "addressLabel": "Adresse",
+          "createLink": "Créer un lien",
+          "browserLinkLabel": "Lien pour navigateur",
+          "accessLinkLabel": "Lien d’accès",
+          "accessLinkHelp": "Collez-le dans « Ajouter un serveur » sur l’autre Orca.",
+          "staleAddressCreate": "L’adresse de connexion a changé. Créez un nouveau lien pour {{address}}."
         },
         "Settings": {
           "3bf149e873": "Paramètres du projet > {{value0}}",
@@ -8704,7 +8722,8 @@
           "devDescription": "Outils réservés au développement pour exercer les états de l'UI.",
           "linearTitle": "Linear",
           "linearDescription": "Fonctionnement de Linear dans Orca, checklist de configuration, skill d'agent et exemples de prompts.",
-          "tasksDescription": "Connectez des fournisseurs, installez le skill Linear et choisissez ce qui apparaît dans Tâches."
+          "tasksDescription": "Connectez des fournisseurs, installez le skill Linear et choisissez ce qui apparaît dans Tâches.",
+          "remoteServersDescription": "Exécutez Orca sur une autre machine et travaillez dessus depuis ici."
         },
         "SettingsFormControls": {
           "42a4d15a30": "Aucune police correspondante.",
@@ -8828,7 +8847,8 @@
           "2ef2b2674b": "Supprimer {{value0}}"
         },
         "SshDestructiveActionDialog": {
-          "895b216267": "Annuler"
+          "895b216267": "Annuler",
+          "moreTargets": "{{count}} de plus"
         },
         "SshPane": {
           "c0f1c80166": "Aucune cible SSH configurée.",
@@ -8851,7 +8871,10 @@
           "f1fc50dad2": "Échec du chargement des cibles SSH",
           "0cda732f43": "Échec du test de connexion",
           "syncedServerSingular": "Synchronisation terminée : {{count}} serveur",
-          "syncedServerPlural": "Synchronisation terminée : {{count}} serveurs"
+          "syncedServerPlural": "Synchronisation terminée : {{count}} serveurs",
+          "noFilterMatch": "Aucun hôte ne correspond.",
+          "addHost": "Ajouter un hôte",
+          "alreadyInSync": "~/.ssh/config est déjà synchronisé"
         },
         "SshPassphraseDialog": {
           "d5a234456f": "Annuler",
@@ -8882,11 +8905,26 @@
           "3d8af2949f": "Modifier la cible",
           "18968ede9e": "Erreur",
           "f0871e6bfb": "connect",
-          "47e94bd6ba": "connecté"
+          "47e94bd6ba": "connecté",
+          "removing": "Suppression…",
+          "testing": "Test en cours…",
+          "select": "Sélectionner {{label}}",
+          "orcaServer": "Serveur Orca",
+          "moreActions": "Autres actions pour {{label}}",
+          "testConnection": "Tester la connexion",
+          "edit": "Modifier…",
+          "remove": "Supprimer…"
         },
         "SshTargetDestructiveActions": {
           "3bb0cf0ee4": "Ceci supprimera la cible et arrêtera tous les terminaux distants actifs.",
-          "4808966c41": "Supprimer la cible SSH"
+          "4808966c41": "Supprimer la cible SSH",
+          "bulkTitleSingular": "Supprimer {{count}} hôte SSH ?",
+          "bulkTitlePlural": "Supprimer {{count}} hôtes SSH ?",
+          "bulkDescription": "Les hôtes supprimés disparaissent des sélecteurs d’hôte des espaces de travail, des automatisations et de la barre latérale. Votre ~/.ssh/config n’est pas modifié, et les synchronisations suivantes ne les rajouteront pas.",
+          "bulkAction": "Supprimer {{count}}",
+          "bulkProgress": "Suppression {{done}} sur {{count}}…",
+          "bulkConnectedSingular": "{{count}} hôte est connecté. Ses terminaux distants seront fermés.",
+          "bulkConnectedPlural": "{{count}} hôtes sont connectés. Leurs terminaux distants seront fermés."
         },
         "SshTargetForm": {
           "fea9cb402e": "Annuler",
@@ -8922,7 +8960,8 @@
           "addDescription": "Ajoutez une machine permanente sur laquelle vous pouvez vous connecter en SSH.",
           "editingPrefix": "Modification",
           "allowRemoteCliControl": "Autoriser l'orca CLI de cet hôte à contrôler Orca",
-          "allowRemoteCliControlHelp": "Activé par défaut pour les nouveaux hôtes. Permet aux commandes orca exécutées sur cet hôte d'ouvrir et de piloter des onglets du navigateur Orca sur ce bureau, uniquement dans les espaces de travail de cet hôte et uniquement tant qu'il est connecté, et aux terminaux lancés par une ancienne version d'Orca sur cet hôte d'exécuter des commandes d'orchestration (check, inbox, send, ask, reply) pour leur propre travail supervisé. Elles ne peuvent pas lire vos fichiers, votre presse-papiers ni vos cookies. Lorsque cette option est désactivée, elles n'atteignent que le serveur Orca de cet hôte."
+          "allowRemoteCliControlHelp": "Activé par défaut pour les nouveaux hôtes. Permet aux commandes orca exécutées sur cet hôte d'ouvrir et de piloter des onglets du navigateur Orca sur ce bureau, uniquement dans les espaces de travail de cet hôte et uniquement tant qu'il est connecté, et aux terminaux lancés par une ancienne version d'Orca sur cet hôte d'exécuter des commandes d'orchestration (check, inbox, send, ask, reply) pour leur propre travail supervisé. Elles ne peuvent pas lire vos fichiers, votre presse-papiers ni vos cookies. Lorsque cette option est désactivée, elles n'atteignent que le serveur Orca de cet hôte.",
+          "addHost": "Ajouter un hôte"
         },
         "TasksPane": {
           "f71d8a9dd3": "Fournisseurs de tâches",
@@ -10789,7 +10828,11 @@
               "4575341c77": "Ajoutez un serveur Orca distant enregistré, générez une URL d'appairage ou choisissez l'hôte par défaut des nouveaux projets.",
               "defaultHostKeyword": "hôte par défaut",
               "newProjectsKeyword": "nouveaux projets",
-              "activeServerKeyword": "serveur actif"
+              "activeServerKeyword": "serveur actif",
+              "addShareDefault": "Ajoutez un serveur Orca distant, partagez cet ordinateur ou choisissez où s’ouvrent les nouveaux projets.",
+              "shareComputerKeyword": "partager cet ordinateur",
+              "accessLinkKeyword": "lien d’accès",
+              "installKeyword": "installer un serveur"
             }
           }
         },
@@ -11380,7 +11423,9 @@
           "localMac": "Mac local",
           "localCredentials": "Les identifiants et vérifications de compte de ce fournisseur appartiennent à ce client de bureau. Pour utiliser un serveur, modifiez Paramètres > Serveurs Orca distants > Avancé > Hôte par défaut des nouveaux projets.",
           "remoteServerRateLimit": "Le budget d'API de {{value0}} provient de la CLI sur ce serveur distant. Choisissez un autre hôte dans le menu Hôte en haut des Paramètres pour voir son budget.",
-          "localRateLimit": "Le budget d'API de {{value0}} provient de la CLI sur ce client de bureau. Choisissez un serveur dans le menu Hôte en haut des Paramètres pour voir son budget."
+          "localRateLimit": "Le budget d'API de {{value0}} provient de la CLI sur ce client de bureau. Choisissez un serveur dans le menu Hôte en haut des Paramètres pour voir son budget.",
+          "remoteServerCredentialsNewProjects": "Les identifiants et vérifications de compte de ce fournisseur appartiennent à ce serveur distant. Pour utiliser un autre hôte, modifiez Réglages > Serveurs Orca distants > Les nouveaux projets s’ouvrent sur.",
+          "localCredentialsNewProjects": "Les identifiants et vérifications de compte de ce fournisseur appartiennent à ce client de bureau. Pour utiliser un serveur, modifiez Réglages > Serveurs Orca distants > Les nouveaux projets s’ouvrent sur."
         },
         "settingOwnership": {
           "clientDefault": "Valeur par défaut du client",
@@ -11600,7 +11645,8 @@
           "stoppingCleanup": "Arrêt…",
           "stopCleanup": "Arrêter le nettoyage",
           "cleanupStopped": "Nettoyage arrêté",
-          "stopCleanupFailed": "Impossible d'arrêter le nettoyage de la VM Cloud."
+          "stopCleanupFailed": "Impossible d'arrêter le nettoyage de la VM Cloud.",
+          "cloudVmRefreshLabel": "Actualiser les Cloud VM"
         },
         "ephemeralVms": {
           "search": {
@@ -12218,14 +12264,24 @@
           "saveFailed": "Impossible d'enregistrer l'hôte",
           "saveFailedHelp": "L'hôte a été vérifié, mais Orca n'a pas pu l'enregistrer. Vérifiez le nom et le stockage local des paramètres, puis réessayez.",
           "differentServer": "This link is for a different server",
-          "differentServerHelp": "This pairing link is for a different server. Create the link on the server you are re-pairing."
+          "differentServerHelp": "This pairing link is for a different server. Create the link on the server you are re-pairing.",
+          "loopbackRecoveryTunnel": "Sur l’autre ordinateur, ouvrez « Partager cet ordinateur » et créez un lien pour « Un autre appareil » avec son adresse Tailscale ou LAN. Si vous y accédez via un tunnel SSH, activez l’option ci-dessous.",
+          "sshTunnelReach": "J’accède à cette adresse via un tunnel SSH",
+          "addServerWithTunnel": "Ajouter le serveur via le tunnel",
+          "addServer": "Ajouter un serveur",
+          "nameLabel": "Nom",
+          "optional": "(facultatif)",
+          "headlessHelpPrefix": "Vous exécutez Orca sans fenêtre ? Sur cet ordinateur, lancez"
         },
         "CloudVmSetupGuide": {
           "title": "Créer une VM cloud",
           "description": "Les VM cloud sont créées à partir de recettes d'environnement lors de la création d'un espace de travail.",
           "setupRecipe": "Configurez une recette d'environnement pour votre fournisseur cloud.",
           "createWorkspace": "Créez un espace de travail et sélectionnez cette recette sous Run on.",
-          "openSetup": "Configurer les recettes d'environnement"
+          "openSetup": "Configurer les recettes d'environnement",
+          "cardTitle": "Cloud VM",
+          "cardDescription": "Créées pour chaque espace de travail à partir d’une recette d’environnement.",
+          "setUpRecipes": "Configurer les recettes"
         },
         "ReleaseChannelSection": {
           "switchFailed": "Impossible de passer à cette version.",
@@ -12596,7 +12652,9 @@
         },
         "sshManagedHostRemove": {
           "description": "Orca s’exécute sur {{label}}. Dans Orca sur vos hôtes SSH, utilisez Arrêter… pour retirer Orca de l’hôte, ou Oublier… si l’hôte n’existe plus. Vous pourrez ensuite supprimer cet hôte SSH.",
-          "open": "Ouvrir Orca sur vos hôtes SSH"
+          "open": "Ouvrir Orca sur vos hôtes SSH",
+          "descriptionServers": "Orca tourne sur {{label}}. Dans Serveurs Orca distants, ouvrez le menu ⋯ d’Orca sur {{label}} et choisissez « Arrêter… » pour retirer Orca de l’hôte, ou « Oublier… » si l’hôte n’existe plus. Vous pourrez ensuite supprimer cet hôte SSH.",
+          "openServers": "Ouvrir Serveurs Orca distants"
         },
         "managedServers": {
           "row": {
@@ -12619,7 +12677,10 @@
             "confirmForget": "Oublier sur ce poste",
             "keepLinked": "Garder lié",
             "forgetDescription": "Dissocie ce serveur ici sans contacter son hôte. Si l'hôte revient, le serveur y tourne peut-être encore.",
-            "title": "Orca sur {{host}}"
+            "title": "Orca sur {{host}}",
+            "orcaVersion": "Orca sur cet hôte : {{version}}",
+            "stopOrcaDescription": "Arrête Orca sur l’hôte SSH et le retire de cette liste.",
+            "updateOrcaOnHost": "Mettre à jour Orca sur cet hôte"
           },
           "title": "Orca sur vos hôtes SSH",
           "description": "Orca s’installe sur un hôte SSH vide et se maintient à jour.",
@@ -12644,7 +12705,10 @@
             "pendingLink": "La connexion via SSH n’a pas abouti.",
             "pendingUnlink": "L’arrêt de l’accès SSH n’a pas abouti.",
             "retry": "Réessayer",
-            "cancelLink": "Annuler"
+            "cancelLink": "Annuler",
+            "linkedRoute": "Accessible via {{host}}, port du serveur {{port}}.",
+            "connect": "Connecter",
+            "chooseHost": "Choisissez un hôte"
           },
           "search": {
             "title": "Orca sur vos hôtes SSH",
@@ -12697,7 +12761,8 @@
             "unverifiable": "Non effectué : Orca n'a pas pu confirmer ce qui tourne sur ce serveur. Réessayez lorsque l'hôte est joignable.",
             "migration": "Non effectué : un déplacement vers ce serveur est inachevé. Reprenez-le d'abord.",
             "deferred": "Pas encore effectué : le serveur n'est pas prêt pour cela. Réessayez plus tard.",
-            "failed": "Orca n'a pas pu terminer cette action sur le serveur. Réessayez."
+            "failed": "Orca n'a pas pu terminer cette action sur le serveur. Réessayez.",
+            "defaultServer": "Non effectué : ce serveur est l’hôte par défaut des nouveaux projets. Choisissez-en un autre dans « Les nouveaux projets s’ouvrent sur » avant de l’arrêter."
           },
           "reassurance": "S’exécute sur chaque hôte, accessible via votre propre connexion SSH. Votre code et vos fichiers restent où ils sont. Seule la liste des projets, onglets et terminaux d’Orca passe sur l’hôte."
         },
@@ -12812,14 +12877,16 @@
           "connect": "Connecter",
           "remove": "Supprimer",
           "turnOn": "Activer dans Expérimental",
-          "forceUpdate": "Forcer la mise à jour"
+          "forceUpdate": "Forcer la mise à jour",
+          "chip": "WSL"
         },
         "RuntimeRepairDialog": {
           "title": "Re-pair {{name}}",
           "description": "{{name}} no longer accepts this computer. On {{name}}, open Settings → Remote Orca Servers → Share this host, create a link for another Orca client, then paste it here.",
           "submit": "Re-pair",
           "success": "Re-paired with {{name}}",
-          "failed": "Re-pair failed"
+          "failed": "Re-pair failed",
+          "descriptionShareComputer": "{{name}} n’accepte plus cet ordinateur. Sur {{name}}, ouvrez Réglages → Serveurs Orca distants → Partager cet ordinateur, créez un lien pour un autre Orca, puis collez-le ici."
         },
         "usageCredentialHost": {
           "outdated": "Mettez à jour Orca sur {{host}} pour y enregistrer cette clé.",
@@ -12862,6 +12929,137 @@
           "terminalsRunning": "{{count}} terminaux sont toujours en cours d’exécution sur cet hôte. Fermez-les, puis redémarrez le serveur Orca.",
           "cancel": "Annuler",
           "confirm": "Redémarrer"
+        },
+        "SshPaneToolbar": {
+          "filter": "Filtrer les hôtes",
+          "sync": "Synchroniser ~/.ssh/config",
+          "more": "Autres actions sur les hôtes SSH",
+          "restoreRemoved": "Restaurer les hôtes supprimés…",
+          "selected": "{{count}} sélectionnés",
+          "selectAll": "Tout sélectionner ({{count}})",
+          "clear": "Effacer",
+          "removeSelected": "Supprimer {{count}}",
+          "restoreRemovedCount": "Restaurer les hôtes supprimés ({{count}})…",
+          "hostCount": "{{count}} hôtes",
+          "selectMatching": "Sélectionner les {{count}} correspondants",
+          "testSelected": "Tester",
+          "clearFilter": "Effacer le filtre",
+          "restoreRemovedLoading": "Restaurer les hôtes supprimés",
+          "restoreRemovedNone": "Aucun hôte supprimé à restaurer",
+          "hiddenDeselectedSingular": "{{count}} hôte masqué désélectionné",
+          "hiddenDeselectedPlural": "{{count}} hôtes masqués désélectionnés"
+        },
+        "SshRestoreRemovedHosts": {
+          "title": "Restaurer les hôtes supprimés ?",
+          "description": "Les hôtes de ~/.ssh/config supprimés dans Orca réapparaissent dans les réglages et dans tous les sélecteurs d’hôte.",
+          "none": "Aucun hôte de ~/.ssh/config supprimé.",
+          "confirm": "Restaurer"
+        },
+        "SshTargetList": {
+          "addedInOrca": "Ajoutés dans Orca",
+          "fromConfig": "Depuis ~/.ssh/config",
+          "selectGroup": "Tout sélectionner dans ce groupe",
+          "filteredCount": "{{count}} sur {{total}}",
+          "selectManualGroup": "Sélectionner tous les hôtes ajoutés dans Orca",
+          "selectConfigGroup": "Sélectionner tous les hôtes de ~/.ssh/config"
+        },
+        "sshBulkRemove": {
+          "removedCount": "{{count}} supprimés",
+          "skippedCount": "{{count}} ignorés",
+          "failedCount": "{{count}} en échec",
+          "skippedManaged": "{{label}} a un serveur Orca.",
+          "skippedWorkspaces": "{{label}} a des espaces de travail.",
+          "skippedHint": "Supprimez les hôtes ignorés un par un pour choisir ce qu’il advient d’eux."
+        },
+        "sshBulkTest": {
+          "passed": "{{count}} joignables",
+          "failed": "{{count}} en échec",
+          "alreadyConnected": "{{count}} déjà connectés"
+        },
+        "serverList": {
+          "addTitle": "Ajouter un serveur",
+          "installNoHosts": "Aucun hôte SSH sans serveur Orca.",
+          "installHostHelp": "Uniquement les hôtes sans serveur Orca.",
+          "addSshHost": "Ajouter un hôte SSH",
+          "cancel": "Annuler",
+          "moreActions": "Plus d’actions pour {{name}}",
+          "moreActionsTooltip": "Plus d’actions",
+          "hideDetails": "Masquer les détails",
+          "details": "Détails",
+          "address": "Adresse",
+          "route": "Itinéraire",
+          "protocol": "Protocole",
+          "capabilities": "Fonctionnalités",
+          "copied": "Erreur copiée",
+          "copyFailed": "Impossible de copier l’erreur.",
+          "copyError": "Copier l’erreur",
+          "updateMenu": "Mettre à jour…",
+          "makeDefault": "Ouvrir les nouveaux projets ici",
+          "sshAccessLinked": "Itinéraire SSH…",
+          "sshAccess": "Se connecter via SSH…",
+          "remove": "Supprimer…",
+          "connecting": "Connexion…",
+          "disconnecting": "Déconnexion…",
+          "needsUpdate": "Mise à jour requise",
+          "unreachable": "Injoignable",
+          "version": "v{{version}}",
+          "updateAvailable": "v{{version}} disponible",
+          "throughSsh": "Via {{host}} → port {{port}}",
+          "manualUpdate": "Mettez à jour Orca sur l’hôte du serveur",
+          "defaultChip": "Par défaut",
+          "sshTunnelChip": "Tunnel SSH",
+          "sshDialogTitle": "Connecter {{name}} via SSH",
+          "sshDialogDescription": "Utilisez cette option quand le serveur n’est pas joignable directement. Orca ouvre un tunnel via un hôte SSH.",
+          "defaultHostLabel": "Les nouveaux projets s’ouvrent sur",
+          "thisComputer": "Cet ordinateur",
+          "defaultHostHelp": "Les projets existants restent où ils sont.",
+          "defaultHostWebHelp": "Ce navigateur ouvre les nouveaux projets sur le serveur choisi.",
+          "updateAll": "Tout mettre à jour ({{count}})",
+          "addServer": "Ajouter un serveur",
+          "moreWaysToAdd": "Autres façons d’ajouter un serveur",
+          "pasteAccessLink": "Coller un lien d’accès",
+          "checkForUpdates": "Rechercher des mises à jour",
+          "emptyDescription": "Associez une machine de développement, une machine cloud ou un ordinateur chez vous. Ses sessions continuent de tourner quand cet ordinateur est en veille.",
+          "movePaused": "Déplacement en pause",
+          "shareTitle": "Partager cet ordinateur",
+          "shareDescriptionNamed": "Permettez à un navigateur, un téléphone ou un autre Orca de travailler sur {{name}}.",
+          "shareDescription": "Permettez à un navigateur, un téléphone ou un autre Orca de travailler sur cet ordinateur.",
+          "shareButton": "Partager…",
+          "done": "Terminé",
+          "unreachableLead": "Orca n’a pas pu joindre ce serveur.",
+          "updateFailedLead": "La dernière mise à jour n’a pas abouti.",
+          "unreachableHint": "Vérifiez qu’Orca tourne sur le serveur et que cet ordinateur peut joindre son adresse.",
+          "tailscaleTip": "C’est une adresse Tailscale : les deux ordinateurs doivent être connectés au même tailnet.",
+          "loopbackTip": "Une adresse 127.0.0.1 ne fonctionne que via un tunnel SSH.",
+          "lastSeen": "Vu pour la dernière fois {{when}}",
+          "retry": "Réessayer",
+          "pasteAccessLinkHelp": "Associez-vous à un Orca qui tourne déjà sur une autre machine.",
+          "cloudVm": "Cloud VM",
+          "cloudVmHelp": "Créées pour chaque espace de travail à partir d’une recette d’environnement.",
+          "addDescriptionShort": "Collez le lien d’accès de « Partager cet ordinateur » sur l’autre machine.",
+          "installHostPlaceholder": "Choisissez un hôte SSH sans Orca",
+          "oneActiveLink": "1 lien actif",
+          "activeLinks": "{{value0}} liens actifs",
+          "shareDialogDescriptionRuns": "Toute personne disposant du lien peut exécuter des commandes en votre nom sur cet ordinateur jusqu’à ce que vous le révoquiez.",
+          "shownAs": "Affiché aux autres sous le nom {{name}}",
+          "editName": "Modifier",
+          "close": "Fermer",
+          "neverConnected": "Jamais connecté",
+          "noSavedServers": "Aucun serveur enregistré",
+          "hideError": "Masquer l’erreur",
+          "showError": "Afficher l’erreur",
+          "installNamePlaceholder": "Identique à l’hôte SSH",
+          "defaultHostEmptyLine": "Les nouveaux projets s’ouvrent sur cet ordinateur tant que vous n’ajoutez pas de serveur.",
+          "setUpDone": "Orca est configuré sur {{name}}.",
+          "settingUpInBackground": "Configuration d’Orca sur {{name}} en arrière-plan. Il apparaîtra dans la liste une fois prêt.",
+          "setUpOnSshHost": "Configurer Orca sur un hôte SSH",
+          "setUp": "Configurer",
+          "overYourSsh": "Via votre connexion SSH"
+        },
+        "networkAddress": {
+          "tailscale": "Tailscale · {{address}}",
+          "lan": "Réseau local · {{address}}",
+          "loopback": "Cet ordinateur · {{address}}"
         }
       },
       "right": {
@@ -18344,6 +18542,7 @@
         "notDoneOption": "Le paramètre n'a pas été modifié.",
         "notDoneCommand": "La commande n'a pas été exécutée.",
         "notDoneGoal": "L'objectif n'a pas été modifié.",
+        "notDoneQueuedEdit": "Votre modification n'a pas été enregistrée.",
         "restartFailed": "L'agent n'a pas pu redémarrer.",
         "capacity": "Orca sur l'ordinateur qui exécute ce chat a atteint une limite de requêtes. Mettez à jour Orca sur cet ordinateur, puis réessayez.",
         "outcomeUnknown": "Orca n'a pas pu confirmer ce qui s'est passé. Vérifiez le chat.",
@@ -18505,6 +18704,7 @@
         "permissionFullAccessCodexDescription": "Ne demande jamais ; peut modifier n’importe quel fichier et utiliser le réseau",
         "permissionFullAccessSharedDescription": "Ne demande jamais avant les modifications ou les commandes",
         "pasteFailed": "Échec du collage.",
+        "tooManySkills": "Votre message n’a pas été envoyé à {{agent}}. Gardez au maximum {{limit}} fichiers de compétences sélectionnés et réessayez.",
         "commandAttachmentsUnsupported": "Retirez les pièces jointes avant d'utiliser une commande de session de chat.",
         "optionValueShort": {
           "minimal": "Min.",
@@ -18526,6 +18726,9 @@
         "interruptedCallsLabel": "Appels d'outil interrompus : {{value0}}",
         "runningPreview": "Exécution de {{preview}}",
         "runningCommand": "Commande en cours d'exécution",
+        "showFullOutput": "Afficher la sortie complète",
+        "fullOutputFailed": "Impossible de charger la sortie complète.",
+        "fullOutputPartial": "Affichage de {{shown}} sur {{total}}.",
         "runningNamedPreview": "En cours d'exécution {{toolName}} {{preview}}",
         "runningNamed": "Exécution de {{toolName}}",
         "ranCommandOneToolSummary": "Exécuté la commande {{commandCount}} et utilisé l'outil {{toolCount}}",
@@ -18824,6 +19027,7 @@
         "pendingWork": "Attendez la fin du travail et des messages en attente avant d'utiliser cette commande."
       },
       "drop": {
+        "messageTitle": "Déposez pour joindre à ce message",
         "title": "Déposer pour joindre à ce chat",
         "subtitle": "Les fichiers sont ajoutés à votre message sous forme de chemins que l'agent peut lire."
       },
@@ -18901,6 +19105,7 @@
         "cancelEditing": "Annuler la modification",
         "editChanged": "Ce message a changé pendant que vous le modifiiez. Votre modification se trouve dans le champ de discussion.",
         "editChangedPrompt": "Ce message a changé pendant que vous le modifiiez. Votre modification sera dans le champ de discussion une fois que vous aurez répondu à l'agent.",
+        "editChangedNotSaved": "Ce message a changé pendant que vous le modifiiez. Votre modification n'a pas été enregistrée.",
         "editFailed": "Ce message ne peut pas être modifié.",
         "editGone": "Ce message a déjà été envoyé ou supprimé. Votre modification se trouve dans le champ de discussion.",
         "editGonePrompt": "Ce message a déjà été envoyé ou supprimé. Votre modification sera dans le champ de discussion une fois que vous aurez répondu à l'agent.",
@@ -18910,7 +19115,9 @@
         "collapse": "Réduire",
         "expand": "Développer",
         "queued": "En file d'attente",
-        "clearAll": "Tout effacer"
+        "clearAll": "Tout effacer",
+        "pasteOrDropImages": "Collez ou déposez des images",
+        "saveNeedsContent": "Ajoutez du texte ou une image pour enregistrer"
       },
       "thought": "A réfléchi",
       "thoughtForDuration": "A réfléchi pendant {{duration}}",
@@ -18972,8 +19179,8 @@
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "Passer au terminal",
-          "switchToChatView": "Passer au chat",
+          "switchToTerminalView": "Passer à l’agent de terminal",
+          "switchToChatView": "Passer à l’interface de chat",
           "closeTabsToLeft": "Fermer tous les onglets à gauche"
         },
         "BrowserTab": {
@@ -19853,6 +20060,7 @@
       "empty": "Aucun sous-agent trouvé."
     },
     "antigravityReferenceDescription": "Continue dans une nouvelle conversation Antigravity CLI en utilisant cette transcription comme référence.",
+    "searchHitSourceHost": "Trouvée sur {{value0}}",
     "antigravityIdeToCli": "IDE → CLI",
     "antigravity2ToCli": "2.0 → CLI",
     "continueInCli": "Continuer en CLI",

@@ -527,7 +527,7 @@ describe('registerRuntimeEnvironmentHandlers', () => {
     )
 
     expect(() => remove(null, { selector: added.environment.id })).toThrow(
-      'Choose another one in Advanced before removing it.'
+      'Choose another one under New projects open on before removing it.'
     )
     expect(activeRuntimeEnvironmentId).toBe(added.environment.id)
     expect(store.updateSettings).not.toHaveBeenCalled()

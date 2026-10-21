@@ -54,36 +54,6 @@ describe('getRuntimeEnvironmentIdForRepo', () => {
       )
     ).toBeNull()
   })
-
-  it('uses the focused host row when duplicate repo ids exist', () => {
-    expect(
-      getRuntimeEnvironmentIdForRepo(
-        {
-          settings: { activeRuntimeEnvironmentId: 'owner-runtime' },
-          repos: [
-            { id: 'repo-1', connectionId: null, executionHostId: 'local' },
-            { id: 'repo-1', connectionId: null, executionHostId: 'runtime:owner-runtime' }
-          ]
-        },
-        'repo-1'
-      )
-    ).toBe('owner-runtime')
-  })
-
-  it('does not silently choose a duplicate repo row when the focused host does not match', () => {
-    expect(
-      getRuntimeEnvironmentIdForRepo(
-        {
-          settings: { activeRuntimeEnvironmentId: 'other-runtime' },
-          repos: [
-            { id: 'repo-1', connectionId: null, executionHostId: 'local' },
-            { id: 'repo-1', connectionId: null, executionHostId: 'runtime:owner-runtime' }
-          ]
-        },
-        'repo-1'
-      )
-    ).toBe('other-runtime')
-  })
 })
 
 type OwnerRow = NonNullable<RepoRuntimeOwnerState['repos']>[number]
@@ -105,9 +75,9 @@ describe('getRuntimeEnvironmentIdForRepo owner matrix', () => {
     ['unstamped row', [row(null)], 'focused', null],
     ['missing row', [], 'focused', 'focused'],
     ['duplicates, local focus', [row('local'), row('runtime:owner')], null, null],
-    ['duplicates, matching focus', [row('local'), row('runtime:owner')], 'owner', 'owner'],
-    ['duplicates, other focus', [row('local'), row('runtime:owner')], 'other', 'other'],
-    ['duplicates, deleted focus', [row('runtime:a'), row('runtime:b')], 'deleted', 'deleted']
+    ['duplicates, matching focus', [row('local'), row('runtime:owner')], 'owner', null],
+    ['duplicates, other focus', [row('local'), row('runtime:owner')], 'other', null],
+    ['duplicates, deleted focus', [row('runtime:a'), row('runtime:b')], 'deleted', null]
   ])('%s', (_name, repos, focused, expected) => {
     const settings = { activeRuntimeEnvironmentId: focused }
     expect(getRuntimeEnvironmentIdForRepo({ repos, settings }, 'repo-1')).toBe(expected)
@@ -236,6 +206,20 @@ describe('runtimeTargetForRepoOwner', () => {
         'r'
       )
     ).toEqual({ kind: 'local' })
+  })
+
+  it('refuses a twin rather than taking the focused copy', () => {
+    const repos = [
+      { id: 'r', connectionId: null, executionHostId: 'local' as const },
+      { id: 'r', connectionId: null, executionHostId: 'runtime:owner' as const }
+    ]
+    expect(runtimeTargetForRepoOwner({ settings: focused, repos }, 'r')).toBeNull()
+    expect(
+      runtimeTargetForRepoOwner({ settings: { activeRuntimeEnvironmentId: 'owner' }, repos }, 'r')
+    ).toBeNull()
+    expect(
+      runtimeTargetForRepoOwner({ settings: { activeRuntimeEnvironmentId: null }, repos }, 'r')
+    ).toBeNull()
   })
 
   it('has no transport for an unknown repo', () => {

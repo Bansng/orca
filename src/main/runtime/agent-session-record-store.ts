@@ -4,7 +4,6 @@
 import { backfillAgentSessionPermissionModes } from './agent-session-permission-backfill'
 import { agentSessionRefusalError } from '../../shared/agent-session-wire-refusals'
 import { createAgentSessionConversationReceipts } from './agent-session-conversation-receipts'
-import { commitConversationCommandRecord } from './agent-session-conversation-command-record'
 import { pinAgentSessionRecordLaunchDirectory } from './agent-session-record-launch-directory'
 import {
   agentSessionOperationKey,
@@ -161,16 +160,6 @@ export class AgentSessionRecordStore {
     return this.listRecords().filter((record) => agentSessionScopeKey(record.location) === scope)
   }
 
-  setConversationCommand(
-    sessionId: string,
-    fence: number,
-    command: NonNullable<AgentSessionRecord['conversationCommand']>
-  ): Promise<void> {
-    return this.transact((draft) =>
-      commitConversationCommandRecord(draft, sessionId, fence, command)
-    )
-  }
-
   /** Unfenced on purpose: the name is a durable note, so writing it never contends with the
    *  writer lease. `null` clears it. */
   setConversationName = (sessionId: string, name: string | null): Promise<AgentSessionRecord> =>
@@ -319,6 +308,13 @@ export class AgentSessionRecordStore {
 
   replaceSessionOptions = (args: AgentSessionOptionsReplacement): Promise<AgentSessionRecord> =>
     this.mutate(args.sessionId, (record) => replaceAgentSessionRecordOptions(record, args))
+
+  /** One options revision from `agent-session-record-options`, decided against the record this
+   *  ordered write holds. */
+  reviseSessionOptions = <A extends { sessionId: string }>(
+    revise: (record: AgentSessionRecord, args: A) => AgentSessionRecord,
+    args: A
+  ) => this.mutate(args.sessionId, (record) => revise(record, args))
 
   async retireClaimKey(keyId: string, now: number): Promise<void> {
     await this.transact((draft) => retireAgentSessionClaimKey(draft, keyId, now))

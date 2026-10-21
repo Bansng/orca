@@ -13,6 +13,7 @@ import {
   splitPublishedLayout
 } from './workspace-layout-records'
 import { GIT_KEY, leaf } from './workspace-layout-session.test-fixture'
+import { ownedEditorFileId } from '../workspace-session-pane-ownership'
 
 function published(): PublishedWorkspaceLayout {
   const { layout } = loadWorkspaceLayoutWithoutReport(
@@ -122,6 +123,42 @@ describe('a published layout as records', () => {
     after.browserTabs = [...after.browserTabs, { ...after.browserTabs[0]!, label: 'other' }]
     expect(indexPublishedLayout(after)).toBeNull()
     expect(diff(before, after)).toEqual({ key: GIT_KEY, change: 'layout', layout: after })
+  })
+
+  it("applies a layout-owner host's editor file order in a reader built without the switch", () => {
+    const before = published()
+    before.editorFiles = [{ filePath: '/repo/a.ts', relativePath: 'a.ts', language: 'typescript' }]
+    const opened = {
+      filePath: '/repo/b.ts',
+      relativePath: 'b.ts',
+      language: 'typescript',
+      runtimeEnvironmentId: 'env-1'
+    }
+    // Keys as the host derives them from each record; the reader's build must not change them.
+    const order = [
+      ownedEditorFileId('/repo/a.ts', '', undefined),
+      ownedEditorFileId('/repo/b.ts', '', 'env-1')
+    ]
+    const applied = applyWorkspaceLayoutRecordChange(before, {
+      key: GIT_KEY,
+      change: 'records',
+      editorFiles: { set: [opened], order }
+    })
+    expect(applied?.editorFiles).toEqual([...before.editorFiles, opened])
+  })
+
+  it("keys two hosts' files at one path apart, so opening one sends only its record", () => {
+    const before = published()
+    const local = { filePath: '/repo/a.ts', relativePath: 'a.ts', language: 'typescript' }
+    before.editorFiles = [local]
+    const after = structuredClone(before)
+    after.editorFiles = [local, { ...local, runtimeEnvironmentId: 'env-1' }]
+    const change = diff(before, after)
+    expect(change).toMatchObject({
+      change: 'records',
+      editorFiles: { set: [after.editorFiles[1]] }
+    })
+    expect(applyWorkspaceLayoutRecordChange(before, change!)).toEqual(after)
   })
 
   it('refuses a change that does not fit what the reader holds', () => {

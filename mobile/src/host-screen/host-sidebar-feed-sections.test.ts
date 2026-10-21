@@ -6,7 +6,8 @@ import {
 import type { ExecutionHostScope } from '../../../src/shared/execution-host'
 import type { SidebarFeedDomains } from '../../../src/shared/sidebar-list/sidebar-feed-domains'
 import { resolveVisibleWorkspaceHostIds } from '../../../src/shared/workspace-view/workspace-host-visibility'
-import { buildHostFeedCatalog, buildHostFeedView } from './host-sidebar-feed-inputs'
+import { buildSidebarFeedCatalog } from '../../../src/shared/sidebar-list/sidebar-feed-catalog'
+import { buildHostFeedView } from './host-sidebar-feed-inputs'
 import { buildHostFeedSections, buildPreFeedSections } from './host-sidebar-feed-sections'
 import {
   FEED_ROWS,
@@ -17,7 +18,7 @@ import {
 } from './host-sidebar-feed.test-fixture'
 import type { MobileViewState } from '../worktree/workspace-view-settings'
 
-const catalog = buildHostFeedCatalog(SERVED_SECTIONS, [], [])
+const catalog = buildSidebarFeedCatalog(SERVED_SECTIONS, [], [])
 
 function phoneFeedView(
   view: MobileViewState,

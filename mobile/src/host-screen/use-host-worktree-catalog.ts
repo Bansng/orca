@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
+import { AppState } from 'react-native'
 import { ORCA_SIDEBAR_INPUTS_IS_MAIN } from '../../../src/shared/sidebar-inputs-switch'
 import { useFocusEffect } from 'expo-router'
 import { setCachedWorktrees } from '../cache/worktree-cache'
@@ -217,7 +218,8 @@ export function useHostWorktreeCatalog(args: {
       fetchWorktrees,
       fetchRepoMetadata,
       syncViewSettings: syncViewSettingsFromDesktop,
-      sidebarFeed
+      sidebarFeed,
+      appState: AppState
     })
   }, [
     client,

@@ -12,10 +12,7 @@ vi.mock('@/runtime/runtime-rpc-client', () => ({ callRuntimeRpc: mocks.callRunti
 import { recordLayoutApply, sendLayoutApply, type WindowLayoutCommand } from './layout-apply-send'
 import { sendGeneratedTabTitles } from './generated-tab-titles-send'
 import { runtimeEnvironmentIdUnlessTwin } from '@/lib/resolve-owner'
-import {
-  adoptLiveTerminalThroughLayoutOwner,
-  createInitialTerminalThroughLayoutOwner
-} from '@/store/terminals/terminal-tab-create-through-layout-owner'
+import { createInitialTerminalThroughLayoutOwner } from '@/store/terminals/terminal-tab-create-through-layout-owner'
 
 const WORKTREE_ID = 'repo-1::/srv/w'
 const FOLDER_ID = 'folder:f1'
@@ -111,13 +108,6 @@ describe.each(PAIRED_WORKSPACES)('$name', ({ workspaceId, rows }) => {
     expect(createInitialTerminalThroughLayoutOwner(getState, workspaceId, create)).toBe(false)
     expect(layoutApplyCalls()).toEqual([])
   })
-
-  it('the live terminal adoption sends nothing', async () => {
-    await expect(
-      adoptLiveTerminalThroughLayoutOwner(() => rows, workspaceId, { ptyId: 'pty-1' })
-    ).resolves.toBe('as-today')
-    expect(layoutApplyCalls()).toEqual([])
-  })
 })
 
 /** Every renderer source file that names the `layout.apply` method, with its count. */
@@ -151,7 +141,7 @@ describe('layout.apply senders', () => {
       'runtime/layout-apply-send.ts': 1,
       // Tests' stand-in for main: it answers layout.apply, never sends it.
       'runtime/layout-apply-test-transport.test-fixture.ts': 1,
-      'store/terminals/terminal-tab-create-through-layout-owner.ts': 2
+      'store/terminals/terminal-tab-create-through-layout-owner.ts': 1
     })
   })
 })

@@ -27,6 +27,7 @@ import { editorTabFileAccess, isClientLocalReadOnlyTab } from '@/lib/local-file-
 import { isFloatingWorkspaceId } from '../../../../shared/floating-workspace-worktree'
 import { chatScratchFileAddress } from '@/runtime/runtime-chat-scratch-file-address'
 import { stampCleanTabDiskBaseline } from './editor-clean-tab-disk-baseline'
+import { applyEditorFileLoadFailure } from './editor-deleted-file-reload'
 
 const inFlightFileReads = new Map<string, InFlightContentRead<FileContent>>()
 
@@ -264,15 +265,20 @@ export function useEditorPanelFileContentLoader({
         // classifiers downstream must see the token, not only its rendering (#21041).
         const loadErrorCode =
           !hostConnecting && err instanceof RuntimeRpcCallError ? err.code : undefined
-        setFileContents((prev) => ({
-          ...prev,
-          [id]: {
-            content: '',
-            isBinary: false,
-            loadError: message,
-            ...(loadErrorCode ? { loadErrorCode } : {})
-          }
-        }))
+        const failure: FileContent = {
+          content: '',
+          isBinary: false,
+          loadError: message,
+          ...(loadErrorCode ? { loadErrorCode } : {})
+        }
+        applyEditorFileLoadFailure({
+          error: err,
+          fileId: id,
+          filePath,
+          tabs: openFilesRef.current,
+          failure,
+          setFileContents
+        })
       } finally {
         if (outstandingFileReadsRef.current[id] === generation) {
           delete outstandingFileReadsRef.current[id]

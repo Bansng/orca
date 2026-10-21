@@ -50,13 +50,13 @@ describe('automation hooks cache key', () => {
     ['missing row follows focus', [], 'focused', 'focused:repo-1'],
     ['missing row, local focus', [], null, 'local:repo-1'],
     [
-      'duplicates fall back to focus',
+      'duplicates name no server, focus or not',
       [
         { id: 'repo-1', executionHostId: 'local' },
         { id: 'repo-1', executionHostId: 'runtime:owner' }
       ],
       'other',
-      'other:repo-1'
+      'local:repo-1'
     ]
   ])('%s', (_name, repos, focused, expected) => {
     expect(cacheKeyFor(repos, focused)).toBe(expected)

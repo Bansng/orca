@@ -1,6 +1,6 @@
-// A frame that changes only its panes' terminal bindings shows without a workspace rebuild: the
-// store's pane trees take the frame's bindings, and each tab's focused pane is resolved as the
-// rebuild resolves it. Anything only a rebuild shows exactly falls back to one.
+// Panes' terminal bindings a frame changed show without a workspace build: the store's pane trees
+// take the frame's bindings, and each tab's focused pane is resolved as the build resolves it.
+// Anything only a build shows exactly falls back to one.
 
 import { resolvePtyBoundActiveLeafId } from '@/components/terminal-pane/terminal-layout-leaf-ids'
 import type { AppState } from '@/store/types'
@@ -19,14 +19,16 @@ function sharesATerminal(layout: PublishedWorkspaceLayout): boolean {
 }
 
 /**
- * `layouts` with the frame's bindings shown, the same object when it already shows them. Null
- * when only a rebuild shows them as the rebuild would: a terminal two panes name (restore releases
- * one), a pane tree the store lacks or draws otherwise, or a tab the window's own command holds.
+ * `layouts` with the frame's bindings of the `rebound` terminal tabs shown, the same object when it
+ * already shows them. A tab the window's own command holds stays as the store has it, as a build
+ * keeps it. Null when only a build shows them as it would: a terminal two panes name (restore
+ * releases one), or a pane tree the store lacks or draws otherwise.
  */
 export function terminalLayoutsWithFrameBindings(
   layouts: TerminalLayouts,
   workspace: string,
-  frame: PublishedWorkspaceLayout
+  frame: PublishedWorkspaceLayout,
+  rebound: ReadonlySet<string>
 ): TerminalLayouts | null {
   if (sharesATerminal(frame)) {
     return null
@@ -34,7 +36,13 @@ export function terminalLayoutsWithFrameBindings(
   let next = layouts
   for (const tab of frame.tabs) {
     const panes = tab.terminal?.panes
-    if (!panes) {
+    if (
+      !panes ||
+      !rebound.has(tab.entityId) ||
+      isTabPaneTreeHeld(tab.entityId) ||
+      isDrawnTabHeld(workspace, tab.id) ||
+      isDrawnTabHeld(workspace, tab.entityId)
+    ) {
       continue
     }
     const current = layouts[tab.entityId]
@@ -46,10 +54,7 @@ export function terminalLayoutsWithFrameBindings(
     if (
       !current?.root ||
       panes.some((pane) => !layoutContainsLeafId(current.root, pane.leafId)) ||
-      Object.keys(bound).some((leafId) => !leafIds.has(leafId)) ||
-      isTabPaneTreeHeld(tab.entityId) ||
-      isDrawnTabHeld(workspace, tab.id) ||
-      isDrawnTabHeld(workspace, tab.entityId)
+      Object.keys(bound).some((leafId) => !leafIds.has(leafId))
     ) {
       return null
     }
