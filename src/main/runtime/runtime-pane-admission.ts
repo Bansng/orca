@@ -1,4 +1,6 @@
+import { PaneOwnerContentionError } from '../ipc/pty/pane/pane-spawn-operation'
 import { toSshExecutionHostId } from '../../shared/execution-host'
+import { collectLeafIds } from '../../shared/terminal-pane-layout-tree'
 import type {
   TerminalPaneAdmission,
   TerminalPaneAdmissionOutcome
@@ -62,6 +64,14 @@ function admissionFor(args: AdmittedSpawnArgs): TerminalPaneAdmission {
   }
 }
 
+function paneStillWritten(
+  store: RuntimeStore | null | undefined,
+  args: AdmittedSpawnArgs
+): boolean {
+  const layout = store?.getWorkspaceSession?.(hostIdOf(args))?.terminalLayoutsByTabId?.[args.tabId]
+  return collectLeafIds(layout?.root).includes(args.leafId)
+}
+
 function hostIdOf(args: AdmittedSpawnArgs): string | undefined {
   return args.connectionId ? toSshExecutionHostId(args.connectionId) : undefined
 }
@@ -118,7 +128,7 @@ export async function startInAdmittedPane<T>(
   try {
     return { outcome, result: await start(outcome) }
   } catch (error) {
-    if (outcome === 'admitted' && !keepOnFailure) {
+    if (outcome === 'admitted' && !keepOnFailure && !(error instanceof PaneOwnerContentionError)) {
       await withdrawAdmittedPane(store, admission, hostId)
     }
     throw error
@@ -128,7 +138,8 @@ export async function startInAdmittedPane<T>(
 /**
  * Starts a runtime-originated terminal: its pane, tab-bar entry and group are written first, then
  * the process starts and binds to that pane. A start that fails, or that attaches to a session
- * already running in another pane, takes back the pane it wrote.
+ * already running in another pane, takes back the pane it wrote. With `startStatus`, the pane
+ * shows 'starting' from before it is written, so no view sees it unbound and starts its own.
  */
 export async function spawnInAdmittedPane(
   store: RuntimeStore | null | undefined,
@@ -136,33 +147,50 @@ export async function spawnInAdmittedPane(
   { startStatus, ...args }: AdmittedSpawnArgs & PaneStartArgs
 ): ReturnType<Spawn> {
   const { groupId: _groupId, afterTabId: _afterTabId, ...spawnArgs } = args
-  const { outcome, result } = await startInAdmittedPane(
-    store,
-    admissionFor(args),
-    hostIdOf(args),
-    async (admitted) => {
-      if (admitted !== undefined && admitted !== 'admitted' && admitted !== 'exists') {
-        // A tab main recorded closed, or a split whose parent pane left the layout.
-        throw new Error(admitted === 'tab_closed' ? admitted : 'terminal_split_source_not_found')
-      }
-      if (!startStatus || (admitted !== 'exists' && !startStatus.keepOnFailure)) {
-        // SAFETY: Callers require spawn; a lost capability during admission keeps the original failure.
-        return controller.spawn!(spawnArgs)
-      }
-      const { sink } = startStatus
-      const paneKey = `${args.tabId}:${args.leafId}`
-      sink.set(paneKey, { status: 'starting' })
-      try {
-        const started = await controller.spawn!(spawnArgs)
-        sink.clear(paneKey)
-        return started
-      } catch (error) {
-        sink.set(paneKey, paneStartFailure(error))
-        throw error
-      }
-    },
-    startStatus?.keepOnFailure
-  )
+  const paneKey = `${args.tabId}:${args.leafId}`
+  let admittedAs: TerminalPaneAdmissionOutcome | undefined
+  startStatus?.sink.set(paneKey, { status: 'starting' })
+  let run: { outcome: TerminalPaneAdmissionOutcome | undefined; result: Awaited<ReturnType<Spawn>> }
+  const start = async (
+    admitted: TerminalPaneAdmissionOutcome | undefined
+  ): Promise<Awaited<ReturnType<Spawn>>> => {
+    if (admitted !== undefined && admitted !== 'admitted' && admitted !== 'exists') {
+      // A tab main recorded closed, or a split whose parent pane left the layout.
+      throw new Error(admitted === 'tab_closed' ? admitted : 'terminal_split_source_not_found')
+    }
+    admittedAs = admitted
+    // SAFETY: Callers require spawn; a lost capability during admission keeps the original failure.
+    return controller.spawn!(spawnArgs)
+  }
+  try {
+    // A reconnect into its own pane skips admission: the pane is already written.
+    run = args.paneSpawnOperation?.mustExist
+      ? { outcome: undefined, result: await start('exists') }
+      : await startInAdmittedPane(
+          store,
+          admissionFor(args),
+          hostIdOf(args),
+          start,
+          startStatus?.keepOnFailure
+        )
+  } catch (error) {
+    // A pane that stays (kept to show the failure, or one main already held) shows why; one
+    // closed while it started is gone, and one another owner won attaches to the winner.
+    if (
+      startStatus &&
+      admittedAs &&
+      !(error instanceof PaneOwnerContentionError) &&
+      (startStatus.keepOnFailure || admittedAs === 'exists') &&
+      paneStillWritten(store, args)
+    ) {
+      startStatus.sink.set(paneKey, paneStartFailure(error))
+    } else {
+      startStatus?.sink.clear(paneKey)
+    }
+    throw error
+  }
+  startStatus?.sink.clear(paneKey)
+  const { outcome, result } = run
   const started = result.agentSessionEnsure?.owner.surface ?? result.stablePaneOwner
   const elsewhere = started && (started.tabId !== args.tabId || started.leafId !== args.leafId)
   if (outcome === 'admitted' && elsewhere) {

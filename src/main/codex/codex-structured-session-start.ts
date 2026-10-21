@@ -115,6 +115,7 @@ export async function openCodexStructuredSession(
   }
   const catalogAccess = codexAcquireCatalogAccess(deps, launch)
   const session: CodexSession = {
+    events: input.events,
     account: start.account,
     connection,
     ...codexSessionLifecycle(input.fence, generation),

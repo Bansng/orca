@@ -28,7 +28,7 @@ type Props = {
   images: MobileNativeChatImageAttachments
   /** A structured chat's + sheet, files and skills; null on a terminal-backed chat. */
   structuredComposer?: MobileNativeChatStructuredComposer | null
-  onMicPress: () => void
+  onMicPress: (() => void) | undefined
   micActive: boolean
   dictationMode: string | undefined
   onMicPressIn: () => void

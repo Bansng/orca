@@ -39,6 +39,7 @@ import { liftSidebarFiltersHidingWorktree } from './worktree-activation-sidebar-
 import { isFloatingWorkspaceId } from '../../../shared/floating-workspace-worktree'
 import { revealFloatingWorkspacePanel } from './floating-workspace-panel-reveal'
 import { markVisited, readPreviousActive } from './worktree-activation-visit'
+import { selectFolderWorkspaces } from '@/store/workspace-record-selectors'
 
 /**
  * Shared activation sequence used by the worktree palette and add-repo/worktree dialogs.
@@ -76,7 +77,7 @@ export function activateAndRevealFolderWorkspace(
     folderWorkspaceId,
     opts?.executionHostId
   )
-  const folderWorkspace = state.folderWorkspaces.find(
+  const folderWorkspace = selectFolderWorkspaces(state).find(
     (workspace) => workspace === folderWorkspaceOwner
   )
   if (!folderWorkspace) {

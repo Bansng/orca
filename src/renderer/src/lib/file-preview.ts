@@ -25,6 +25,7 @@ import { findPage } from '@/store/slices/browser-page-records'
 import type { BrowserPageConversionLeg } from '@/store/slices/browser-page-conversion'
 import { ORCA_BROWSER_BLANK_URL } from '../../../shared/constants'
 import { chatScratchFileAddress } from '@/runtime/runtime-chat-scratch-file-address'
+import { selectFolderWorkspaces, selectWorktreesByRepo } from '@/store/workspace-record-selectors'
 
 export type PreviewableLanguage = 'html'
 
@@ -129,10 +130,10 @@ export function useWorkspaceFileBrowserActionPredicate(
       runtimeEnvironmentId: worktreeId
         ? runtimeEnvironmentIdWithLegacyFallbackUnlessTwin(state, worktreeId)
         : null,
-      folderWorkspaces: state.folderWorkspaces,
+      folderWorkspaces: selectFolderWorkspaces(state),
       projectGroups: state.projectGroups,
       repos: state.repos,
-      worktreesByRepo: state.worktreesByRepo
+      worktreesByRepo: selectWorktreesByRepo(state)
     }))
   )
   return useCallback(

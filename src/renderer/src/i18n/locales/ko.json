@@ -1275,6 +1275,12 @@
       }
     },
     "components": {
+      "hostPicker": {
+        "searchHosts": "호스트 검색…",
+        "noHostsMatch": "일치하는 호스트가 없습니다.",
+        "moreHosts_one": "호스트 {{count}}개 더 있음. 이름으로 검색하세요.",
+        "moreHosts_other": "호스트 {{count}}개 더 있음. 이름으로 검색하세요."
+      },
       "CodexRestartChip": {
         "c72a5fb234": "다시 시작",
         "9263e75f49": "Codex는 이전 계정을 사용하고 있습니다",
@@ -3827,6 +3833,12 @@
             "connectedHostCount_one": "호스트 {{count}}개",
             "connectedHostCount_other": "호스트 {{count}}개",
             "connecting": "연결 중…",
+            "searchSshHosts": "SSH 호스트 검색…",
+            "noMatchingSshHosts": "일치하는 SSH 호스트가 없습니다.",
+            "moreSshHostMatches_one": "{{count}}개 더 일치합니다. 계속 입력해 범위를 좁히세요.",
+            "moreSshHostMatches_other": "{{count}}개 더 일치합니다. 계속 입력해 범위를 좁히세요.",
+            "moreSshHosts_one": "SSH 호스트 {{count}}개 더 찾기…",
+            "moreSshHosts_other": "SSH 호스트 {{count}}개 중에서 찾기…",
             "runtime_unavailable_transport_up": "Orca를 사용할 수 없습니다.",
             "runtime_workspace_window_closed": "워크스페이스 창이 닫혔습니다."
           },
@@ -5838,8 +5850,8 @@
           "workspaceSection": "워크스페이스",
           "primaryDeleteDisabled": "기본 작업 트리는 삭제할 수 없습니다. 대신 프로젝트를 제거하세요.",
           "deleteWorktree": "작업 트리 삭제",
-          "sleepWithDescendants": "자손과 동침({{value0}})",
-          "sleepWithDescendantsDescription": "메모리와 CPU를 확보하려면 이 워크스페이스과 모든 중첩 하위 항목의 활성 패널을 닫으세요.",
+          "sleepWithDescendants": "하위 항목도 절전 ({{value0}})",
+          "sleepWithDescendantsDescription": "이 워크스페이스와 모든 하위 워크스페이스의 활성 패널을 닫아 메모리와 CPU 사용량을 줄입니다.",
           "deleteWithDescendants": "하위 항목과 함께 삭제…"
         },
         "WorktreeList": {
@@ -6827,7 +6839,6 @@
           "4e32e030b2": "로컬에 저장됩니다. Orca는 사용량 새로 고침을 위해 platform.minimax.io로만 전송합니다.",
           "remoteServerFallback": "원격 서버",
           "loadAccountsFailed": "프로바이더 계정을 불러오지 못했습니다.",
-          "remoteScopeAccounts": "{{value0}}에서 관리하는 계정을 표시하고 있습니다. 계정 추가나 재인증은 해당 서버에서 진행하세요.",
           "accountScopePrefix": "계정 범위",
           "accountScopeRemoteServerUnnamed": "원격 서버",
           "remoteScopeLocalAccountsKept": "이 데스크탑에서 관리되는 계정은 그대로 유지됩니다. 기본 런타임을 로컬 데스크탑으로 다시 전환하면 확인할 수 있습니다.",
@@ -12545,7 +12556,6 @@
         "sshManagedHostRemove": {
           "description": "{{label}}에서 Orca가 실행 중입니다. SSH 호스트의 Orca에서 중지…를 사용해 호스트에서 Orca를 제거하거나, 호스트가 없어졌다면 잊기…를 사용하세요. 그런 다음 이 SSH 호스트를 제거할 수 있습니다.",
           "open": "SSH 호스트의 Orca 열기",
-          "descriptionServers": "Orca가 {{label}}에서 실행 중입니다. 원격 Orca 서버에서 {{label}}의 Orca ⋯ 메뉴를 열고 '중지…'를 선택해 호스트에서 Orca를 제거하거나, 호스트가 없어졌다면 '삭제…'를 선택하세요. 그런 다음 이 SSH 호스트를 제거할 수 있습니다.",
           "openServers": "원격 Orca 서버 열기"
         },
         "managedServers": {
@@ -12569,7 +12579,6 @@
             "confirmForget": "이 데스크톱에서 잊기",
             "keepLinked": "연결 유지",
             "forgetDescription": "호스트에 연결하지 않고 여기서 이 서버의 연결을 해제합니다. 호스트가 다시 살아나면 서버가 그곳에서 계속 실행 중일 수 있습니다.",
-            "title": "{{host}}의 Orca",
             "orcaVersion": "이 호스트의 Orca: {{version}}",
             "stopOrcaDescription": "SSH 호스트에서 Orca를 중지하고 이 목록에서 제거합니다.",
             "updateOrcaOnHost": "이 호스트의 Orca 업데이트"
@@ -12914,9 +12923,6 @@
           "emptyDescription": "개발 머신, 클라우드 머신 또는 집에 있는 데스크톱을 페어링하세요. 이 컴퓨터가 절전 모드여도 세션은 그곳에서 계속 실행됩니다.",
           "movePaused": "이전 일시 중지됨",
           "shareTitle": "이 컴퓨터 공유",
-          "shareDescriptionNamed": "브라우저, 휴대폰 또는 다른 Orca에서 {{name}}로 작업할 수 있게 합니다.",
-          "shareDescription": "브라우저, 휴대폰 또는 다른 Orca에서 이 컴퓨터로 작업할 수 있게 합니다.",
-          "shareButton": "공유…",
           "done": "완료",
           "unreachableLead": "Orca가 이 서버에 연결하지 못했습니다.",
           "updateFailedLead": "마지막 업데이트가 완료되지 않았습니다.",
@@ -14306,8 +14312,8 @@
             "deleteReasonUnsupportedAgent": "{{value0}} 세션은 Orca에서 삭제할 수 없습니다.",
             "resumeInNewNativeChat": "새 채팅에서 재개",
             "resumeInNewCli": "새 터미널에서 재개",
-            "resumeInNewCliTooltipFork": "이 대화를 새 CLI 세션으로 포크합니다.",
-            "resumeInNewCliTooltipChat": "기본 채팅은 그대로 유지됩니다."
+            "resumeInNewCliTooltipFork": "이 대화의 복사본으로 새 터미널 에이전트 세션을 시작합니다.",
+            "resumeInNewCliTooltipChat": "이 채팅은 그대로 유지됩니다."
           },
           "AiVaultSessionDeleteDialog": {
             "title": "이 세션을 삭제할까요?",
@@ -19110,8 +19116,8 @@
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "터미널 에이전트로 전환",
-          "switchToChatView": "채팅 UI로 전환",
+          "switchToTerminalView": "터미널 에이전트로 계속하기",
+          "switchToChatView": "채팅 UI에서 계속하기",
           "closeTabsToLeft": "왼쪽의 모든 탭 닫기"
         },
         "BrowserTab": {
@@ -20479,7 +20485,17 @@
   "tabHoverCard": {
     "browser": "브라우저",
     "editor": "편집기",
-    "terminal": "터미널"
+    "terminal": "터미널",
+    "namingFailure": {
+      "regenerating": "다시 생성 중…",
+      "regenerate": "이름 다시 생성",
+      "title": "이 채팅의 이름을 지정하지 못했습니다",
+      "description": "채팅 이름 에이전트가 오류로 중지되어, 채팅은 첫 메시지를 이름으로 유지합니다.",
+      "viewError": "오류 보기",
+      "dialogTitle": "채팅 자동 이름 지정 실패",
+      "dialogDescriptionStart": "Orca가",
+      "dialogDescriptionEnd": "의 이름을 첫 메시지로부터 생성하지 못했습니다."
+    }
   },
   "jira": {
     "savedFilters": {

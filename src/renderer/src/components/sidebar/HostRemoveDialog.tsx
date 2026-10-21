@@ -22,6 +22,7 @@ import type { HostRemovalTarget } from './host-rename-remove'
 import { resolveSshHostRemoval } from './ssh-host-remove-resolution'
 import { clearSshHostWorkspaces } from './ssh-host-remove-workspaces'
 import { removeWslHost } from './wsl-host-removal'
+import { selectWorktreesByRepo } from '@/store/workspace-record-selectors'
 
 type HostRemoveDialogProps = {
   open: boolean
@@ -48,7 +49,7 @@ export function HostRemoveDialog({
   const mountedRef = useMountedRef()
 
   const repos = useAppStore((s) => s.repos)
-  const worktreesByRepo = useAppStore((s) => s.worktreesByRepo)
+  const worktreesByRepo = useAppStore((s) => selectWorktreesByRepo(s))
   const sshConnectionStates = useAppStore((s) => s.sshConnectionStates)
 
   // Resolve which workspaces live on the target so the dialog can offer to

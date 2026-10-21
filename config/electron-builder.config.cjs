@@ -375,6 +375,8 @@ module.exports = {
     'out/main/gitlab/project-ref-parser.js',
     'out/main/grok/**',
     'out/main/hermes/**',
+    'out/main/asar-transparent-fs.js',
+    'out/main/macos-tree-clone.js',
     'out/main/orca-profiles/profile-index-store.js',
     'out/main/persistence/profile-state/**',
     'out/main/startup/http1-compatibility-marker.js',
@@ -638,6 +640,7 @@ module.exports = {
     icon: 'resources/build/icon.icns',
     entitlements: 'resources/build/entitlements.mac.plist',
     entitlementsInherit: 'resources/build/entitlements.mac.plist',
+    ...(isMacRelease ? { sign: resolve(__dirname, 'scripts/sign-mac-app.mjs') } : {}),
     signIgnore: [
       ...bundledRipgrepMacSignIgnore,
       ...orcadTemplateMacSignIgnore,

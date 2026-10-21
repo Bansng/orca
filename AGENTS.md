@@ -25,6 +25,7 @@ Use the `$electron` skill and Playwright CDP for rendered Orca UI checks. Do not
 Before writing new logic at any scale — a function, component, IPC channel, state store, or whole subsystem/flow — check whether an existing implementation already does the job. Extend or generalize it instead of building a parallel version.
 
 ## Avoid Comments
+
 - Only use when code does not describe
 - BE CONCISE. 1 LINE if possible (why not how)
 

@@ -17,6 +17,7 @@ import {
   resolveEditorExternalWatchTargetRows
 } from './editor-external-watch-target-rows'
 import { selectWatchEligibleWorkspaceIds } from './editor-external-watch-scope'
+import { selectFolderWorkspaces, selectWorktreesByRepo } from '@/store/workspace-record-selectors'
 
 export type EditorExternalWatchTarget = {
   worktreeId: string
@@ -150,7 +151,7 @@ export function selectEditorExternalWatchTargets(
   const activeWorkspaceExecutionHostId = state.activeWorkspaceExecutionHostId ?? null
   if (
     cachedOpenFiles === state.openFiles &&
-    cachedWorktreesByRepo === state.worktreesByRepo &&
+    cachedWorktreesByRepo === selectWorktreesByRepo(state) &&
     cachedRepos === state.repos &&
     cachedActiveWorktreeId === state.activeWorktreeId &&
     cachedActiveWorkspaceExecutionHostId === activeWorkspaceExecutionHostId &&
@@ -161,7 +162,7 @@ export function selectEditorExternalWatchTargets(
     cachedRightSidebarExplorerView === state.rightSidebarExplorerView &&
     cachedGitStatusHugeByWorktree === state.gitStatusHugeByWorktree &&
     cachedSshConnectionStates === state.sshConnectionStates &&
-    cachedFolderWorkspaces === state.folderWorkspaces &&
+    cachedFolderWorkspaces === selectFolderWorkspaces(state) &&
     cachedProjectGroups === state.projectGroups &&
     cachedLastVisitedAtByWorktreeId === state.lastVisitedAtByWorktreeId
   ) {
@@ -190,7 +191,7 @@ export function selectEditorExternalWatchTargets(
   }
   const activeWorktreeId = state.activeWorktreeId
   const activeWorktree = activeWorktreeId
-    ? findWorktreeById(state.worktreesByRepo, activeWorktreeId)
+    ? findWorktreeById(selectWorktreesByRepo(state), activeWorktreeId)
     : undefined
   const activeWorktreeHost = parseExecutionHostId(activeWorktree?.hostId)
   const activeRepo = activeWorktree
@@ -238,7 +239,7 @@ export function selectEditorExternalWatchTargets(
   const targetsKey = sortedEntries.map(([key]) => key).join('|')
   const unwatchedTargetsKey = [...unwatchedTargetKeys].sort().join('|')
   cachedOpenFiles = state.openFiles
-  cachedWorktreesByRepo = state.worktreesByRepo
+  cachedWorktreesByRepo = selectWorktreesByRepo(state)
   cachedRepos = state.repos
   cachedActiveWorktreeId = state.activeWorktreeId
   cachedActiveWorkspaceExecutionHostId = activeWorkspaceExecutionHostId
@@ -249,7 +250,7 @@ export function selectEditorExternalWatchTargets(
   cachedRightSidebarExplorerView = state.rightSidebarExplorerView
   cachedGitStatusHugeByWorktree = state.gitStatusHugeByWorktree
   cachedSshConnectionStates = state.sshConnectionStates
-  cachedFolderWorkspaces = state.folderWorkspaces
+  cachedFolderWorkspaces = selectFolderWorkspaces(state)
   cachedProjectGroups = state.projectGroups
   cachedLastVisitedAtByWorktreeId = state.lastVisitedAtByWorktreeId
 

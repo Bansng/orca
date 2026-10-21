@@ -21,6 +21,7 @@ import type { DiffSection } from '../../diff-section-types'
 import type { DiffSectionItemProps } from '../../diff-section-item-props'
 import { getDiskBaselineSignature } from '../../../../../../shared/disk-baseline-signature'
 import { writeEditorSave } from '../../editor-save-disk-precondition'
+import { selectWorktreesByRepo } from '@/store/workspace-record-selectors'
 
 export type CombinedDiffSectionActions = {
   handleSectionSaveRef: DiffSectionItemProps['handleSectionSaveRef']
@@ -191,7 +192,7 @@ export function useCombinedDiffSectionActions({
       try {
         const state = useAppStore.getState()
         const worktree = file.worktreeId
-          ? findWorktreeById(state.worktreesByRepo, file.worktreeId)
+          ? findWorktreeById(selectWorktreesByRepo(state), file.worktreeId)
           : null
         const writeResult = await writeEditorSave(
           getEditorFileOperationContext(

@@ -200,7 +200,14 @@ export type RuntimeTerminalProgramStatusFacetEvent = {
 
 export type HookLiveAgentRow = Pick<
   RuntimeAgentRowSnapshot,
-  'payload' | 'updatedAt' | 'evidenceObservedAt' | 'stateStartedAt' | 'worktreeId' | 'programStatus'
+  | 'payload'
+  | 'updatedAt'
+  | 'evidenceObservedAt'
+  | 'stateStartedAt'
+  | 'turnEndedAt'
+  | 'turnEndDisposition'
+  | 'worktreeId'
+  | 'programStatus'
 >
 
 export type TerminalHandleRecord = {
