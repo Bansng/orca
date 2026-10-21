@@ -85,6 +85,11 @@ export type SleepingAgentSessionRecord = {
   restoreOnTabOpenOnly?: boolean
 }
 
+/** A record of a slept pane (worktree sleep, or a legacy record); 'quit'/'live' resume a running agent. */
+export function isPaneSleepRecord(record: Pick<SleepingAgentSessionRecord, 'origin'>): boolean {
+  return record.origin === undefined || record.origin === 'worktree-sleep'
+}
+
 const RESUMABLE_TUI_AGENT_SET: ReadonlySet<string> = new Set(RESUMABLE_TUI_AGENTS)
 const PROVIDER_SESSION_ID_MAX_LENGTH = 512
 

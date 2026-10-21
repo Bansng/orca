@@ -1274,6 +1274,12 @@
       }
     },
     "components": {
+      "hostPicker": {
+        "searchHosts": "Buscar hosts…",
+        "noHostsMatch": "Ningún host coincide.",
+        "moreHosts_one": "{{count}} host más. Búscalo por nombre.",
+        "moreHosts_other": "{{count}} hosts más. Busca por nombre para encontrar uno."
+      },
       "CodexRestartChip": {
         "c72a5fb234": "Reiniciar",
         "9263e75f49": "Codex está usando la cuenta anterior.",
@@ -3822,6 +3828,12 @@
             "connectedHostCount_one": "{{count}} host",
             "connectedHostCount_other": "{{count}} hosts",
             "connecting": "Conectando…",
+            "searchSshHosts": "Buscar hosts SSH…",
+            "noMatchingSshHosts": "Ningún host SSH coincide.",
+            "moreSshHostMatches_one": "{{count}} coincidencia más. Sigue escribiendo para acotar.",
+            "moreSshHostMatches_other": "{{count}} coincidencias más. Sigue escribiendo para acotar.",
+            "moreSshHosts_one": "Buscar {{count}} host SSH más…",
+            "moreSshHosts_other": "Buscar entre {{count}} hosts SSH más…",
             "runtime_unavailable_transport_up": "Orca no disponible",
             "runtime_workspace_window_closed": "Ventana del espacio de trabajo cerrada"
           },
@@ -6837,7 +6849,6 @@
           "4e32e030b2": "Se almacena localmente. Orca solo la envía a platform.minimax.io para actualizar el uso.",
           "remoteServerFallback": "el servidor remoto",
           "loadAccountsFailed": "No se pudieron cargar las cuentas de proveedor.",
-          "remoteScopeAccounts": "Mostrando las cuentas administradas por {{value0}}. Agrega o vuelve a autenticar cuentas en ese servidor.",
           "accountScopePrefix": "Alcance de la cuenta",
           "accountScopeRemoteServerUnnamed": "Servidor remoto",
           "remoteScopeLocalAccountsKept": "Las cuentas administradas en este escritorio no cambian. Vuelve a cambiar el runtime predeterminado a Escritorio local para verlas.",
@@ -12540,7 +12551,6 @@
         "sshManagedHostRemove": {
           "description": "Orca se ejecuta en {{label}}. En Orca en tus hosts SSH, usa Detener… para quitar Orca del host, u Olvidar… si el host ya no existe. Después podrás eliminar este host SSH.",
           "open": "Abrir Orca en tus hosts SSH",
-          "descriptionServers": "Orca se ejecuta en {{label}}. En Servidores remotos de Orca, abre el menú ⋯ de Orca en {{label}} y elige «Detener…» para quitar Orca del host, o «Olvidar…» si el host ya no existe. Después podrás quitar este host SSH.",
           "openServers": "Abrir Servidores remotos de Orca"
         },
         "managedServers": {
@@ -12564,7 +12574,6 @@
             "confirmForget": "Olvidar en este escritorio",
             "keepLinked": "Mantener vinculado",
             "forgetDescription": "Desvincula este servidor aquí sin contactar con su host. Si el host vuelve, es posible que el servidor siga ejecutándose allí.",
-            "title": "Orca en {{host}}",
             "orcaVersion": "Orca en este host: {{version}}",
             "stopOrcaDescription": "Detiene Orca en el host SSH y lo quita de esta lista.",
             "updateOrcaOnHost": "Actualizar Orca en este host"
@@ -12909,9 +12918,6 @@
           "emptyDescription": "Empareja un equipo de desarrollo, una máquina en la nube o un escritorio en casa. Sus sesiones siguen ejecutándose allí cuando este equipo entra en reposo.",
           "movePaused": "Traslado en pausa",
           "shareTitle": "Compartir este equipo",
-          "shareDescriptionNamed": "Permite que un navegador, un teléfono u otro Orca trabajen en {{name}}.",
-          "shareDescription": "Permite que un navegador, un teléfono u otro Orca trabajen en este equipo.",
-          "shareButton": "Compartir…",
           "done": "Listo",
           "unreachableLead": "Orca no pudo acceder a este servidor.",
           "updateFailedLead": "La última actualización no terminó.",
@@ -14301,8 +14307,8 @@
             "deleteReasonUnsupportedAgent": "Las sesiones de {{value0}} no se pueden eliminar desde Orca.",
             "resumeInNewNativeChat": "Reanudar en un nuevo chat",
             "resumeInNewCli": "Reanudar en un nuevo terminal",
-            "resumeInNewCliTooltipFork": "Hace un fork de esta conversación en una nueva sesión de CLI.",
-            "resumeInNewCliTooltipChat": "El chat nativo queda como está."
+            "resumeInNewCliTooltipFork": "Inicia una nueva sesión del agente de terminal con una copia de esta conversación.",
+            "resumeInNewCliTooltipChat": "Este chat permanece sin cambios."
           },
           "AiVaultSessionDeleteDialog": {
             "title": "¿Eliminar esta sesión?",
@@ -19070,8 +19076,8 @@
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "Cambiar al agente de terminal",
-          "switchToChatView": "Cambiar a la interfaz de chat",
+          "switchToTerminalView": "Continuar con el agente de terminal",
+          "switchToChatView": "Continuar en la interfaz de chat",
           "closeTabsToLeft": "Cerrar todas las pestañas a la izquierda"
         },
         "BrowserTab": {
@@ -20467,7 +20473,17 @@
   "tabHoverCard": {
     "browser": "Navegador",
     "editor": "Editor",
-    "terminal": "Terminal"
+    "terminal": "Terminal",
+    "namingFailure": {
+      "regenerating": "Regenerando…",
+      "regenerate": "Regenerar nombre",
+      "title": "No se pudo nombrar este chat",
+      "description": "El agente de nombres de chat se detuvo con un error, así que el chat conserva su primer mensaje como nombre.",
+      "viewError": "ver error",
+      "dialogTitle": "Falló el nombre automático del chat",
+      "dialogDescriptionStart": "Orca no pudo generar un nombre para",
+      "dialogDescriptionEnd": "a partir de su primer mensaje."
+    }
   },
   "updates": {
     "installBlock": {

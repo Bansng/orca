@@ -155,7 +155,6 @@ export function MobileNativeChatToolLine({
   memberId,
   block,
   result,
-  defaultExpanded,
   disclosureKey,
   fontScale,
   onOpenFile
@@ -165,13 +164,12 @@ export function MobileNativeChatToolLine({
   block: NativeChatToolCallBlock | NativeChatToolResultBlock
   /** This call's output, when the run paired one to it. */
   result?: NativeChatToolResultBlock
-  defaultExpanded: boolean
   /** Identity this line's open state is remembered under while it is unmounted. */
   disclosureKey?: string
   fontScale: number
   onOpenFile?: (path: string) => void
 }): React.JSX.Element {
-  const [expanded, setExpanded] = useMobileNativeChatDisclosure(disclosureKey, defaultExpanded)
+  const [expanded, setExpanded] = useMobileNativeChatDisclosure(disclosureKey, false)
   const call = isToolCallBlock(block) ? block : undefined
   const label = call ? nativeChatToolLineLabel(call, result) : null
   const body = call ? result : block.type === 'tool-result' ? block : undefined

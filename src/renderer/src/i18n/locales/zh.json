@@ -1275,6 +1275,12 @@
       }
     },
     "components": {
+      "hostPicker": {
+        "searchHosts": "搜索主机…",
+        "noHostsMatch": "没有匹配的主机。",
+        "moreHosts_one": "还有 {{count}} 个主机，请按名称搜索。",
+        "moreHosts_other": "还有 {{count}} 个主机，请按名称搜索。"
+      },
       "CodexRestartChip": {
         "c72a5fb234": "重新启动",
         "9263e75f49": "Codex 正在使用之前的账户",
@@ -3827,6 +3833,12 @@
             "connectedHostCount_one": "{{count}} 个主机",
             "connectedHostCount_other": "{{count}} 个主机",
             "connecting": "正在连接…",
+            "searchSshHosts": "搜索 SSH 主机…",
+            "noMatchingSshHosts": "没有匹配的 SSH 主机。",
+            "moreSshHostMatches_one": "还有 {{count}} 个匹配项，继续输入以缩小范围。",
+            "moreSshHostMatches_other": "还有 {{count}} 个匹配项，继续输入以缩小范围。",
+            "moreSshHosts_one": "在另外 {{count}} 个 SSH 主机中查找…",
+            "moreSshHosts_other": "在另外 {{count}} 个 SSH 主机中查找…",
             "runtime_unavailable_transport_up": "Orca 不可用",
             "runtime_workspace_window_closed": "工作区窗口已关闭"
           },
@@ -6821,7 +6833,6 @@
           "9fec52de4b": "如何复制 Cookie",
           "remoteServerFallback": "远程服务器",
           "loadAccountsFailed": "无法加载提供商账户。",
-          "remoteScopeAccounts": "正在显示由 {{value0}} 管理的账户。请在该服务器上添加或重新验证账户。",
           "accountScopePrefix": "账户范围",
           "accountScopeRemoteServerUnnamed": "远程服务器",
           "remoteScopeLocalAccountsKept": "此桌面端管理的账户并未改变。将默认运行时切换回本地桌面即可查看。",
@@ -12559,7 +12570,6 @@
         "sshManagedHostRemove": {
           "description": "Orca 正在 {{label}} 上运行。请在“SSH 主机上的 Orca”中使用“停止…”从主机移除 Orca；如果主机已不存在，请使用“忘记…”。之后即可移除此 SSH 主机。",
           "open": "打开“SSH 主机上的 Orca”",
-          "descriptionServers": "Orca 正在 {{label}} 上运行。请在“远程 Orca 服务器”中打开 {{label}} 上的 Orca 的 ⋯ 菜单，选择“停止…”从主机上移除 Orca；如果主机已不存在，请选择“忘记…”。之后即可移除此 SSH 主机。",
           "openServers": "打开远程 Orca 服务器"
         },
         "managedServers": {
@@ -12583,7 +12593,6 @@
             "confirmForget": "在此桌面上忘记",
             "keepLinked": "保持关联",
             "forgetDescription": "在此处取消关联此服务器，而不联系其主机。如果主机恢复，服务器可能仍在那里运行。",
-            "title": "{{host}} 上的 Orca",
             "orcaVersion": "此主机上的 Orca：{{version}}",
             "stopOrcaDescription": "停止 SSH 主机上的 Orca，并将其从此列表中移除。",
             "updateOrcaOnHost": "更新此主机上的 Orca"
@@ -12914,9 +12923,6 @@
           "emptyDescription": "配对开发机、云主机或家里的台式机。此电脑休眠时，会话会继续在那里运行。",
           "movePaused": "迁移已暂停",
           "shareTitle": "共享此电脑",
-          "shareDescriptionNamed": "让浏览器、手机或另一个 Orca 在 {{name}} 上工作。",
-          "shareDescription": "让浏览器、手机或另一个 Orca 在此电脑上工作。",
-          "shareButton": "共享…",
           "done": "完成",
           "unreachableLead": "Orca 无法访问此服务器。",
           "updateFailedLead": "上次更新未完成。",
@@ -14306,8 +14312,8 @@
             "deleteReasonUnsupportedAgent": "{{value0}} 会话无法在 Orca 中删除。",
             "resumeInNewNativeChat": "在新聊天中恢复",
             "resumeInNewCli": "在新终端中恢复",
-            "resumeInNewCliTooltipFork": "将此对话派生到新的 CLI 会话中。",
-            "resumeInNewCliTooltipChat": "本机聊天保持不变。"
+            "resumeInNewCliTooltipFork": "使用此对话的副本启动新的终端智能体会话。",
+            "resumeInNewCliTooltipChat": "此聊天保持不变。"
           },
           "AiVaultSessionDeleteDialog": {
             "title": "要删除此会话吗？",
@@ -19075,8 +19081,8 @@
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "切换到终端智能体",
-          "switchToChatView": "切换到聊天UI",
+          "switchToTerminalView": "使用终端智能体继续",
+          "switchToChatView": "在聊天界面中继续",
           "closeTabsToLeft": "关闭左侧的所有选项卡"
         },
         "BrowserTab": {
@@ -20479,7 +20485,17 @@
   "tabHoverCard": {
     "browser": "浏览器",
     "editor": "编辑器",
-    "terminal": "终端"
+    "terminal": "终端",
+    "namingFailure": {
+      "regenerating": "正在重新生成…",
+      "regenerate": "重新生成名称",
+      "title": "无法为此聊天命名",
+      "description": "聊天命名代理因错误而停止，因此聊天将保留其第一条消息作为名称。",
+      "viewError": "查看错误",
+      "dialogTitle": "聊天自动命名失败",
+      "dialogDescriptionStart": "Orca 无法根据第一条消息为",
+      "dialogDescriptionEnd": "生成名称。"
+    }
   },
   "jira": {
     "savedFilters": {

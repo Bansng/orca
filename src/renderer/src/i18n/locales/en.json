@@ -1473,6 +1473,12 @@
       }
     },
     "components": {
+      "hostPicker": {
+        "searchHosts": "Search hosts…",
+        "noHostsMatch": "No hosts match.",
+        "moreHosts_one": "{{count}} more host. Search by name to find it.",
+        "moreHosts_other": "{{count}} more hosts. Search by name to find one."
+      },
       "BrowserCookieImportDisclosure": {
         "title": "Google logins aren't imported",
         "description": "Sign in to Google directly in Orca."
@@ -4084,7 +4090,13 @@
             "runtime_workspace_window_closed": "Workspace window closed",
             "connectedHostCount_one": "{{count}} host",
             "connectedHostCount_other": "{{count}} hosts",
-            "connecting": "Connecting…"
+            "connecting": "Connecting…",
+            "searchSshHosts": "Search SSH hosts…",
+            "noMatchingSshHosts": "No SSH hosts match.",
+            "moreSshHostMatches_one": "{{count}} more match. Keep typing to narrow it down.",
+            "moreSshHostMatches_other": "{{count}} more matches. Keep typing to narrow them down.",
+            "moreSshHosts_one": "Find {{count}} more SSH host…",
+            "moreSshHosts_other": "Find among {{count}} more SSH hosts…"
           },
           "StatusBar": {
             "9659e38343": "Ports",
@@ -7115,7 +7127,6 @@
           "9fec52de4b": "How to copy the cookie",
           "remoteServerFallback": "the remote server",
           "loadAccountsFailed": "Could not load provider accounts.",
-          "remoteScopeAccounts": "Showing accounts managed by {{value0}}. Add or re-authenticate accounts on that server.",
           "accountScopePrefix": "Account scope",
           "accountScopeRemoteServerUnnamed": "Remote server",
           "remoteScopeLocalAccountsKept": "Accounts managed on this desktop are unchanged. Switch the default runtime back to Local desktop to view them.",
@@ -12777,7 +12788,7 @@
         "sshManagedHostRemove": {
           "description": "Orca runs on {{label}}. Under Orca on your SSH hosts, use Stop… to remove Orca from the host, or Forget… if the host is gone. Then you can remove this SSH host.",
           "open": "Open Orca on your SSH hosts",
-          "descriptionServers": "Orca runs on {{label}}. In Remote Orca Servers, open the ⋯ menu on Orca on {{label}} and choose Stop… to remove Orca from the host, or Forget… if the host is gone. Then you can remove this SSH host.",
+          "descriptionServerHost": "Orca runs on {{label}}. In Remote Orca Servers, open the ⋯ menu on {{label}} and choose Stop… to remove Orca from the host, or Forget… if the host is gone. Then you can remove this SSH host.",
           "openServers": "Open Remote Orca Servers"
         },
         "managedServers": {
@@ -12801,7 +12812,6 @@
             "confirmForget": "Forget on this desktop",
             "keepLinked": "Keep linked",
             "forgetDescription": "Unlinks this server here without contacting its host. If the host comes back, the server may still be running there.",
-            "title": "Orca on {{host}}",
             "orcaVersion": "Orca on this host: {{version}}",
             "stopOrcaDescription": "Stops Orca on the SSH host and removes it from this list.",
             "updateOrcaOnHost": "Update Orca on this host"
@@ -13186,9 +13196,6 @@
           "emptyDescription": "Pair a dev box, a cloud machine, or a desktop at home. Its sessions keep running there when this computer sleeps.",
           "movePaused": "Move paused",
           "shareTitle": "Share this computer",
-          "shareDescriptionNamed": "Let a browser, phone, or another Orca work on {{name}}.",
-          "shareDescription": "Let a browser, phone, or another Orca work on this computer.",
-          "shareButton": "Share…",
           "done": "Done",
           "unreachableLead": "Orca couldn’t reach this server.",
           "updateFailedLead": "The last update didn’t finish.",
@@ -14591,8 +14598,8 @@
             "deleteReasonUnsupportedAgent": "{{value0}} sessions can't be deleted from Orca.",
             "resumeInNewNativeChat": "Resume in New Chat",
             "resumeInNewCli": "Resume in New Terminal",
-            "resumeInNewCliTooltipFork": "Forks this conversation into a new CLI session.",
-            "resumeInNewCliTooltipChat": "The native chat stays as it is."
+            "resumeInNewCliTooltipFork": "Start a new terminal agent session with a copy of this conversation.",
+            "resumeInNewCliTooltipChat": "This chat stays unchanged."
           },
           "AiVaultSessionDeleteDialog": {
             "title": "Delete this session?",
@@ -19397,8 +19404,8 @@
     "tab": {
       "bar": {
         "SortableTabContextMenu": {
-          "switchToTerminalView": "Switch to Terminal Agent",
-          "switchToChatView": "Switch to Chat UI",
+          "switchToTerminalView": "Continue with Terminal Agent",
+          "switchToChatView": "Continue in Chat UI",
           "closeTabsToLeft": "Close All Tabs To The Left"
         },
         "BrowserTab": {
@@ -20492,7 +20499,23 @@
       "removeTitle": "Remove managed account?",
       "removeDescription": "Stop agents using this profile first. Removal deletes its saved credentials and conversation data. Your system login stays unchanged.",
       "cancel": "Cancel"
-    }
+    },
+    "hostSignIn": {
+      "copied": "Copied",
+      "copyFailed": "Could not copy",
+      "pasteCodeHelp": "After you sign in, the page shows a code. Paste it here.",
+      "continue": "Continue",
+      "starting": "Starting sign-in on {{host}}…",
+      "verifying": "Finishing sign-in on {{host}}…",
+      "waiting": "Open this page on this device and sign in. The account is saved on {{host}}.",
+      "copyLink": "Copy link",
+      "open": "Open",
+      "enterCode": "Enter this code on that page:",
+      "copyCode": "Copy code",
+      "cancelFailed": "Could not reach the server to cancel yet.",
+      "cancel": "Cancel"
+    },
+    "remoteScopeAccountsAddHere": "Showing accounts managed by {{value0}}. New accounts sign in there; you finish in this device’s browser."
   },
   "fileSearch": {
     "failed": "Search failed. Try again."
@@ -20625,7 +20648,17 @@
   "tabHoverCard": {
     "browser": "Browser",
     "editor": "Editor",
-    "terminal": "Terminal"
+    "terminal": "Terminal",
+    "namingFailure": {
+      "regenerating": "Regenerating…",
+      "regenerate": "Regenerate name",
+      "title": "Couldn't name this chat",
+      "description": "The chat-name agent stopped with an error, so the chat keeps its first message as its name.",
+      "viewError": "view error",
+      "dialogTitle": "Chat auto-name failed",
+      "dialogDescriptionStart": "Orca couldn't generate a name for",
+      "dialogDescriptionEnd": "from its first message."
+    }
   },
   "updates": {
     "installBlock": {

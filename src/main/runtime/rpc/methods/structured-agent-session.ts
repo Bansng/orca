@@ -38,6 +38,7 @@ import {
 import { STRUCTURED_AGENT_SESSION_HOLD_METHODS } from './structured-agent-session-hold'
 import { STRUCTURED_AGENT_SESSION_PROMPT_RESPONSE_METHODS } from './structured-agent-session-prompt-response'
 import { STRUCTURED_AGENT_SESSION_REVEAL_METHODS } from './structured-agent-session-reveal'
+import { STRUCTURED_AGENT_SESSION_REGENERATE_NAME_METHODS } from './structured-agent-session-regenerate-name'
 import { STRUCTURED_AGENT_SESSION_QUEUED_METHODS } from './structured-agent-session-queued-methods'
 import { STRUCTURED_AGENT_SESSION_RESTART_RESUME_METHODS } from './structured-agent-session-restart-resume'
 import {
@@ -174,9 +175,12 @@ export const STRUCTURED_AGENT_SESSION_METHODS = [
     params: SleepWorkspaceParams,
     handler: async (params, ctx) => {
       requireStructuredCapability(ctx)
+      if (params.markAsleep) {
+        return (await requireInstalledHost(ctx)).sleepWorkspace(params.workspaceId, true)
+      }
       const installed = getStructuredAgentSessionHost()
       if (installed) {
-        return installed.sleepWorkspace(params.workspaceId)
+        return installed.sleepWorkspace(params.workspaceId, params.markAsleep)
       }
       let store: Awaited<ReturnType<typeof ctx.runtime.openAgentSessionRecordStore>>
       try {
@@ -184,14 +188,14 @@ export const STRUCTURED_AGENT_SESSION_METHODS = [
       } catch (error) {
         const appeared = getStructuredAgentSessionHost()
         if (appeared) {
-          return appeared.sleepWorkspace(params.workspaceId)
+          return appeared.sleepWorkspace(params.workspaceId, params.markAsleep)
         }
         console.warn('[agent-session] workspace sleep record inventory unavailable', error)
         return { stoppedSessionIds: [], failures: [{ reason: 'inventory-unavailable' }] }
       }
       const appeared = getStructuredAgentSessionHost()
       if (appeared) {
-        return appeared.sleepWorkspace(params.workspaceId)
+        return appeared.sleepWorkspace(params.workspaceId, params.markAsleep)
       }
       try {
         const records = store
@@ -294,6 +298,7 @@ export const STRUCTURED_AGENT_SESSION_METHODS = [
   }),
   ...STRUCTURED_AGENT_SESSION_HOLD_METHODS,
   ...STRUCTURED_AGENT_SESSION_REVEAL_METHODS,
+  ...STRUCTURED_AGENT_SESSION_REGENERATE_NAME_METHODS,
   ...STRUCTURED_AGENT_SESSION_RESTART_RESUME_METHODS,
   ...STRUCTURED_AGENT_SESSION_STATUS_METHODS,
   ...STRUCTURED_AGENT_SESSION_TURN_COMPLETION_METHODS,

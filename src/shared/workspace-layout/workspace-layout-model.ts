@@ -86,7 +86,10 @@ export type LayoutLeaf = {
   title?: string
   /** The pane's last grid: the size its terminal starts at. */
   lastGrid?: TerminalGrid
+  /** A slept pane's record (isPaneSleepRecord). Never set with `resume`. */
   sleeping?: LayoutSleepingRecord
+  /** A running agent's resume record (origin live/quit), not a sleep. Never set with `sleeping`. */
+  resume?: LayoutSleepingRecord
 }
 
 export type WorkspaceLayout = {

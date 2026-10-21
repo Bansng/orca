@@ -1,9 +1,8 @@
 import { z } from 'zod'
 import { isTerminalLeafId } from '../stable-pane-id'
-import { TerminalPaneLayoutNodeSchema } from './session-tabs-schemas-params'
-import { TerminalOrphanGroupLayout } from './terminal-orphan-params'
 import { SleepCommand, WakeCommand } from './workspace-layout-sleep-wake-params'
 import { RenameTabsCommand } from './workspace-layout-rename-tabs-params'
+import { SetGroupRatiosCommand, SetPaneRatiosCommand } from './workspace-layout-ratio-params'
 import {
   ApplyDefaultTabsCommand,
   CreateTerminalTabCommand,
@@ -59,14 +58,6 @@ const MovePaneCommand = z.object({
   side: z.enum(['left', 'right', 'top', 'bottom'])
 })
 
-/** The tab's tree with its new ratios; main refuses one whose panes differ from its own. */
-const SetPaneRatiosCommand = z.object({
-  type: z.literal('setPaneRatios'),
-  workspace: OnPane.workspace,
-  tabId: OnPane.tabId,
-  root: TerminalPaneLayoutNodeSchema
-})
-
 /** The pane a tab's chat view shows; null clears it. */
 const SetChatPaneCommand = z.object({
   type: z.literal('setChatPane'),
@@ -97,13 +88,6 @@ const SplitGroupCommand = z.object({
   ...OnTab,
   besideGroupId: z.string().min(1),
   direction: z.enum(['left', 'right', 'up', 'down'])
-})
-
-/** The workspace's group tree with its new ratios; main refuses one whose groups differ. */
-const SetGroupRatiosCommand = z.object({
-  type: z.literal('setGroupRatios'),
-  workspace: OnPane.workspace,
-  groupLayout: TerminalOrphanGroupLayout
 })
 
 /**

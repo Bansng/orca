@@ -11,6 +11,7 @@
 // store does not show from frames yet (startup, a reopened stream, a first visit, one sent whole)
 // takes the full build, whose view the window reads back through its save and the Loader.
 
+import { showFramePatch, withMovedTabsSelected } from '@/store/slices/tabs/moved-tab-selection'
 import { useAppStore } from '@/store'
 import type { AppState } from '@/store/types'
 import type { TerminalTab } from '../../../shared/terminal-tab-types'
@@ -24,8 +25,9 @@ import {
 import type { TerminalTabTitleUpdate } from '@/store/slices/terminal-tab-title-batch'
 import type { WorkspaceLayoutChangeFrame } from '../../../shared/workspace-layout/workspace-layout-stream-frames'
 import { liveTitleUpdates } from './workspace-layout-frame-changes'
-import { terminalLayoutsWithFrameBindings } from './workspace-layout-frame-bindings'
+import { terminalLayoutsWithReboundFrames } from './workspace-layout-frame-bindings'
 import { terminalLayoutsWithFramePaneTrees } from './workspace-layout-frame-pane-trees'
+import { showFramePaneStarts } from './workspace-layout-frame-pane-starts'
 import {
   fullLayoutFrameBuildPatch,
   workspaceLayoutFrameBuildPatch,
@@ -45,7 +47,8 @@ import {
 import {
   isTabPaneTreeHeld,
   onTabPaneTreeRedraw,
-  takeTabRowFields
+  takeTabRowFields,
+  type MovedTabSelection
 } from './layout-owner-pane-intents'
 import {
   isDrawnGroupLayoutHeld,
@@ -91,11 +94,12 @@ export function openWorkspaceLayoutFrameSync(
   /** Workspaces whose pane trees the store may still lack: a build ran for them, or a tab the
    *  window's own command held skipped one. */
   let paneTreeKeys = new Set<string>()
+  const paneStartsShown = new Map<string, ReadonlySet<string>>()
 
+  /** The moved tabs' selections this flush's writes took. */
+  let selectionsTaken: MovedTabSelection[] = []
   const show = (patch: LayoutFrameBuildPatch): void => {
-    if (Object.keys(patch).length > 0) {
-      store.setState(patch)
-    }
+    selectionsTaken.push(...showFramePatch(store, patch))
   }
 
   // Each change against the cache's copy it applies to, before the frame replaces it.
@@ -132,22 +136,18 @@ export function openWorkspaceLayoutFrameSync(
   // Only panes' bindings changed: the pane trees take them, unless only a build shows them so.
   const showFrameBindings = (rebound: ReadonlyMap<string, ReadonlySet<string>>): string[] => {
     const state = store.getState()
-    let layouts = state.terminalLayoutsByTabId
-    const unshown: string[] = []
-    for (const [key, tabIds] of rebound) {
-      const next = terminalLayoutsWithFrameBindings(layouts, key, cache[key]!, tabIds)
-      if (next) {
-        layouts = next
-      } else {
-        unshown.push(key)
-      }
-    }
-    show(terminalLayoutsPatch(state, layouts))
-    return unshown
+    const shownBindings = terminalLayoutsWithReboundFrames(
+      state.terminalLayoutsByTabId,
+      cache,
+      rebound
+    )
+    show(terminalLayoutsPatch(state, shownBindings.layouts))
+    return shownBindings.unshown
   }
 
   const flush = (): void => {
     flushQueued = false
+    selectionsTaken = []
     if (!live) {
       pending.clear()
       return
@@ -219,12 +219,14 @@ export function openWorkspaceLayoutFrameSync(
     if (titleUpdates.length > 0) {
       store.getState().updateTabTitles(titleUpdates)
     }
+    showFramePaneStarts(store, changed, cache, paneStartsShown)
     for (const key of [...fullBuilt, ...workspaceBuilt]) {
       shown.add(key)
       // Against the store, not the frame: a held tab's tree may lag the pane trees drawn since.
       paneTreeKeys.add(key)
     }
-    // A closed stream's cache is frozen: the window draws its own answers then.
+    // A closed stream's cache is frozen: answers the window draws itself (a split, close or create)
+    // show then; any other change waits for the reopened stream's snapshot.
     if (!streamOpen) {
       return
     }
@@ -238,7 +240,8 @@ export function openWorkspaceLayoutFrameSync(
       changed,
       fullBuilt,
       workspaceBuilt,
-      rowFieldsTaken
+      rowFieldsTaken,
+      selectTakenMovedTabs: (state) => withMovedTabsSelected(state, selectionsTaken)
     })
   }
 
@@ -281,7 +284,8 @@ export function openWorkspaceLayoutFrameSync(
   })
   // Against the store: the window may have drawn over main's tree for this tab since.
   const stopReleaseListener = onTabPaneTreeRedraw((tabId) => {
-    // A closed stream's cache is frozen: the window draws its own answers then.
+    // A closed stream's cache is frozen: answers the window draws itself (a split, close or create)
+    // show then; any other change waits for the reopened stream's snapshot.
     if (!streamOpen) {
       return
     }

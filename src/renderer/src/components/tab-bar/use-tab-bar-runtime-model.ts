@@ -27,6 +27,7 @@ import {
 import { shouldShowWindowsShellMenu } from './windows-shell-menu-visibility'
 import { createUnifiedTabLookup } from './tab-bar-item-model'
 import { getClientCreationActionPolicy } from '@/lib/client-creation-action-policy'
+import { selectWorktreesByRepo } from '@/store/workspace-record-selectors'
 
 const isWindows = navigator.userAgent.includes('Windows')
 export const isMacOs = navigator.userAgent.includes('Mac')
@@ -174,7 +175,7 @@ export function useTabBarRuntimeModel({
   const projects = useAppStore((s) => (needsLocalProjectRuntime ? s.projects : EMPTY_PROJECTS))
   const repos = useAppStore((s) => (needsLocalProjectRuntime ? s.repos : EMPTY_REPOS))
   const worktreesByRepo = useAppStore((s) =>
-    needsLocalProjectRuntime ? s.worktreesByRepo : EMPTY_WORKTREES_BY_REPO
+    needsLocalProjectRuntime ? selectWorktreesByRepo(s) : EMPTY_WORKTREES_BY_REPO
   )
   const localProjectRuntime = useMemo(() => {
     if (!needsLocalProjectRuntime) {
