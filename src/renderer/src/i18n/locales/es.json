@@ -95,7 +95,8 @@
         "korean": "한국어",
         "japanese": "日本語",
         "spanish": "Español",
-        "french": "Français"
+        "french": "Français",
+        "portuguese": "Português (Brasil)"
       },
       "statusBar": {
         "claudeToggleDescription": "Muestra el consumo de tokens y el costo de Claude para el espacio de trabajo activo.",
@@ -210,6 +211,10 @@
       "readFailed": "No se pudo leer la configuración de agentes. Comprueba la conexión con el host e inténtalo de nuevo.",
       "saveFailed": "No se pudo guardar la configuración de agentes. Comprueba la conexión con el host e inténtalo de nuevo.",
       "hostDefaults": "Valores predeterminados para nuevos agentes en el host seleccionado.",
+      "defaultOpensAs": "Abrir {{value0}} como",
+      "defaultOpensAsChat": "Chat",
+      "defaultOpensAsCli": "CLI",
+      "defaultOpensAsScope": "Se aplica a las nuevas sesiones de {{value0}} iniciadas desde este equipo, incluso en hosts emparejados. Coincide con su interruptor en Proveedores.",
       "save": "Guardar",
       "clearDefault": "Borrar agente predeterminado"
     },
@@ -3510,7 +3515,6 @@
         "bar": {
           "BrowserTab": {
             "6e0bc8f3a8": "Abrir en el navegador",
-            "9dd880bd56": "Cerrar todas las pestañas a la derecha",
             "1611a1324b": "Cerrar",
             "5d6e89891f": "Duplicar pestaña",
             "966feb9ad5": "Dividir a la derecha",
@@ -3527,7 +3531,6 @@
             "52ce4f4605": "Copiar ruta relativa",
             "5b85754786": "Copiar ruta",
             "bfd5797ef4": "Abrir vista previa de Markdown",
-            "e5ff31ccaf": "Cerrar todas las pestañas a la derecha",
             "ba1369dd24": "Cerrar todas las pestañas del editor",
             "1ba8492c5b": "Cerrar",
             "68cc610e7f": "Renombrar",
@@ -3560,7 +3563,6 @@
           "SortableTabContextMenu": {
             "35e8892fd0": "Color de pestaña",
             "2f697b3c31": "Cambiar título",
-            "c1ee099c7e": "Cerrar todas las pestañas a la derecha",
             "8d16f9cd30": "Cerrar otras",
             "89359a36f7": "Cerrar",
             "21132389e9": "Dividir a la derecha",
@@ -7101,8 +7103,6 @@
           "ee110e1830": "Sin ref base predeterminada"
         },
         "BrowserDefaultZoomSetting": {
-          "2622126877": "Nivel de zoom aplicado a nuevas pestañas del navegador.",
-          "bbeec087d3": "Se aplica a nuevas pestañas del navegador.",
           "265597101f": "Zoom predeterminado"
         },
         "BrowserHomePageSetting": {
@@ -12706,7 +12706,8 @@
           "behindRolledBack": "Ejecuta una versión del servidor de Orca más antigua que esta app; la última actualización se revirtió. Usa Actualizar servidor para intentarlo de nuevo.",
           "behindNoTemplate": "Ejecuta una versión del servidor de Orca que esta app no puede actualizar; esta compilación no incluye un servidor para este host.",
           "behindMigrating": "Ejecuta el servidor de Orca, que se actualizará cuando termine el traslado de sus proyectos.",
-          "behindCheckFailed": "Ejecuta el servidor de Orca; Orca no pudo comprobar si está por detrás de esta app."
+          "behindCheckFailed": "Ejecuta el servidor de Orca; Orca no pudo comprobar si está por detrás de esta app.",
+          "refusedBlockedReason": "Orca aún no está configurado en este host. {{reason}}"
         },
         "deltaMove": {
           "action": "Mover los proyectos nuevos…",
@@ -16655,7 +16656,6 @@
             "95af781091": "Enviar comentarios a un agente",
             "ac39b9366b": "Enviar",
             "a3508d7e6e": "{{value0}} anotación{{value1}} listo. Seleccione otro elemento o copie todos los comentarios.",
-            "f796c774a4": "Escriba una URL arriba para comenzar a navegar.",
             "366bf5d62c": "Nueva pestaña",
             "1c78adc73d": "Abrir externamente",
             "da68d35f7b": "Abrir página fallida en el navegador predeterminado",
@@ -16781,7 +16781,8 @@
               "bar": {
                 "suggestions": {
                   "87fcdd0da9": "{{value0}} Buscar"
-                }
+                },
+                "placeholder": "Busca o introduce una URL"
               }
             }
           },
@@ -18958,6 +18959,8 @@
         "plan": "Plan",
         "historyRepaired": "No se pudo cargar parte del historial de este chat.",
         "historyItemTooLarge": "Esta parte del chat era demasiado grande para mostrarla.",
+        "continuedOutside": "Continuado fuera de este chat.",
+        "continuedOutsideRewound": "Continuado fuera de este chat. Las respuestas anteriores ya no están en el historial de esta conversación.",
         "stoppedBeforeStart": "Detenido manualmente",
         "dismiss": "Descartar",
         "copyError": "Copiar error",
@@ -19077,16 +19080,13 @@
       "bar": {
         "SortableTabContextMenu": {
           "switchToTerminalView": "Continuar con el agente de terminal",
-          "switchToChatView": "Continuar en la interfaz de chat",
-          "closeTabsToLeft": "Cerrar todas las pestañas a la izquierda"
+          "switchToChatView": "Continuar en la interfaz de chat"
         },
         "BrowserTab": {
-          "closeOthers": "Cerrar otras",
-          "closeTabsToLeft": "Cerrar todas las pestañas a la izquierda"
+          "closeOthers": "Cerrar otras"
         },
         "EditorFileTabContextMenu": {
-          "closeOthers": "Cerrar otras",
-          "closeTabsToLeft": "Cerrar todas las pestañas a la izquierda"
+          "closeOthers": "Cerrar otras"
         },
         "CopyTabIdMenuItem": {
           "copied": "ID de pestaña copiado",
@@ -19353,6 +19353,13 @@
           "checking": "Comprobando si hay cambios…",
           "checkingDetails": "Comprobando…",
           "unavailableDetails": "Detalles no disponibles"
+        },
+        "unsavedEdits": {
+          "discarded_one": "Se descartarán las ediciones sin guardar de {{count}} archivo:",
+          "discarded_other": "Se descartarán las ediciones sin guardar de {{count}} archivos:",
+          "moreFiles": "y {{value}} más",
+          "blocked_one": "Guarda o cierra antes {{count}} archivo sin guardar en {{name}}",
+          "blocked_other": "Guarda o cierra antes {{count}} archivos sin guardar en {{name}}"
         }
       }
     },

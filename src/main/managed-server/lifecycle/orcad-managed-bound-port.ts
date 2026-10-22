@@ -52,21 +52,6 @@ async function readManagedOrcadSlotReadiness(
   return parsed.state === 'ready' ? parsed.readiness : null
 }
 
-async function readSlotBoundPort(
-  target: OrcadRemoteExecTarget & { remoteInstallDir: string }
-): Promise<number | null> {
-  const readiness = await readManagedOrcadSlotReadiness(target)
-  return readiness ? orcadBoundPort(readiness) : null
-}
-
-/** Falls back to the preferred port only when the slot published no endpoint (older builds). */
-export async function readManagedOrcadBoundPort(
-  target: OrcadRemoteExecTarget & { remoteInstallDir: string },
-  preferredPort: number
-): Promise<number> {
-  return (await readSlotBoundPort(target)) ?? preferredPort
-}
-
 /** What the active slot publishes now, read over SSH; null when none is active or ready. */
 export async function readActiveManagedOrcadReadiness(
   input: Pick<OrcadTunnelPortInput, 'target' | 'connection'>

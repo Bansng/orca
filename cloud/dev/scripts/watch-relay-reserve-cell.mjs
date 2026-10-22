@@ -22,7 +22,9 @@ import {
   WRITE_CONFIRMATION
 } from './operate-relay-cell-flags.mjs'
 import {
+  DIRECTOR_DRAIN_FIELDS,
   DIRECTOR_METRICS_LIMIT,
+  directorMetricsSample,
   readDirectorDrainReturn,
   readDirectorRequestsByCodePerMinute,
   readLogEntries
@@ -43,7 +45,8 @@ import {
   measuredPhoneBackground,
   phoneSinceOf,
   PHONE_WATCH_RULES,
-  RESERVE_WATCH_RULES
+  RESERVE_WATCH_RULES,
+  UNATTRIBUTED_503S
 } from './relay-reserve-watch-rules.mjs'
 
 const execFileAsync = promisify(execFile)
@@ -161,7 +164,7 @@ const failed503Read = (error) => ({ ok: false, error, perMinute: {}, minutes: []
 // point for (the director always serves something, so no front at all is no evidence); a minute
 // with no metrics line from any instance is `unmetered`, since subtracting nothing there is a guess.
 // Coverage is any instance, not each: one instance's missing lines under-subtract, biased to a trip.
-export async function readDirector503Minutes(reader, { projectId, directorService, endedAt, minutes }) {
+export async function readDirector503Minutes(reader, { projectId, directorService, endedAt, minutes, metrics: logged }) {
   const span = { startedAt: new Date(endedAt - minutes * MINUTE_MS), endedAt: new Date(endedAt) }
   const config = { projectId, directorService }
   let read
@@ -172,11 +175,10 @@ export async function readDirector503Minutes(reader, { projectId, directorServic
     return failed503Read(`director 503 metric unreadable: ${error instanceof Error ? error.message : error}`)
   }
   if (read.failed) return failed503Read('director 503 metric read failed')
-  // A line covers the 30 s before it, so the last minute's tail is in the next minute's lines.
-  const metrics = await readDirectorDrainReturn(reader, {
-    config,
-    window: { startedAt: span.startedAt, endedAt: new Date(endedAt + DIRECTOR_METRICS_INTERVAL_MS) }
-  })
+  // The sample's combined log read passes these in; a background read takes its own.
+  const metrics = logged ?? (await readDirectorDrainReturn(reader, { config, window: directorMetricsWindow(endedAt, minutes) }))
+  const failedPart = metrics.find((part) => part.failed && part.error)
+  if (failedPart) return failed503Read(`director runtime metrics read failed: ${failedPart.error}`)
   const lineTimes = metrics.flatMap((part) => part.samples.map((sample) => Date.parse(sample.timestamp)))
   if (lineTimes.some((at) => !Number.isFinite(at))) return failed503Read('director runtime metrics line with an unparseable timestamp')
   const scheduled = drainReturnByMinute(metrics, DIRECTOR_METRICS_LIMIT)
@@ -190,8 +192,40 @@ export async function readDirector503Minutes(reader, { projectId, directorServic
     perMinute: Object.fromEntries(keys.map((minute, index) => [minute, nonDrain.series[index]])),
     minutes: keys,
     publishedThrough: published.at(-1) ?? null,
-    unmetered: keys.filter((minute) => !metered.has(minute))
+    unmetered: keys.filter((minute) => !metered.has(minute)),
+    instances: director503ByInstance(metrics, keys, nonDrain.series)
   }
+}
+
+// A line covers the 30 s before it, so the last minute's tail is in the next minute's lines.
+const directorMetricsWindow = (endedAt, minutes) => ({
+  startedAt: new Date(endedAt - minutes * MINUTE_MS),
+  endedAt: new Date(endedAt + DIRECTOR_METRICS_INTERVAL_MS)
+})
+
+// The same non-drain measure per director instance, from each instance's own runtime-metrics
+// counts of the /v1/assign 503s it answered, less its own scheduled ones. 10-21 07:55Z read 40,
+// 169, 5 on the stalled instance this way, against 54, 155, 5 in Cloud Run's request log.
+// `directors` is, per minute, how many instances logged a line ending in it.
+function director503ByInstance(metrics, keys, fleet) {
+  const samples = metrics.flatMap((part) => part.samples)
+  const perInstance = {}
+  for (const instance of new Set(samples.map((sample) => sample.instanceId).filter(Boolean))) {
+    const own = drainReturnByMinute([{ samples: samples.filter((sample) => sample.instanceId === instance) }], DIRECTOR_METRICS_LIMIT)
+    const { series } = withoutDrainDeferrals({ perMinute: own.assign503sPerMinute }, own, keys)
+    perInstance[instance] = Object.fromEntries(keys.map((minute, index) => [minute, series[index]]))
+  }
+  // Cloud Run's own 503s, or a route the director does not count; an instance that stopped logging
+  // lands here too.
+  perInstance[UNATTRIBUTED_503S] = Object.fromEntries(
+    keys.map((minute, index) => [minute, fleet[index] - Object.values(perInstance).reduce((sum, byMinute) => sum + (byMinute[minute] ?? 0), 0)])
+  )
+  const logged = new Map(keys.map((minute) => [minute, new Set()]))
+  for (const sample of samples) {
+    if (sample.instanceId) logged.get(minuteKey(Date.parse(sample.timestamp) - 1))?.add(sample.instanceId)
+  }
+  const directors = Object.fromEntries([...logged].map(([minute, instances]) => [minute, instances.size]))
+  return { ok: true, perMinute: perInstance, directors }
 }
 
 const CELL_METRICS_EVENT = 'orca_relay_runtime_metrics'
@@ -201,22 +235,28 @@ const sumOf = (counts) => Object.values(counts ?? {}).reduce((sum, count) => sum
 // The cell's own runtime metrics lines (one per 30 s) for the `minutes` whole minutes ending at
 // `endedAt`, per minute: what the phone rules judge. A line counts toward the minute it ends in;
 // a minute no line covers is `unmetered`, never zero.
-export async function readCellPhoneMinutes(reader, { cellId, endedAt, minutes }) {
-  const span = { startedAt: new Date(endedAt - minutes * MINUTE_MS), endedAt: new Date(endedAt) }
-  const read = await readLogEntries(reader, {
+function cellPhoneQuery({ cellId, endedAt, minutes }) {
+  return {
     filter: [
       'resource.type="gce_instance"',
       `jsonPayload.event="${CELL_METRICS_EVENT}"`,
       `jsonPayload.cellId="${cellId}"`,
-      `timestamp>="${span.startedAt.toISOString()}"`,
-      `timestamp<"${new Date(endedAt + DIRECTOR_METRICS_INTERVAL_MS).toISOString()}"`
+      ...timestampClauses(endedAt - minutes * MINUTE_MS, endedAt + DIRECTOR_METRICS_INTERVAL_MS)
     ].join(' AND '),
-    projection:
-      'json(timestamp,jsonPayload.phoneRejectionsByCodeDelta,jsonPayload.resumeConfirmFailuresByCodeDelta,' +
-      'jsonPayload.phoneAttachDeadlinesDelta,jsonPayload.phoneAcceptDatabaseErrorsDelta,jsonPayload.resumeRenewalFailuresDelta,' +
-      'jsonPayload.clientAcceptCompletedDelta)',
-    limit: LOG_ENTRY_LIMIT
-  })
+    fields: [
+      'jsonPayload.phoneRejectionsByCodeDelta', 'jsonPayload.resumeConfirmFailuresByCodeDelta', 'jsonPayload.phoneAttachDeadlinesDelta',
+      'jsonPayload.phoneAcceptDatabaseErrorsDelta', 'jsonPayload.resumeRenewalFailuresDelta', 'jsonPayload.clientAcceptCompletedDelta'
+    ],
+    match: (entry) => entry.resource?.type === 'gce_instance'
+  }
+}
+
+export async function readCellPhoneMinutes(reader, request) {
+  return parseCellPhoneMinutes(await readQuery(reader, cellPhoneQuery(request)), request)
+}
+
+function parseCellPhoneMinutes(read, { endedAt, minutes }) {
+  const span = { startedAt: new Date(endedAt - minutes * MINUTE_MS), endedAt: new Date(endedAt) }
   if (read.failed) return failedRead(read.error)
   if (read.entries.length >= LOG_ENTRY_LIMIT) return failedRead('cell runtime metrics read truncated')
   const keys = minutesOf(span)
@@ -254,13 +294,24 @@ function directorLogFilter(directorService, eventClause, sinceAt) {
   ].join(' AND ')
 }
 
+const atOrAfter = (entry, sinceAt) => Date.parse(entry.timestamp) >= sinceAt
+const isEvent = (entry, event) => entry.resource?.type === 'cloud_run_revision' && entry.jsonPayload?.event === event
+
+function ledgerQuery({ directorService, at }) {
+  const sinceAt = at - RESERVE_WATCH_RULES.ledgerSummaryMaxAgeMs
+  return {
+    filter: directorLogFilter(directorService, `jsonPayload.event="${LEDGER_SUMMARY_EVENT}"`, sinceAt),
+    fields: ['jsonPayload.pending', 'jsonPayload.dropped'],
+    match: (entry) => isEvent(entry, LEDGER_SUMMARY_EVENT) && atOrAfter(entry, sinceAt)
+  }
+}
+
+export async function readLedgerSample(reader, request) {
+  return parseLedgerSample(await readQuery(reader, ledgerQuery(request)))
+}
+
 // Newest summary per director instance; queued plus dropped rows are the ones not in Postgres.
-export async function readLedgerSample(reader, { directorService, at }) {
-  const read = await readLogEntries(reader, {
-    filter: directorLogFilter(directorService, `jsonPayload.event="${LEDGER_SUMMARY_EVENT}"`, at - RESERVE_WATCH_RULES.ledgerSummaryMaxAgeMs),
-    projection: 'json(timestamp,labels.instanceId,jsonPayload.pending,jsonPayload.dropped)',
-    limit: LOG_ENTRY_LIMIT
-  })
+function parseLedgerSample(read) {
   if (read.failed) return failedRead(read.error)
   if (read.entries.length >= LOG_ENTRY_LIMIT) return failedRead('ledger summary read truncated')
   if (read.entries.length === 0) return failedRead('no placing director logged a ledger summary')
@@ -285,16 +336,26 @@ export async function readLedgerSample(reader, { directorService, at }) {
 
 // The same read also takes the ledger summary every placing director logs each minute, as a
 // positive control: with no fresh summary in it, no seat-behind-row line is blindness, not zero.
-export async function readSeatBehindRowSample(reader, { directorService, cellId, at }) {
-  const read = await readLogEntries(reader, {
+function seatBehindRowQuery({ directorService, cellId, at }) {
+  const sinceAt = at - RESERVE_WATCH_RULES.duplicateSeat.lookbackMs
+  return {
     filter: directorLogFilter(
       directorService,
       `((jsonPayload.event="${SEAT_BEHIND_ROW_EVENT}" AND jsonPayload.cellId="${cellId}") OR jsonPayload.event="${LEDGER_SUMMARY_EVENT}")`,
-      at - RESERVE_WATCH_RULES.duplicateSeat.lookbackMs
+      sinceAt
     ),
-    projection: 'json(timestamp,labels.instanceId,jsonPayload.event,jsonPayload.epoch,jsonPayload.rowEpoch)',
-    limit: LOG_ENTRY_LIMIT
-  })
+    fields: ['jsonPayload.epoch', 'jsonPayload.rowEpoch'],
+    match: (entry) =>
+      atOrAfter(entry, sinceAt) &&
+      ((isEvent(entry, SEAT_BEHIND_ROW_EVENT) && entry.jsonPayload?.cellId === cellId) || isEvent(entry, LEDGER_SUMMARY_EVENT))
+  }
+}
+
+export async function readSeatBehindRowSample(reader, request) {
+  return parseSeatBehindRowSample(await readQuery(reader, seatBehindRowQuery(request)), request)
+}
+
+function parseSeatBehindRowSample(read, { cellId, at }) {
   if (read.failed) return failedRead(read.error)
   if (read.entries.length >= LOG_ENTRY_LIMIT) return failedRead('seat-behind-row read truncated')
   const reports = []
@@ -314,6 +375,60 @@ export async function readSeatBehindRowSample(reader, { directorService, cellId,
   }
   if (!controlSeen) return failedRead('seat-behind-row read holds no fresh ledger summary (positive control)')
   return { ok: true, reports }
+}
+
+const timestampClauses = (startedAt, endedAt) => [
+  `timestamp>="${new Date(startedAt).toISOString()}"`,
+  `timestamp<"${new Date(endedAt).toISOString()}"`
+]
+const projectionOf = (queries) =>
+  `json(${[...new Set(['timestamp', 'resource.type', 'labels.instanceId', 'jsonPayload.event', 'jsonPayload.cellId', ...queries.flatMap((query) => query.fields)])].join(',')})`
+const readQuery = (reader, query) => readLogEntries(reader, { filter: query.filter, projection: projectionOf([query]), limit: LOG_ENTRY_LIMIT })
+
+function directorMetricsQuery({ directorService, endedAt, minutes }) {
+  const window = directorMetricsWindow(endedAt, minutes)
+  return {
+    filter: [
+      'resource.type="cloud_run_revision"',
+      `resource.labels.service_name="${directorService}"`,
+      `jsonPayload.event="${CELL_METRICS_EVENT}"`,
+      ...timestampClauses(window.startedAt, window.endedAt)
+    ].join(' AND '),
+    fields: DIRECTOR_DRAIN_FIELDS.map((field) => `jsonPayload.${field}`),
+    match: (entry) => isEvent(entry, CELL_METRICS_EVENT),
+    minSamples: Math.floor((window.endedAt - window.startedAt) / DIRECTOR_METRICS_INTERVAL_MS)
+  }
+}
+
+// The queries one sample sends; `phoneRequest` is false while the phone path is not watched.
+export const sampleLogQueries = ({ phoneRequest, director, seatRequest }) => ({
+  phone: phoneRequest && cellPhoneQuery(phoneRequest),
+  directorMetrics: directorMetricsQuery(director),
+  ledger: ledgerQuery({ directorService: director.directorService, at: seatRequest.at }),
+  seatBehindRow: seatBehindRowQuery(seatRequest)
+})
+
+// Every Cloud Logging query a sample needs, as one read: the project allows 60 reads a minute
+// across every watch and tool, and on 10-21 18:39Z twelve watches at five reads a sample drew 429s
+// until c21 and c22 tripped unverifiable. Each query keeps its own filter and takes back the lines
+// that are its own; the combined read truncated or failed fails every one of them.
+export async function readSampleLogs(reader, queries) {
+  const named = Object.entries(queries).filter(([, query]) => query)
+  const read = await readLogEntries(reader, {
+    filter: named.map(([, query]) => `(${query.filter})`).join(' OR '),
+    projection: projectionOf(named.map(([, query]) => query)),
+    limit: LOG_ENTRY_LIMIT
+  })
+  const failure = read.failed
+    ? read.error
+    : read.entries.length >= LOG_ENTRY_LIMIT
+      ? 'sample log read truncated'
+      : read.entries.some((entry) => !Number.isFinite(Date.parse(entry.timestamp)))
+        ? 'sample log line with an unparseable timestamp'
+        : null
+  return Object.fromEntries(
+    named.map(([name, query]) => [name, failure ? { failed: true, error: failure, entries: [] } : { failed: false, entries: read.entries.filter(query.match) }])
+  )
 }
 
 function createReader(dependencies, projectId) {
@@ -459,27 +574,26 @@ export async function watchSegment(config, dependencies) {
       }
       state = { ...state, phoneBackground: measuredPhoneBackground(read) }
     }
+    // Complete minutes only, held back past the publishing delay.
+    const endedAt = minuteFloor(at - METRIC_DELAY_MS)
+    const phoneRequest = { cellId: request.cellId, endedAt, minutes: PHONE_WATCH_RULES.readMinutes }
+    const director = { directorService, endedAt, minutes: RESERVE_WATCH_RULES.director503.readMinutes }
+    const seatRequest = { directorService, cellId: request.cellId, at }
+    const queries = sampleLogQueries({ phoneRequest: phoneWatched && phoneRequest, director, seatRequest })
+    const logs = await readSampleLogs(reader, queries)
+    const directorMetrics = {
+      failed: logs.directorMetrics.failed,
+      error: logs.directorMetrics.error,
+      samples: logs.directorMetrics.entries.map(directorMetricsSample),
+      minSamples: queries.directorMetrics.minSamples
+    }
     const sample = {
       at,
       cell,
-      ...(phoneWatched
-        ? {
-            phone: await readCellPhoneMinutes(reader, {
-              cellId: request.cellId,
-              endedAt: minuteFloor(at - METRIC_DELAY_MS),
-              minutes: PHONE_WATCH_RULES.readMinutes
-            })
-          }
-        : {}),
-      director503: await readDirector503Minutes(reader, {
-        projectId: request.projectId,
-        directorService,
-        // Complete minutes only, held back past the publishing delay.
-        endedAt: minuteFloor(at - METRIC_DELAY_MS),
-        minutes: RESERVE_WATCH_RULES.director503.readMinutes
-      }),
-      ledger: await readLedgerSample(reader, { directorService, at }),
-      seatBehindRow: await readSeatBehindRowSample(reader, { directorService, cellId: request.cellId, at })
+      ...(phoneWatched ? { phone: parseCellPhoneMinutes(logs.phone, phoneRequest) } : {}),
+      director503: await readDirector503Minutes(reader, { projectId: request.projectId, ...director, metrics: [directorMetrics] }),
+      ledger: parseLedgerSample(logs.ledger),
+      seatBehindRow: parseSeatBehindRowSample(logs.seatBehindRow, seatRequest)
     }
     const result = evaluateWatchSample(state, sample, { unverifiableLimit: config.unverifiableLimit })
     state = result.state

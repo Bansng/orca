@@ -7,6 +7,7 @@ import { PaneStartStatuses, paneStartFailure } from '../../pane-start-statuses'
 import type { WindowLayoutCommand } from '../../runtime-layout-apply'
 import { allocateTerminalPaneIdentity } from '../../runtime-terminal-pane-identity'
 import { OrcaRuntimeWithCreateTerminal } from './terminal-create'
+import { mainOwnsTabLayout } from './main-owned-tab-layout'
 import { PaneOwnerContentionError } from '../../../ipc/pty/pane/pane-spawn-operation'
 
 export type FailedStartPane = { tabId: string; leafId: string }
@@ -66,6 +67,31 @@ export abstract class OrcaRuntimeWithFailedStartPanes extends OrcaRuntimeWithCre
       )
     }
     return super.createTerminal(worktreeSelector, opts, created)
+  }
+
+  /**
+   * Starts the first pane of a tab the window drew and main already wrote, under the window's ids;
+   * the window's pane attaches to it. Refused (`host_not_owned`) as a pane-named split is: switch
+   * off, or a tab main's layout does not hold, keeps the window's own start.
+   */
+  startWindowTabTerminal(
+    worktreeId: string,
+    pane: { tabId: string; leafId: string },
+    opts: Omit<dependencies.TerminalCreateOptions, 'tabId' | 'leafId' | 'presentation'>
+  ): Promise<dependencies.RuntimeTerminalCreate> {
+    if (
+      !ORCA_LAYOUT_OWNER_IS_MAIN ||
+      !mainOwnsTabLayout(this.getWorkspaceSessionHostIdsForTab(worktreeId, pane.tabId))
+    ) {
+      return Promise.reject(new Error('host_not_owned'))
+    }
+    // Background: the window already shows the tab, so main reveals nothing.
+    return this.createTerminal(`id:${worktreeId}`, {
+      ...opts,
+      ...pane,
+      presentation: 'background',
+      keepPaneOnStartFailure: true
+    })
   }
 
   protected notePaneSleeping(paneKey: string): void {

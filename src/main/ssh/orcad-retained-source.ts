@@ -4,8 +4,8 @@
  * only stopping the server, removing the host or uninstalling does.
  *
  * On every start the rows are compared with what the migration committed. If an older build
- * changed them, the host is marked `sourceChangedAt`: its rows show again, it stays on the relay,
- * and it needs a new move. A second manifest is never merged into the server automatically.
+ * changed them, the host is marked `sourceChangedAt`: its rows show again, it is unserved, and it
+ * needs a new move. A second manifest is never merged into the server automatically.
  */
 import { createHash } from 'node:crypto'
 import { getAppEnvironment } from '../../shared/app-environment'

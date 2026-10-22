@@ -215,6 +215,10 @@ function terminalRows(tab: LayoutTerminalTab, scope: Scope): RuntimeMobileSessio
       ...(tabWide && tab.quickCommandLabel?.trim()
         ? { quickCommandLabel: tab.quickCommandLabel.trim() }
         : {}),
+      ...(tabWide && tab.aiVaultTitle?.title.trim() ? { aiVaultTitle: tab.aiVaultTitle } : {}),
+      ...(tabWide && scope.generatedTitlesEnabled && tab.generatedTitle?.trim()
+        ? { generatedTitle: tab.generatedTitle.trim() }
+        : {}),
       parentTabId: tab.entityId,
       leafId,
       ...(leaf?.ptyId ? { ptyId: leaf.ptyId } : {}),

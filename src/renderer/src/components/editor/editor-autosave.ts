@@ -36,13 +36,18 @@ export type EditorPathMutationTarget = {
   }
 }
 
-export type EditorSaveQuiesceTarget = { fileId: string } | EditorPathMutationTarget
+export type EditorSaveQuiesceTarget =
+  | {
+      fileId: string
+      /** Don't Save: no flush, and autosave held until the release runs. */ discard?: true
+    }
+  | EditorPathMutationTarget
 
 export type EditorSaveQuiesceDetail = EditorSaveQuiesceTarget & {
   claim: () => void
   resolve: () => void
   reject?: (message: string) => void
-  /** A path quiesce holds autosave of that file in every workspace until this release runs. */
+  /** A path or discard quiesce holds autosave of that file in every workspace until this release runs. */
   onHold?: (release: () => void) => void
 }
 

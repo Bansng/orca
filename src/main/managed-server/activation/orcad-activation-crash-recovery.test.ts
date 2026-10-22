@@ -45,7 +45,7 @@ import { deployOrcad } from '../../ssh/orcad-remote-deploy'
 import { rollbackOrcad } from '../install/orcad-remote-rollback'
 import { recoverInterruptedOrcadActivation } from './orcad-activation-recovery'
 import { wakeStoppedManagedOrcad } from '../lifecycle/orcad-managed-wake'
-import { planManagedOrcadAutoUpdate } from '../lifecycle/orcad-managed-auto-update'
+import { planManagedOrcadAutoUpdate } from '../lifecycle/orcad-managed-update-decision'
 import { parseOrcadActivationRecord } from './orcad-activation-record'
 import { getRemoteHostPlatform } from '../../ssh/ssh-remote-platform'
 import type { OrcadHostTransport } from '../../ssh/orcad-host-transport'
@@ -101,6 +101,12 @@ const rollback = (): Promise<unknown> =>
     ...slot,
     record: FakeOrcadHost.newRecord(),
     census,
+    recountCensus: async () => ({
+      liveSessions: 0,
+      startedSinceActivation: 0,
+      daemonProtocolVersion: 3
+    }),
+    releaseIncumbentAdmission: async () => {},
     targetBuildHash: BUILD_HASH,
     targetDaemonProtocol: {
       protocolVersion: 3,

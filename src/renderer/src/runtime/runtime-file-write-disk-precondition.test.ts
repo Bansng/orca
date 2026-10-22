@@ -441,4 +441,34 @@ describe('writeRuntimeFile disk precondition', () => {
     ).rejects.toThrow('pairing changed')
     expect(writeCalls()).toHaveLength(1)
   })
+
+  it.each([
+    ['a host that compares at write time', true, precondition],
+    ['an older host after the client-side compare', false, precondition],
+    ['an unguarded write', true, undefined]
+  ])(
+    'sends no bytes when the caller is voided during the checks (%s)',
+    async (_, enforces, pre) => {
+      let voided = false
+      const voidCaller = (): void => {
+        voided = true
+      }
+      serveHost({
+        enforcesPrecondition: enforces,
+        diskContent: 'original',
+        onStatus: voidCaller,
+        onRead: voidCaller
+      })
+      runtimeEnvironmentCall.mockResolvedValue(rpcOk({ ok: true }))
+
+      await expect(
+        writeRuntimeFile(remoteContext, '/remote/repo/file.ts', 'edited', undefined, pre, () => {
+          if (voided) {
+            throw new Error('voided')
+          }
+        })
+      ).rejects.toThrow('voided')
+      expect(writeCalls()).toHaveLength(0)
+    }
+  )
 })

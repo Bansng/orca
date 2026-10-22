@@ -26,7 +26,11 @@ import { createWorkspaceTerminalHydrationActions } from '../terminals/workspace-
 import { createWorkspaceTerminalReconnectActions } from '../terminals/workspace-terminal-reconnect'
 import { createPairedTerminalTabCloseIntentSlice } from '../terminals/paired-terminal-tab-close-intent-actions'
 
-export const createTerminalSlice: StateCreator<AppState, [], [], TerminalSlice> = (set, get) => ({
+export const createTerminalSlice: StateCreator<AppState, [], [], TerminalSlice> = (
+  set,
+  get,
+  api
+) => ({
   tabsByWorktree: {},
   activeTabId: null,
   activeTabIdByWorktree: {},
@@ -73,7 +77,7 @@ export const createTerminalSlice: StateCreator<AppState, [], [], TerminalSlice> 
   lastTerminalInputAtByPaneKey: {},
   recentQuickCommandIdByGroup: {},
   ...createTerminalEphemeralActions(set, get),
-  ...createTerminalTabCreationActions(set, get),
+  ...createTerminalTabCreationActions(set, get, api.subscribe),
   ...createTerminalTabAgentLaunchPaneActions(set),
   ...createActiveWorkspaceTerminalActions(set, get),
   ...createTerminalTabCloseActions(set, get),

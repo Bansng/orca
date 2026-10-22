@@ -72,18 +72,13 @@ export function RemoteBrowserPagePane({
     addressBarInputRef,
     guestFocus
   })
-  const {
-    addressBarValue,
-    setAddressBarValue,
-    committedAddress,
-    setAddressBarValueFromPage,
-    addressBarEditSession
-  } = useBrowserAddressBarEditSession({
-    pageId: browserTab.id,
-    url: browserTab.url,
-    addressBarInputRef,
-    startAddressBarFocusGrab
-  })
+  const { addressBarValue, setAddressBarValueFromPage, ...addressBar } =
+    useBrowserAddressBarEditSession({
+      pageId: browserTab.id,
+      url: browserTab.url,
+      addressBarInputRef,
+      startAddressBarFocusGrab
+    })
   // Pane-owned notices, split by what they are ABOUT, because that decides who outranks whom:
   //
   //   'direct'      — feedback on what the user just did (URL validation). Always shown: it is the
@@ -390,8 +385,8 @@ export function RemoteBrowserPagePane({
       <RemoteBrowserPageToolbar
         runtimeEnvironmentId={runtimeEnvironmentId}
         addressBarValue={addressBarValue}
-        onAddressBarChange={setAddressBarValue}
-        committedAddress={committedAddress}
+        onAddressBarChange={addressBar.setAddressBarValue}
+        committedAddress={addressBar.committedAddress}
         onLeaveAddressBar={leaveAddressBarForPage}
         onSubmitAddressBar={submitAddressBar}
         onNavigateToUrl={navigateToUrl}
@@ -399,9 +394,10 @@ export function RemoteBrowserPagePane({
           convertBrowserPageToWorkspaceDoc(browserTab.id, docLocation)
         }
         addressBarInputRef={addressBarInputRef}
-        addressBarEditSession={addressBarEditSession}
+        addressBarEditSession={addressBar.addressBarEditSession}
         busy={busy}
         loading={browserTab.loading}
+        loadFailed={browserTab.loadError !== null}
         markup={markup}
         frameUrl={frameUrl}
         isActive={isActive}
@@ -428,6 +424,7 @@ export function RemoteBrowserPagePane({
         runtimeTarget={runtimeTarget}
         onReload={() => void runRemoteNavigation('browser.reload')}
         onGoto={(url) => void runRemoteNavigation('browser.goto', url)}
+        onNavigateToUrl={navigateToUrl}
         onReconnect={reconnectRemoteStream}
         handleRemotePointerDown={handleRemotePointerDown}
         handleRemotePointerUp={handleRemotePointerUp}

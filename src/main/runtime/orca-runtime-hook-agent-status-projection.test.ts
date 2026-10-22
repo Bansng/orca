@@ -441,6 +441,34 @@ describe('headless hook agent-status projection (#11761)', () => {
     })
   })
 
+  // A rename is the tab's name, not process title evidence: the CLI status read keeps the agent.
+  it('keeps the terminal agent status running after the pane is renamed to a shell name', async () => {
+    const runtime = await createRuntimeWithHookRows([
+      hookRow({
+        state: 'working',
+        prompt: 'Working',
+        toolName: undefined,
+        interactivePrompt: undefined
+      })
+    ])
+    observePaneTitle(runtime, '⠋ Claude')
+    const { tabs } = await runtime.listMobileSessionTabs(`id:${WORKTREE_ID}`)
+    const handle = tabs[0]?.type === 'terminal' ? tabs[0].terminal : undefined
+    if (!handle) {
+      throw new Error('expected a live terminal handle')
+    }
+    await expect(runtime.getTerminalAgentStatus(handle)).resolves.toMatchObject({
+      isRunningAgent: true
+    })
+
+    await runtime.renameTerminal(handle, 'bash')
+
+    await expect(runtime.getTerminalAgentStatus(handle)).resolves.toMatchObject({
+      isRunningAgent: true,
+      status: 'working'
+    })
+  })
+
   it('retires the renamed agent when its OSC title returns to the shell', async () => {
     const runtime = await createRuntimeWithHookRows([
       hookRow({ state: 'working', prompt: '', toolName: undefined, interactivePrompt: undefined })

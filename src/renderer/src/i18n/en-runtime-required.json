@@ -3035,7 +3035,8 @@
       },
       "composer": {
         "effort": "Effort",
-        "imageUnsupported": "Image paste is not supported for this agent."
+        "imageUnsupported": "Image paste is not supported for this agent.",
+        "placeholder": "Ask anything, @ to mention files, / for commands"
       },
       "failureWords": {
         "accountSwitchInProgress": "{{agent}}'s setup is changing on this host. Try again after it finishes.",
@@ -3145,6 +3146,8 @@
       "notices": {
         "compaction": "Context compacted",
         "contextCleared": "Context cleared",
+        "continuedOutside": "Continued outside this chat.",
+        "continuedOutsideRewound": "Continued outside this chat. Earlier replies above are no longer in this conversation's history.",
         "historyItemTooLarge": "This part of the chat was too large to show.",
         "historyRepaired": "Part of this chat's history couldn't be loaded.",
         "plan": "Plan"
@@ -3346,6 +3349,14 @@
           "readyManyOne": "{{value0}} workspaces found, with 1 cleanup suggestion.",
           "readyOneMany": "1 workspace found, with {{value0}} cleanup suggestions.",
           "readyOneOne": "1 workspace found, with 1 cleanup suggestion."
+        }
+      },
+      "delete": {
+        "unsavedEdits": {
+          "blocked_one": "Save or close {{count}} unsaved file in {{name}} first",
+          "blocked_other": "Save or close {{count}} unsaved files in {{name}} first",
+          "discarded_one": "Unsaved edits in {{count}} file will be discarded:",
+          "discarded_other": "Unsaved edits in {{count}} files will be discarded:"
         }
       }
     }

@@ -236,7 +236,11 @@ export const TerminalCreateParams = z.object({
   tabId: OptionalString,
   leafId: OptionalString,
   spawnIntent: SpawnIntentParam.optional(),
-  shell: WindowsShellOverrideParam.optional()
+  shell: WindowsShellOverrideParam.optional(),
+  // Layout-owner build: the window's own new tab, already written to main under `tabId`/`leafId`;
+  // main starts its first pane. Only a window sends it, and only to its own main process.
+  windowTab: z.literal(true).optional(),
+  cwd: OptionalString
 })
 
 export const TerminalSplit = z

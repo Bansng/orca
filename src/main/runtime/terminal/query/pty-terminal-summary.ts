@@ -21,10 +21,6 @@ import { ORCA_LAYOUT_OWNER_IS_MAIN } from '../../../../shared/layout-owner-switc
 import { startedMainTerminalSurfaces } from '../surface/main-terminal-surfaces'
 import { HEADLESS_RUNTIME_WINDOW_ID } from '../../../../shared/runtime-types'
 
-export type LiveTerminalPty = ReturnType<
-  OrcaRuntimeWithBuildPtyTerminalSummary['getLivePtyForHandle']
->
-
 export abstract class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntimeWithGetPtyRecordForPaneKey {
   protected abstract bindPtyIncarnationHandle(
     retained: PtyIncarnationHandleRecord,
@@ -46,10 +42,8 @@ export abstract class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntime
 
     const pane = parsePaneKey(pty.paneKey ?? '')
     const orphaned = !ptyHoldsRecordedSurface(pty, this.ptySurfaceTopology())
-    // A restarted host's terminal has no title yet; until it has one, its tab's saved name stands in.
-    const title =
-      getLatestPtyTitle(this.getPtyDisplayRecord(pty)) ??
-      (orphaned ? null : this.getSavedTerminalTabCustomTitle(pty.worktreeId, pty.tabId))
+    const processTitle = getLatestPtyTitle(this.getPtyDisplayRecord(pty))
+    const title = this.getPtyManualTitle(pty, orphaned) ?? processTitle
     const paneTitle =
       orphaned || !pty.tabId || !pane
         ? null
@@ -87,20 +81,20 @@ export abstract class OrcaRuntimeWithBuildPtyTerminalSummary extends OrcaRuntime
       ...this.resolvePaneAgentIdentityField(
         pty.launchAgent,
         pty.foregroundAgent,
-        title,
+        processTitle,
         pty.paneKey ?? null
       )
     }
   }
 
-  protected getSavedTerminalTabCustomTitle(
-    worktreeId: string,
-    tabId: string | null
-  ): string | null {
-    const tab = this.getWorkspaceSessionForWorktree(worktreeId)?.tabsByWorktree[worktreeId]?.find(
-      (candidate) => candidate.id === tabId
-    )
-    return tab?.customTitle?.trim() || null
+  /** The terminal's manual name: its saved tab's, or the rename's while no saved tab holds it. */
+  protected getPtyManualTitle(pty: RuntimePtyWorktreeRecord, orphaned: boolean): string | null {
+    const tab = orphaned
+      ? undefined
+      : this.getWorkspaceSessionForWorktree(pty.worktreeId)?.tabsByWorktree[pty.worktreeId]?.find(
+          (candidate) => candidate.id === pty.tabId
+        )
+    return tab ? tab.customTitle?.trim() || null : (pty.manualTitle ?? null)
   }
 
   protected getLiveLeafForHandle(handle: string): {

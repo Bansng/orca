@@ -90,6 +90,12 @@ const rollback = (): Promise<unknown> =>
     ...slot,
     record: FakeOrcadHost.newRecord(),
     census,
+    recountCensus: async () => ({
+      liveSessions: 0,
+      startedSinceActivation: 0,
+      daemonProtocolVersion: 3
+    }),
+    releaseIncumbentAdmission: async () => {},
     targetBuildHash: BUILD_HASH,
     targetDaemonProtocol: { protocolVersion: 3, previousProtocolVersions: [1, 2] }
   })

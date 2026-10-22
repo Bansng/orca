@@ -39,7 +39,6 @@ export function useBrowserPageNavigationDownloads({
   webviewRef,
   activeLoadFailureRef,
   lastKnownWebviewUrlRef,
-  trackNextLoadingEventRef,
   recoveryNavigationValidationRef,
   onSetUrlRef,
   onUpdatePageStateRef,
@@ -55,7 +54,6 @@ export function useBrowserPageNavigationDownloads({
   webviewRef: MutableRefObject<Electron.WebviewTag | null>
   activeLoadFailureRef: MutableRefObject<BrowserLoadError | null>
   lastKnownWebviewUrlRef: MutableRefObject<string | null>
-  trackNextLoadingEventRef: MutableRefObject<boolean>
   recoveryNavigationValidationRef: MutableRefObject<BrowserPageRecoveryNavigationValidation | null>
   onSetUrlRef: MutableRefObject<BrowserPageUrlSetter>
   onUpdatePageStateRef: MutableRefObject<(tabId: string, updates: BrowserTabPageState) => void>
@@ -105,7 +103,6 @@ export function useBrowserPageNavigationDownloads({
         worktreeId,
         activeLoadFailureRef,
         lastKnownWebviewUrlRef,
-        trackNextLoadingEventRef,
         recoveryNavigationValidationRef,
         webviewRef,
         onSetUrlRef,
@@ -125,7 +122,6 @@ export function useBrowserPageNavigationDownloads({
       onUpdatePageStateRef,
       recoveryNavigationValidationRef,
       setResourceNotice,
-      trackNextLoadingEventRef,
       webviewRef,
       worktreeId
     ]

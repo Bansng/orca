@@ -3,10 +3,10 @@ import {
   isImeOwnedKeyboardEvent,
   useImeKeyGestureOwnership
 } from '@/lib/ime-composition-keyboard-event'
-import type { BrowserAddressBarPreview } from './browser-address-bar-edit-session'
+import type { BrowserAddressBarSelection } from './browser-address-bar-edit-session'
 import { useAddressBarSelectionAfterCommit } from './use-address-bar-selection-after-commit'
 
-export type AddressBarPreview = Pick<BrowserAddressBarPreview, 'typedQuery' | 'selection'>
+export type AddressBarPreview = { typedQuery: string; selection: BrowserAddressBarSelection }
 
 export type AddressBarSuggestionsState =
   | { kind: 'previewing'; preview: AddressBarPreview }
@@ -46,7 +46,9 @@ export type BrowserAddressBarEscapeBinding = {
   value: string
   committedAddress: string
   suggestionsShown: boolean
-  previewRef: RefObject<AddressBarPreview | null>
+  /** The typed text while the bar shows an arrowed or inline-completed suggestion. */
+  prePreviewValueRef: RefObject<string | null>
+  previewSelectionRef: RefObject<BrowserAddressBarSelection | null>
   restoreTypedQuery: () => void
   closeSuggestions: () => void
   onChange: (value: string) => void
@@ -58,7 +60,8 @@ export function useBrowserAddressBarEscape({
   value,
   committedAddress,
   suggestionsShown,
-  previewRef,
+  prePreviewValueRef,
+  previewSelectionRef,
   restoreTypedQuery,
   closeSuggestions,
   onChange,
@@ -87,7 +90,11 @@ export function useBrowserAddressBarEscape({
       // unmarked one. Chrome closes the list on the first and ignores the second.
       if (imeEscape.ownsKeyDown(event)) {
         event.stopPropagation()
-        if (event.nativeEvent.isComposing && !previewRef.current && suggestionsShown) {
+        if (
+          event.nativeEvent.isComposing &&
+          prePreviewValueRef.current === null &&
+          suggestionsShown
+        ) {
           closeSuggestions()
         }
         return
@@ -97,7 +104,18 @@ export function useBrowserAddressBarEscape({
       }
       event.preventDefault()
       event.stopPropagation()
-      const preview = previewRef.current
+      const typedQuery = prePreviewValueRef.current
+      const preview =
+        typedQuery === null
+          ? null
+          : {
+              typedQuery,
+              selection: previewSelectionRef.current ?? {
+                start: typedQuery.length,
+                end: typedQuery.length,
+                direction: 'none' as const
+              }
+            }
       const outcome = resolveAddressBarEscape({
         suggestions: preview
           ? { kind: 'previewing', preview }
@@ -133,7 +151,8 @@ export function useBrowserAddressBarEscape({
       onChange,
       onLeaveAddressBar,
       placeSelection,
-      previewRef,
+      prePreviewValueRef,
+      previewSelectionRef,
       restoreTypedQuery,
       suggestionsShown,
       value

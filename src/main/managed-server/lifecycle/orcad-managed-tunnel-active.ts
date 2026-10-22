@@ -5,15 +5,12 @@ import {
   type KnownRuntimeEnvironment,
   type RuntimeSshTunnelLink
 } from '../../../shared/runtime-environments'
-import type { SshTarget } from '../../../shared/ssh-types'
+import type { PortForwardEntry, SshTarget } from '../../../shared/ssh-types'
 import type { SshConnection } from '../../ssh/connection/ssh-connection'
 import { adoptSshConnection } from '../../ssh/connection/ssh-connection-attribution'
 import type { SshConnectionManager } from '../../ssh/connection/ssh-connection-manager'
 import type { getSshTargetRegistryStore } from '../../ssh/targets/ssh-target-registry'
-import type {
-  PortForwardEntry,
-  SshPortForwardManager
-} from '../../ssh/port-forwarding/ssh-port-forward'
+import type { SshPortForwardManager } from '../../ssh/port-forwarding/ssh-port-forward'
 
 export type ActiveOrcadTunnel = {
   connection: SshConnection
