@@ -1,9 +1,14 @@
+import { startupCwdFallbackOutcome } from '../spawn-startup-target'
 import type { RuntimePtySpawnState } from './spawn-state'
 import { resolvePaneSpawnReservation } from '../pane/spawn-reservation'
 
 export function completeRuntimeSpawnResponse(ctx: RuntimePtySpawnState) {
   const args = ctx.args
+  const startupCwdFallback = startupCwdFallbackOutcome(ctx.startupCwdFallback, ctx.result)
+  const savedStartupCwd =
+    (startupCwdFallback ? ctx.correctStartupCwd : undefined) ?? ctx.requestedCwd
   const response = {
+    savedStartupCwd,
     id: ctx.result.id,
     ...(ctx.result.incarnationId ? { incarnationId: ctx.result.incarnationId } : {}),
     ...(ctx.stablePaneOwner && (ctx.stablePaneOwner.handle || args.preAllocatedHandle)
@@ -15,7 +20,8 @@ export function completeRuntimeSpawnResponse(ctx: RuntimePtySpawnState) {
           }
         }
       : {}),
-    ...(ctx.result.agentSessionEnsure ? { agentSessionEnsure: ctx.result.agentSessionEnsure } : {})
+    ...(ctx.result.agentSessionEnsure ? { agentSessionEnsure: ctx.result.agentSessionEnsure } : {}),
+    ...(startupCwdFallback ? { startupCwdFallback } : {})
   }
   resolvePaneSpawnReservation(ctx.paneSpawnReservationKey, ctx.paneSpawnReservation, {
     ...ctx.result,

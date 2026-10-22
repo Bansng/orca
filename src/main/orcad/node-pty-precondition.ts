@@ -67,13 +67,7 @@ export type NodePtyProbeFailure = {
   detail: string
 }
 
-/**
- * What the child actually reported, before any judgement is made about it.
- *
- * Split from the classification so callers that need the loader's own words — the relay,
- * which quotes them back when nothing recognizes the shape — do not have to re-derive
- * them from a formatted verdict.
- */
+/** What the child actually reported, before any judgement is made about it. */
 export type NodePtyProbeOutcome =
   | { kind: 'loaded'; loadedDir: string | null }
   | { kind: 'noBinary' }
@@ -222,14 +216,13 @@ function resolveNodePtyDir(): string | null {
   }
 }
 
-/** Local equivalent of the relay's remote toolchain probe, reusing its pure half. */
+/** Probes this machine's build toolchain for install hints. */
 export function probeLocalBuildToolchainHints(platform: NodeJS.Platform): string[] {
   if (platform === 'win32') {
     return []
   }
-  // Why macOS is not routed through the relay's hints: that function answers with a
-  // cross-distro apt/dnf/pacman/apk menu when it finds no package manager, and none of
-  // those lines is the macOS answer. Printing them here would be confidently wrong.
+  // Why macOS skips the generic hints: with no package manager found they list a
+  // cross-distro apt/dnf/pacman/apk menu, and none of those lines is the macOS answer.
   if (platform === 'darwin') {
     return ['  xcode-select --install']
   }

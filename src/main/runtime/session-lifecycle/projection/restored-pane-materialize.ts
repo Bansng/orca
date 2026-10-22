@@ -12,10 +12,12 @@ import { isWorktreeTerminalsSleepingError } from '../../worktree-terminals-sleep
 import type { TerminalWorkspaceLaunchScope } from '../../runtime-legacy-worker-terminal-recovery-types'
 import type { TuiAgent } from '../../../../shared/tui-agent'
 import type { AgentLaunchRuntime } from '../../../../shared/agent-launch-runtime'
+import type { RuntimeMobileSessionCreateTerminalResult } from '../../../../shared/runtime-session-contracts'
 import type { RuntimeMobileSessionTerminalTab } from '../../../../shared/runtime-types'
 import {
   RestoredPaneStarter,
   type RestoredPane,
+  type StartedPty,
   type RestoredPaneTrigger
 } from '../../terminal/recovery/restored-pane-start'
 import { isPublishedHeld, reopenHeldPanes } from '../../terminal/recovery/held-pane-reopen'
@@ -45,7 +47,7 @@ export abstract class OrcaRuntimeWithRestoredPaneStart extends OrcaRuntimeWithBu
   ensureRestoredPaneStarted(
     pane: RestoredPane,
     trigger: RestoredPaneTrigger = {}
-  ): Promise<string | null> {
+  ): Promise<StartedPty | null> {
     this.restoredPanes ??= new RestoredPaneStarter({
       boundPtyId: (target) => this.storedPaneBinding(target),
       isLive: (ptyId) => this.ptysById.get(ptyId)?.connected === true,
@@ -68,10 +70,10 @@ export abstract class OrcaRuntimeWithRestoredPaneStart extends OrcaRuntimeWithBu
         })
         // Why: the started id, not the stored layout, whose bind write may still be in flight.
         // Resolved only once registered, so a caller delivering to it never misses (A1's handles).
-        if (!started || !this.ptysById.has(started)) {
+        if (!started.tab.ptyId || !this.ptysById.has(started.tab.ptyId)) {
           throw new Error('terminal_not_started')
         }
-        return started
+        return { id: started.tab.ptyId, startupCwdFallback: started.startupCwdFallback }
       }
     })
     return this.restoredPanes.ensureStarted(pane, trigger)
@@ -86,7 +88,7 @@ export abstract class OrcaRuntimeWithRestoredPaneStart extends OrcaRuntimeWithBu
     return reopenHeldPanes(panes, {
       isHeld: (pane) => isPublishedHeld(published, pane),
       stopNewerDaemons: () => reopenNewerDaemonTerminals().then((result) => result.reopened),
-      start: (pane) => this.ensureRestoredPaneStarted(pane)
+      start: async (pane) => (await this.ensureRestoredPaneStarted(pane))?.id ?? null
     })
   }
 
@@ -116,7 +118,7 @@ export abstract class OrcaRuntimeWithRestoredPaneStart extends OrcaRuntimeWithBu
       targetGroupId,
       sessionId
     }: RestoredPaneTrigger & { sessionId?: string }
-  ): Promise<string | null> {
+  ): Promise<RuntimeMobileSessionCreateTerminalResult> {
     // Why: a pending agent tab may exist without its startup command ever
     // having been delivered (the create's renderer stalled, #7587), so a
     // bare materialize would put a plain shell under the agent icon.
@@ -171,7 +173,7 @@ export abstract class OrcaRuntimeWithRestoredPaneStart extends OrcaRuntimeWithBu
           ...(automatic ? { refuseSleptWorktree: true } : {})
         }
       )
-      return created.tab.ptyId ?? null
+      return created
     } catch (err) {
       if (
         !(automatic && isWorktreeTerminalsSleepingError(err)) &&

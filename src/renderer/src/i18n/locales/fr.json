@@ -199,7 +199,8 @@
         "korean": "한국어",
         "japanese": "日本語",
         "spanish": "Español",
-        "french": "Français"
+        "french": "Français",
+        "portuguese": "Português (Brasil)"
       },
       "statusBar": {
         "claudeToggleDescription": "Afficher l'utilisation des tokens et des coûts de Claude pour l'espace de travail actif.",
@@ -314,6 +315,10 @@
       "readFailed": "Impossible de lire les paramètres des agents. Vérifiez la connexion à l’hôte et réessayez.",
       "saveFailed": "Impossible d’enregistrer les paramètres des agents. Vérifiez la connexion à l’hôte et réessayez.",
       "hostDefaults": "Paramètres par défaut des nouveaux agents sur l’hôte sélectionné.",
+      "defaultOpensAs": "Ouvrir {{value0}} en tant que",
+      "defaultOpensAsChat": "Chat",
+      "defaultOpensAsCli": "CLI",
+      "defaultOpensAsScope": "S’applique aux nouvelles sessions {{value0}} lancées depuis cet ordinateur, y compris sur les hôtes associés. Correspond à son interrupteur dans Fournisseurs.",
       "save": "Enregistrer",
       "clearDefault": "Effacer l'agent par défaut"
     },
@@ -3623,7 +3628,6 @@
         "bar": {
           "BrowserTab": {
             "6e0bc8f3a8": "Ouvrir dans le navigateur",
-            "9dd880bd56": "Fermer tous les onglets à droite",
             "1611a1324b": "Fermer",
             "5d6e89891f": "Dupliquer l'onglet",
             "966feb9ad5": "Scinder vers la droite",
@@ -3640,7 +3644,6 @@
             "52ce4f4605": "Copier le chemin relatif",
             "5b85754786": "Copier le chemin",
             "bfd5797ef4": "Ouvrir l'aperçu Markdown",
-            "e5ff31ccaf": "Fermer tous les onglets à droite",
             "ba1369dd24": "Fermer tous les onglets de l'éditeur",
             "1ba8492c5b": "Fermer",
             "68cc610e7f": "Renommer",
@@ -3673,7 +3676,6 @@
           "SortableTabContextMenu": {
             "35e8892fd0": "Couleur de l'onglet",
             "2f697b3c31": "Modifier le titre",
-            "c1ee099c7e": "Fermer tous les onglets à droite",
             "8d16f9cd30": "Fermer les autres",
             "89359a36f7": "Fermer",
             "21132389e9": "Scinder vers la droite",
@@ -7214,8 +7216,6 @@
           "ee110e1830": "Aucun ref de base par défaut"
         },
         "BrowserDefaultZoomSetting": {
-          "2622126877": "Niveau de zoom appliqué aux nouveaux onglets du navigateur.",
-          "bbeec087d3": "Appliqué aux nouveaux onglets du navigateur.",
           "265597101f": "Zoom par défaut"
         },
         "BrowserHomePageSetting": {
@@ -12819,7 +12819,8 @@
           "behindRolledBack": "Exécute une version du serveur Orca plus ancienne que cette app ; la dernière mise à jour a été annulée. Utilisez Mettre à jour le serveur pour réessayer.",
           "behindNoTemplate": "Exécute une version du serveur Orca que cette app ne peut pas mettre à jour ; cette version d’Orca n’inclut pas de serveur pour cet hôte.",
           "behindMigrating": "Exécute le serveur Orca, qui se mettra à jour une fois le déplacement de ses projets terminé.",
-          "behindCheckFailed": "Exécute le serveur Orca ; Orca n’a pas pu vérifier s’il est en retard sur cette app."
+          "behindCheckFailed": "Exécute le serveur Orca ; Orca n’a pas pu vérifier s’il est en retard sur cette app.",
+          "refusedBlockedReason": "Orca n’est pas encore configuré sur cet hôte. {{reason}}"
         },
         "deltaMove": {
           "action": "Déplacer les nouveaux projets…",
@@ -16768,7 +16769,6 @@
             "95af781091": "Envoyer un retour à un agent",
             "ac39b9366b": "Envoyer",
             "a3508d7e6e": "{{value0}} annotation{{value1}} prête. Sélectionnez un autre élément ou copiez tous les retours.",
-            "f796c774a4": "Saisissez une URL ci-dessus pour commencer à naviguer.",
             "366bf5d62c": "Nouvel onglet",
             "1c78adc73d": "Ouvrir en externe",
             "da68d35f7b": "Ouvrir la page en erreur dans le navigateur par défaut",
@@ -16894,7 +16894,8 @@
               "bar": {
                 "suggestions": {
                   "87fcdd0da9": "Recherche {{value0}}"
-                }
+                },
+                "placeholder": "Rechercher ou saisir une URL"
               }
             }
           },
@@ -18940,6 +18941,8 @@
         "plan": "Plan",
         "historyRepaired": "Une partie de l'historique de ce chat n'a pas pu être chargée.",
         "historyItemTooLarge": "Cette partie du chat était trop volumineuse pour être affichée.",
+        "continuedOutside": "Poursuivi en dehors de ce chat.",
+        "continuedOutsideRewound": "Poursuivi en dehors de ce chat. Les réponses précédentes ne font plus partie de l'historique de cette conversation.",
         "stoppedBeforeStart": "Arrêté manuellement",
         "dismiss": "Ignorer",
         "copyError": "Copier l'erreur",
@@ -19186,16 +19189,13 @@
       "bar": {
         "SortableTabContextMenu": {
           "switchToTerminalView": "Continuer avec l’agent de terminal",
-          "switchToChatView": "Continuer dans l’interface de chat",
-          "closeTabsToLeft": "Fermer tous les onglets à gauche"
+          "switchToChatView": "Continuer dans l’interface de chat"
         },
         "BrowserTab": {
-          "closeOthers": "Fermer les autres",
-          "closeTabsToLeft": "Fermer tous les onglets à gauche"
+          "closeOthers": "Fermer les autres"
         },
         "EditorFileTabContextMenu": {
-          "closeOthers": "Fermer les autres",
-          "closeTabsToLeft": "Fermer tous les onglets à gauche"
+          "closeOthers": "Fermer les autres"
         },
         "CopyTabIdMenuItem": {
           "copied": "ID de l'onglet copié",
@@ -19469,6 +19469,13 @@
           "checking": "Recherche de modifications…",
           "checkingDetails": "Vérification…",
           "unavailableDetails": "Détails indisponibles"
+        },
+        "unsavedEdits": {
+          "discarded_one": "Les modifications non enregistrées de {{count}} fichier seront ignorées :",
+          "discarded_other": "Les modifications non enregistrées de {{count}} fichiers seront ignorées :",
+          "moreFiles": "et {{value}} de plus",
+          "blocked_one": "Enregistrez ou fermez d'abord {{count}} fichier non enregistré dans {{name}}",
+          "blocked_other": "Enregistrez ou fermez d'abord {{count}} fichiers non enregistrés dans {{name}}"
         }
       }
     },

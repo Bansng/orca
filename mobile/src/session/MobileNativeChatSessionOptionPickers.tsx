@@ -1,8 +1,10 @@
+import { useEffect, useRef } from 'react'
 import { ActivityIndicator, Keyboard, Pressable, StyleSheet, Text, View } from 'react-native'
 import {
   ChevronLeft,
   FilePenLine,
   Hand,
+  LockKeyhole,
   ShieldAlert,
   ShieldCheck,
   X,
@@ -101,6 +103,14 @@ export function MobileNativeChatSessionOptionPickers({
   onDrawerOpen,
   onDrawerAfterClose
 }: MobileNativeChatSessionOptionPickersProps & PresentationProps): React.JSX.Element | null {
+  const open = presentation?.page != null
+  const wasOpen = useRef(false)
+  useEffect(() => {
+    if (open && !wasOpen.current) {
+      controller.optionSurface?.demandModelCatalog?.()
+    }
+    wasOpen.current = open
+  }, [open, controller.optionSurface])
   const { snapshot, pendingId } = controller
   const model = snapshot.find((descriptor) => descriptor.category === 'model')
   const permission = snapshot.find(
@@ -203,6 +213,17 @@ export function MobileNativeChatSessionOptionPickers({
                 ) : null}
               </View>
             </View>
+            {isWorking && !permissionView ? (
+              <View style={styles.lockNotice} accessibilityLiveRegion="polite">
+                <LockKeyhole size={16} color={colors.textSecondary} />
+                <View style={styles.lockNoticeBody}>
+                  <Text style={styles.lockNoticeTitle}>Agent is working</Text>
+                  <Text style={styles.lockNoticeDescription}>
+                    Model settings unlock when this turn finishes.
+                  </Text>
+                </View>
+              </View>
+            ) : null}
             {sessionOptionDispatchUnconfirmed(activeDescriptor) ? (
               <SessionOptionCaption>Sent to the agent — not confirmed</SessionOptionCaption>
             ) : null}
@@ -339,6 +360,26 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  lockNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.lg
+  },
+  lockNoticeBody: {
+    flex: 1,
+    gap: spacing.xs
+  },
+  lockNoticeTitle: {
+    color: colors.textPrimary,
+    fontSize: typography.bodySize,
+    fontWeight: '600'
+  },
+  lockNoticeDescription: {
+    color: colors.textSecondary,
+    fontSize: typography.metaSize
   },
   group: {
     overflow: 'hidden',

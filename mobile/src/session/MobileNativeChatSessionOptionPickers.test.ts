@@ -25,6 +25,7 @@ vi.mock('lucide-react-native', () => ({
   ChevronRight: 'ChevronRight',
   FilePenLine: 'FilePenLine',
   Hand: 'Hand',
+  LockKeyhole: 'LockKeyhole',
   ShieldAlert: 'ShieldAlert',
   ShieldCheck: 'ShieldCheck',
   X: 'X'
@@ -317,6 +318,9 @@ describe('MobileNativeChatSessionOptionPickers', () => {
     expect(rowByText('Opus 4.8').props.accessibilityState?.disabled).toBe(true)
     expect(pill('Low').props.accessibilityState?.disabled).toBe(true)
     expect(rowByText('Permissions').props.accessibilityState?.disabled).toBe(false)
+    expect(renderer!.root.findByProps({ children: 'Agent is working' })).toBeDefined()
+    await act(async () => rowByText('Permissions').props.onPress())
+    expect(renderer!.root.findAllByProps({ children: 'Agent is working' })).toHaveLength(0)
   })
 
   it('keeps the permission mode in the model sheet and warns on the pill at full access', async () => {

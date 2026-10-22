@@ -137,7 +137,8 @@ export function writeEditorSave(
   filePath: string,
   content: string,
   access: LocalFileAccess | undefined,
-  write: EditorSaveWrite
+  write: EditorSaveWrite,
+  beforeSend?: () => void
 ): Promise<FileWriteResult> {
   return writeRuntimeFile(
     context,
@@ -146,7 +147,8 @@ export function writeEditorSave(
     access,
     write.kind === 'guarded'
       ? { expectedSignature: write.signature, allowMissing: write.allowMissing }
-      : undefined
+      : undefined,
+    beforeSend
   )
 }
 

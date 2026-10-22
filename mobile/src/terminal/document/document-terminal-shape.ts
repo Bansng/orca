@@ -36,6 +36,8 @@ export type TerminalDocumentCell = {
   getChars?: () => string
   getWidth?: () => number
   isBgDefault: () => boolean
+  isBgRGB?: () => boolean
+  getBgColor?: () => number
   extended?: { urlId?: number }
   isInverse: () => number
   isUnderline?: () => number

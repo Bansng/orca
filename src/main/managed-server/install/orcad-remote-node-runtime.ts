@@ -28,7 +28,7 @@ import {
   execCommand,
   isUnconfirmedSshCommandTermination
 } from '../../ssh/remote-exec/remote-exec-command'
-import { uploadRelayDirectory } from './remote-install-transfers'
+import { uploadRemoteInstallDirectory } from './remote-install-transfers'
 import { remoteSha256Command } from './remote-sha256-command'
 import { stageNodeRuntimeArchive } from './remote-node-runtime-host-download'
 import {
@@ -320,7 +320,7 @@ export async function ensureRemoteOrcadNodeRuntime(options: {
       exec,
       stageDir,
       upload: (dir) =>
-        remoteStep(() => uploadRelayDirectory(conn, dir, stageDir, host, { signal })),
+        remoteStep(() => uploadRemoteInstallDirectory(conn, dir, stageDir, host, { signal })),
       onLocalStage: (dir) => (localStage = dir)
     })
     let promoteRan = false

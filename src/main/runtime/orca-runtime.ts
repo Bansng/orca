@@ -95,10 +95,11 @@ class OrcaRuntimeService extends OrcaRuntimeSidebarBase {
   readonly workspaceRows = ORCA_SIDEBAR_INPUTS_IS_MAIN
     ? new WorkspaceRowsProducer({
         store: this.store,
-        // Merged fresh (git scans keep their own cache): the window's metadata writes emit no
-        // client event, so the shared listing may predate them.
-        listVisibleWorktrees: async () =>
-          this.visibleResolvedWorktreeSnapshot(await this.computeResolvedWorktrees()),
+        // Its own scans, not the shared listing: metadata joins at read, so no write waits on git.
+        scan: () => this.scanResolvedWorktreeRepos(),
+        join: (scans) => this.joinResolvedWorktreeScans(scans),
+        visible: (snapshot) => this.visibleResolvedWorktreeSnapshot(snapshot),
+        lifecycle: this.workspaceLifecycle,
         onClientEvent: (listener, options) => this.onClientEvent(listener, options)
       })
     : null
@@ -109,7 +110,7 @@ class OrcaRuntimeService extends OrcaRuntimeSidebarBase {
           sidebarInputsFeedDomains({
             facts: requireSwitchedOn(this.sidebarFacts),
             pairedServerRows: requireSwitchedOn(this.pairedServerRows),
-            workspaceCreations: requireSwitchedOn(this.workspaceCreations),
+            workspaceLifecycle: requireSwitchedOn(this.workspaceLifecycle),
             workspaceRows: requireSwitchedOn(this.workspaceRows),
             repoIcons: requireSwitchedOn(this.repoIconDataUrls),
             store: () => this.store,

@@ -157,6 +157,27 @@
     },
     "request": {
       "pairedServerWorkspace": "This workspace runs on a paired server. Use that server's browser tabs."
+    },
+    "newTab": {
+      "emptyHint": "Search or enter an address above. Sites you visit, dev servers running in this workspace, and its PR and issue will show up here.",
+      "openServerFailed": "Couldn’t open {{address}}",
+      "removedFromHistory": "Removed “{{title}}” from history",
+      "removeSuggestion": "Remove from history",
+      "state": {
+        "closed": "Closed",
+        "draft": "Draft",
+        "merged": "Merged",
+        "open": "Open"
+      },
+      "suggested": "Suggested",
+      "thisWorkspace": "This workspace",
+      "undo": "Undo",
+      "checks": {
+        "failing": "Checks failing",
+        "passing": "Checks passing",
+        "pending": "Checks pending"
+      },
+      "runningElsewhere": "{{count}} running in other workspaces"
     }
   },
   "editor": {
@@ -272,7 +293,8 @@
         "korean": "한국어",
         "japanese": "日本語",
         "spanish": "Español",
-        "french": "Français"
+        "french": "Français",
+        "portuguese": "Português (Brasil)"
       },
       "statusBar": {
         "claudeToggleDescription": "Show Claude token and cost usage for the active workspace.",
@@ -366,6 +388,23 @@
         "optionNativeTooltip": "Keeps Electron's built-in identity for sites that reject the cleaned identity. Google sign-in is unavailable in Native mode.",
         "restartRequired": "Restart required",
         "unavailable": "Browser identity is unavailable."
+      },
+      "sitePermissions": {
+        "allow": "Allow",
+        "block": "Block",
+        "ask": "Ask again",
+        "profile": "Browser profile",
+        "empty": "No sites have been allowed or blocked yet.",
+        "title": "Site permissions",
+        "description": "Sites ask before using your camera, microphone, location and more. Change what you allowed or blocked for each site.",
+        "search": {
+          "permissions": "permissions",
+          "camera": "camera",
+          "microphone": "microphone",
+          "location": "location",
+          "notifications": "notifications",
+          "clipboard": "clipboard"
+        }
       }
     },
     "agents": {
@@ -387,6 +426,10 @@
       "readFailed": "Couldn’t read agent settings. Check the host connection and try again.",
       "saveFailed": "Couldn’t save agent settings. Check the host connection and try again.",
       "hostDefaults": "Defaults for new agents on the selected host.",
+      "defaultOpensAs": "Open {{value0}} as",
+      "defaultOpensAsChat": "Chat",
+      "defaultOpensAsCli": "CLI",
+      "defaultOpensAsScope": "Applies to new {{value0}} sessions launched from this computer, including on paired hosts. Matches its Providers switch.",
       "save": "Save",
       "clearDefault": "Clear default agent",
       "autoPermissions": "Auto",
@@ -3761,7 +3804,6 @@
         "bar": {
           "BrowserTab": {
             "6e0bc8f3a8": "Open In Browser",
-            "9dd880bd56": "Close All Tabs To The Right",
             "1611a1324b": "Close",
             "5d6e89891f": "Duplicate Tab",
             "966feb9ad5": "Split Right",
@@ -3778,7 +3820,6 @@
             "52ce4f4605": "Copy Relative Path",
             "5b85754786": "Copy Path",
             "bfd5797ef4": "Open Markdown Preview",
-            "e5ff31ccaf": "Close All Tabs To The Right",
             "ba1369dd24": "Close All Editor Tabs",
             "1ba8492c5b": "Close",
             "68cc610e7f": "Rename",
@@ -3800,6 +3841,7 @@
             "chatNotInstalled": "Not installed",
             "chatNotOverSsh": "No chat over SSH",
             "chatNotInWsl": "No chat in WSL",
+            "chatNotInSubfolder": "No chat in a subfolder",
             "chatNotOnHost": "No chat on this host",
             "chatCheckFailed": "Couldn’t check chat availability",
             "chatLoading": "Checking chat support…",
@@ -3821,7 +3863,6 @@
           "SortableTabContextMenu": {
             "35e8892fd0": "Tab Color",
             "2f697b3c31": "Change Title",
-            "c1ee099c7e": "Close All Tabs To The Right",
             "8d16f9cd30": "Close Others",
             "89359a36f7": "Close",
             "21132389e9": "Split Right",
@@ -7381,9 +7422,8 @@
           "ee110e1830": "No default base ref"
         },
         "BrowserDefaultZoomSetting": {
-          "2622126877": "Zoom level applied to newly opened browser tabs.",
-          "bbeec087d3": "Applied to newly opened browser tabs.",
-          "265597101f": "Default Zoom"
+          "265597101f": "Default Zoom",
+          "siteDefault": "Zoom for sites you haven't zoomed."
         },
         "BrowserHomePageSetting": {
           "d4ddcd0056": "Save",
@@ -12474,6 +12514,12 @@
           "cardDescription": "Created per workspace from an environment recipe.",
           "setUpRecipes": "Set up recipes"
         },
+        "ReleaseBuildPicker": {
+          "build": "Build",
+          "searchLabel": "Search builds",
+          "searchPlaceholder": "Search builds…",
+          "noMatches": "No matching builds."
+        },
         "ReleaseChannelSection": {
           "switchFailed": "Could not switch to that build.",
           "title": "Release channel",
@@ -12946,7 +12992,8 @@
           "nodeDownloadBlocked": "Neither this computer nor this host could download Node.js, which Orca’s server needs. Use a Node.js mirror, or check the network on both machines.",
           "nodeDownloadBlockedNoMirror": "Neither this computer nor this host could download Node.js, which Orca’s server needs. Check the network or proxy on both machines, then connect again.",
           "nodeDownloadBlockedMirrorTried": "Neither this computer nor this host could download Node.js, including from the Node.js download mirror. Check the mirror setting, then connect again.",
-          "reassurance": "Runs on {{host}}, reached over your own SSH connection. Your code and files stay where they are. Only Orca’s list of projects, tabs and terminals moves to {{host}}."
+          "reassurance": "Runs on {{host}}, reached over your own SSH connection. Your code and files stay where they are. Only Orca’s list of projects, tabs and terminals moves to {{host}}.",
+          "refusedBlockedReason": "Orca isn’t set up on this host yet. {{reason}}"
         },
         "ZcodeCliSetupSection": {
           "title": "Use GLM with ZCode",
@@ -16950,7 +16997,6 @@
             "95af781091": "Send feedback to an agent",
             "ac39b9366b": "Send",
             "a3508d7e6e": "{{value0}} annotation{{value1}} ready. Select another element or copy all feedback.",
-            "f796c774a4": "Type a URL above to start browsing.",
             "366bf5d62c": "New Tab",
             "1c78adc73d": "Open Externally",
             "da68d35f7b": "Open failed page in default browser",
@@ -17052,7 +17098,16 @@
             "bf648471c5": "Creating…",
             "53bbe3dab4": "Imported {{value0}} cookies from file.",
             "c5f0e4d3b2a1": "Imported {{value0}} cookies from {{value1}} ({{value2}}).",
-            "d6a1f5e4c3b2": "Imported {{value0}} cookies from {{value1}}."
+            "d6a1f5e4c3b2": "Imported {{value0}} cookies from {{value1}}.",
+            "zoom": "Zoom",
+            "zoomOut": "Zoom out",
+            "zoomIn": "Zoom in",
+            "resetZoom": "Reset zoom",
+            "appearance": "Appearance",
+            "appearanceMatchOrca": "Match Orca",
+            "appearanceLight": "Light",
+            "appearanceDark": "Dark",
+            "zoomPercent": "Zoom {{value0}}%"
           },
           "GrabConfirmationSheet": {
             "314a0aaa5b": "Attach to AI",
@@ -17076,7 +17131,8 @@
               "bar": {
                 "suggestions": {
                   "87fcdd0da9": "{{value0}} Search"
-                }
+                },
+                "placeholder": "Search or enter URL"
               }
             }
           },
@@ -18386,6 +18442,33 @@
           "password": "Password",
           "confirm": "Sign in",
           "cancel": "Cancel"
+        },
+        "sitePermission": {
+          "label": {
+            "camera": "Camera",
+            "microphone": "Microphone",
+            "location": "Location",
+            "notifications": "Notifications",
+            "clipboard": "Clipboard",
+            "midi": "MIDI devices",
+            "windowManagement": "Window management",
+            "idleDetection": "Device use"
+          },
+          "ask": {
+            "camera": "Use your camera",
+            "microphone": "Use your microphone",
+            "location": "Know your location",
+            "notifications": "Show notifications",
+            "clipboard": "See text and images copied to the clipboard",
+            "midi": "Use your MIDI devices",
+            "windowManagement": "Manage windows on all your displays",
+            "idleDetection": "Know when you are actively using this device"
+          },
+          "title": "{{site}} wants to",
+          "allow": "Allow",
+          "block": "Block",
+          "localFiles": "Local files",
+          "fileTitle": "This file wants to"
         }
       },
       "HostedReviewUnlinkMenuItem": {
@@ -18846,6 +18929,8 @@
         "plan": "Plan",
         "historyRepaired": "Part of this chat's history couldn't be loaded.",
         "historyItemTooLarge": "This part of the chat was too large to show.",
+        "continuedOutside": "Continued outside this chat.",
+        "continuedOutsideRewound": "Continued outside this chat. Earlier replies above are no longer in this conversation's history.",
         "stoppedBeforeStart": "Stopped manually",
         "dismiss": "Dismiss",
         "copyError": "Copy error",
@@ -19189,7 +19274,9 @@
         "send": "Submit",
         "next": "Next",
         "skip": "Skip",
-        "sending": "Sending…"
+        "sending": "Sending…",
+        "terminalRequired": "Answer this OMP question in the terminal.",
+        "openTerminal": "Answer in terminal"
       },
       "ask": {
         "awaiting": "Awaiting user input:",
@@ -19206,7 +19293,9 @@
         "needsAccess": "Needs access to",
         "needsNewerOrca": "This request needs a newer version of Orca.",
         "plan": {
-          "file": "Plan file"
+          "file": "Plan file",
+          "reviewTitle": "Review proposed plan",
+          "refineHint": "Refine plan closes the review so you can send what to change."
         }
       },
       "launchPromptNotDelivered": "Not delivered — check the terminal",
@@ -19405,16 +19494,13 @@
       "bar": {
         "SortableTabContextMenu": {
           "switchToTerminalView": "Continue with Terminal Agent",
-          "switchToChatView": "Continue in Chat UI",
-          "closeTabsToLeft": "Close All Tabs To The Left"
+          "switchToChatView": "Continue in Chat UI"
         },
         "BrowserTab": {
-          "closeOthers": "Close Others",
-          "closeTabsToLeft": "Close All Tabs To The Left"
+          "closeOthers": "Close Others"
         },
         "EditorFileTabContextMenu": {
-          "closeOthers": "Close Others",
-          "closeTabsToLeft": "Close All Tabs To The Left"
+          "closeOthers": "Close Others"
         },
         "CopyTabIdMenuItem": {
           "copied": "Tab ID copied",
@@ -19688,6 +19774,13 @@
           "checking": "Checking for changes…",
           "checkingDetails": "Checking…",
           "unavailableDetails": "Details unavailable"
+        },
+        "unsavedEdits": {
+          "discarded_one": "Unsaved edits in {{count}} file will be discarded:",
+          "discarded_other": "Unsaved edits in {{count}} files will be discarded:",
+          "moreFiles": "and {{value}} more",
+          "blocked_one": "Save or close {{count}} unsaved file in {{name}} first",
+          "blocked_other": "Save or close {{count}} unsaved files in {{name}} first"
         }
       }
     },
@@ -19802,7 +19895,8 @@
       "runTerminalUnavailable": "Run terminal is unavailable."
     },
     "agentCombobox": {
-      "clearSelection": "Clear agent selection"
+      "clearSelection": "Clear agent selection",
+      "startInTerminal": "Start {{value0}} in a terminal"
     },
     "newWorkspace": {
       "agentOptional": "Agent [Optional]",

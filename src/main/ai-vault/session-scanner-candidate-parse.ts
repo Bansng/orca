@@ -11,7 +11,11 @@ import {
   type SessionParseStats
 } from './session-scanner-parse-cache'
 import { recordSessionScanIssue } from './session-scan-issues'
-import { noteSessionParseCacheListed, getSessionParseCacheEntry } from './session-parse-cache-store'
+import {
+  getSessionParseCacheEntry,
+  noteSessionParseCacheListed,
+  sessionParseCacheKey
+} from './session-parse-cache-store'
 import { describeSkippedTranscriptRecords } from './session-transcript-record-budget'
 import { canStopParsingSessions } from './session-scan-cutoff'
 import type { SessionFileCandidate, SessionParseResult } from './session-scanner-types'
@@ -115,7 +119,8 @@ export async function parseSessionCandidates(args: {
         (!args.admitSession || args.admitSession(result.session))
       ) {
         if (args.listed === false) {
-          noteSessionParseCacheListed(selected[resultIndex].file.path)
+          const { agent, file } = selected[resultIndex]
+          noteSessionParseCacheListed(sessionParseCacheKey(agent, file.path))
         }
         sessions.add(result.session)
       }
@@ -171,7 +176,9 @@ function skippedRecordIssue(
   candidate: SessionFileCandidate,
   executionHostId: ExecutionHostId
 ): AiVaultScanIssue | null {
-  const entry = getSessionParseCacheEntry(candidate.file.path)
+  const entry = getSessionParseCacheEntry(
+    sessionParseCacheKey(candidate.agent, candidate.file.path)
+  )
   const skipped = entry?.resume?.skippedRecords ?? entry?.skippedRecords
   const message = skipped ? describeSkippedTranscriptRecords(skipped) : null
   if (message === null) {

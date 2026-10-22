@@ -24,6 +24,7 @@ import type {
   AgentSessionSurfaceBinding
 } from '../../../../shared/agent-session-host-authority'
 import { localProvider } from '../provider/registry'
+import type { StartupCwdFallback } from '../../../../shared/startup-cwd-fallback'
 
 export type RuntimePtySpawnState = {
   deps: PtyRuntimeControllerDeps
@@ -33,6 +34,10 @@ export type RuntimePtySpawnState = {
   preAdoptedStablePane: AdoptStablePaneResult | null
   reattachedCodexHomeRoutes: Map<string, CodexPaneHomeRoute | null>
   cwd: string | undefined
+  requestedCwd: string | undefined
+  prevalidatedCwd: string | undefined
+  startupCwdFallback: StartupCwdFallback | undefined
+  correctStartupCwd?: string
   provider: IPtyProvider
   isClaudeLaunch: boolean
   terminalRuntimeOptions: { shellOverride?: string; terminalWindowsWslDistro?: string | null }
@@ -160,6 +165,9 @@ export function createRuntimePtySpawnState(
     preAdoptedStablePane: null,
     reattachedCodexHomeRoutes: new Map(),
     cwd: undefined,
+    requestedCwd: undefined,
+    prevalidatedCwd: undefined,
+    startupCwdFallback: undefined,
     provider: localProvider,
     isClaudeLaunch: false,
     terminalRuntimeOptions: {},

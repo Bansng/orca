@@ -3,6 +3,7 @@ import { Loader2, Server, ServerOff } from 'lucide-react'
 import { toastSshConnectFailure } from '@/ssh/ssh-connect-failure-toast'
 import { Button } from '@/components/ui/button'
 import { SshHostNodeMirrorAction } from '@/components/settings/SshHostNodeMirrorAction'
+import { SshHostMoveAnywayButton } from '@/components/settings/SshHostMoveAnywayAction'
 import { useAppStore } from '@/store'
 import type { SshConnectionStatus } from '../../../../shared/ssh-types'
 import { toRuntimeExecutionHostId, toSshExecutionHostId } from '../../../../shared/execution-host'
@@ -204,12 +205,21 @@ export function TerminalSshReconnectOverlay({
             </div>
           ) : null}
           {!targetRemoved ? (
-            <div className="mt-2 empty:hidden">
+            <div className="mt-2 flex flex-wrap gap-2 empty:hidden">
               <SshHostNodeMirrorAction
                 targetId={targetId}
                 status={managedServer}
                 ownerEnvironmentId={sshOwnerEnvironmentId}
               />
+              {/* Why local only: the dialog drives this desktop's own move, not a server's. */}
+              {sshOwnerEnvironmentId ? null : (
+                <SshHostMoveAnywayButton
+                  target={{ id: targetId, label: targetLabel }}
+                  status={managedServer}
+                  // A connect in flight may clear the refusal; a click would start a second one.
+                  disabled={isConnecting}
+                />
+              )}
             </div>
           ) : null}
         </div>

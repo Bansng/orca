@@ -91,7 +91,8 @@ export async function writeRemoteFileIfUnchanged(
   filePath: string,
   content: string,
   params: RemoteFileWriteParams,
-  precondition: FileWriteDiskPrecondition
+  precondition: FileWriteDiskPrecondition,
+  beforeSend?: () => void
 ): Promise<FileWriteResult> {
   // Why once per save: a retry may follow a reconnect, never a re-pair to another host.
   const pairingRevision = captureRuntimeEnvironmentRequestRevision(context.target.environmentId)
@@ -115,7 +116,8 @@ export async function writeRemoteFileIfUnchanged(
           return diskConflict ? { result: { ok: false, diskConflict } } : { params }
         },
         15_000,
-        pairingRevision
+        pairingRevision,
+        beforeSend
       )
     )
   try {

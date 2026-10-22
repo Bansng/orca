@@ -95,7 +95,8 @@
         "korean": "한국어",
         "japanese": "日本語",
         "spanish": "Español",
-        "french": "Français"
+        "french": "Français",
+        "portuguese": "Português (Brasil)"
       },
       "statusBar": {
         "claudeToggleDescription": "显示当前工作区的 Claude Token 与费用消耗情况。",
@@ -210,6 +211,10 @@
       "readFailed": "无法读取智能体设置。请检查主机连接并重试。",
       "saveFailed": "无法保存智能体设置。请检查主机连接并重试。",
       "hostDefaults": "所选主机上新智能体的默认设置。",
+      "defaultOpensAs": "{{value0}} 的打开方式",
+      "defaultOpensAsChat": "聊天",
+      "defaultOpensAsCli": "CLI",
+      "defaultOpensAsScope": "适用于从这台电脑启动的新 {{value0}} 会话，包括在已配对主机上启动的会话。与提供方中的开关一致。",
       "save": "保存",
       "clearDefault": "清除默认智能体"
     },
@@ -3515,7 +3520,6 @@
         "bar": {
           "BrowserTab": {
             "6e0bc8f3a8": "在浏览器中打开",
-            "9dd880bd56": "关闭右侧的所有选项卡",
             "1611a1324b": "关闭",
             "5d6e89891f": "复制选项卡",
             "966feb9ad5": "向右拆分",
@@ -3532,7 +3536,6 @@
             "52ce4f4605": "复制相对路径",
             "5b85754786": "复制路径",
             "bfd5797ef4": "打开 Markdown 预览",
-            "e5ff31ccaf": "关闭右侧的所有选项卡",
             "ba1369dd24": "关闭所有编辑器选项卡",
             "1ba8492c5b": "关闭",
             "68cc610e7f": "重命名",
@@ -3565,7 +3568,6 @@
           "SortableTabContextMenu": {
             "35e8892fd0": "标签颜色",
             "2f697b3c31": "更改标题",
-            "c1ee099c7e": "关闭右侧的所有选项卡",
             "8d16f9cd30": "关闭其他",
             "89359a36f7": "关闭",
             "21132389e9": "向右拆分",
@@ -7091,8 +7093,6 @@
           "ee110e1830": "没有默认的基本参考"
         },
         "BrowserDefaultZoomSetting": {
-          "2622126877": "缩放级别应用于新打开的浏览器选项卡。",
-          "bbeec087d3": "应用于新打开的浏览器选项卡。",
           "265597101f": "默认缩放"
         },
         "BrowserHomePageSetting": {
@@ -12725,7 +12725,8 @@
           "behindRolledBack": "运行的 Orca 服务器比此应用旧；上次更新已回滚。请使用“更新服务器”重试。",
           "behindNoTemplate": "运行的 Orca 服务器无法由此应用更新；此版本没有适用于此主机的服务器。",
           "behindMigrating": "运行 Orca 服务器，它会在项目迁移完成后更新。",
-          "behindCheckFailed": "运行 Orca 服务器；Orca 无法检查它是否落后于此应用。"
+          "behindCheckFailed": "运行 Orca 服务器；Orca 无法检查它是否落后于此应用。",
+          "refusedBlockedReason": "此主机尚未设置 Orca。{{reason}}"
         },
         "deltaMove": {
           "action": "迁移新项目…",
@@ -16660,7 +16661,6 @@
             "95af781091": "向智能体发送反馈",
             "ac39b9366b": "发送",
             "a3508d7e6e": "{{value0}} 注释{{value1}} 准备就绪。选择另一个元素或复制所有反馈。",
-            "f796c774a4": "在上面输入 URL 即可开始浏览。",
             "366bf5d62c": "新标签",
             "1c78adc73d": "在外部打开",
             "da68d35f7b": "在默认浏览器中打开失败页面",
@@ -16786,7 +16786,8 @@
               "bar": {
                 "suggestions": {
                   "87fcdd0da9": "{{value0}} 搜索"
-                }
+                },
+                "placeholder": "搜索或输入网址"
               }
             }
           },
@@ -18836,6 +18837,8 @@
         "plan": "计划",
         "historyRepaired": "此聊天的部分历史记录无法加载。",
         "historyItemTooLarge": "聊天的这一部分过大，无法显示。",
+        "continuedOutside": "已在此聊天之外继续。",
+        "continuedOutsideRewound": "已在此聊天之外继续。上方较早的回复已不在此对话的历史记录中。",
         "stoppedBeforeStart": "已手动停止",
         "dismiss": "关闭",
         "copyError": "复制错误",
@@ -19082,16 +19085,13 @@
       "bar": {
         "SortableTabContextMenu": {
           "switchToTerminalView": "使用终端智能体继续",
-          "switchToChatView": "在聊天界面中继续",
-          "closeTabsToLeft": "关闭左侧的所有选项卡"
+          "switchToChatView": "在聊天界面中继续"
         },
         "BrowserTab": {
-          "closeOthers": "关闭其他",
-          "closeTabsToLeft": "关闭左侧的所有选项卡"
+          "closeOthers": "关闭其他"
         },
         "EditorFileTabContextMenu": {
-          "closeOthers": "关闭其他",
-          "closeTabsToLeft": "关闭左侧的所有选项卡"
+          "closeOthers": "关闭其他"
         },
         "CopyTabIdMenuItem": {
           "copied": "已复制标签页 ID",
@@ -19365,6 +19365,13 @@
           "checking": "正在检查更改…",
           "checkingDetails": "检查…",
           "unavailableDetails": "详细信息不可用"
+        },
+        "unsavedEdits": {
+          "discarded_one": "{{count}} 个文件中未保存的编辑将被放弃：",
+          "discarded_other": "{{count}} 个文件中未保存的编辑将被放弃：",
+          "moreFiles": "及另外 {{value}} 个",
+          "blocked_one": "请先保存或关闭 {{name}} 中 {{count}} 个未保存的文件",
+          "blocked_other": "请先保存或关闭 {{name}} 中 {{count}} 个未保存的文件"
         }
       }
     },

@@ -95,7 +95,8 @@
         "korean": "한국어",
         "japanese": "日本語",
         "spanish": "Español",
-        "french": "Français"
+        "french": "Français",
+        "portuguese": "Português (Brasil)"
       },
       "statusBar": {
         "claudeToggleDescription": "アクティブなワークスペースの Claude トークンとコストの使用状況を表示します。",
@@ -210,6 +211,10 @@
       "readFailed": "Agent設定を読み込めませんでした。ホストへの接続を確認して再試行してください。",
       "saveFailed": "Agent設定を保存できませんでした。ホストへの接続を確認して再試行してください。",
       "hostDefaults": "選択したホストで起動する新しいAgentの既定値。",
+      "defaultOpensAs": "{{value0}}の開き方",
+      "defaultOpensAsChat": "チャット",
+      "defaultOpensAsCli": "CLI",
+      "defaultOpensAsScope": "このコンピューターから起動する新しい{{value0}}セッション（ペアリングしたホスト上も含む）に適用されます。プロバイダーのスイッチと連動します。",
       "save": "保存",
       "clearDefault": "デフォルトの Agent をクリア"
     },
@@ -3515,7 +3520,6 @@
         "bar": {
           "BrowserTab": {
             "6e0bc8f3a8": "ブラウザで開く",
-            "9dd880bd56": "右側のすべてのタブを閉じる",
             "1611a1324b": "閉じる",
             "5d6e89891f": "タブの複製",
             "966feb9ad5": "右に分割",
@@ -3532,7 +3536,6 @@
             "52ce4f4605": "相対パスをコピー",
             "5b85754786": "パスのコピー",
             "bfd5797ef4": "Markdown プレビューを開く",
-            "e5ff31ccaf": "右側のすべてのタブを閉じる",
             "ba1369dd24": "すべてのエディターのタブを閉じる",
             "1ba8492c5b": "閉じる",
             "68cc610e7f": "名前を変更する",
@@ -3565,7 +3568,6 @@
           "SortableTabContextMenu": {
             "35e8892fd0": "タブの色",
             "2f697b3c31": "タイトルの変更",
-            "c1ee099c7e": "右側のすべてのタブを閉じる",
             "8d16f9cd30": "その他を閉じる",
             "89359a36f7": "閉じる",
             "21132389e9": "右に分割",
@@ -7091,8 +7093,6 @@
           "ee110e1830": "デフォルトの基本参照はありません"
         },
         "BrowserDefaultZoomSetting": {
-          "2622126877": "新しく開いたブラウザタブに適用されるズームレベル。",
-          "bbeec087d3": "新しく開いたブラウザタブに適用されます。",
           "265597101f": "デフォルトのズーム"
         },
         "BrowserHomePageSetting": {
@@ -12711,7 +12711,8 @@
           "behindRolledBack": "このアプリより古い Orca サーバーを実行しています。前回の更新はロールバックされました。[サーバーを更新] で再試行してください。",
           "behindNoTemplate": "このアプリでは更新できない Orca サーバーを実行しています。このビルドにはこのホスト用のサーバーが含まれていません。",
           "behindMigrating": "Orca サーバーを実行しています。プロジェクトの移動が完了した後に更新されます。",
-          "behindCheckFailed": "Orca サーバーを実行しています。Orca はこのアプリより古いかどうかを確認できませんでした。"
+          "behindCheckFailed": "Orca サーバーを実行しています。Orca はこのアプリより古いかどうかを確認できませんでした。",
+          "refusedBlockedReason": "このホストにはまだ Orca がセットアップされていません。{{reason}}"
         },
         "deltaMove": {
           "action": "新規プロジェクトを移動…",
@@ -16660,7 +16661,6 @@
             "95af781091": "Agent にフィードバックを送信する",
             "ac39b9366b": "送信",
             "a3508d7e6e": "{{value0}} アノテーション{{value1}} が準備されました。別の要素を選択するか、すべてのフィードバックをコピーします。",
-            "f796c774a4": "上に URL を入力して閲覧を開始します。",
             "366bf5d62c": "新規タブ",
             "1c78adc73d": "外部で開く",
             "da68d35f7b": "失敗したページをデフォルトのブラウザで開く",
@@ -16786,7 +16786,8 @@
               "bar": {
                 "suggestions": {
                   "87fcdd0da9": "{{value0}} 検索"
-                }
+                },
+                "placeholder": "検索またはURLを入力"
               }
             }
           },
@@ -18871,6 +18872,8 @@
         "plan": "プラン",
         "historyRepaired": "このチャットの履歴の一部を読み込めませんでした。",
         "historyItemTooLarge": "チャットのこの部分は大きすぎるため表示できません。",
+        "continuedOutside": "このチャットの外で続けられました。",
+        "continuedOutsideRewound": "このチャットの外で続けられました。上の以前の返信は、この会話の履歴にはもうありません。",
         "stoppedBeforeStart": "手動で停止しました",
         "dismiss": "閉じる",
         "copyError": "エラーをコピー",
@@ -19117,16 +19120,13 @@
       "bar": {
         "SortableTabContextMenu": {
           "switchToTerminalView": "ターミナル Agent で続ける",
-          "switchToChatView": "チャット UI で続ける",
-          "closeTabsToLeft": "左側のすべてのタブを閉じる"
+          "switchToChatView": "チャット UI で続ける"
         },
         "BrowserTab": {
-          "closeOthers": "その他を閉じる",
-          "closeTabsToLeft": "左側のすべてのタブを閉じる"
+          "closeOthers": "その他を閉じる"
         },
         "EditorFileTabContextMenu": {
-          "closeOthers": "その他を閉じる",
-          "closeTabsToLeft": "左側のすべてのタブを閉じる"
+          "closeOthers": "その他を閉じる"
         },
         "CopyTabIdMenuItem": {
           "copied": "タブ ID をコピーしました",
@@ -19400,6 +19400,13 @@
           "checking": "変更を確認中…",
           "checkingDetails": "確認中…",
           "unavailableDetails": "詳細を利用できません"
+        },
+        "unsavedEdits": {
+          "discarded_one": "{{count}} 個のファイルの未保存の編集は破棄されます：",
+          "discarded_other": "{{count}} 個のファイルの未保存の編集は破棄されます：",
+          "moreFiles": "ほか {{value}} 件",
+          "blocked_one": "先に {{name}} の未保存のファイル {{count}} 個を保存するか閉じてください",
+          "blocked_other": "先に {{name}} の未保存のファイル {{count}} 個を保存するか閉じてください"
         }
       }
     },
