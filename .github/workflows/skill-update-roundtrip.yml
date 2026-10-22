@@ -27,6 +27,9 @@ concurrency:
   group: skill-roundtrip-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+permissions:
+  contents: read
+
 jobs:
   roundtrip:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft != true

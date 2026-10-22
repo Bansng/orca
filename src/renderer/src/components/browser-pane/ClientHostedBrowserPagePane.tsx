@@ -1,15 +1,12 @@
 import { useEffectEvent, useLayoutEffect, useRef, useState } from 'react'
 import { BrowserPageZoomIndicator } from './assemble-chrome/browser-page-zoom-indicator'
 import { useAppStore } from '@/store'
-import type {
-  BrowserLoadError,
-  BrowserPage as BrowserPageState
-} from '../../../../shared/browser-workspace-types'
+import type { BrowserLoadError } from '../../../../shared/browser-workspace-types'
 import { toHttpsRecoveryUrl } from '../../../../shared/browser-url'
-import type { RuntimeBrowserClientPlacement } from '../../../../shared/runtime-browser-placement'
 import {
   readBrowserClientPageGuestMetadataIfLive,
-  createBrowserClientPageLoadFailureHandler
+  createBrowserClientPageLoadFailureHandler,
+  bindBrowserClientPageGuestEvents
 } from './browser-client-page-guest-metadata'
 import {
   forgetBrowserClientPageMetadataReports,
@@ -50,11 +47,7 @@ import {
   getOpenableExternalUrl,
   toDisplayUrl
 } from './describe-page/browser-page-url-display'
-import type {
-  BrowserChromeShortcutScope,
-  BrowserPageUrlSetter,
-  BrowserTabPageState
-} from './describe-page/browser-page-types'
+import type { ClientHostedBrowserPagePaneProps } from './describe-page/browser-page-types'
 
 export function ClientHostedBrowserPagePane({
   browserTab,
@@ -66,18 +59,7 @@ export function ClientHostedBrowserPagePane({
   chromeShortcutScope,
   onUpdatePageState,
   onSetUrl
-}: {
-  browserTab: BrowserPageState
-  workspaceId: string
-  runtimeEnvironmentId: string
-  worktreeId: string
-  /** Null while the tab is still an optimistic stage: the host mints the placement, not this client. */
-  placement: RuntimeBrowserClientPlacement | null
-  isActive: boolean
-  chromeShortcutScope: BrowserChromeShortcutScope
-  onUpdatePageState: (tabId: string, updates: BrowserTabPageState) => void
-  onSetUrl: BrowserPageUrlSetter
-}): React.JSX.Element {
+}: ClientHostedBrowserPagePaneProps): React.JSX.Element {
   const viewportRef = useRef<HTMLDivElement | null>(null)
   const webviewRef = useRef<Electron.WebviewTag | null>(null)
   const addressBarInputRef = useRef<HTMLInputElement | null>(null)
@@ -146,10 +128,7 @@ export function ClientHostedBrowserPagePane({
   // Why: the tour points at controls that cannot work yet, and recording the interaction is a
   // one-way write that would burn the tour on a pane the user has not really seen.
   useClientHostedBrowserIntroTour(isActive && !attachmentError && placement !== null)
-  useBrowserPageFindShortcuts({
-    ...shortcutOwner,
-    setFindOpen
-  })
+  useBrowserPageFindShortcuts({ ...shortcutOwner, setFindOpen })
   useBrowserPageWebviewShortcuts({
     ...shortcutOwner,
     isActiveRef,
@@ -241,9 +220,7 @@ export function ClientHostedBrowserPagePane({
       const activeLoadFailure = activeLoadFailureRef.current
       // URL writes clear certificate challenges, so preserve them while a failure stands.
       if (!activeLoadFailure) {
-        setUrlFromGuest(browserTab.id, metadata.url, {
-          preserveLoadError: true
-        })
+        setUrlFromGuest(browserTab.id, metadata.url, { preserveLoadError: true })
       }
       updatePageStateFromGuest(browserTab.id, {
         title: metadata.title,
@@ -278,25 +255,15 @@ export function ClientHostedBrowserPagePane({
         updatePageStateFromGuest(browserTab.id, { loading: false, loadError })
       }
     )
+    const unbind = bindBrowserClientPageGuestEvents(webview, onStart, syncNavigation, onFailLoad)
     const cleanupGuest = (): void => {
-      webview.removeEventListener('did-start-navigation', onStart)
-      webview.removeEventListener('did-stop-loading', syncNavigation)
-      webview.removeEventListener('did-navigate', syncNavigation)
-      webview.removeEventListener('did-navigate-in-page', syncNavigation)
-      webview.removeEventListener('page-title-updated', syncNavigation)
-      webview.removeEventListener('did-fail-load', onFailLoad)
+      unbind()
       guestLoss.dispose()
       publisher.dispose()
       forgetBrowserClientPageMetadataReports(browserTab.id)
       attachment.detach()
     }
     releaseGuest = cleanupGuest
-    webview.addEventListener('did-start-navigation', onStart)
-    webview.addEventListener('did-stop-loading', syncNavigation)
-    webview.addEventListener('did-navigate', syncNavigation)
-    webview.addEventListener('did-navigate-in-page', syncNavigation)
-    webview.addEventListener('page-title-updated', syncNavigation)
-    webview.addEventListener('did-fail-load', onFailLoad)
     syncNavigation()
     // Resume navigation submitted before host adoption.
     const deferredUrl = consumeBrowserPageDeferredNavigation(browserTab.id)
