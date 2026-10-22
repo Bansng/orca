@@ -323,7 +323,7 @@ describe('NewWorktreeModal project targets', () => {
     await flushUpdates()
 
     expect(renderer.root.findAll((node) => node.props.label === 'Workspace name')).toHaveLength(1)
-    expect(sendRequest).toHaveBeenCalledWith('preflight.detectAgents')
+    expect(sendRequest).toHaveBeenCalledWith('preflight.detectAgents', { repoId: 'folder-1' })
     expect(sendRequest).not.toHaveBeenCalledWith('ssh.getState', expect.anything())
     expect(sendRequest.mock.calls.map(([method]) => method)).not.toContain(
       'worktree.prefetchCreateBase'

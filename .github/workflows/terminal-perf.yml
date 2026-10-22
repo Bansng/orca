@@ -48,6 +48,12 @@ on:
     # terminal throughput regressions are caught before users report typing lag.
     - cron: '30 8 * * *'
 
+permissions:
+  contents: read
+
+# Candidate source must not write caches in the dispatch branch's scope.
+cache-mode: read
+
 jobs:
   terminal-perf:
     name: terminal scale perf

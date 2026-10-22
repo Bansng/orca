@@ -16,6 +16,9 @@ on:
 permissions:
   contents: read
 
+# Candidate source must not write caches in the dispatch branch's scope.
+cache-mode: read
+
 concurrency:
   group: windows-native-preparation-comparison-${{ github.ref }}
   cancel-in-progress: false

@@ -46,7 +46,7 @@ outputs:
     description: The small pnpm-owned verification record, without registry metadata.
     value: ${{ steps.verification-cache.outputs.path }}
   verification-cache-key:
-    description: Exact verification record key, also used by the isolated PR benchmark.
+    description: Exact verification record cache key.
     value: ${{ steps.verification-cache.outputs.key }}
   node-version:
     description: Resolved Node.js version used for the install.
@@ -93,9 +93,7 @@ runs:
 
     # setup-node needs pnpm on PATH to locate and restore its store.
     - name: Setup pnpm
-      uses: pnpm/setup@v2
-      with:
-        install: false
+      uses: ./.github/actions/setup-pnpm
 
     # Desktop-only jobs should not miss their download cache when mobile dependencies change.
     - name: Setup Node.js
