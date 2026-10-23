@@ -109,10 +109,10 @@ export class DegradedDaemonPtyProvider implements IPtyProvider {
 
   // Why: an unknown id cannot borrow listing authority from the fresh-spawn provider.
   providesAgentSessionOwnerListings = (ptyId: string): boolean =>
-    this.sessionProviders.get(ptyId)?.providesAgentSessionOwnerListings?.(ptyId) === true
+    this.ownerRecovery.getVerifiedRoute(ptyId)?.providesAgentSessionOwnerListings?.(ptyId) === true
 
   supportsFencedTermination = (id: string): boolean =>
-    this.sessionProviders.get(id)?.supportsFencedTermination?.(id) === true
+    this.ownerRecovery.getVerifiedRoute(id)?.supportsFencedTermination?.(id) === true
 
   killFenced = (request: PtyFencedTerminationRequest) =>
     terminateResolvedDaemonSession(request, () =>
@@ -320,7 +320,7 @@ export class DegradedDaemonPtyProvider implements IPtyProvider {
 
   fanoutCurrentDaemonSyntheticExits(code: number, exit: { replacedByRestart?: true } = {}): void {
     for (const id of this.getSessionIdsRoutedTo('current-daemon')) {
-      this.sessionProviders.delete(id)
+      this.ownerRecovery.forgetRoute(id)
       // Why: restart kills listed sessions even when the adapter did not track them active.
       // oxlint-disable-next-line unicorn/no-useless-spread -- copy-safe: listeners may unsubscribe during iteration
       for (const listener of [...this.exitListeners]) {

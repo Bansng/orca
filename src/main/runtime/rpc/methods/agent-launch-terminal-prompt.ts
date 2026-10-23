@@ -60,7 +60,7 @@ const REAL_CLOCK: ReadinessClock = {
  * budget ends is reported as it is, and nothing is written into it.
  */
 async function waitThroughBlockingPrompts(
-  runtime: TerminalPromptRuntime,
+  runtime: LaunchedAgentReadinessRuntime,
   handle: string,
   agent: TuiAgent,
   freshLaunch: boolean,
@@ -86,6 +86,16 @@ async function waitThroughBlockingPrompts(
     await clock.sleep(BLOCKED_RECHECK_MS)
     assertAgentPromptRequestActive(signal)
   }
+}
+
+/** A freshly started agent's readiness, as a launch prompt waits for it, blocking prompts included. */
+export function waitForStartedAgentReady(
+  runtime: LaunchedAgentReadinessRuntime,
+  handle: string,
+  agent: TuiAgent,
+  signal?: AbortSignal
+): Promise<RuntimeTerminalWait | undefined> {
+  return waitThroughBlockingPrompts(runtime, handle, agent, true, REAL_CLOCK, signal)
 }
 
 /**

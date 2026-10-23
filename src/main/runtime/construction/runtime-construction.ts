@@ -65,7 +65,7 @@ export abstract class OrcaRuntimeWithStateFields extends OrcaRuntimeWithLinearCo
     | null
   declare protected readonly checkHookAgentPresenceFn: HostServices['checkHookAgentPresenceFn']
   /** Hook-reported provider session changes; null on a host without a hook store. */
-  declare protected readonly subscribeAgentProviderSessionChangesFn:
+  declare readonly subscribeAgentProviderSessionChangesFn:
     | RuntimeConstructionBindings['subscribeAgentProviderSessionChanges']
     | null
   declare protected readonly reconcileAgentStatusForEndedProcessFn: HostServices['reconcileAgentStatusForEndedProcessFn']

@@ -477,6 +477,28 @@ describe('resumeAgentSessionInWorkspace', () => {
     expect(spawn).toHaveBeenCalledOnce()
   })
 
+  // A connector reopens through here, so an SSH host out of contact must never read as an exit.
+  it.each([
+    ['unverifiable', false],
+    ['live', false],
+    [null, false],
+    ['exited', true]
+  ] as const)(
+    'resumes past an old pane naming the session only on a proven exit (%s)',
+    async (presence, resumes) => {
+      const fixture = makeSleptWorkspace()
+      const { spawn, resume } = makeRuntime(fixture, {
+        rows: () => [sessionRow(PANE_KEY)],
+        checkHookAgentPresence: async () => presence
+      })
+
+      const result = await resume()
+
+      expect(result.ok).toBe(resumes)
+      expect(resumeSpawns(spawn)).toBe(resumes ? 1 : 0)
+    }
+  )
+
   it('refuses a session captured on another host without spawning', async () => {
     const fixture = makeSleptWorkspace()
     const { spawn, resume } = makeRuntime(fixture)

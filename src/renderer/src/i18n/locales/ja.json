@@ -1096,6 +1096,21 @@
       },
       "duplicatePairedServers": {
         "ambiguousSameServer": "{{value0}} と {{value1}} は二重にペアリングされた同じサーバーです。[設定] > [リモート Orca サーバー] でどちらかを削除してください。"
+      },
+      "bundled": {
+        "skill": {
+          "install": {
+            "error": {
+              "message": {
+                "homeUnavailable": "スキルのインストール先となるホームフォルダーが見つかりませんでした。",
+                "wslUnavailable": "このマシンでは WSL を利用できないため、Orca はスキルをインストールできませんでした。",
+                "environmentMismatch": "このマシンでは WSL にスキルをインストールできません。",
+                "wslDetectionFailed": "WSL にインストールされている Agent を確認できませんでした。ディストリビューションが起動することを確認してから再試行してください。",
+                "unknown": "スキルをインストールできませんでした。"
+              }
+            }
+          }
+        }
       }
     },
     "hooks": {
@@ -4203,12 +4218,9 @@
             "successOne": "{{value0}} を更新しました",
             "successMany": "{{value0}} 件のスキルを更新しました",
             "successAria": "スキルを更新しました。クリックすると詳細を開きます。",
-            "errorLabel": "更新に失敗しました",
-            "errorTooltip": "スキルの更新に失敗しました — クリックすると詳細を表示します",
-            "errorAria": "スキルの更新に失敗しました。クリックすると詳細を開きます。",
-            "stoppingLabel": "更新を停止しています",
-            "stoppingTooltip": "スキルの更新を停止しています…",
-            "stoppingAria": "スキルの更新を停止しています。クリックすると詳細を開きます。"
+            "attentionAria": "一部のスキルの更新はスキップされました。クリックして詳細を開きます。",
+            "attentionLabel": "スキルに対応が必要",
+            "attentionTooltip": "一部のスキルの更新はスキップされました — クリックして詳細を表示"
           },
           "RuntimeHostStatusRow": {
             "previous_connection_closed": "以前の接続が閉じられました",
@@ -4757,34 +4769,7 @@
           "updateMany": "スキルを更新",
           "description": "Agent がこのバージョンの Orca の最新の手順に従うように、{{value0}} を更新してください。"
         },
-        "SkillFreshnessRow": {
-          "statusUpdateAvailable": "更新があります",
-          "statusCantUpdate": "スキップ済み",
-          "cantUpdateReason": "このスキルは Orca が安全に更新できない場所にインストールされているため、更新コマンドは変更しません。",
-          "chipCurrent": "現在",
-          "chipInaccessible": "アクセス不可",
-          "chipDuplicate": "重複",
-          "chipExternalLink": "外部リンク",
-          "chipBrokenLink": "リンク切れ",
-          "chipReadOnly": "読み取り専用",
-          "chipInRepo": "リポジトリ内",
-          "chipPluginCache": "プラグインキャッシュ",
-          "tipCurrent": "ここのスキルはすでに最新です。更新しても変更されません。",
-          "tipInaccessible": "Orca はここのスキルを読み取れなかったため（権限またはファイルのエラー）、確認も更新もできません。",
-          "tipDuplicate": "このスキルはメインとは別に、ここにもインストールされています。そのため 更新コマンドは到達できません。更新を許可するには削除してください。",
-          "tipExternalLink": "これは Orca のスキルフォルダーの外を指すショートカットです。更新では追跡されません。",
-          "tipBrokenLink": "これは存在しないものを指すショートカットです。削除しても問題ありません。",
-          "tipReadOnly": "ここのスキルは読み取り専用の場所にあるため、権限を変更するまで更新できません。",
-          "tipInRepo": "ここのスキルはグローバルスキルではなくプロジェクト内にあります。Orca はグローバルなものだけを更新します。",
-          "tipPluginCache": "ここのスキルはプラグインによって管理されています。代わりにプラグインを更新してください。",
-          "skippedReasonReadOnly": "このコピーは読み取り専用の場所にあるため、Orca は更新対象から除外しました。Orca が更新できるように、権限を変更してください。",
-          "skippedReasonInaccessible": "Orca はこのコピーを読み取れなかったため、このスキルを更新対象から除外しました。",
-          "skippedReasonInRepo": "これはグローバルスキルではなくプロジェクトスキルです。Orca はグローバルスキルのみを更新するため、更新対象から除外しました。",
-          "skippedReasonPluginCache": "このスキルはプラグインが管理しているため、Orca は更新対象から除外しました。代わりにプラグインを更新してください。",
-          "skippedReasonExternalLink": "このコピーは Orca のスキルフォルダー外を指すショートカットのため、Orca は更新対象から除外しました。",
-          "skippedReasonBrokenLink": "このコピーは存在しない対象へのショートカットのため、Orca は更新対象から除外しました。削除して問題ありません。",
-          "skippedReasonDuplicate": "これは別のコピーのため、更新は反映されません。コマンドはメインのコピーのみを更新します。このコピーを削除してからスキルを再インストールすると、この場所もメインに追従します。"
-        },
+        "SkillFreshnessRow": {},
         "SkillFreshnessUpdateDialog": {
           "title": "スキルを更新",
           "checking": "インストール済みの Orca スキルを確認中…",
@@ -4792,41 +4777,28 @@
           "updateOne": "1 件の更新があります",
           "updateMany": "{{value0}} 件の更新があります",
           "success": "インストール済みの Orca スキルはすべて最新です。",
-          "attention": "一部のインストール済み Orca スキルは自動的に更新できません。",
           "checkNow": "再確認",
           "close": "閉じる",
-          "blockedOne": "1 件のスキルは自動更新できません。",
-          "blockedMany": "{{value0}} 件のスキルは自動更新できません。",
-          "runningOne": "1 件のスキルを更新しています…",
-          "runningMany": "{{value0}} 件のスキルを更新しています…",
-          "runningDescription": "このウィンドウは閉じてかまいません。バックグラウンドで実行が続きます。",
           "progressAria": "スキルを更新しています",
-          "updatedOne": "1 件のスキルを更新しました",
-          "updatedMany": "{{value0}} 件のスキルを更新しました",
-          "updatedPartial": "{{value1}} 件中 {{value0}} 件のスキルを更新しました",
           "errorTitle": "更新が完了しませんでした",
-          "retry": "再試行",
-          "copyCommand": "コマンドをコピー",
-          "copied": "コピーしました",
-          "showLog": "ログを表示",
           "updating": "Updating…",
           "updateActionOne": "1 件のスキルを更新",
           "updateActionMany": "{{value0}} 件のスキルを更新",
           "done": "完了",
-          "stop": "停止",
-          "stopping": "Stopping…",
-          "stoppingHeadline": "更新を停止しています…",
-          "scanIncomplete": "Orca はプラグインで管理されるスキルの確認を完了できませんでした。",
-          "scanDepthLimit": "このフォルダーを確認する前に、プラグインスキャンの深度上限に達しました。",
-          "scanEntryLimit": "キャッシュの残りを確認する前に、プラグインスキャンのエントリ数上限に達しました。",
-          "scanCandidateLimit": "安全に確認できる数を超える同名のスキルフォルダーが見つかりました。",
-          "scanManifestLimit": "安全な上限を超えたため、このプラグインマニフェストをスキップしました。",
-          "scanOutsideRoot": "プラグインキャッシュの外部を指しているため、このプラグインパスをスキップしました。",
-          "scanIoErrorWithCode": "このプラグインパスを読み取れませんでした（{{value0}}）。",
-          "scanIoError": "このプラグインパスを読み取れませんでした。",
-          "scanIssueLimit": "スキップされたプラグインフォルダーが多すぎるため、個別に表示できません。",
-          "unselectedForeignOne": "Orca 以外からインストールされた 1 件のスキルは選択されていません。",
-          "unselectedForeignMany": "Orca 以外からインストールされた {{value0}} 件のスキルは選択されていません。"
+          "finishedWithProblems": "一部のスキルに対応が必要です",
+          "repair": "以前の更新が中断されました。更新すると修復されます。",
+          "hideFolders": "フォルダーを隠す",
+          "showFolders": "フォルダーを表示",
+          "upToDateMany": "{{value0}} 個のスキルは最新です。",
+          "upToDateOne": "{{value0}} は最新です。",
+          "updatedMany": "{{value0}} 個のスキルを更新しました",
+          "updatedOne": "1 個のスキルを更新しました",
+          "updatedSkipped": "{{value0}} · {{value1}} 件をスキップ",
+          "currentOne": "1 個のスキルは最新です",
+          "currentMany": "{{value0}} 個のスキルは最新です",
+          "noUpdates": "利用可能な更新はありません",
+          "updateServer": "サーバーの Orca を更新すると、Orca スキルを更新できます。",
+          "connectHost": "この SSH ホストに接続すると、Orca スキルを確認できます。"
         },
         "SkillFreshnessStatusPill": {
           "updateAvailable": "更新があります",
@@ -4835,18 +4807,13 @@
           "details": "詳細",
           "needsAttention": "スキルを確認",
           "checking": "確認中…",
-          "checkFailed": "チェックに失敗しました"
+          "checkFailed": "チェックに失敗しました",
+          "updateServer": "サーバーの Orca を更新してください",
+          "connectHost": "SSH ホストに接続してください"
         },
-        "SkillUpdateResultRows": {
-          "stillOutdated": "更新を実行しましたが、まだ最新ではありません。"
-        },
+        "SkillUpdateResultRows": {},
         "SkillUpdateRow": {
-          "oneLocation": "1 件の場所",
-          "manyLocations": "{{value0}} 件の場所",
-          "notFromOrca": "Orca 以外から導入",
-          "notFromOrcaSourceTip": "{{value0}} からインストールされています。選択すると Orca のバージョンに置き換えられます。",
-          "notFromOrcaNoRecordTip": "このコピーには Orca によるインストール記録がありません。選択すると Orca のバージョンに置き換えられます。",
-          "includeSkill": "{{value0}} を含める"
+          "replaceWithOrca": "Orca のコピーに置き換える（バックアップを保持）"
         },
         "host": {
           "local": "このマシン",
@@ -5222,6 +5189,34 @@
           "placementSummaryParts": "{{roots}} 間の {{parts}} を削除します。",
           "placementJoin": " と ",
           "retainedSource": "スキル自体は{{path}}のままです。"
+        },
+        "skillPlanOpCopy": {
+          "busy": "別のインストールがまだ実行中です",
+          "edited": "スキルが Orca の外部で編集されています",
+          "install": "インストール",
+          "installFor": "{{value0}} にインストール",
+          "installed": "インストール済み",
+          "keep": "変更なし",
+          "leftAsIs": "このコピーはそのまま保持されました",
+          "link": "リンク",
+          "linked": "リンク済み",
+          "needsAttention": "対応が必要",
+          "other": "別のスキルがこの名前を使用しています",
+          "replace": "置き換え",
+          "replacedWithBackup": "置き換えました · 元のコピーはバックアップとして保存されました",
+          "sharedNotCurrent": "共有コピーは Orca のものではありません",
+          "unwritable": "Orca はこのフォルダーに書き込めません",
+          "unreadable": "Orca はすべてのファイルを読み取れません",
+          "update": "更新",
+          "updated": "更新済み",
+          "write": "インストール",
+          "keepLink": "リンク、変更なし",
+          "repair": "修復",
+          "sharedFolder": "共有フォルダー",
+          "updateSkipped": "更新をスキップ: {{value0}}",
+          "updateAvailable": "更新があります",
+          "repairAvailable": "修復できます",
+          "installAvailable": "インストールできます"
         }
       },
       "sidebar": {
@@ -6234,7 +6229,6 @@
         },
         "LinearAgentSkillSetupPrompt": {
           "modalTitle": "Linear チケットアクセスを有効にする",
-          "modalDescription": "ターミナルから Linear スキルをインストールします。",
           "modalPrompt": "Agent が添付された Linear チケットを読み書きできるようにします。",
           "dontShowAgain": "今後表示しない",
           "missingBoth": "Orca CLI と Linear Agent スキルがありません。",
@@ -6247,8 +6241,6 @@
           "recheck": "再確認",
           "panelTitle": "Linear Agent スキル",
           "panelDescription": "リンクされた Linear タスクの引き継ぎ用にホスト Agent スキルをインストールします。",
-          "terminalTitle": "Linear Agent スキルをインストール",
-          "terminalAria": "Linear Agent スキルのインストールターミナル",
           "successTitle": "Linear チケットアクセスの準備ができました",
           "successDescription": "Agent はこのワークスペースからリンクされた Linear チケットを読み取り、更新できるようになりました。",
           "successDescriptionWsl": "WSL Agent はこのワークスペースからリンクされた Linear チケットを使用できるようになりました。",
@@ -6260,7 +6252,8 @@
           "toastMissingSkill": "Linear スキルがありません",
           "toastInstallSkillDescription": "Linear スキルをインストールして、Agent が Orca CLI を通じて Linear タスクを読み書きできるようにします。",
           "toastRemoteDescription": "{{value0}} リモート Agent 環境では独自の設定が必要な場合があります。",
-          "toastWslDescription": "{{value0}} この設定は選択した WSL Agent ランタイムで実行されます。"
+          "toastWslDescription": "{{value0}} この設定は選択した WSL Agent ランタイムで実行されます。",
+          "modalInstallDescription": "Agent 用に Linear スキルをインストールします。"
         },
         "FolderWorkspaceComposerDialog": {
           "connectFailed": "プロジェクトへの接続に失敗しました。",
@@ -6916,7 +6909,6 @@
         },
         "AgentSkillSetupPanel": {
           "0b810ec59f": "Enter を押してコマンドを実行します。",
-          "ed197f59a2": "コマンドをコピー",
           "817d3f9f18": "コマンドをコピー",
           "5289300939": "未インストール",
           "9fcebceb2a": "インストール済み",
@@ -6924,17 +6916,21 @@
           "c689392435": "再確認",
           "a31e2aa302": "コマンドのコピーに失敗しました。",
           "378ad26865": "コマンドをコピーしました。",
-          "copiedCommand": "コマンドをコピーしました。",
-          "failedToCopyCommand": "コマンドのコピーに失敗しました。",
-          "copyCommandAria": "コマンドをコピー",
-          "runCommandDescription": "Enter を押してコマンドを実行します。",
-          "5f818f12ab": "準備中…",
-          "4c05b9d7cb": "セットアップ用ターミナルを準備しています。",
           "installLabel": "インストール",
           "updateLabel": "更新",
-          "setupCommandFailed": "セットアップコマンドはコード {{value0}} で終了しました。このエラーは再試行が成功すると解消されます。",
+          "retrySetup": "再試行",
+          "installing": "インストール中...",
+          "hostUnavailable": "このワークスペースのマシンにはまだスキルをインストールできません。",
+          "replaceWithOrcaCopy": "Orca のコピーに置き換える",
+          "copyCommandAria": "コマンドをコピー",
+          "ed197f59a2": "コマンドをコピー",
+          "failedToCopyCommand": "コマンドのコピーに失敗しました。",
+          "copiedCommand": "コマンドをコピーしました。",
+          "5f818f12ab": "準備中…",
           "setupFailed": "セットアップに失敗しました",
-          "retrySetup": "再試行"
+          "runCommandDescription": "Enter を押してコマンドを実行します。",
+          "4c05b9d7cb": "セットアップ用ターミナルを準備しています。",
+          "setupCommandFailed": "セットアップコマンドはコード {{value0}} で終了しました。このエラーは再試行が成功すると解消されます。"
         },
         "AgentsPane": {
           "d83834f5e6": "インストールされている Agent を検出しています…",
@@ -7230,16 +7226,10 @@
         "CliSkillRuntimeSetup": {
           "04325573f8": "WSL",
           "a58ba464ad": "スキルの場所",
-          "0ed08febc5": "WSL シェルコマンドの登録に失敗しました。",
-          "3728a94fb6": "WSL シェルコマンドには注意が必要です",
-          "775a4cfbb8": "WSL シェルコマンドの登録は利用できません",
           "c47127f222": "WSL のデフォルト",
           "0c9f3cf9da": "Orca がグローバル Agent スキルをチェックしてインストールする場所を選択します。",
           "f00d6aa9b5": "このマシンでは WSL を利用できません。",
-          "7c776ff9d8": "wsl",
-          "fc0fcf72fd": "スキルセットアップ前に WSL シェルコマンドを登録してください。",
-          "windowsPathUnknown": "WSL のシェルコマンド PATH を確認できませんでした",
-          "refreshCliRegistration": "CLI の登録状態を更新してから、もう一度お試しください。"
+          "7c776ff9d8": "wsl"
         },
         "CommitMessageAiPane": {
           "841ed9884a": "ソース管理 AI をカスタマイズしていないリポジトリによって使用されます。",
@@ -8003,14 +7993,13 @@
         "OrchestrationPane": {
           "52e0634e2c": "コーディネーター Agent に、ハンドオフ、ワークツリーハンドオーバー、および順次または並列の子 Agent にオーケストレーションを使用するように依頼します。",
           "ae79504732": "使い方",
-          "7bc082f4de": "インストールコマンドのコピー",
-          "832f1f3ee6": "独自のターミナルをご希望ですか?",
           "9bedd2a6e5": "Agent がコンテキストを引き継ぎ、Orca を通じて作業を調整できるようにします。",
           "07641b9768": "オーケストレーションスキル",
           "2aacdb0517": "ハンドオフ、ワークツリーのハンドオーバー、および子 Agent の作業全体にわたってコーディング Agent を調整します。",
           "191ac34567": "Agent オーケストレーション",
           "nestedWorkerDepthTitle": "ネストされたワーカーの深さ",
-          "nestedWorkerDepthDescription": "起動されたワーカーが、さらに自分のワーカーを起動できる世代数です。1 にすると Agent ツリーはフラットになります。コーディネーターがワーカーを起動し、そのワーカーはワーカーを起動しません。"
+          "nestedWorkerDepthDescription": "起動されたワーカーが、さらに自分のワーカーを起動できる世代数です。1 にすると Agent ツリーはフラットになります。コーディネーターがワーカーを起動し、そのワーカーはワーカーを起動しません。",
+          "7bc082f4de": "インストールコマンドのコピー"
         },
         "OrchestrationSetupCard": {
           "e7d2a5146c": "Agent がコンテキストを引き継ぎ、Orca を通じて作業を調整できるようにします。",
@@ -8026,15 +8015,6 @@
           "fullCoverage_other": "検出されたすべての {{value0}} Agent がスキルを持っています。",
           "noCoverage": "上記スキルをインストールして再確認してください。",
           "partialCoverage": "{{value1}} 件中 {{value0}} 件の Agent がスキルを持っていることが検出されました。"
-        },
-        "OrchestrationSkillPromptDialog": {
-          "f08d45293d": "コマンドをコピー",
-          "35550f3b3b": "完了",
-          "1bdce1911e": "オーケストレーションスキルのインストールコマンドのコピー",
-          "b99f375eb2": "ターミナルでこのコマンドを実行して、Agent のオーケストレーションスキルをインストールします。",
-          "2914abcfa2": "オーケストレーションスキルをインストールする",
-          "d3dc559225": "インストールコマンドのコピーに失敗しました。",
-          "239bf9132b": "インストールコマンドをコピーしました。"
         },
         "PrivacyDiagnosticBundleControls": {
           "dc8404a930": "診断ファイルを作成",
@@ -9298,7 +9278,7 @@
             "5d8f1a3b7c": "中国",
             "7e2a4b8c1d": "海外",
             "cursor": {
-              "description": "このコンピュータに既にある Cursor のサインイン（cursor-agent login）から読み取った月間プラン使用状況。",
+              "description": "このコンピュータに既にある Cursor のサインイン（cursor-agent login）から読み取ったプラン使用状況。",
               "kw": {
                 "cursor": "cursor",
                 "rateLimit": "レート制限",
@@ -9584,7 +9564,7 @@
               "background": "背景"
             },
             "cursor": {
-              "description": "このコンピュータの Cursor サインインから月間 Cursor プラン使用状況を表示します。",
+              "description": "このコンピュータの Cursor サインインから Cursor プラン使用状況を表示します。",
               "kw": {
                 "cursor": "cursor"
               },
@@ -9739,7 +9719,6 @@
               "614c756ab1": "ブラウザの Cookie をインポートする",
               "cee44fb442": "オートメーション",
               "a57c2172dc": "Agent ブラウザ",
-              "6ea88e5206": "npx",
               "f5b8fdddf5": "orca-cli",
               "e5a784bc54": "インストール",
               "9d97446873": "Agent",
@@ -9995,7 +9974,6 @@
             "f89a94773c": "更新",
             "79ff46776e": "アプリのアップデートを確認し、新規 Orca バージョンをインストールします。",
             "e15af4eb64": "アップデートをチェックする",
-            "6382fe9724": "npx",
             "baa263d6d8": "Agent",
             "bda108e66c": "スキル",
             "244e3fb4c8": "Orca スキルをインストールして、Agent が Orca CLI を使用できるようにします。",
@@ -11602,9 +11580,7 @@
           "checking": "レシピを確認中…",
           "none": "レシピはまだ見つかりません。",
           "cloudVmSkillTitle": "クラウド VM セットアップスキル",
-          "cloudVmRefresh": "クラウド VM レシピを更新",
-          "cloudVmTerminalTitle": "クラウド VM のセットアップ",
-          "cloudVmTerminalAriaLabel": "クラウド VM スキルインストールターミナル"
+          "cloudVmRefresh": "クラウド VM レシピを更新"
         },
         "ephemeralVmsExperimentalSetting": {
           "description": "リポジトリが所有するオンデマンド環境のセットアップコントロールとワークスペース実行ターゲットを示します。",
@@ -11627,16 +11603,16 @@
             "skill": {
               "install": {
                 "cta": {
-                  "copiedCommand": "コマンドをコピーしました。",
-                  "copyFailed": "コマンドのコピーに失敗しました。",
                   "skillLabel": "Agent スキル：",
                   "checking": "確認中…",
                   "installed": "インストール済み",
                   "notInstalled": "未インストール",
                   "recheck": "再確認",
-                  "installedDescription": "Agent スキルがインストールされました。更新するには以下を実行してください：",
                   "description": "Agent が Linear の課題を読み書きできるようにします。接続、スキル、表示設定を含むガイドは、設定 → タスクソースにあります。",
-                  "copyCommand": "コマンドをコピー"
+                  "copyFailed": "コマンドのコピーに失敗しました。",
+                  "copyCommand": "コマンドをコピー",
+                  "installedDescription": "Agent スキルがインストールされました。更新するには以下を実行してください：",
+                  "copiedCommand": "コマンドをコピーしました。"
                 }
               },
               "search": {
@@ -11750,8 +11726,6 @@
           "skillTitle": "Linear スキル",
           "howToUse": "プロンプト例",
           "howToUseDescription": "カードをクリックするとプロンプトをコピーできます。スキルのインストール後、Linear にリンクしたワークツリーで使用してください。",
-          "terminalTitle": "Linear スキルのセットアップ",
-          "terminalAriaLabel": "Linear スキルのインストールターミナル",
           "manageConnectionHint": "接続済みの Linear ワークスペースと API キーは次の場所で確認できます：",
           "manageConnectionLink": "連携"
         },
@@ -12112,8 +12086,6 @@
           "skillDescription": "Agent が /orca-linear で課題の参照、更新の投稿、状態変更、プル／MR の添付を行えるようにします。",
           "skillBlocked": "先に Linear に接続してから、Agent 用スキルをインストールしてください。",
           "skillPanelTitle": "Linear スキル",
-          "terminalTitle": "Linear スキルのセットアップ",
-          "terminalAriaLabel": "Linear スキルのインストールターミナル",
           "showDescription": "Linear をタスクのソース選択とサイドバーのショートカットに表示します。"
         },
         "TaskSourceProviderCard": {
@@ -12495,11 +12467,11 @@
             "keychain": "macOS キーチェーン（cursor-agent）"
           },
           "staleUsage": "最後に確認できた使用状況 — 最新の更新に失敗しました: {{reason}}",
-          "subtitle": "このコンピュータに既にある Cursor のサインインから、月間の Cursor プラン使用状況を表示します。Orca は読み取るだけで、Cursor のログインを変更することはありません。",
+          "subtitle": "このコンピュータに既にある Cursor のサインインから、Cursor プラン使用状況を表示します。Orca は読み取るだけで、Cursor のログインを変更することはありません。",
           "title": "Cursor",
           "usageDescription": "Cursor は請求サイクルとともにリセットされる 2 つのプールの利用に課金し、使い切るとオンデマンドの追加料金が発生します。",
           "usageLabel": "使用量",
-          "usageTitle": "月間プラン使用状況"
+          "usageTitle": "プラン使用状況"
         },
         "NotificationHostToggles": {
           "offCount": "{{count}} 台オフ",
@@ -12961,6 +12933,35 @@
           "tailscale": "Tailscale · {{address}}",
           "lan": "ローカルネットワーク · {{address}}",
           "loopback": "このコンピューター · {{address}}"
+        },
+        "BundledSkillInstallStatus": {
+          "updateServer": "スキルをインストールするには、サーバーの Orca を更新してください。",
+          "connectHost": "この SSH ホストに接続すると、スキルをインストールできます。"
+        },
+        "OrchestrationSkillPromptDialog": {
+          "d3dc559225": "インストールコマンドのコピーに失敗しました。",
+          "f08d45293d": "コマンドをコピー",
+          "b99f375eb2": "ターミナルでこのコマンドを実行して、Agent のオーケストレーションスキルをインストールします。",
+          "35550f3b3b": "完了",
+          "2914abcfa2": "オーケストレーションスキルをインストールする",
+          "1bdce1911e": "オーケストレーションスキルのインストールコマンドのコピー",
+          "239bf9132b": "インストールコマンドをコピーしました。"
+        },
+        "bundledSkillSetupCopy": {
+          "installForAgent": "{{value0}} にインストール",
+          "installForMore": "さらに {{value0}} 個のAgentにインストール",
+          "installedForAgent": "{{value0}} にインストール済み",
+          "installedForMore": "さらに {{value0}} 個のAgentにインストール済み",
+          "installedForAgents": "{{value0}} 個のAgentにインストール済み",
+          "replacedWithBackup": "置き換え済み · 元のコピーはバックアップとして保存されました",
+          "attentionUnwritable": "対応が必要です · Orca は {{folder}} に書き込めません",
+          "attentionBusy": "対応が必要です · この場所では別のスキルのインストールがまだ完了していません",
+          "attentionUnreadable": "対応が必要です · Orca はこのコピーのすべてのファイルを読み取れません",
+          "attentionEdited": "対応が必要です · このコピーは編集されています",
+          "attentionOther": "対応が必要です · 別のスキルがすでにこの名前を使用しています",
+          "attentionSharedNotCurrent": "対応が必要です · このフォルダーが使用する共有コピーは Orca のものではありません",
+          "resultUpdateSkippedPlaces": "{{result}} · {{places}} か所で更新をスキップ: {{reason}}",
+          "resultUpdateSkippedAgent": "{{result}} · {{agent}} で更新をスキップ: {{reason}}"
         }
       },
       "right": {
@@ -14583,11 +14584,6 @@
           "yoloModeLabel": "Yolo モード",
           "yoloPermissionsDescription": "Agent は確認なしでコマンドを実行しファイルを編集します。一部はサンドボックスも回避します。信頼できるプロジェクトでのみ使用してください。"
         },
-        "FeatureSetupInlineTerminal": {
-          "789b59936e": "Enter キーを押してコマンドを実行し、要求されたら npx を確認します。これは、後で [設定] で設定することもできます。",
-          "47fc6cc6dc": "スキルセットアップコマンド",
-          "c767ab7061": "スキルセットアップ"
-        },
         "IntegrationsStep": {
           "277f30eb34": "Linear、GitLab、Bitbucket、Azure DevOps、Gitea、Jira は [設定] > [連携] にあります。",
           "3a3e360289": "その他のタスクソース",
@@ -14734,6 +14730,11 @@
               }
             }
           }
+        },
+        "FeatureSetupInlineTerminal": {
+          "789b59936e": "Enter キーを押してコマンドを実行し、要求されたら npx を確認します。これは、後で [設定] で設定することもできます。",
+          "47fc6cc6dc": "スキルセットアップコマンド",
+          "c767ab7061": "スキルセットアップ"
         }
       },
       "new": {
@@ -15133,10 +15134,8 @@
             "c61c91e642": "Agent が Orca を通じて調整し、大規模な複数ステップのタスクを完了まで進められるようにします。",
             "ac07f8887f": "Agent オーケストレーション",
             "e9eb197e12": "開かれたコンピュータ操作許可",
-            "3a59452a67": "スキルコマンドをコピーし、確認用に以下へ挿入しました。",
             "c605f51f2b": "機能セットアップの準備完了",
             "1aa657d8f4": "一部の機能の設定には注意が必要です",
-            "allInstalled": "すべてのスキルがインストール済み",
             "installSkills": "スキルをインストール"
           },
           "AiCommitPrSettingsCard": {
@@ -15472,7 +15471,6 @@
             "c9728107c5": "試してみる",
             "25dd101f15": "ブラウザのセットアップに注意が必要です",
             "e02b11e6b0": "ブラウザのセットアップが完了しました",
-            "d6d15077df": "スキルコマンドをコピーし、確認用に以下へ挿入しました。",
             "78e65f19d9": "ブラウザのセットアップに失敗しました",
             "b7345c18db": "予期しないエラーが発生しました。",
             "5f97caf76b": "インストール中…"
@@ -15517,15 +15515,6 @@
             "badb4fc342": ">",
             "22e62f3bab": "Claude Code セッションが開始されました"
           },
-          "CliSkillSetupTerminal": {
-            "1953e90447": "Enter を押して、Agent に Orca CLI オーケストレーションスキルをインストールします。",
-            "43b60ec5c3": "Orca CLI およびオーケストレーションスキルのインストールターミナル",
-            "84e9576dac": "スキルセットアップ",
-            "5c3aee22c0": "コマンドをコピー",
-            "5eca672aac": "スキルインストールコマンドのコピー",
-            "6ff813fc1d": "スキルコマンドのコピーに失敗しました。",
-            "b8ad063571": "スキルインストールコマンドをコピーしました。"
-          },
           "CmdJPaletteTipDialog": {
             "c0bb9f869b": "設定→ショートカット",
             "8241897205": "いつでもショートカットを再バインドします"
@@ -15552,6 +15541,19 @@
             "d20ccf1e61": "完了",
             "379d776971": "タイピング",
             "0418f9becc": "開く"
+          },
+          "CliSkillSetupPanel": {
+            "title": "スキルセットアップ",
+            "description": "Agent 用に Orca CLI とオーケストレーションのスキルをインストールします。"
+          },
+          "CliSkillSetupTerminal": {
+            "6ff813fc1d": "スキルコマンドのコピーに失敗しました。",
+            "1953e90447": "Enter を押して、Agent に Orca CLI オーケストレーションスキルをインストールします。",
+            "84e9576dac": "スキルセットアップ",
+            "43b60ec5c3": "Orca CLI およびオーケストレーションスキルのインストールターミナル",
+            "5c3aee22c0": "コマンドをコピー",
+            "5eca672aac": "スキルインストールコマンドのコピー",
+            "b8ad063571": "スキルインストールコマンドをコピーしました。"
           }
         }
       },
@@ -15646,9 +15648,7 @@
           },
           "MobileEmulatorAgentSetupGuideSteps": {
             "21f5687c07": "Orca CLI スキル",
-            "64fb057667": "このワークツリーの orca エミュレータコマンドを Agent に教えます。",
-            "5c59ea96ca": "モバイルエミュレータ用 Orca CLI スキルのセットアップ",
-            "bff5341ac3": "モバイルエミュレータ用 Orca CLI スキルのインストール用ターミナル"
+            "64fb057667": "このワークツリーの orca エミュレータコマンドを Agent に教えます。"
           },
           "MobileEmulatorTabIntroCallout": {
             "1924982130": "閉じる",
@@ -16380,7 +16380,13 @@
               "notice": "このセクションの読み込み後に、ディスク上のファイルが変更されました。"
             },
             "notUtf8": {
-              "notice": "{{name}} は UTF-8 テキストではないため、自動保存は一時停止しています。UTF-8 に変換するには自分で保存してください。"
+              "notice": "{{name}} は UTF-8 テキストではないため、自動保存は一時停止しています。自分で保存すると UTF-8 で書き直され、UTF-8 として無効な文字は置き換えられます。",
+              "refused": "このファイルは UTF-8 テキストではないため、保存されませんでした。",
+              "confirm": {
+                "title": "{{name}} を UTF-8 で保存しますか？",
+                "description": "このファイルは UTF-8 テキストではありません。UTF-8 で保存すると、UTF-8 として無効な文字は � に置き換えられ、元のバイトは復元できません。",
+                "action": "UTF-8 で保存"
+              }
             }
           }
         },

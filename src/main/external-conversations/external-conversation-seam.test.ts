@@ -1,8 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { GlobalSettings } from '../../shared/global-settings-types'
-import { OrchestrationDb } from '../runtime/orchestration/db/orchestration-db'
 import { hashCanonical } from '../runtime/rpc/orchestration-mutation-receipt'
-import { ExternalConversationSeam } from './external-conversation-seam'
 import type { ConversationKey } from './external-conversation-types'
 import {
   fakeLauncher,
@@ -13,39 +10,11 @@ import {
   PANE,
   WORKTREE
 } from './external-conversation.test-fixture'
+import { deferred, harness } from './external-conversation-seam.test-fixture'
 
 const KEY: ConversationKey = { source: 'dev', externalId: 'thread-1' }
 const TARGET = { kind: 'existing' as const, worktree: `id:${WORKTREE}` }
 const START = { agent: 'claude', target: TARGET, prompt: 'first' }
-
-function harness(
-  settings: Partial<GlobalSettings> = {},
-  records = fakeLinkStore(),
-  db = new OrchestrationDb(':memory:')
-) {
-  const removed = new Set<(worktreeId: string) => void>()
-  const seam = (): ExternalConversationSeam =>
-    new ExternalConversationSeam({
-      store: records.store,
-      readSettings: () => settings,
-      receiptDb: () => db,
-      onWorkspaceRemoved: (listener) => {
-        removed.add(listener)
-        return () => removed.delete(listener)
-      }
-    })
-  const removeWorkspace = (worktreeId: string): void =>
-    removed.forEach((listener) => listener(worktreeId))
-  return { ...records, seam: seam(), restart: seam, db, removed, removeWorkspace }
-}
-
-function deferred<T>() {
-  let resolve!: (value: T) => void
-  const promise = new Promise<T>((done) => {
-    resolve = done
-  })
-  return { promise, resolve }
-}
 
 const UNKNOWN = { outcome: 'unknown', reason: 'launch_outcome_unknown' }
 
@@ -359,8 +328,8 @@ describe('ExternalConversationSeam disposal', () => {
 })
 
 async function started() {
-  const h = harness()
   const terminal = fakeTerminal()
+  const h = harness({}, undefined, undefined, terminal.terminal)
   const { launcher } = fakeLauncher(async () => launchResult('handed-to-terminal'))
   const host = { launcher, terminal: terminal.terminal }
   await h.seam.start(host, KEY, 'start', START)
@@ -544,8 +513,8 @@ describe('ExternalConversationSeam twin removal', () => {
     const records = fakeLinkStore([LOCAL_REPO, { ...LOCAL_REPO, connectionId: 'box' }])
     records.put(WORKTREE, 'local', {})
     records.put(WORKTREE, 'ssh:box', {})
-    const h = harness({}, records)
     const terminal = fakeTerminal()
+    const h = harness({}, records, undefined, terminal.terminal)
     const { launcher } = fakeLauncher(async () => launchResult('handed-to-terminal'), {
       worktreeId: WORKTREE,
       sshHostId: linkedHost === 'local' ? null : linkedHost
@@ -580,8 +549,8 @@ describe('ExternalConversationSeam twin removal', () => {
 
 describe('ExternalConversationSeam start-headed lanes', () => {
   async function startHeaded(delayLink: boolean) {
-    const h = harness()
     const terminal = fakeTerminal()
+    const h = harness({}, undefined, undefined, terminal.terminal)
     const launched = deferred<void>()
     const linkResolved = deferred<void>()
     const { launcher, launch } = fakeLauncher(async () => {
@@ -636,8 +605,8 @@ describe('ExternalConversationSeam start-headed lanes', () => {
   })
 
   it('lets no follower adopt a process when the launch published none it can prove', async () => {
-    const { seam } = harness()
     const terminal = fakeTerminal()
+    const { seam } = harness({}, undefined, undefined, terminal.terminal)
     terminal.state.ptyId = null
     const launched = deferred<void>()
     const { launcher, launch } = fakeLauncher(async () => {

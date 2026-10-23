@@ -16,13 +16,13 @@ import type {
 import type { TranscriptMessageSink } from './session-transcript-consumers'
 import {
   accumulatorSessionIdentity,
-  addPreviewContent,
   createAccumulator,
   finalizeSession,
   sessionIdFromFileName,
   updateLatestLocation,
   updateTimeline
 } from './session-scanner-accumulator'
+import { addSessionContent } from './session-scanner-messages'
 import { countSubagentTranscripts } from './session-scanner-subagent-transcripts'
 import {
   asRecord,
@@ -149,7 +149,7 @@ export function consumeClaudeSessionRecord(
     // must seed the primary title, not be demoted as machinery.
     const isMetaUserTurn =
       record.isMeta === true || (title != null && isKnownHarnessInjectedUserTurnText(title))
-    addPreviewContent(accumulator, 'user', asRecord(record.message)?.content, record.timestamp, {
+    addSessionContent(accumulator, 'user', asRecord(record.message)?.content, record.timestamp, {
       seedFirstUserPrompt: !isMetaUserTurn
     })
     if (title) {
@@ -165,7 +165,7 @@ export function consumeClaudeSessionRecord(
   if (record.type === 'assistant') {
     accumulator.messageCount++
     const message = asRecord(record.message)
-    addPreviewContent(accumulator, 'assistant', message?.content, record.timestamp)
+    addSessionContent(accumulator, 'assistant', message?.content, record.timestamp)
     const model = extractString(message?.model)
     if (model) {
       accumulator.model = model
