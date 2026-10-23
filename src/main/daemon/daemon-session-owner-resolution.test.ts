@@ -327,7 +327,7 @@ describe('DaemonSessionOwnerResolver', () => {
     resolver.recordRoute('session', first, 'same')
 
     await expect(resolver.resolve('session', 'same', true)).resolves.toEqual({ kind: 'unknown' })
-    expect(routes.has('session')).toBe(false)
+    expect(routes.get('session')).toBe(first)
   })
 
   it('does not let a bare-id route choose between listed incarnations', async () => {
@@ -344,7 +344,7 @@ describe('DaemonSessionOwnerResolver', () => {
     await expect(resolver.listProcesses()).rejects.toBeInstanceOf(
       TerminalSessionOwnerUnverifiedError
     )
-    expect(routes.has('session')).toBe(false)
+    expect(routes.get('session')).toBe(first)
   })
 
   it('accepts one exact-id owner when persisted incarnation evidence is stale', async () => {

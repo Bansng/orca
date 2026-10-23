@@ -1,8 +1,11 @@
 import type { GlobalSettings } from '../../shared/global-settings-types'
 import type { RuntimeWorktreeLifecycleEvent } from '../runtime/orca-runtime-core'
-import type { DeliveryReceiptDb } from './external-conversation-delivery-receipts'
+import { DeliveryReceipts, type DeliveryReceiptDb } from './external-conversation-delivery-receipts'
 import type { ExternalConversationLinkStore } from './external-conversation-links'
-import { ExternalConversationSeam } from './external-conversation-seam'
+import {
+  ExternalConversationSeam,
+  type ExternalConversationSeamDeps
+} from './external-conversation-seam'
 
 export type ExternalConversationStore = ExternalConversationLinkStore & {
   getSettings: () => Partial<
@@ -14,8 +17,8 @@ export type ExternalConversationStore = ExternalConversationLinkStore & {
 /**
  * Owns the seam's lifetime, on the settings-change pattern `installStructuredAgentAvailability`
  * uses: one exists exactly while `experimentalConnectors` is on. The flag is
- * first read on the first connector call, so a host that never sees one never reads it; a change
- * after that disposes or rebuilds the seam without waiting for another call. The host is the
+ * first read on the first `current()`, which each runtime host makes at startup so an enabled
+ * seam watches its links from then; a change after that disposes or rebuilds the seam. The host is the
  * authority, so every connector entry point asks it rather than its caller's profile.
  */
 export function installExternalConversations(
@@ -23,11 +26,16 @@ export function installExternalConversations(
   runtime: {
     getOrchestrationDb: () => DeliveryReceiptDb
     onWorktreeLifecycle: (listener: (event: RuntimeWorktreeLifecycleEvent) => void) => () => void
-  }
+    subscribeAgentProviderSessionChangesFn:
+      | ExternalConversationSeamDeps['onProviderSessionsChanged']
+      | null
+  } & ExternalConversationSeamDeps['sessionRows']
 ): { current(): ExternalConversationSeam | null } {
   if (!store) {
     return { current: () => null }
   }
+  // One per process, so leftover settlement only reaches a previous process's receipts.
+  const receipts = new DeliveryReceipts(() => runtime.getOrchestrationDb())
   let seam: ExternalConversationSeam | null = null
   let reconciled = false
   const reconcile = (): void => {
@@ -37,13 +45,17 @@ export function installExternalConversations(
       seam = new ExternalConversationSeam({
         store,
         readSettings: () => store.getSettings(),
-        receiptDb: () => runtime.getOrchestrationDb(),
+        receipts,
         onWorkspaceRemoved: (listener) =>
           runtime.onWorktreeLifecycle((event) => {
             if (event.kind === 'removed') {
               listener(event.worktreeId)
             }
-          })
+          }),
+        sessionRows: runtime,
+        // A host without a hook store reports no sessions; reopen then refuses for want of one.
+        onProviderSessionsChanged: (listener) =>
+          runtime.subscribeAgentProviderSessionChangesFn?.(listener) ?? (() => {})
       })
     } else if (!enabled && seam) {
       seam.dispose('connectors_disabled')

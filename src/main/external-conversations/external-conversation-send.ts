@@ -23,7 +23,10 @@ const UNREACHABLE = new Set([
 
 /** The linked pane's handle and the process it is bound to now; null once nothing is. */
 export function bindPane(
-  terminal: FollowUpTerminal,
+  terminal: Pick<
+    FollowUpTerminal,
+    'getTerminalHandleForPaneKey' | 'getTerminalPromptRequestBinding'
+  >,
   paneKey: string
 ): { handle: string; binding: AgentPromptExpectedBinding } | null {
   const handle = terminal.getTerminalHandleForPaneKey(paneKey)

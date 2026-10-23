@@ -5,13 +5,19 @@ import type { Repo } from '../../shared/repo-types'
 import type { RuntimeTerminalSend } from '../../shared/runtime-terminal-send-contract'
 import type { HostWorktreeTarget } from '../../shared/worktree/host-qualified-identity'
 import type { AgentPaneWorkspace } from '../agent-hooks/agent-transition-detector'
+import type { LaunchedAgentForeground } from '../runtime/launched-agent-foreground'
 import type { AgentLaunchPublishedSurface } from '../agent-launch/agent-launch-execution'
 import type { ExternalConversationLinkStore } from './external-conversation-links'
-import type { FollowUpTerminal } from './external-conversation-send'
+import type { AgentStatusIpcPayload } from '../../shared/agent-status-ipc-payload'
+import type { RuntimeTerminalWait } from '../../shared/runtime-terminal-contracts'
+import type { AgentSessionResumeResult } from '../runtime/session-lifecycle/projection/resume-agent-session-in-workspace'
+import type { ConversationTerminal } from './external-conversation-seam'
 import type { ConversationLauncher } from './external-conversation-start'
 
 export const WORKTREE = 'repo-1::/work/a'
 export const PANE = 'tab-1:11111111-1111-4111-8111-111111111111'
+export const REOPENED_PANE = 'tab-2:22222222-2222-4222-8222-222222222222'
+export const SESSION = { key: 'session_id' as const, id: 'claude-session-1' }
 export const LOCAL_REPO: Repo = {
   id: 'repo-1',
   path: '/work',
@@ -124,15 +130,43 @@ type WriteOptions = {
   expectedBinding?: { ptyId: string; processIncarnation: string }
 }
 
+/** A hook row naming the agent's session in `paneKey`, as the hook store reports it. */
+export function sessionRow(
+  paneKey: string,
+  connectionId: string | null = null,
+  session = SESSION
+): AgentStatusIpcPayload {
+  return {
+    paneKey,
+    connectionId,
+    agentType: 'claude',
+    state: 'done',
+    prompt: '',
+    receivedAt: 1,
+    stateStartedAt: 1,
+    providerSession: session
+  }
+}
+
 /**
  * A terminal whose prompt writer keeps the shared writer's order: hold while blocked (under
- * `wait`), then the binding fence, the guard, the signal, and the write.
+ * `wait`), then the binding fence, the guard, the signal, and the write. Its hook store names
+ * the session in the agent's pane while the agent runs; its safe resume refuses as a pane that
+ * may still hold the session does, until `reopenable` lets it resume into a fresh pane.
  */
 export function fakeTerminal() {
-  const state: { ptyId: string | null; incarnation: number; blocked: boolean } = {
+  const state: {
+    ptyId: string | null
+    paneKey: string
+    incarnation: number
+    blocked: boolean
+    rows: AgentStatusIpcPayload[] | null
+  } = {
     ptyId: 'pty-1',
+    paneKey: PANE,
     incarnation: 1,
-    blocked: false
+    blocked: false,
+    rows: null
   }
   const current = (): string =>
     `inc-${state.ptyId}${state.incarnation > 1 ? `-${state.incarnation}` : ''}`
@@ -176,9 +210,23 @@ export function fakeTerminal() {
       return { handle, accepted: true, bytesWritten: 1 }
     }
   )
+  const resumeAgentSessionInWorkspace = vi.fn(
+    async (
+      _worktreeId: string,
+      _request: { signal?: AbortSignal; mutationId: string }
+    ): Promise<AgentSessionResumeResult> => ({ ok: false, reason: 'held_elsewhere' })
+  )
+  const ready: RuntimeTerminalWait = {
+    handle: 'term-2',
+    condition: 'tui-idle',
+    satisfied: true,
+    status: 'running',
+    exitCode: null
+  }
+  const waitForFreshWorkerComposer = vi.fn(async () => ready)
   const terminal = {
     getTerminalHandleForPaneKey: (paneKey: string) =>
-      paneKey === PANE && state.ptyId ? 'term-1' : null,
+      paneKey === state.paneKey && state.ptyId ? (paneKey === PANE ? 'term-1' : 'term-2') : null,
     getTerminalPromptRequestBinding: () => {
       if (!state.ptyId) {
         throw new Error('terminal_not_writable')
@@ -186,14 +234,33 @@ export function fakeTerminal() {
       return { ptyId: state.ptyId, processIncarnation: current(), generation: 1 }
     },
     sendTerminalAgentPrompt,
-    readLaunchedAgentForeground: vi.fn(async () => 'agent' as const),
-    subscribeToTerminalData: () => () => {}
-  } satisfies FollowUpTerminal
+    readLaunchedAgentForeground: vi.fn(
+      async (_ptyId: string): Promise<LaunchedAgentForeground> => 'agent'
+    ),
+    subscribeToTerminalData: () => () => {},
+    getAgentStatusRowsForPane: (paneKey: string) =>
+      state.rows ?? (paneKey === state.paneKey && state.ptyId ? [sessionRow(paneKey)] : []),
+    resumeAgentSessionInWorkspace,
+    waitForFreshWorkerComposer,
+    waitForTerminal: vi.fn(async () => ready)
+  } satisfies ConversationTerminal
   return {
     terminal,
     state,
     writes,
     sendTerminalAgentPrompt,
+    resumeAgentSessionInWorkspace,
+    waitForFreshWorkerComposer,
+    /** The safe resume starts the session in a fresh pane, as after a proven exit or a closed tab. */
+    reopenable() {
+      resumeAgentSessionInWorkspace.mockImplementation(async () => {
+        state.paneKey = REOPENED_PANE
+        state.ptyId = 'pty-2'
+        state.incarnation = 1
+        return { ok: true, handle: 'term-2', paneKey: REOPENED_PANE, ptyId: 'pty-2' }
+      })
+    },
+
     /** Holds waiting on the approval. */
     held: () => waiters.size,
     answer() {

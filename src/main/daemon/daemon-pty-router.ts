@@ -102,11 +102,14 @@ export class DaemonPtyRouter implements IPtyProvider {
   providesAgentSessionOwnerListings(ptyId: string): boolean {
     // Why: an unmapped id may belong to any preserved daemon generation;
     // only an established route can make an omitted owner authoritative.
-    return this.sessionAdapters.get(ptyId)?.providesAgentSessionOwnerListings(ptyId) === true
+    return (
+      this.ownerResolver.getVerifiedRoute(ptyId)?.providesAgentSessionOwnerListings?.(ptyId) ===
+      true
+    )
   }
 
   supportsFencedTermination(id: string): boolean {
-    return this.sessionAdapters.get(id)?.supportsFencedTermination(id) === true
+    return this.ownerResolver.getVerifiedRoute(id)?.supportsFencedTermination?.(id) === true
   }
 
   killFenced = (request: PtyFencedTerminationRequest) =>

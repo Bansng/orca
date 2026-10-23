@@ -939,7 +939,9 @@ jobs:
       - name: Install WebKit for the drawer check
         id: webkit
         background: true
-        run: pnpm exec playwright-core install --with-deps webkit
+        run: |
+          bash .github/scripts/prepare-ubuntu-apt.sh
+          pnpm exec playwright-core install --with-deps webkit
 
       # The entry lives in mobile/ so one React resolves; without this every RN import is nothing.
       - uses: ./.github/actions/install-mobile-dependencies

@@ -425,6 +425,9 @@
         },
         "editor": {
           "save": {
+            "notUtf8": {
+              "refused": "This file isn't UTF-8 text, so it wasn't saved."
+            },
             "sectionStale": {
               "notice": "This file changed on disk since this section loaded."
             },
@@ -2156,6 +2159,8 @@
           "01f45d3d8a": "sidebar",
           "021538e1d1": "SSH disconnected",
           "1d66d84f0b": "string",
+          "57eaa61b55": "Hide child workspaces",
+          "8cb634cda6": "Show child workspaces",
           "93aebe4529": "Folder",
           "automationCreated": "Created by automation",
           "branchFolderPathIdentity": "Branch or folder path",
@@ -2519,6 +2524,10 @@
             "bd19fd7a59": "Kill all sessions",
             "c9382662bb": "Restart daemon",
             "e7ccce7e87": "of system RAM"
+          },
+          "SkillUpdateStatusSegment": {
+            "successMany": "Updated {{value0}} skills",
+            "successOne": "Updated {{value0}}"
           },
           "SshStatusSegment": {
             "3d0128b105": "connected",

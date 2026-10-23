@@ -198,7 +198,10 @@ describe('registerPtyHandlers', () => {
           await vi.advanceTimersByTimeAsync(1_000)
           await expect(stopPromise).resolves.toBe(true)
 
-          expect(listProcesses.mock.calls[0]?.[0]).toEqual({ deadlineMs: callerDeadlineMs })
+          expect(listProcesses.mock.calls[0]?.[0]).toEqual({
+            deadlineMs: callerDeadlineMs,
+            ptyIds: ['local-pty']
+          })
           const settlementDeadlines = listProcesses.mock.calls
             .slice(1)
             .map(([opts]) => opts?.deadlineMs)

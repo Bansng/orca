@@ -1095,6 +1095,21 @@
       },
       "duplicatePairedServers": {
         "ambiguousSameServer": "{{value0}} y {{value1}} son el mismo servidor emparejado dos veces. Quita uno en Configuración > Servidores remotos de Orca."
+      },
+      "bundled": {
+        "skill": {
+          "install": {
+            "error": {
+              "message": {
+                "homeUnavailable": "Orca no encontró la carpeta de inicio donde instalar las skills.",
+                "wslUnavailable": "WSL no está disponible en este equipo, así que Orca no pudo instalar las skills allí.",
+                "environmentMismatch": "Este equipo no puede instalar skills en WSL.",
+                "wslDetectionFailed": "Orca no pudo comprobar qué agentes están instalados en WSL. Asegúrate de que la distribución se inicia y vuelve a intentarlo.",
+                "unknown": "Orca no pudo instalar las skills."
+              }
+            }
+          }
+        }
       }
     },
     "hooks": {
@@ -4213,12 +4228,9 @@
             "successOne": "Updated {{value0}}",
             "successMany": "Updated {{value0}} skills",
             "successAria": "Skills updated. Click to open details.",
-            "errorLabel": "Update failed",
-            "errorTooltip": "Skill update failed — click to see details",
-            "errorAria": "Skill update failed. Click to open details.",
-            "stoppingLabel": "Stopping update",
-            "stoppingTooltip": "Stopping the skill update…",
-            "stoppingAria": "Stopping the skill update. Click to open details."
+            "attentionAria": "Se omitieron algunas actualizaciones de skills. Haz clic para abrir los detalles.",
+            "attentionLabel": "Skills requieren atención",
+            "attentionTooltip": "Se omitieron algunas actualizaciones de skills — haz clic para ver los detalles"
           },
           "NativeChatResumeStatusSegment": {
             "failedLabelOne": "1 chat no pudo reanudarse",
@@ -4767,34 +4779,7 @@
           "updateMany": "Actualizar skills",
           "description": "Actualiza {{value0}} para que los Agents sigan las instrucciones actuales de esta versión de Orca."
         },
-        "SkillFreshnessRow": {
-          "statusUpdateAvailable": "Actualización disponible",
-          "statusCantUpdate": "No se puede actualizar",
-          "cantUpdateReason": "Esta skill está instalada en un lugar que Orca no puede actualizar de forma segura, así que el comando de actualización la deja sin cambios.",
-          "chipCurrent": "Actual",
-          "chipInaccessible": "Inaccesible",
-          "chipDuplicate": "Duplicada",
-          "chipExternalLink": "Enlace externo",
-          "chipBrokenLink": "Enlace roto",
-          "chipReadOnly": "Solo lectura",
-          "chipInRepo": "En un repo",
-          "chipPluginCache": "Caché de plugin",
-          "tipCurrent": "La skill aquí ya está actualizada; la actualización no la cambiará.",
-          "tipInaccessible": "Orca no pudo leer la skill aquí (un error de permisos o de archivo), así que no puede comprobarla ni actualizarla.",
-          "tipDuplicate": "La skill también está instalada aquí, aparte de la principal, así que el comando de actualización no puede alcanzarla. Elimínala para permitir las actualizaciones.",
-          "tipExternalLink": "Es un acceso directo que apunta fuera de las carpetas de skills de Orca; la actualización no lo seguirá.",
-          "tipBrokenLink": "Es un acceso directo a algo que ya no existe; puedes eliminarlo sin problema.",
-          "tipReadOnly": "La skill aquí está en una ubicación de solo lectura, así que no se puede actualizar hasta que cambies sus permisos.",
-          "tipInRepo": "La skill aquí vive dentro de un proyecto, no en tus skills globales; Orca solo actualiza las globales.",
-          "tipPluginCache": "La skill aquí la gestiona un plugin; actualiza el plugin en su lugar.",
-          "skippedReasonReadOnly": "This copy is in a read-only location, so Orca left it out of the update. Change its permissions to let Orca update it.",
-          "skippedReasonInaccessible": "Orca couldn’t read this copy, so it left the skill out of the update.",
-          "skippedReasonInRepo": "This is a project skill, not a global one — Orca only updates your global skills, so it left this out of the update.",
-          "skippedReasonPluginCache": "A plugin manages this skill, so Orca left it out of the update — update the plugin instead.",
-          "skippedReasonExternalLink": "This copy is a shortcut pointing outside Orca’s skill folders, so Orca left it out of the update.",
-          "skippedReasonBrokenLink": "This copy is a shortcut to something that no longer exists, so Orca left it out — you can safely delete it.",
-          "skippedReasonDuplicate": "Es una copia aparte, así que la actualización no la alcanza: el comando solo actualiza la copia principal. Elimina esta copia y vuelve a instalar la skill para que esta ubicación siga a la principal."
-        },
+        "SkillFreshnessRow": {},
         "SkillFreshnessUpdateDialog": {
           "title": "Actualizar skills",
           "checking": "Comprobando las skills de Orca instaladas…",
@@ -4802,41 +4787,28 @@
           "updateOne": "Se puede actualizar 1 skill de forma segura",
           "updateMany": "Se pueden actualizar {{value0}} skills de forma segura",
           "success": "Todas las skills de Orca instaladas están actualizadas.",
-          "attention": "Algunas skills de Orca instaladas no se pueden actualizar automáticamente.",
           "checkNow": "Comprobar ahora",
           "close": "Cerrar",
-          "blockedOne": "1 skill can't be updated automatically.",
-          "blockedMany": "{{value0}} skills can't be updated automatically.",
-          "runningOne": "Updating 1 skill…",
-          "runningMany": "Updating {{value0}} skills…",
-          "runningDescription": "You can close this window — it keeps running in the background.",
           "progressAria": "Updating skills",
-          "updatedOne": "Updated 1 skill",
-          "updatedMany": "Updated {{value0}} skills",
-          "updatedPartial": "Updated {{value0}} of {{value1}} skills",
           "errorTitle": "The update didn't finish",
-          "retry": "Retry",
-          "copyCommand": "Copy command",
-          "copied": "Copied",
-          "showLog": "Show log",
           "updating": "Updating…",
           "updateActionOne": "Update 1 skill",
           "updateActionMany": "Update {{value0}} skills",
           "done": "Done",
-          "stop": "Stop",
-          "stopping": "Stopping…",
-          "stoppingHeadline": "Stopping the update…",
-          "scanIncomplete": "Orca no pudo terminar de comprobar los skills gestionados por plugins.",
-          "scanDepthLimit": "Orca alcanzó el límite de profundidad del análisis antes de comprobar esta carpeta.",
-          "scanEntryLimit": "Orca alcanzó el límite de entradas del análisis antes de comprobar el resto de esta caché.",
-          "scanCandidateLimit": "Orca encontró más carpetas de skills con el mismo nombre de las que puede inspeccionar de forma segura.",
-          "scanManifestLimit": "Orca omitió este manifiesto del plugin porque superaba un límite seguro.",
-          "scanOutsideRoot": "Orca omitió esta ruta del plugin porque apunta fuera de la caché de plugins.",
-          "scanIoErrorWithCode": "Orca no pudo leer esta ruta del plugin ({{value0}}).",
-          "scanIoError": "Orca no pudo leer esta ruta del plugin.",
-          "scanIssueLimit": "Orca encontró demasiadas carpetas de plugins omitidas para mostrarlas por separado.",
-          "unselectedForeignOne": "1 skill no instalada por Orca no está seleccionada.",
-          "unselectedForeignMany": "{{value0}} skills no instaladas por Orca no están seleccionadas."
+          "finishedWithProblems": "Algunas skills requieren atención",
+          "repair": "Una actualización anterior se interrumpió. Actualiza para repararla.",
+          "hideFolders": "Ocultar carpetas",
+          "showFolders": "Mostrar carpetas",
+          "upToDateMany": "{{value0}} skills están actualizadas.",
+          "upToDateOne": "{{value0}} está actualizada.",
+          "updatedMany": "Se actualizaron {{value0}} skills",
+          "updatedOne": "Se actualizó 1 skill",
+          "updatedSkipped": "{{value0}} · {{value1}} omitidas",
+          "currentOne": "1 skill está actualizada",
+          "currentMany": "{{value0}} skills están actualizadas",
+          "noUpdates": "No hay actualizaciones disponibles",
+          "updateServer": "Actualiza Orca en el servidor para actualizar sus skills de Orca.",
+          "connectHost": "Conéctate a este host SSH para revisar sus skills de Orca."
         },
         "SkillFreshnessStatusPill": {
           "updateAvailable": "Actualización disponible",
@@ -4845,18 +4817,13 @@
           "details": "Details",
           "needsAttention": "Review skill",
           "checking": "De cheques...",
-          "checkFailed": "Verificación fallida"
+          "checkFailed": "Verificación fallida",
+          "updateServer": "Actualiza Orca en el servidor",
+          "connectHost": "Conecta el host SSH"
         },
-        "SkillUpdateResultRows": {
-          "stillOutdated": "Still out of date after the update ran."
-        },
+        "SkillUpdateResultRows": {},
         "SkillUpdateRow": {
-          "oneLocation": "1 ubicación",
-          "manyLocations": "{{value0}} ubicaciones",
-          "notFromOrca": "No es de Orca",
-          "notFromOrcaSourceTip": "Instalada desde {{value0}}. Si la seleccionas, se reemplaza por la versión de Orca.",
-          "notFromOrcaNoRecordTip": "No hay registro de instalación de Orca para esta copia. Si la seleccionas, se reemplaza por la versión de Orca.",
-          "includeSkill": "Incluir {{value0}}"
+          "replaceWithOrca": "Reemplazar por la copia de Orca (guarda una copia de seguridad)"
         },
         "host": {
           "local": "Esta máquina",
@@ -5232,6 +5199,34 @@
           "placementSummaryParts": "Elimina {{parts}} a través de {{roots}}.",
           "placementJoin": "y",
           "retainedSource": "La habilidad en sí permanece en {{path}}."
+        },
+        "skillPlanOpCopy": {
+          "busy": "Otra instalación sigue en curso",
+          "edited": "Skill modificada fuera de Orca",
+          "install": "Instalar",
+          "installFor": "Instalar para {{value0}}",
+          "installed": "Instalada",
+          "keep": "Sin cambios",
+          "leftAsIs": "Esta copia se conservó tal como estaba",
+          "link": "Enlazar",
+          "linked": "Enlazada",
+          "needsAttention": "Requiere atención",
+          "other": "Otra skill usa este nombre",
+          "replace": "Reemplazar",
+          "replacedWithBackup": "Reemplazado · Tu copia se guardó como copia de seguridad",
+          "sharedNotCurrent": "La copia compartida no es de Orca",
+          "unwritable": "Orca no puede escribir en esta carpeta",
+          "unreadable": "Orca no puede leer todos los archivos",
+          "update": "Actualizar",
+          "updated": "Actualizada",
+          "write": "Instalar",
+          "keepLink": "Enlace, sin cambios",
+          "repair": "Reparar",
+          "sharedFolder": "Carpeta compartida",
+          "updateSkipped": "Actualización omitida: {{value0}}",
+          "updateAvailable": "Actualización disponible",
+          "repairAvailable": "Reparación disponible",
+          "installAvailable": "Instalación disponible"
         }
       },
       "sidebar": {
@@ -6231,7 +6226,6 @@
         },
         "LinearAgentSkillSetupPrompt": {
           "modalTitle": "Habilitar acceso a issues de Linear",
-          "modalDescription": "Instala el skill de Linear desde una terminal.",
           "modalPrompt": "Permite que los Agents lean y editen el issue de Linear adjunto.",
           "dontShowAgain": "No volver a mostrar",
           "missingBoth": "Faltan la CLI de Orca y el skill de Linear para Agents.",
@@ -6244,8 +6238,6 @@
           "recheck": "Volver a comprobar",
           "panelTitle": "Skill de Linear para Agents",
           "panelDescription": "Instala el skill de Agents del host para handoffs desde tareas de Linear enlazadas.",
-          "terminalTitle": "Instalar skill de Linear para Agents",
-          "terminalAria": "Terminal de instalación del skill de Linear para Agents",
           "successTitle": "El acceso a issues de Linear está listo",
           "successDescription": "Los Agents ya pueden leer y actualizar issues de Linear enlazados desde este espacio de trabajo.",
           "successDescriptionWsl": "Los Agents de WSL ya pueden usar issues de Linear enlazados desde este espacio de trabajo.",
@@ -6257,7 +6249,8 @@
           "toastMissingSkill": "Falta el skill de Linear",
           "toastInstallSkillDescription": "Instala el skill de Linear para permitir que tus Agents lean y editen tareas de Linear a través de la CLI de Orca.",
           "toastRemoteDescription": "{{value0}} Los entornos de Agents remotos pueden necesitar setup propio.",
-          "toastWslDescription": "{{value0}} Este setup se ejecuta en el entorno de Agent WSL seleccionado."
+          "toastWslDescription": "{{value0}} Este setup se ejecuta en el entorno de Agent WSL seleccionado.",
+          "modalInstallDescription": "Instala la habilidad de Linear para tus agentes."
         },
         "FolderWorkspaceComposerDialog": {
           "connectFailed": "No se pudo conectar al proyecto.",
@@ -6928,7 +6921,6 @@
         },
         "AgentSkillSetupPanel": {
           "0b810ec59f": "Presiona Enter para ejecutar el comando.",
-          "ed197f59a2": "Copiar comando",
           "817d3f9f18": "Copiar comando",
           "5289300939": "No instalado",
           "9fcebceb2a": "Instalado",
@@ -6936,17 +6928,21 @@
           "c689392435": "Volver a comprobar",
           "a31e2aa302": "No se pudo copiar el comando.",
           "378ad26865": "Comando copiado.",
-          "copiedCommand": "Comando copiado.",
-          "failedToCopyCommand": "No se pudo copiar el comando.",
-          "copyCommandAria": "Copiar comando",
-          "runCommandDescription": "Presiona Enter para ejecutar el comando.",
-          "5f818f12ab": "Preparando...",
-          "4c05b9d7cb": "Preparando el terminal de configuración.",
           "installLabel": "Instalar",
           "updateLabel": "Actualizar",
-          "setupCommandFailed": "El comando de configuración salió con el código {{value0}}. Este error desaparecerá después de un reintento exitoso.",
+          "retrySetup": "Reintentar",
+          "installing": "Instalando...",
+          "hostUnavailable": "Orca todavía no puede instalar skills en la máquina de este espacio de trabajo.",
+          "replaceWithOrcaCopy": "Reemplazar con la copia de Orca",
+          "copyCommandAria": "Copiar comando",
+          "ed197f59a2": "Copiar comando",
+          "failedToCopyCommand": "No se pudo copiar el comando.",
+          "copiedCommand": "Comando copiado.",
+          "5f818f12ab": "Preparando...",
           "setupFailed": "Error de configuración",
-          "retrySetup": "Reintentar"
+          "runCommandDescription": "Presiona Enter para ejecutar el comando.",
+          "4c05b9d7cb": "Preparando el terminal de configuración.",
+          "setupCommandFailed": "El comando de configuración salió con el código {{value0}}. Este error desaparecerá después de un reintento exitoso."
         },
         "AgentsPane": {
           "d83834f5e6": "Detectando agents instalados…",
@@ -7242,16 +7238,10 @@
         "CliSkillRuntimeSetup": {
           "04325573f8": "WSL",
           "a58ba464ad": "Ubicación del skill",
-          "0ed08febc5": "No se pudo registrar el comando de shell de WSL.",
-          "3728a94fb6": "El comando de shell de WSL necesita atención",
-          "775a4cfbb8": "El registro del comando de shell de WSL no está disponible",
           "c47127f222": "WSL predeterminado",
           "0c9f3cf9da": "Elige dónde Orca comprueba e instala agent skills globales.",
           "f00d6aa9b5": "WSL no está disponible en esta máquina.",
-          "7c776ff9d8": "wsl",
-          "fc0fcf72fd": "Registra el comando de shell de WSL antes de configurar el skill.",
-          "windowsPathUnknown": "WSL shell command PATH could not be checked",
-          "refreshCliRegistration": "Actualiza el estado de registro de la CLI e inténtalo de nuevo."
+          "7c776ff9d8": "wsl"
         },
         "CommitMessageAiPane": {
           "841ed9884a": "Usado por repositorios que no han personalizado Source Control AI.",
@@ -7978,14 +7968,13 @@
         "OrchestrationPane": {
           "52e0634e2c": "Pídele a un agente coordinador que use la orquestación para handoffs, handoffs de worktree y agentes secundarios secuenciales o paralelos.",
           "ae79504732": "Cómo usarlo",
-          "7bc082f4de": "Copiar comando de instalación",
-          "832f1f3ee6": "¿Prefieres tu propia terminal?",
           "9bedd2a6e5": "Permite a los agentes transferir contexto y coordinar el trabajo a través de Orca.",
           "07641b9768": "Skill de orquestación",
           "2aacdb0517": "Coordina agentes de programación en handoffs, handoffs de worktree y trabajo de agentes secundarios.",
           "191ac34567": "Orquestación de agentes",
           "nestedWorkerDepthTitle": "Profundidad del trabajador anidado",
-          "nestedWorkerDepthDescription": "¿Cuántas generaciones de trabajadores despedidos pueden engendrar sus propios trabajadores? 1 mantiene el árbol de agentes plano: un coordinador envía trabajadores y esos trabajadores no envían."
+          "nestedWorkerDepthDescription": "¿Cuántas generaciones de trabajadores despedidos pueden engendrar sus propios trabajadores? 1 mantiene el árbol de agentes plano: un coordinador envía trabajadores y esos trabajadores no envían.",
+          "7bc082f4de": "Copiar comando de instalación"
         },
         "OrchestrationSetupCard": {
           "e7d2a5146c": "Permite a los agentes transferir contexto y coordinar el trabajo a través de Orca.",
@@ -8001,15 +7990,6 @@
           "fullCoverage_other": "Todos los agentes {{value0}} detectados tienen la habilidad.",
           "noCoverage": "Instale la habilidad anterior y luego vuelva a verificar.",
           "partialCoverage": "{{value0}} de {{value1}} agentes detectados tienen la habilidad."
-        },
-        "OrchestrationSkillPromptDialog": {
-          "f08d45293d": "Copiar comando",
-          "35550f3b3b": "Hecho",
-          "1bdce1911e": "Copiar comando de instalación del skill de orquestación",
-          "b99f375eb2": "Ejecuta este comando en una terminal para instalar el skill de orquestación para tus agentes.",
-          "2914abcfa2": "Instalar skill de orquestación",
-          "d3dc559225": "No se pudo copiar el comando de instalación.",
-          "239bf9132b": "Comando de instalación copiado."
         },
         "PrivacyDiagnosticBundleControls": {
           "dc8404a930": "Crear archivo de diagnóstico",
@@ -9266,7 +9246,7 @@
             "b0a4e8c6d9": "OAuth",
             "a9f3d7b5c8": "inicio de sesión",
             "cursor": {
-              "description": "Uso mensual del plan obtenido del inicio de sesión de Cursor que ya está en este equipo (cursor-agent login).",
+              "description": "Uso del plan obtenido del inicio de sesión de Cursor que ya está en este equipo (cursor-agent login).",
               "kw": {
                 "cursor": "cursor",
                 "rateLimit": "rate limit",
@@ -9551,7 +9531,7 @@
             "usagePercentageDisplayTitle": "Porcentajes de uso",
             "usagePercentageDisplayDescription": "Elige si los límites del proveedor muestran el porcentaje usado o restante.",
             "cursor": {
-              "description": "Muestra el uso mensual del plan de Cursor a partir del inicio de sesión de Cursor en este equipo.",
+              "description": "Muestra el uso del plan de Cursor a partir del inicio de sesión de Cursor en este equipo.",
               "kw": {
                 "cursor": "cursor"
               },
@@ -9714,7 +9694,6 @@
               "614c756ab1": "Importar cookies del navegador",
               "cee44fb442": "automatización",
               "a57c2172dc": "navegador-agente",
-              "6ea88e5206": "npx",
               "f5b8fdddf5": "orca-cli",
               "e5a784bc54": "instalar",
               "9d97446873": "agent",
@@ -9970,7 +9949,6 @@
             "f89a94773c": "actualizar",
             "79ff46776e": "Busque actualizaciones de la aplicación e instale una versión más reciente de Orca.",
             "e15af4eb64": "Buscar actualizaciones",
-            "6382fe9724": "npx",
             "baa263d6d8": "agentes",
             "bda108e66c": "skill",
             "244e3fb4c8": "Instala el skill de Orca para que los agentes sepan usar la CLI de Orca.",
@@ -11599,9 +11577,7 @@
           "checking": "Comprobando recetas…",
           "none": "Aún no se han encontrado recetas.",
           "cloudVmSkillTitle": "Skill de configuración de VM en la nube",
-          "cloudVmRefresh": "Actualizar recetas de VM en la nube",
-          "cloudVmTerminalTitle": "Configuración de VM en la nube",
-          "cloudVmTerminalAriaLabel": "Terminal de instalación de la skill de VM en la nube"
+          "cloudVmRefresh": "Actualizar recetas de VM en la nube"
         },
         "ephemeralVmsExperimentalSetting": {
           "description": "Muestra controles de configuración y destinos de ejecución de espacios de trabajo para entornos bajo demanda del repositorio.",
@@ -11624,16 +11600,16 @@
             "skill": {
               "install": {
                 "cta": {
-                  "copiedCommand": "Comando copiado.",
-                  "copyFailed": "Error al copiar el comando.",
                   "skillLabel": "Habilidad del agente:",
                   "checking": "Verificando...",
                   "installed": "Instalado",
                   "notInstalled": "No instalado",
                   "recheck": "Reverificar",
-                  "installedDescription": "Habilidad del agente instalada. Para actualizarla, ejecuta:",
                   "description": "Permite que los agentes lean y editen tareas de Linear. La configuración guiada completa (conexión + habilidad + visibilidad) está en Ajustes → Fuentes de tareas.",
-                  "copyCommand": "Copiar comando"
+                  "copyFailed": "Error al copiar el comando.",
+                  "copyCommand": "Copiar comando",
+                  "installedDescription": "Habilidad del agente instalada. Para actualizarla, ejecuta:",
+                  "copiedCommand": "Comando copiado."
                 }
               },
               "search": {
@@ -11747,8 +11723,6 @@
           "skillTitle": "Habilidad de Linear",
           "howToUse": "Prompts de ejemplo",
           "howToUseDescription": "Haz clic en una tarjeta para copiar un prompt. Úsalos en un espacio de trabajo vinculado a Linear después de instalar la habilidad.",
-          "terminalTitle": "Configuración de la habilidad de Linear",
-          "terminalAriaLabel": "Terminal de instalación de la habilidad de Linear",
           "manageConnectionHint": "Revisa los espacios de trabajo de Linear conectados y las claves de API en",
           "manageConnectionLink": "Integraciones"
         },
@@ -12109,8 +12083,6 @@
           "skillDescription": "Proporciona /orca-linear a los agentes para leer incidencias, publicar actualizaciones, cambiar estados y adjuntar solicitudes de cambio.",
           "skillBlocked": "Conecta Linear primero y luego instala la habilidad para los agentes.",
           "skillPanelTitle": "Habilidad de Linear",
-          "terminalTitle": "Configuración de la habilidad de Linear",
-          "terminalAriaLabel": "Terminal de instalación de la habilidad de Linear",
           "showDescription": "Incluye Linear en el selector de fuentes de Tareas y en los accesos directos de la barra lateral."
         },
         "TaskSourceProviderCard": {
@@ -12218,11 +12190,11 @@
             "keychain": "Llavero de macOS (cursor-agent)"
           },
           "staleUsage": "Último uso conocido — falló la actualización más reciente: {{reason}}",
-          "subtitle": "Muestra tu uso mensual del plan de Cursor a partir del inicio de sesión que ya está en este equipo. Orca solo lo lee — nunca modifica tu inicio de sesión de Cursor.",
+          "subtitle": "Muestra tu uso del plan de Cursor a partir del inicio de sesión que ya está en este equipo. Orca solo lo lee — nunca modifica tu inicio de sesión de Cursor.",
           "title": "Cursor",
           "usageDescription": "Cursor factura dos cuotas que se restablecen con tu ciclo de facturación, más gasto bajo demanda cuando se agotan.",
           "usageLabel": "Uso",
-          "usageTitle": "Uso mensual del plan"
+          "usageTitle": "Uso del plan"
         },
         "NotificationHostToggles": {
           "offCount": "{{count}} desactivadas",
@@ -12958,6 +12930,35 @@
           "tailscale": "Tailscale · {{address}}",
           "lan": "Red local · {{address}}",
           "loopback": "Este equipo · {{address}}"
+        },
+        "BundledSkillInstallStatus": {
+          "updateServer": "Actualiza Orca en el servidor para instalar sus skills.",
+          "connectHost": "Conéctate a este host SSH para instalar sus skills."
+        },
+        "OrchestrationSkillPromptDialog": {
+          "d3dc559225": "No se pudo copiar el comando de instalación.",
+          "f08d45293d": "Copiar comando",
+          "b99f375eb2": "Ejecuta este comando en una terminal para instalar el skill de orquestación para tus agentes.",
+          "35550f3b3b": "Hecho",
+          "2914abcfa2": "Instalar skill de orquestación",
+          "1bdce1911e": "Copiar comando de instalación del skill de orquestación",
+          "239bf9132b": "Comando de instalación copiado."
+        },
+        "bundledSkillSetupCopy": {
+          "installForAgent": "Instalar para {{value0}}",
+          "installForMore": "Instalar para {{value0}} agentes más",
+          "installedForAgent": "Instalado para {{value0}}",
+          "installedForMore": "Instalado para {{value0}} agentes más",
+          "installedForAgents": "Instalado para {{value0}} agentes",
+          "replacedWithBackup": "Reemplazada · Se guardó una copia de seguridad de tu versión",
+          "attentionUnwritable": "Requiere atención · Orca no puede escribir en {{folder}}",
+          "attentionBusy": "Requiere atención · Otra instalación de habilidades aún está terminando aquí",
+          "attentionUnreadable": "Requiere atención · Orca no puede leer todos los archivos de esta copia",
+          "attentionEdited": "Requiere atención · Editaste esta copia",
+          "attentionOther": "Requiere atención · Otra habilidad ya usa este nombre",
+          "attentionSharedNotCurrent": "Requiere atención · La copia compartida que usa esta carpeta no es de Orca",
+          "resultUpdateSkippedPlaces": "{{result}} · Actualización omitida en {{places}} ubicaciones: {{reason}}",
+          "resultUpdateSkippedAgent": "{{result}} · Actualización omitida en {{agent}}: {{reason}}"
         }
       },
       "right": {
@@ -14580,11 +14581,6 @@
           "yoloModeLabel": "Modo Yolo",
           "yoloPermissionsDescription": "Los agentes ejecutan comandos y editan archivos sin preguntar, y algunos también omiten su sandbox. Úsalo solo en proyectos de confianza."
         },
-        "FeatureSetupInlineTerminal": {
-          "789b59936e": "Pulsa Enter para ejecutar el comando y confirma npx si se te solicita. También puedes configurarlo más tarde en Configuración.",
-          "47fc6cc6dc": "Comando de configuración de skills",
-          "c767ab7061": "Configuración de skills"
-        },
         "IntegrationsStep": {
           "277f30eb34": "Linear, GitLab, Bitbucket, Azure DevOps, Gitea y Jira se encuentran en Configuración > Integraciones.",
           "3a3e360289": "Más fuentes de tareas",
@@ -14731,6 +14727,11 @@
               }
             }
           }
+        },
+        "FeatureSetupInlineTerminal": {
+          "789b59936e": "Pulsa Enter para ejecutar el comando y confirma npx si se te solicita. También puedes configurarlo más tarde en Configuración.",
+          "47fc6cc6dc": "Comando de configuración de skills",
+          "c767ab7061": "Configuración de skills"
         }
       },
       "new": {
@@ -15130,10 +15131,8 @@
             "c61c91e642": "Permite que los agentes se coordinen a través de Orca para mantener en marcha tareas grandes de varios pasos hasta completarlas.",
             "ac07f8887f": "Orquestación de agentes",
             "e9eb197e12": "Permisos de uso de computadora abiertos",
-            "3a59452a67": "Comando de skill copiado e insertado abajo para revisarlo.",
             "c605f51f2b": "Configuración de capacidades lista",
             "1aa657d8f4": "La configuración de algunas capacidades necesita atención",
-            "allInstalled": "Todas las skills instaladas",
             "installSkills": "Instalar skills"
           },
           "AiCommitPrSettingsCard": {
@@ -15469,7 +15468,6 @@
             "c9728107c5": "Pruébalo",
             "25dd101f15": "La configuración del navegador necesita atención",
             "e02b11e6b0": "Configuración del navegador lista",
-            "d6d15077df": "Comando de skill copiado e insertado abajo para revisarlo.",
             "78e65f19d9": "La configuración del navegador falló",
             "b7345c18db": "Se produjo un error inesperado.",
             "5f97caf76b": "Instalando…"
@@ -15514,15 +15512,6 @@
             "badb4fc342": ">",
             "22e62f3bab": "Sesión de Claude Code iniciada"
           },
-          "CliSkillSetupTerminal": {
-            "1953e90447": "Presiona Enter para instalar el skill de orquestación de la CLI de Orca para tus agentes.",
-            "43b60ec5c3": "Terminal de instalación de CLI de Orca y skill de orquestación",
-            "84e9576dac": "Configuración de skill",
-            "5c3aee22c0": "Copiar comando",
-            "5eca672aac": "Copiar comando de instalación de skill",
-            "6ff813fc1d": "No se pudo copiar el comando de skill.",
-            "b8ad063571": "Comando de instalación de skill copiado."
-          },
           "CmdJPaletteTipDialog": {
             "c0bb9f869b": "Configuración → Atajos",
             "8241897205": "Puedes reasignar el atajo en cualquier momento en"
@@ -15549,6 +15538,19 @@
             "d20ccf1e61": "hecho",
             "379d776971": "escribiendo",
             "0418f9becc": "abierto"
+          },
+          "CliSkillSetupPanel": {
+            "title": "Configuración de skill",
+            "description": "Instala las habilidades de la CLI de Orca y de orquestación para tus agentes."
+          },
+          "CliSkillSetupTerminal": {
+            "6ff813fc1d": "No se pudo copiar el comando de skill.",
+            "1953e90447": "Presiona Enter para instalar el skill de orquestación de la CLI de Orca para tus agentes.",
+            "84e9576dac": "Configuración de skill",
+            "43b60ec5c3": "Terminal de instalación de CLI de Orca y skill de orquestación",
+            "5c3aee22c0": "Copiar comando",
+            "5eca672aac": "Copiar comando de instalación de skill",
+            "b8ad063571": "Comando de instalación de skill copiado."
           }
         }
       },
@@ -15643,9 +15645,7 @@
           },
           "MobileEmulatorAgentSetupGuideSteps": {
             "21f5687c07": "Skill del CLI de Orca",
-            "64fb057667": "Enseña a los agentes los comandos orca del emulador para este worktree.",
-            "5c59ea96ca": "Configuración de la skill de Orca CLI para Mobile Emulator",
-            "bff5341ac3": "Terminal de instalación de la skill de Orca CLI para Mobile Emulator"
+            "64fb057667": "Enseña a los agentes los comandos orca del emulador para este worktree."
           },
           "MobileEmulatorTabIntroCallout": {
             "1924982130": "Descartar",
@@ -16366,7 +16366,13 @@
         "editor": {
           "save": {
             "notUtf8": {
-              "notice": "La función de guardado automático está pausada para {{name}} porque no es texto UTF-8. Guárdalo manualmente para convertirlo a UTF-8."
+              "notice": "El autoguardado está en pausa para {{name}} porque no es texto UTF-8. Si lo guardas tú, se reescribe como UTF-8 y se reemplazan los caracteres que no son UTF-8 válido.",
+              "refused": "Este archivo no es texto UTF-8, así que no se guardó.",
+              "confirm": {
+                "title": "¿Guardar {{name}} como UTF-8?",
+                "description": "Este archivo no es texto UTF-8. Al guardarlo como UTF-8, los caracteres que no son UTF-8 válido se reemplazan por � y los bytes originales no se pueden recuperar.",
+                "action": "Guardar como UTF-8"
+              }
             },
             "failure": {
               "notice": {

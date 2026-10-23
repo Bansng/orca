@@ -1,10 +1,15 @@
-import { refused, type ConnectorRefusal, type Delivery } from './external-conversation-types'
+import {
+  CONNECTOR_REFUSALS,
+  refused,
+  type ConnectorRefusal,
+  type Delivery
+} from './external-conversation-types'
 
 type Lane = { controller: AbortController; signal: AbortSignal; tail: Promise<unknown> }
 
 /** Why an aborted conversation signal stopped: the seam's disable, or this conversation's cancel. */
 export function refusalOf(signal: AbortSignal): ConnectorRefusal {
-  return signal.reason === 'agent_not_reachable' ? 'agent_not_reachable' : 'connectors_disabled'
+  return CONNECTOR_REFUSALS.find((reason) => reason === signal.reason) ?? 'connectors_disabled'
 }
 
 /**

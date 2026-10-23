@@ -52,8 +52,6 @@ import { sidebarInputsFeedDomains } from './sidebar-inputs/sidebar-inputs-feed-d
 import { requireSwitchedOn } from './sidebar-inputs/require-switched-on'
 import { HEADLESS_RUNTIME_WINDOW_ID } from '../../shared/runtime-session-contracts'
 import { getHostDisplayLabelOverrides } from '../../shared/host-setting-overrides'
-import { installExternalConversations } from '../external-conversations/external-conversations-install'
-import type { ExternalConversationSeam } from '../external-conversations/external-conversation-seam'
 
 // Switch point: a window-fed build keeps no sidebar facts layer.
 const OrcaRuntimeSidebarBase: typeof OrcaRuntimeWithAgentTransitions = ORCA_SIDEBAR_INPUTS_IS_MAIN
@@ -178,13 +176,6 @@ class OrcaRuntimeService extends OrcaRuntimeSidebarBase {
   }
 
   private structuredAgentAvailability?: ReturnType<typeof installStructuredAgentAvailability>
-
-  private readonly externalConversations = installExternalConversations(this.store, this)
-
-  /** The connector seam while `experimentalConnectors` is on; null refuses every connector call. */
-  getExternalConversationSeam(): ExternalConversationSeam | null {
-    return this.externalConversations.current()
-  }
 
   /** This host's agent health snapshot and every replacement, from first use; returns the release. */
   subscribeStructuredAgentAvailability(read: StructuredAgentAvailabilityReader): () => void {

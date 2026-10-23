@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { RuntimeClientError } from '../runtime-client'
-import { callConnector, formatConnectorStart } from './connector'
+import { callConnector, formatConnectorStart, formatDelivery } from './connector'
 
 function refusingClient(code: string) {
   return {
@@ -30,6 +30,15 @@ describe('orca connector', () => {
     )
     expect(formatConnectorStart({ outcome: 'unknown', reason: 'replayed_after_restart' })).toBe(
       'prompt unknown: replayed_after_restart'
+    )
+  })
+
+  it('says when a send reopened a closed agent', () => {
+    expect(formatDelivery({ outcome: 'accepted', reopened: true })).toBe(
+      'accepted (reopened the agent)'
+    )
+    expect(formatDelivery({ outcome: 'refused', reason: 'agent_asleep_in_window' })).toBe(
+      'refused: agent_asleep_in_window'
     )
   })
 })

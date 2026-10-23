@@ -4,10 +4,13 @@ import { printResult } from '../format'
 import { RuntimeClientError } from '../runtime-client'
 import { getRequiredWorktreeSelector } from '../selectors'
 
-type ConnectorDelivery = { outcome: string; reason?: string }
+type ConnectorDelivery = { outcome: string; reason?: string; reopened?: boolean }
 
-function formatDelivery(delivery: ConnectorDelivery): string {
-  return delivery.reason ? `${delivery.outcome}: ${delivery.reason}` : delivery.outcome
+export function formatDelivery(delivery: ConnectorDelivery): string {
+  if (delivery.reason) {
+    return `${delivery.outcome}: ${delivery.reason}`
+  }
+  return delivery.reopened ? `${delivery.outcome} (reopened the agent)` : delivery.outcome
 }
 
 /** `unknown` cannot say whether this call started the agent, so only the definite answers claim it. */
