@@ -79,11 +79,17 @@ export function cloneClaudeSessionParseState(
 }
 
 export function consumeClaudeSessionLine(state: ClaudeSessionParseState, line: string): void {
-  const { accumulator } = state
   const record = parseJsonObject(line)
-  if (!record) {
-    return
+  if (record) {
+    consumeClaudeSessionRecord(state, record)
   }
+}
+
+export function consumeClaudeSessionRecord(
+  state: ClaudeSessionParseState,
+  record: Record<string, unknown>
+): void {
+  const { accumulator } = state
 
   if (typeof record.sessionId === 'string' && record.sessionId.trim()) {
     accumulator.sessionId = record.sessionId.trim()
