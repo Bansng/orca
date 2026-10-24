@@ -60,7 +60,7 @@ vi.mock('@/runtime/runtime-rpc-client', async (importOriginal) =>
 )
 
 import { useTerminalWatcherEffects } from '../use-terminal-watcher-effects'
-import { beginStructuredAgentSessionProvisionalLaunch } from '@/lib/structured-agent-session-provisional-tab'
+import { beginStructuredAgentSessionProvisionalLaunch } from '@/lib/agent-session/structured-agent-session-provisional-tab'
 import { isEmptyWorkspaceDefaultSurfacePending } from '@/lib/empty-workspace-default-surface-claims'
 import type { AgentSessionLaunchPlan } from '@/lib/agent-session-launch-plan'
 import type { Tab } from '../../../../shared/tab-types'

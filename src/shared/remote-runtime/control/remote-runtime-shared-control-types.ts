@@ -2,7 +2,10 @@ import type { RuntimeRpcResponse } from '../../runtime-rpc-envelope'
 import type { RemoteRuntimeClientError } from '../../remote-runtime-client-error'
 import type { RemoteRuntimePreparedRequest } from '../requests/remote-runtime-prepared-request-admission'
 import type { RuntimeCapability } from '../../protocol-version'
-import type { RemoteRuntimeSocketLivenessOptions } from '../../remote-runtime-socket-liveness'
+import type {
+  RemoteRuntimeSocketDeathCause,
+  RemoteRuntimeSocketLivenessOptions
+} from '../../remote-runtime-socket-liveness'
 
 export type SharedControlConnectionState =
   | 'closed'
@@ -71,6 +74,45 @@ export type RemoteRuntimeSharedConnectionDiagnostics = {
   lastConnectedAt: number | null
   lastClose: { code: number; reason: string } | null
   lastError: string | null
+  /** Why the last socket closed; cleared when a socket becomes ready, like lastClose. */
+  lastCloseCause?: SharedControlSocketCloseCause
+  /** Last keepalive ping round trip; absent until one is measured. Not a publish trigger. */
+  lastRttMs?: number
+}
+
+export type SharedControlSocketCloseCause =
+  | RemoteRuntimeSocketDeathCause
+  | 'socket_close'
+  | 'socket_error'
+  | 'protocol_error'
+  | 'local'
+
+export type SharedControlSocketClosed = (
+  error: RemoteRuntimeClientError,
+  socketGeneration: number,
+  cause: SharedControlSocketCloseCause
+) => void
+
+export type SharedControlSocketClose = {
+  cause: SharedControlSocketCloseCause
+  errorCode: string | null
+}
+
+export type CloseSocketOptions = {
+  preserveReadyWaitersAndPendingRequests?: boolean
+  close?: SharedControlSocketClose
+}
+
+/** One closed control socket, for diagnostics; carries no hostnames, tokens or payloads. */
+export type SharedControlSocketCloseRecord = SharedControlSocketClose & {
+  closeCode: number | null
+  state: SharedControlConnectionState
+  lastRttMs: number | null
+  socketUptimeMs: number | null
+  readyUptimeMs: number | null
+  reconnectAttempt: number
+  pendingRequestCount: number
+  subscriptionCount: number
 }
 export type RemoteRuntimeSharedControlConnectionOptions = {
   environmentId?: string
@@ -82,6 +124,8 @@ export type RemoteRuntimeSharedControlConnectionOptions = {
   /** Any inbound frame, ping or pong on the current socket. */
   onAnswered?: () => void
   reconnectStableResetMs?: number
+  /** Every socket close with its cause, e.g. for the diagnostics trace. */
+  onSocketClosed?: (record: SharedControlSocketCloseRecord) => void
   liveness?: RemoteRuntimeSocketLivenessOptions
   /**
    * The server refused this socket's token. Null leaves the usual reconnect; a promise means the

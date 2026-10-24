@@ -1038,6 +1038,7 @@
       },
       "webRuntimeSession": {
         "remoteHostDisconnected": "O espaço de trabalho não está conectado a um host Orca remoto.",
+        "splitSourceUnpublished": "O painel não foi dividido: o terminal ainda não foi iniciado no host.",
         "terminalCreateUnconfirmed": "O Orca não conseguiu confirmar que o novo terminal foi aberto no host."
       },
       "gitlabJobTraceClient": {
@@ -7699,6 +7700,11 @@
           "191ac34567": "Orquestração de Agentes",
           "nestedWorkerDepthTitle": "Profundidade de worker aninhado",
           "nestedWorkerDepthDescription": "Quantas gerações de workers despachados podem gerar seus próprios workers. 1 mantém a árvore de agentes plana: um coordenador despacha workers, e esses workers não despacham.",
+          "chatErrorEscalationTitle": "Avisar o coordenador sobre erros do chat",
+          "chatErrorEscalationDescription": "Quando um agente atribuído encontra um erro que encerra seu turno, envia o erro exato ao coordenador que o atribuiu. A tarefa continua atribuída ao agente. Funciona apenas para agentes executados na interface de chat.",
+          "chatErrorEscalationNeedsChat": "Ative a interface de chat nas configurações experimentais para usar.",
+          "chatErrorEscalationKeywordError": "erro",
+          "chatErrorEscalationKeywordChat": "chat",
           "7bc082f4de": "Copiar comando de instalação"
         },
         "RuntimeAccessGrantList": {
@@ -12200,6 +12206,7 @@
           "759463a221": "Não é possível abrir o diretório: {{value0}}"
         },
         "EditorPanelHeader": {
+          "readOnlyBadge": "Somente leitura",
           "fb8331694e": "Abrir Pré-visualização ao Lado",
           "4157f3cbf3": "Abrir Pré-visualização de Markdown",
           "269ce4842b": "Copiar Caminho Relativo",
@@ -15515,7 +15522,11 @@
             "downloadOpenWithDefaultApp": "Baixar e abrir com o aplicativo padrão",
             "downloadOpenFailed": "Falha ao baixar '{{value0}}'.",
             "openInThisGroup": "Abrir neste grupo",
-            "openInThisGroupRefused": "Não foi possível abrir {{value0}} neste grupo"
+            "openInThisGroupRefused": "Não foi possível abrir {{value0}} neste grupo",
+            "fileInOtherWorkspace": "Este arquivo está em {{value0}}",
+            "fileInAnotherWorkspace": "Este arquivo está em outro espaço de trabalho",
+            "openInOwningWorkspace": "Abrir lá",
+            "openedHereReadOnly": "Aberto aqui como somente leitura"
           },
           "MobileDriverOverlay": {
             "c6460cf584": "Retomar",
@@ -15636,13 +15647,28 @@
             "c337c9d75c": "Fechar"
           },
           "TerminalRemoteRuntimeReconnectBanner": {
-            "retryingTitle": "Reconectando ao runtime remoto",
             "disconnectedTitle": "Runtime remoto desconectado",
-            "retryingBody": "O Orca vai tentar novamente por até um minuto. Este terminal vai retomar se a conexão voltar.",
             "disconnectedBody": "As tentativas automáticas foram interrompidas. Reconecte para retomar esta sessão de terminal.",
             "reconnectButton": "Reconectar",
             "pairingRefusedTitle": "Este host não aceita mais este computador",
-            "pairingRefusedBody": "O Orca não conseguiu parear com ele novamente via SSH. Nada no host foi interrompido. Reconecte para tentar novamente."
+            "pairingRefusedBody": "O Orca não conseguiu parear com ele novamente via SSH. Nada no host foi interrompido. Reconecte para tentar novamente.",
+            "signInTitle": "Aguardando login SSH",
+            "signInBody": "Este terminal continua sozinho quando você entrar no host.",
+            "signInButton": "Entrar",
+            "serverRestartingTitle": "{{server}} está reiniciando",
+            "serverRestartingBody": "O Orca se reconecta quando o servidor voltar, e os terminais são retomados nesse momento.",
+            "streamStalledTitle": "O terminal parou de responder",
+            "streamStalledBody": "{{server}} parou de enviar a saída deste terminal. O Orca está reconectando-o automaticamente.",
+            "sessionEndedTitle": "Reconectando o terminal",
+            "sessionEndedBody": "{{server}} fechou o fluxo deste terminal. O Orca está reconectando-o automaticamente.",
+            "waitingTitle": "Aguardando {{server}}",
+            "waitingBody": "O Orca reconecta este terminal quando o servidor o oferecer de novo ou a conexão mudar. Clique em Reconectar para tentar agora.",
+            "downFor": "Sem conexão há {{duration}}",
+            "tailscaleHint": "Verifique o caminho do Tailscale:",
+            "fallbackServerName": "o servidor",
+            "connectionLostTitle": "Reconectando a {{server}}",
+            "connectionLostBody": "A conexão com o servidor caiu. O Orca está tentando novamente de forma automática, e os terminais serão retomados quando ela voltar.",
+            "reattachingBody": "O Orca está reconectando este terminal a {{server}} automaticamente."
           },
           "TerminalPane": {
             "ac112e9036": "Remover título",

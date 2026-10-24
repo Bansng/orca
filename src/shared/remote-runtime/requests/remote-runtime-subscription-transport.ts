@@ -1,4 +1,4 @@
-import { closeRemoteRuntimeSocket } from '../../remote-runtime-socket-close'
+import { closeRemoteRuntimeSocket } from '../remote-runtime-socket-close'
 import { throwIfSignalAborted, abortSignalReason } from '../../abort-signal-reason'
 import { randomUUID } from 'node:crypto'
 import WebSocket from 'ws'
@@ -12,7 +12,7 @@ import { RemoteRuntimeClientError } from '../../remote-runtime-client-error'
 import {
   remoteRuntimeConnectFailureMessage,
   remoteRuntimeConnectOptions
-} from '../../remote-runtime-connect-bound'
+} from '../remote-runtime-connect-bound'
 import {
   isRemoteRuntimeBinaryFrameWithinLimit,
   REMOTE_RUNTIME_MAX_WEBSOCKET_FRAME_BYTES,
