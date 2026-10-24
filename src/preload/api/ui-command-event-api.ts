@@ -3,7 +3,10 @@ import type {
   RuntimeFileOpenPosition
 } from '../../shared/runtime-file-contracts'
 import type { JiraQuickFilterState } from '../../shared/jira-quick-filters'
-import type { JiraSavedFilterState, JiraSavedFilterMutation } from '../../shared/jira-saved-filters'
+import type {
+  JiraSavedFilterState,
+  JiraSavedFilterMutation
+} from '../../shared/jira/jira-saved-filters'
 import type { MarkdownDocument } from '../../shared/filesystem-entry-types'
 import type { PersistedUIState } from '../../shared/persisted-ui-state-types'
 import type { TuiAgent } from '../../shared/tui-agent'

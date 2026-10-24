@@ -40,8 +40,8 @@ import {
   remoteRuntimeReadyError,
   remoteRuntimeTimeoutError,
   remoteRuntimeUnavailableError
-} from './remote-runtime-request-frames'
-import { formatSharedControlCloseMessage } from './remote-runtime-shared-control-protocol'
+} from './remote-runtime/requests/remote-runtime-request-frames'
+import { formatSharedControlCloseMessage } from './remote-runtime/control/remote-runtime-shared-control-protocol'
 import { RuntimeRpcCallQueueOverloadError } from './runtime-rpc-call-queue'
 import { withRemoteRuntimeTailscaleHint } from './remote-runtime-tailscale-hint'
 import { MAX_TIMER_DELAY_MS } from './timer-delay'

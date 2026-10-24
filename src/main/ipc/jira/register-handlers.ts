@@ -26,7 +26,7 @@ import type {
   JiraIssueListFilters,
   JiraIssueUpdate,
   JiraSiteSelection
-} from '../../../shared/jira-types'
+} from '../../../shared/jira/jira-types'
 
 const VALID_FILTERS = new Set<JiraIssueFilter>(['assigned', 'reported', 'all', 'done'])
 const issueSummaryRequests = new JiraCancellableRequests()

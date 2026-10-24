@@ -184,6 +184,7 @@ describe('terminal file links carry their source tab', () => {
 
   it('keeps automatic HTML opens on their existing browser route', async () => {
     setPlatform('Macintosh')
+    storeState.settings = { openLinksInApp: true }
     seedSourceTab()
 
     openDetectedFilePath('/tmp/report.html', null, null, sourceDeps)

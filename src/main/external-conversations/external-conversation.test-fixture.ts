@@ -28,10 +28,7 @@ export const LOCAL_REPO: Repo = {
 
 type LinkRow = { externalConversations?: unknown; hostId?: ExecutionHostId }
 
-/**
- * The real store's two projections: each host's canonical rows, and the locator-keyed map that
- * keeps only the first host to write an id.
- */
+/** Model canonical host rows separately from the locator map that keeps the first same-path host. */
 export function fakeLinkStore(repos: Repo[] = [LOCAL_REPO]) {
   const byHost = new Map<ExecutionHostId, Record<string, LinkRow>>()
   const legacy: Record<string, LinkRow> = {}
@@ -101,7 +98,6 @@ export function launchResult(
   }
 }
 
-/** Publishes, then settles as `settle` says; `workspace` is the pane's host-qualified workspace. */
 export function fakeLauncher(
   settle: () => Promise<AgentLaunchResult>,
   workspace: AgentPaneWorkspace = { worktreeId: WORKTREE, sshHostId: null },
@@ -130,7 +126,6 @@ type WriteOptions = {
   expectedBinding?: { ptyId: string; processIncarnation: string }
 }
 
-/** A hook row naming the agent's session in `paneKey`, as the hook store reports it. */
 export function sessionRow(
   paneKey: string,
   connectionId: string | null = null,
@@ -148,12 +143,7 @@ export function sessionRow(
   }
 }
 
-/**
- * A terminal whose prompt writer keeps the shared writer's order: hold while blocked (under
- * `wait`), then the binding fence, the guard, the signal, and the write. Its hook store names
- * the session in the agent's pane while the agent runs; its safe resume refuses as a pane that
- * may still hold the session does, until `reopenable` lets it resume into a fresh pane.
- */
+/** Preserve writer ordering: approval wait, binding fence, guard, abort check, then write. */
 export function fakeTerminal() {
   const state: {
     ptyId: string | null
@@ -171,6 +161,8 @@ export function fakeTerminal() {
   const current = (): string =>
     `inc-${state.ptyId}${state.incarnation > 1 ? `-${state.incarnation}` : ''}`
   const writes: string[] = []
+  /** Raw keys written outside the prompt writer: prompt answers. */
+  const keys: string[] = []
   const waiters = new Set<(error?: Error) => void>()
   const hold = (signal: AbortSignal | undefined): Promise<void> =>
     new Promise((resolve, reject) => {
@@ -210,6 +202,20 @@ export function fakeTerminal() {
       return { handle, accepted: true, bytesWritten: 1 }
     }
   )
+  const sendTerminal = vi.fn(
+    async (
+      handle: string,
+      action: { text?: string },
+      options: { beforeWrite?: (ptyId: string) => unknown }
+    ): Promise<RuntimeTerminalSend> => {
+      if (!state.ptyId) {
+        throw new Error('terminal_not_writable')
+      }
+      await options.beforeWrite?.(state.ptyId)
+      keys.push(action.text ?? '')
+      return { handle, accepted: true, bytesWritten: 1, writeSettlement: { outcome: 'accepted' } }
+    }
+  )
   const resumeAgentSessionInWorkspace = vi.fn(
     async (
       _worktreeId: string,
@@ -234,6 +240,7 @@ export function fakeTerminal() {
       return { ptyId: state.ptyId, processIncarnation: current(), generation: 1 }
     },
     sendTerminalAgentPrompt,
+    sendTerminal,
     readLaunchedAgentForeground: vi.fn(
       async (_ptyId: string): Promise<LaunchedAgentForeground> => 'agent'
     ),
@@ -248,10 +255,11 @@ export function fakeTerminal() {
     terminal,
     state,
     writes,
+    keys,
+    sendTerminal,
     sendTerminalAgentPrompt,
     resumeAgentSessionInWorkspace,
     waitForFreshWorkerComposer,
-    /** The safe resume starts the session in a fresh pane, as after a proven exit or a closed tab. */
     reopenable() {
       resumeAgentSessionInWorkspace.mockImplementation(async () => {
         state.paneKey = REOPENED_PANE
@@ -261,7 +269,6 @@ export function fakeTerminal() {
       })
     },
 
-    /** Holds waiting on the approval. */
     held: () => waiters.size,
     answer() {
       state.blocked = false
@@ -271,7 +278,7 @@ export function fakeTerminal() {
       state.ptyId = null
       ;[...waiters].forEach((settle) => settle(new Error('terminal_not_writable')))
     },
-    /** A new process in the same pane and PTY id; `answer` then hands held writes to it. */
+    /** Replace the process without changing pane or PTY IDs, exercising the incarnation fence. */
     replace() {
       state.incarnation += 1
     }

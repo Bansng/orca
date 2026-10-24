@@ -37,6 +37,7 @@ import { getCurrentMainWindow } from './ssh-ipc-context'
 import { broadcastSshState } from './ssh-renderer-broadcast'
 import { connectInFlight } from './ssh-connect-attempt-registry'
 import { startLegacyRelayBridge } from '../../ssh/legacy-relay/legacy-relay-bridge-registry'
+import { isBridgeableLease } from '../../ssh/legacy-relay/legacy-relay-bridge-leases'
 
 export function hostServerOnConnectDeps(userDataPath: string): HostServerOnConnectDeps {
   const registry = getSshTargetRegistryStore()!
@@ -108,6 +109,7 @@ export function hostServerOnConnectDeps(userDataPath: string): HostServerOnConne
         // The connect's own census already answered; a conversion before any session reuses it.
         censusHost: (host) =>
           hostProof ? Promise.resolve(hostProof) : censusHostRelayTerminalsFor(host)(),
+        isBridgedPaneLease: isBridgeableLease,
         // Why no releaseDirectSession: a disconnect here would cancel the connect that asked for it.
         destinationFor: orcadMigrationDestinationFor,
         serverRepositoriesFor: orcadServerRepositoriesFor,

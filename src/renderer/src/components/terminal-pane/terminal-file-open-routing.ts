@@ -1,4 +1,3 @@
-import { absolutePathToFileUri } from '@/components/editor/markdown-internal-links'
 import { getWorkspaceFilePreviewPlan, openFileInBrowserTab } from '@/lib/file-preview'
 import { downloadAndOpenRemoteTerminalFile } from './terminal-remote-file-download-open'
 import { findWorkspaceFileRoute } from '@/lib/runtime-workspace-file-route'
@@ -27,7 +26,8 @@ import {
 } from './terminal-host-workspace-file'
 import { isFloatingWorkspaceId } from '../../../../shared/floating-workspace-worktree'
 import { captureEditorOpenLinkIntent } from '@/store/slices/editor/tabs/editor-open-target-group'
-import { cancelPendingEditorLineRevealFrames } from '@/store/slices/editor/focus/editor-focus-reveal'
+import { reserveDetectedFilePathOpenTurn } from './terminal-file-open-turn'
+import { openHtmlFileInBrowser } from './terminal-html-file-browser-open'
 import { showOpenInGroupRefusedToast } from './terminal-file-open-in-group-toast'
 import { isExplicitEditorScopeKept, openLinkedFileInEditor } from './terminal-file-link-editor-open'
 
@@ -39,6 +39,11 @@ export {
   type TerminalFileContext
 } from './terminal-file-path-mapping'
 import { runtimeTargetEnvironmentId } from '@/runtime/runtime-client-target'
+import {
+  httpLinkDirectClickDestination,
+  type HttpLinkDestination
+} from '@/lib/http-link-destinations'
+import { isHtmlFilePath, localHtmlFileDestinations } from './local-html-file-destinations'
 
 export type FileOpenFailure = {
   /** `missing` is a verified absence; `unverifiable` means the host could not answer (dropped SSH, timeout, denied path). */
@@ -51,7 +56,10 @@ type TerminalFileOpenDeps = {
   worktreePath: string
   runtimeEnvironmentId?: string | null
   wslDistro?: string | null
+  /** Shift+modifier: the OS default app, or the other link-routing browser for a local HTML file. */
   openWithSystemDefault?: boolean
+  /** Where a local HTML file opens, chosen from its popover; otherwise link routing decides. */
+  browserDestination?: HttpLinkDestination
   /** The paired-server terminal that printed the link; lets its host grant a file outside workspaces. */
   terminalHandle?: string | null
   /** Reports a path that could not be verified before opening; skipped once a later open supersedes it. */
@@ -62,34 +70,10 @@ type TerminalFileOpenDeps = {
   openInSourceGroup?: boolean
 }
 
-export function isHtmlFilePath(filePath: string): boolean {
-  return /\.html?$/i.test(filePath)
-}
-
-function openHtmlFileInBrowser(filePath: string, worktreeId: string, clientLocal: boolean): void {
-  const store = useAppStore.getState()
-  if (worktreeId) {
-    // Why: following an HTML file link changes which worktree is foregrounded,
-    // so it must record a history visit before opening the browser tab — but the
-    // browser tab is the surface, so an emptied workspace must not gain a shell.
-    activateAndRevealWorktree(worktreeId, { providesInitialSurface: true })
-  }
-  const fileUrl = absolutePathToFileUri(filePath)
-  const title = filePath.split(/[/\\]/).pop() ?? filePath
-  store.createBrowserTab(worktreeId, fileUrl, {
-    title,
-    activate: true,
-    // Why: the file is on this computer, so the workspace's paired-server runtime must not adopt the page.
-    ...(clientLocal ? { browserRuntimeEnvironmentId: null } : {})
-  })
-}
-
 export function shouldOpenTerminalFileWithSystemDefault(fileContext: TerminalFileContext): boolean {
   // Why: an unresolved owner has no connectionId either, which would otherwise read as local.
   return fileContext.sourceHostResolved && canClientOsOpenWorkspaceFile(fileContext)
 }
-
-let latestOpenDetectedFilePathRequestId = 0
 
 export function openDetectedFilePath(
   filePath: string,
@@ -104,8 +88,7 @@ export function openDetectedFilePath(
     worktreePath,
     terminalLinkWslDistro(deps.wslDistro, runtimeEnvironmentId)
   )
-  const requestId = ++latestOpenDetectedFilePathRequestId
-  cancelPendingEditorLineRevealFrames()
+  const isCurrentOpen = reserveDetectedFilePathOpenTurn()
   // Why: capture at activation; focus may move while the host resolves the path.
   const linkIntent = captureEditorOpenLinkIntent(
     useAppStore.getState(),
@@ -119,7 +102,7 @@ export function openDetectedFilePath(
     if (!explicitGroupRequest) {
       return false
     }
-    if (requestId === latestOpenDetectedFilePathRequestId) {
+    if (isCurrentOpen()) {
       showOpenInGroupRefusedToast(mappedFilePath)
     }
     return true
@@ -153,7 +136,7 @@ export function openDetectedFilePath(
         // Why: root workspace switching must work for SSH/runtime paths without
         // local auth/stat, while still coalescing provider + fallback clicks.
         await Promise.resolve()
-        if (requestId !== latestOpenDetectedFilePathRequestId) {
+        if (!isCurrentOpen()) {
           return
         }
         activateAndRevealWorktree(worktreeRootLink.id, {
@@ -191,7 +174,7 @@ export function openDetectedFilePath(
         statResult = await statUserOpenedPath(fileContext, mappedFilePath)
       }
     } catch (error) {
-      if (requestId === latestOpenDetectedFilePathRequestId && deps.onOpenFailure) {
+      if (isCurrentOpen() && deps.onOpenFailure) {
         // Why: loss of contact with the host is not evidence the file is gone.
         deps.onOpenFailure({
           verdict: isMissingRuntimePathError(error) ? 'missing' : 'unverifiable',
@@ -201,12 +184,26 @@ export function openDetectedFilePath(
       return
     }
 
-    if (requestId !== latestOpenDetectedFilePathRequestId) {
+    if (!isCurrentOpen()) {
       return
     }
 
     const canOpenWithSystemDefault = shouldOpenTerminalFileWithSystemDefault(fileContext)
-    if (openWithSystemDefault && canOpenWithSystemDefault) {
+    // Why: a remote workspace's hint and rows promise Orca before the path resolves, and an
+    // explicit group request falls through so the HTML branch can refuse it.
+    const pageDestination =
+      canOpenWithSystemDefault &&
+      !clientLocal &&
+      hostGrantId === null &&
+      !explicitGroupRequest &&
+      isHtmlFilePath(mappedFilePath)
+        ? (deps.browserDestination ??
+          httpLinkDirectClickDestination(localHtmlFileDestinations(), openWithSystemDefault))
+        : null
+    const opensWithSystemDefault = pageDestination
+      ? pageDestination === 'system'
+      : openWithSystemDefault
+    if (opensWithSystemDefault && canOpenWithSystemDefault) {
       // Why: Shift+Cmd/Ctrl mirrors URL links by escaping Orca and honoring the
       // user's OS file associations without adding editor-specific settings.
       const openedWithSystemDefault = await window.api.shell.openFilePath(
@@ -236,8 +233,8 @@ export function openDetectedFilePath(
       return
     }
 
-    // Why: local HTML files render in Orca's browser for ordinary Cmd/Ctrl-click,
-    // and remain the fallback if Shift+Cmd/Ctrl cannot launch the OS default.
+    // Why: a local HTML file routed to Orca renders in its browser, which also catches a
+    // system-browser open the OS could not launch.
     if (isHtmlFilePath(mappedFilePath) && hostGrantId === null) {
       if (canOpenWithSystemDefault) {
         // Why: Orca's browser has no group placement in v1.
@@ -330,7 +327,7 @@ export function openDetectedFilePath(
       },
       linkIntent,
       { line, column },
-      () => requestId === latestOpenDetectedFilePathRequestId
+      isCurrentOpen
     )
     if (!opened) {
       refuseExplicitNonEditorRoute()

@@ -4,7 +4,18 @@
  * refused here whoever makes it.
  */
 
-import { ConnectorSend, ConnectorStart } from '../../../../shared/rpc-contract/connector-params'
+import { delayUnlessAborted } from '../../../../shared/abort-aware-delay'
+import {
+  ConnectorAnswer,
+  ConnectorPendingPrompt,
+  ConnectorSend,
+  ConnectorStart,
+  ConnectorWatch
+} from '../../../../shared/rpc-contract/connector-params'
+import type {
+  ConversationEvent,
+  ConversationSnapshot
+} from '../../../external-conversations/external-conversation-events'
 import {
   runtimeConversationHost,
   type ExternalConversationSeam
@@ -51,5 +62,54 @@ export const CONNECTOR_METHODS = [
         deliveryId,
         text
       )
+  }),
+  defineMethod({
+    name: 'connector.pendingPrompt',
+    permission: 'workspace',
+    params: ConnectorPendingPrompt,
+    handler: async ({ source, externalId }, context) => ({
+      prompt: requireSeam(context.runtime).pendingPrompt(runtimeConversationHost(context.runtime), {
+        source,
+        externalId
+      })
+    })
+  }),
+  defineMethod({
+    name: 'connector.answer',
+    permission: 'workspace',
+    params: ConnectorAnswer,
+    handler: async ({ source, externalId, promptId, optionId }, context) =>
+      requireSeam(context.runtime).answer(
+        runtimeConversationHost(context.runtime),
+        { source, externalId },
+        promptId,
+        optionId
+      )
+  }),
+  // Development only: the CLI has no stream transport, so a dev watch collects one window.
+  defineMethod({
+    name: 'connector.watch',
+    permission: 'workspace',
+    params: ConnectorWatch,
+    handler: async ({ forMs }, context) => {
+      const seam = requireSeam(context.runtime)
+      let snapshot: ConversationSnapshot | null = null
+      const events: ConversationEvent[] = []
+      const release = seam.watch(runtimeConversationHost(context.runtime), (event) => {
+        if (event.kind === 'snapshot') {
+          snapshot = event
+        } else {
+          events.push(event)
+        }
+      })
+      // A closed connection or a disable ends the window early.
+      const ended = AbortSignal.any([seam.signal, ...(context.signal ? [context.signal] : [])])
+      try {
+        await delayUnlessAborted(forMs, ended)
+      } finally {
+        release()
+      }
+      return { snapshot, events }
+    }
   })
 ]
