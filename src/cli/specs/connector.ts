@@ -38,5 +38,38 @@ export const CONNECTOR_COMMAND_SPECS: CommandSpec[] = [
       ...CONNECTOR_NOTES,
       'Held while the agent is asking for permission, and sent once it is answered.'
     ]
+  },
+  {
+    path: ['connector', 'prompt'],
+    hidden: true,
+    summary: "Show what a dev connector conversation's agent is waiting on",
+    usage: 'orca connector prompt --conversation <id> [--json]',
+    allowedFlags: [...GLOBAL_FLAGS, 'conversation'],
+    notes: [
+      CONNECTOR_NOTES[0],
+      'An approval or a one-question single choice can be answered here; anything else reads unsupported, to answer in Orca.'
+    ]
+  },
+  {
+    path: ['connector', 'answer'],
+    hidden: true,
+    summary: "Answer a dev connector conversation's pending prompt",
+    usage: 'orca connector answer --conversation <id> --prompt-id <id> --option <id> [--json]',
+    allowedFlags: [...GLOBAL_FLAGS, 'conversation', 'prompt-id', 'option'],
+    notes: [
+      CONNECTOR_NOTES[0],
+      'Refused unless --prompt-id is the prompt still pending in the same agent process, so a late answer never types into whatever came next.'
+    ]
+  },
+  {
+    path: ['connector', 'watch'],
+    hidden: true,
+    summary: 'Collect connector conversation events for a while',
+    usage: 'orca connector watch [--for-ms <ms>] [--json]',
+    allowedFlags: [...GLOBAL_FLAGS, 'for-ms'],
+    notes: [
+      CONNECTOR_NOTES[0],
+      'Prints a snapshot of every linked conversation, then each event (linked, prompt, turn-started, turn-ended) seen in the window; --for-ms defaults to 30000.'
+    ]
   }
 ]

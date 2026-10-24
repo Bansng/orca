@@ -48,7 +48,7 @@ describe('DeliveryReceipts ledger capacity', () => {
     expect(db.countPendingMutationReceipts(['connector:dev'])).toBe(CONNECTOR_PENDING_RECEIPT_LIMIT)
     db.close()
 
-    // Process loss, then a restart that never starts connectors.
+    // Reopen without starting connectors to model a process restart before connector initialization.
     const reopened = new OrchestrationDb(path)
     expect(reopened.beginMutationReceipt(ORDINARY).disposition).toBe('started')
     reopened.close()
@@ -88,7 +88,6 @@ describe('DeliveryReceipts ledger capacity', () => {
     expect(
       reopened.getMutationReceipt('connector:dev', JSON.stringify(['thread', '0']))?.state
     ).toBe('completed')
-    // The settled rows no longer hold the connector's budget.
     await expect(after.run(KEY, 'new', 'connector.send', ['hello'], execute)).resolves.toEqual({
       outcome: 'accepted'
     })

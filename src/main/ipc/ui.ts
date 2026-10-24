@@ -3,7 +3,7 @@ import { JiraQuickFilterStateParam } from '../../shared/rpc-contract/jira-quick-
 import {
   normalizeJiraSavedFilterState,
   mutateJiraSavedFilterState
-} from '../../shared/jira-saved-filters'
+} from '../../shared/jira/jira-saved-filters'
 import { JiraSavedFilterMutationParam } from '../../shared/rpc-contract/jira-saved-filter-params'
 import { BrowserWindow, ipcMain, webContents, type WebContents } from 'electron'
 import type { Store } from '../persistence'

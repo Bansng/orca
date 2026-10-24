@@ -7,7 +7,7 @@ import type { VerifyAndAddRuntimeEnvironmentResult } from '../../shared/remote-p
 import type { RuntimeStatus } from '../../shared/runtime-types'
 import type { RuntimeRpcResponse } from '../../shared/runtime-rpc-envelope'
 import type { PublicKnownRuntimeEnvironment } from '../../shared/runtime-environments'
-import type { RemoteRuntimeSharedConnectionDiagnostics } from '../../shared/remote-runtime-shared-control-types'
+import type { RemoteRuntimeSharedConnectionDiagnostics } from '../../shared/remote-runtime/control/remote-runtime-shared-control-types'
 import { RUNTIME_ENVIRONMENT_DIAGNOSTICS_CHANNEL } from '../../shared/runtime-environment-diagnostics'
 import {
   WSL_ORCAD_ACCOUNT_NOT_APPLIED_CHANNEL,

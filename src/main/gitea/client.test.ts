@@ -25,7 +25,6 @@ import { __resetRepoDefaultBranchCacheForTests } from '../source-control/repo-de
 
 const OLD_ENV = process.env
 
-/** Serve the remote URL plus the #9171 default-branch resolver probes. */
 function primeGitExecWithDefaultBranch(defaultRef = 'refs/remotes/origin/main'): void {
   gitExecFileAsyncMock.mockImplementation(async (args: string[]) => {
     if (args[0] === 'remote') {
@@ -255,10 +254,8 @@ describe('Gitea client', () => {
     const fetchMock = vi.fn(async () => Response.json({ message: 'unauthorized' }, { status: 403 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    // The swallowing variant returns null — indistinguishable from "no PR".
     await expect(getGiteaPullRequestForBranch('/repo', 'feature/gitea')).resolves.toBeNull()
-    // The throwing variant makes the failure visible so eligibility records
-    // `unavailable` rather than a false "No pull request found".
+    // Strict lookup must distinguish unavailable transport from a confirmed missing review.
     await expect(getGiteaPullRequestForBranchOrThrow('/repo', 'feature/gitea')).rejects.toThrow(
       /Gitea request failed/
     )

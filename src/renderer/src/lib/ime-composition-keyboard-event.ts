@@ -24,6 +24,9 @@ type ImeKeyGestureEvent = Pick<
   'key' | 'keyCode' | 'nativeEvent' | 'preventDefault' | 'shiftKey'
 > & { altKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }
 
+// Hangul has no candidate step, so the Enter that commits it is the user's own Enter.
+const HANGUL_ONLY = /^\p{Script=Hangul}+$/u
+
 /**
  * Why: the key that ends a CJK composition arrives as two keydowns: Enter confirming a
  * candidate, and Escape in macOS Korean. The two orderings differ by platform. Windows/Linux
@@ -36,9 +39,9 @@ export function useImeKeyGestureOwnership(key: 'Enter' | 'Escape'): {
   isComposing: () => boolean
   ownsKeyDown: (event: ImeKeyGestureEvent) => boolean
   onKeyUp: (event: Pick<ImeKeyGestureEvent, 'key' | 'keyCode'>) => void
-  onCompositionEnd: () => void
+  onCompositionEnd: (committedText?: string) => void
   reset: () => void
-  setComposing: (active: boolean) => void
+  setComposing: (active: boolean, committedText?: string) => void
 } {
   const stateRef = useRef<{ composing: boolean; pendingKey: object | null }>({
     composing: false,
@@ -60,6 +63,9 @@ export function useImeKeyGestureOwnership(key: 'Enter' | 'Escape'): {
       }
     }
     // Shift+Enter is a newline, never a submit — it must never be owned or swallowed.
+    // Only Enter is the user's own after Hangul; macOS Korean still redispatches an unmarked Escape.
+    const endsGestureWithoutCarry = (committedText: string): boolean =>
+      key === 'Enter' && HANGUL_ONLY.test(committedText)
     const isPlainKey = (event: ImeKeyGestureEvent): boolean =>
       event.key === key && event.keyCode === KEY_CODES[key] && !event.shiftKey
     // The redispatched Enter of a confirm carries no modifiers, so a chorded one is the
@@ -102,18 +108,23 @@ export function useImeKeyGestureOwnership(key: 'Enter' | 'Escape'): {
         // Any keyup can precede the redispatch, including an IME-owned Process/229 release.
         expirePendingKey()
       },
-      onCompositionEnd: () => {
+      onCompositionEnd: (committedText = '') => {
         const compositionWasActive = stateRef.current.composing
         stateRef.current.composing = false
-        if (compositionWasActive && !stateRef.current.pendingKey) {
+        if (endsGestureWithoutCarry(committedText)) {
+          stateRef.current.pendingKey = null
+        } else if (compositionWasActive && !stateRef.current.pendingKey) {
           // IBus can finish composition before its only unmarked confirming Enter.
           stateRef.current.pendingKey = {}
           expirePendingKey()
         }
       },
       reset,
-      setComposing: (active: boolean) => {
+      setComposing: (active: boolean, committedText = '') => {
         stateRef.current.composing = active
+        if (!active && endsGestureWithoutCarry(committedText)) {
+          stateRef.current.pendingKey = null
+        }
       }
     }
   }, [key])

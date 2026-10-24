@@ -11,7 +11,7 @@ import {
   remoteRuntimeConnectFailureMessage,
   remoteRuntimeConnectOptions
 } from './remote-runtime-connect-bound'
-import { openRemoteRuntimeWebSocket } from './remote-runtime-request-websocket'
+import { openRemoteRuntimeWebSocket } from './remote-runtime/requests/remote-runtime-request-websocket'
 import { withRemoteRuntimeTailscaleHint } from './remote-runtime-tailscale-hint'
 
 const servers = new Set<Server>()

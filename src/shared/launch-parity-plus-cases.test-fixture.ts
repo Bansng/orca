@@ -37,7 +37,7 @@ function plus(
     producer: { kind: 'plus', agent: 'claude', via },
     request,
     provider,
-    settings: { agentDefaultArgs: { claude: ARGS } }
+    settings: { agentDefaultArgs: { claude: ARGS }, agentPermissionOverrides: { claude: 'own' } }
   }
 }
 

@@ -33,8 +33,7 @@ export async function execFileCaptureToTermination(
   options: Omit<ExecFileCaptureOptions, 'onStderr'>,
   termination?: WslProcessGroupTermination
 ): Promise<{ stdout: string | Buffer; stderr: string | Buffer }> {
-  // Spawn cost is reported by spawnProcess's observer, which runProcess goes
-  // through; recording it again here would double-count every capture.
+  // runProcess already reports spawn cost through spawnProcess.
   let program: string
   try {
     program = resolveSelectedLocalCommand(command, {
@@ -78,9 +77,7 @@ export async function execFileCaptureToTermination(
         options.signal?.aborted
           ? 'The operation was aborted.'
           : result.outputTruncated
-            ? // Why fail instead of returning the clipped text: callers parse this
-              // as JSON or JSONL, where a clipped answer reads as a shorter valid
-              // one. execFile's own maxBuffer overrun errored for the same reason.
+            ? // Reject clipped output: JSON/JSONL consumers could otherwise accept an incomplete result.
               `${command} produced more than ${options.maxBuffer ?? DEFAULT_GIT_MAX_BUFFER} bytes of output.`
             : cleanStderr.trim() || `${command} exited with ${result.code}.`
       )
@@ -122,8 +119,7 @@ function observeStderr(
     try {
       observer(typeof chunk === 'string' ? chunk : chunk.toString('utf8'))
     } catch (error) {
-      // Why: a throw inside a stream listener is an uncaught main-process
-      // exception; an observer must never be able to fail the command.
+      // Detach throwing observers so stream callbacks cannot crash main.
       child.stderr?.off('data', onData)
       console.warn('git stderr observer failed; detaching it', error)
     }
@@ -146,7 +142,6 @@ export function execFileCapture(
     let settled = false
     let terminating = false
     let child: ChildProcess | WorkerThreadChildProcess | null = null
-    // Native macOS first; Windows/WSL keep their existing tree-termination path.
     const useWorker = options.spawnOnWorkerThread === true && process.platform === 'darwin'
     let timer: NodeJS.Timeout | null = null
     let terminationReported = false
@@ -209,9 +204,7 @@ export function execFileCapture(
         args,
         {
           cwd: options.cwd,
-          // Why: git.exe is console-subsystem and Orca's main process owns no
-          // console, so every spawn without this flashes a conhost that takes
-          // foreground. Git runs on nearly every interaction (#14543).
+          // Hide console-subsystem children so frequent Git calls cannot flash or take focus.
           windowsHide: true,
           encoding: options.encoding,
           maxBuffer: options.maxBuffer ?? DEFAULT_GIT_MAX_BUFFER,

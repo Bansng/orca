@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getDefaultSettings } from '../../../../shared/constants'
 import { getDefaultOnboardingState } from '../../../../shared/onboarding-defaults'
+import type { OnboardingState } from '../../../../shared/onboarding-state-types'
 import { useAppStore } from '@/store'
 import {
   resolveDismissedOnboardingFolderAgentLaunch,
@@ -30,17 +31,19 @@ afterEach(() => vi.restoreAllMocks())
 const reposAdd = vi.fn()
 const worktreesList = vi.fn()
 const onboardingGet = vi.fn()
+const onboardingUpdate = vi.fn()
 
 beforeEach(() => {
   reposAdd.mockReset()
   worktreesList.mockReset()
   onboardingGet.mockReset()
+  onboardingUpdate.mockReset()
   worktreeActivation.activateAndRevealWorktree.mockReset()
   vi.stubGlobal('window', {
     api: {
       repos: { add: reposAdd },
       worktrees: { list: worktreesList },
-      onboarding: { get: onboardingGet }
+      onboarding: { get: onboardingGet, update: onboardingUpdate }
     }
   })
 })
@@ -57,7 +60,14 @@ describe('repo slice skipped-onboarding folder startup', () => {
     worktreesList.mockImplementation(({ repoId }: { repoId: string }) => [
       makeWorktree({ id: `${repoId}::/folder`, repoId })
     ])
-    onboardingGet.mockResolvedValue({ ...getDefaultOnboardingState(), outcome: 'dismissed' })
+    let onboarding: OnboardingState = { ...getDefaultOnboardingState(), outcome: 'dismissed' }
+    onboardingGet.mockImplementation(async () => onboarding)
+    onboardingUpdate.mockImplementation(
+      async ({ checklist }: { checklist: Partial<OnboardingState['checklist']> }) => {
+        onboarding = { ...onboarding, checklist: { ...onboarding.checklist, ...checklist } }
+        return onboarding
+      }
+    )
     const store = createTestStore()
     store.setState({
       settings: {
@@ -115,7 +125,8 @@ it.each(['paired-linux', 'local-bash', 'withheld', 'structured-withheld'] as con
         experimentalNativeChat: true,
         nativeChatProviders: { claude: target === 'structured-withheld' },
         terminalWindowsShell: 'C:\\Program Files\\Git\\bin\\bash.exe',
-        agentDefaultArgs: { claude: '--append-system-prompt "don\'t edit"' }
+        agentDefaultArgs: { claude: '--append-system-prompt "don\'t edit"' },
+        agentPermissionOverrides: { claude: 'own' }
       },
       runtimeStatusByEnvironmentId: new Map([
         [
