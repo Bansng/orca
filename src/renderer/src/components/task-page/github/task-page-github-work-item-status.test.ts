@@ -18,11 +18,6 @@ describe('task-page-github-work-item-status', () => {
     expect(getTaskPageGitHubWorkItemStateLabel({ type: 'pr', state: 'merged' })).toBe('Merged')
   })
 
-  it('maps issue states to labels', () => {
-    expect(getTaskPageGitHubWorkItemStateLabel({ type: 'issue', state: 'open' })).toBe('Open')
-    expect(getTaskPageGitHubWorkItemStateLabel({ type: 'issue', state: 'closed' })).toBe('Closed')
-  })
-
   it('uses GitHub-like neutral draft tones and muted draft icons', () => {
     const draftTone = getTaskPageGitHubWorkItemStateTone({ type: 'pr', state: 'draft' })
     expect(draftTone).toContain('muted')

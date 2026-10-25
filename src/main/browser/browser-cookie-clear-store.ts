@@ -8,7 +8,7 @@ import type {
   CookieImportWriteStore
 } from './browser-cookie-import-clear'
 import { restoreEveryCookieIdentity } from './browser-cookie-identity-restore'
-import { normalizeCookiePartitionSite } from './browser-cookie-source-partition'
+import { normalizeCookiePartitionSite } from './cookies/sources/browser-cookie-source-partition'
 
 type CdpCookiePartitionKey = {
   topLevelSite?: string

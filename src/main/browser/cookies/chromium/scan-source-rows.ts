@@ -9,13 +9,13 @@ import { prepareStagedCookiesForImport } from '../../browser-cookie-staged-impor
 import {
   chromiumTimestampToUnix,
   buildChromiumCookieInsertParams
-} from '../../browser-cookie-sqlite'
+} from '../sources/browser-cookie-sqlite'
 import { databaseSameSite } from '../sources/browser-cookie-validation'
 import {
   buildUndecryptableWarning,
   cookieEncryptionVersion,
   decryptCookieValueRaw
-} from '../../browser-cookie-decryption'
+} from '../sources/browser-cookie-decryption'
 import { diag } from '../../browser-cookie-import-diagnostics'
 import type { ChromiumImportContext } from './import-context'
 

@@ -32,7 +32,7 @@ import {
 } from './native-chat-turn-grouping'
 import type { NativeChatMessage, NativeChatRole } from './native-chat-types'
 import { dispatchWasWithdrawn } from './structured-agent-session-dispatch-rejection'
-import { inSendOrder } from './native-chat-send-order'
+import { inSendOrder } from './native-chat/native-chat-send-order'
 import { runningStructuredAgentSessionTurnScope } from './structured-agent-session-live-turn'
 import { nativeChatOpeningTurnKey } from './native-chat-messages-waiting-behind-live-turn'
 import type { AgentSessionLatestTurn } from './agent-session-wire'

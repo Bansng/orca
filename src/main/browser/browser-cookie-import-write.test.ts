@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { CookieClearIdentity } from './browser-cookie-import-clear'
-import type { SourcePartitionRead } from './browser-cookie-source-partition'
+import type { SourcePartitionRead } from './cookies/sources/browser-cookie-source-partition'
 import { writeImportedCookies, type SourceCookieToWrite } from './browser-cookie-import-write'
 
 const PARTITION_KEY = { topLevelSite: 'https://top.example', hasCrossSiteAncestor: true }

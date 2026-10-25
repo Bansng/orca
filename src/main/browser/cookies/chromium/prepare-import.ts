@@ -13,14 +13,14 @@ import { createChromiumCookieSnapshot } from '../../chromium-cookie-snapshot'
 import { resolveChromiumCookiesPath } from '../../chromium-cookie-path'
 import { copyFileWithWindowsRetry } from '../../../../shared/windows-retry-file-operations'
 import { planImportWrites } from '../../browser-cookie-import-write'
-import { readChromiumRowPartition } from '../../browser-cookie-source-partition'
+import { readChromiumRowPartition } from '../sources/browser-cookie-source-partition'
 import { diag } from '../../browser-cookie-import-diagnostics'
-import type { DetectedBrowser } from '../../browser-cookie-detection-types'
+import type { DetectedBrowser } from '../sources/browser-cookie-detection-types'
 import type { CookieImportOptions } from '../../browser-cookie-import-pipeline'
-import type { ChromiumCookieColumnInfo } from '../../browser-cookie-sqlite'
+import type { ChromiumCookieColumnInfo } from '../sources/browser-cookie-sqlite'
 import type { ChromiumImportContext } from './import-context'
 import type { Session } from 'electron'
-import { getEncryptionKey } from '../../browser-cookie-key'
+import { getEncryptionKey } from '../sources/browser-cookie-key'
 
 export type ChromiumImportPreparation =
   | { context: ChromiumImportContext }

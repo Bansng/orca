@@ -4,7 +4,7 @@ import {
 } from '@/lib/agent-launch-routing'
 import { STRUCTURED_AGENT_SESSION_REGISTERED_AGENTS_RUNTIME_CAPABILITY as CATALOG } from '../../../shared/protocol-version'
 import type { GlobalSettings } from '../../../shared/global-settings-types'
-import { isNativeChatProviderDisplayedOn } from '../../../shared/native-chat-providers'
+import { isNativeChatProviderDisplayedOn } from '../../../shared/native-chat/native-chat-providers'
 import {
   isNativeChatEnabled,
   type NativeChatDefaultSettings

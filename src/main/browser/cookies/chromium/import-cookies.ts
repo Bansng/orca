@@ -7,7 +7,7 @@ import {
   reasonWithDiagLog,
   summarizeCookieImportError
 } from '../../browser-cookie-import-diagnostics'
-import type { DetectedBrowser } from '../../browser-cookie-detection-types'
+import type { DetectedBrowser } from '../sources/browser-cookie-detection-types'
 import type { CookieImportOptions } from '../../browser-cookie-import-pipeline'
 import { prepareChromiumCookieImport } from './prepare-import'
 import { scanChromiumCookieRows } from './scan-source-rows'

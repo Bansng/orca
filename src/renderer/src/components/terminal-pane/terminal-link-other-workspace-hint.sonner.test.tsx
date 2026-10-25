@@ -40,14 +40,15 @@ vi.mock('@/lib/runtime-workspace-file-route', () => ({
 const sourceDeps = { worktreeId: 'wt-a', worktreePath: '/a' }
 
 async function settle(): Promise<void> {
-  await act(async () => {
-    for (let i = 0; i < 5; i += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 0))
-    }
-  })
+  for (let i = 0; i < 5; i += 1) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1)
+    })
+  }
 }
 
 beforeEach(() => {
+  vi.useFakeTimers()
   vi.clearAllMocks()
   storeState.openFiles = []
   storeState.repos = [{ id: 'repo-b', displayName: 'project-b' }]
@@ -71,6 +72,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
 })
 
 describe('a terminal file link clicked in workspace A', () => {
@@ -141,13 +143,35 @@ describe('a terminal file link clicked in workspace A', () => {
 
     openDetectedFilePath('/b/report.md', null, null, sourceDeps)
     await settle()
-    openDetectedFilePath('/b/report.md', null, null, sourceDeps)
+    findWorkspaceFileRouteMock.mockReturnValue({
+      worktreeId: 'wt-b',
+      relativePath: 'notes.md',
+      executionHostId: 'local'
+    })
+    openDetectedFilePath('/b/notes.md', 11, null, sourceDeps)
     await settle()
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300))
+      await vi.advanceTimersToNextFrame()
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300)
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300)
     })
 
     expect(screen.getByText('This file is in project-b · feature-b')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Open there' }))
+    await settle()
+
+    expect(openFileMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        filePath: '/b/notes.md',
+        relativePath: 'notes.md',
+        worktreeId: 'wt-b'
+      }),
+      { forceContentReload: true }
+    )
   })
 
   it('shows no read-only hint when the link reused an editable tab here', async () => {

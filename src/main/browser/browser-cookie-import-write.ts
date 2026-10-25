@@ -5,7 +5,7 @@ import type {
   CookieImportWriteStore
 } from './browser-cookie-import-clear'
 import { registrableFamily } from './browser-cookie-import-policy'
-import type { SourcePartitionRead } from './browser-cookie-source-partition'
+import type { SourcePartitionRead } from './cookies/sources/browser-cookie-source-partition'
 
 export type ImportedCookieFields = {
   url: string
