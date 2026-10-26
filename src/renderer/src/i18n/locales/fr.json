@@ -273,6 +273,11 @@
         }
       },
       "chat": {
+        "fontFamily": "Police",
+        "fontFamilyDescription": "Police des messages, de l’activité et de la zone de saisie.",
+        "inheritFont": "Même police que l’IDE",
+        "fontPreviewLabel": "Aperçu de la police du chat",
+        "fontPreview": "Le vif renard brun saute par-dessus le chien paresseux.",
         "title": "Chat",
         "textSize": "Taille du texte",
         "textSizeDescription": "Messages, activité des outils et zone de message. {{increase}} / {{decrease}} dans un chat modifient aussi ce réglage.",
@@ -4449,6 +4454,7 @@
             "memory": {
               "metric": {
                 "workingSetDescription": "Somme des working sets (WS). Les pages partagées peuvent apparaître dans plusieurs processus.",
+                "footprintDescription": "Somme des empreintes mémoire, la valeur affichée par le Moniteur d’activité : la mémoire propre à chaque processus, mémoire graphique comprise. Les pages partagées entre processus ne sont pas comptées deux fois.",
                 "rssDescription": "Somme des tailles résidentes (RSS). Les pages partagées ou aliasées peuvent apparaître dans plusieurs processus.",
                 "privateBytesDescription": "Octets privés additionnés : mémoire engagée par ces processus, comptée si elle est résidente ou paginée. C'est ce que l'hôte facture par rapport à sa limite de validation, de sorte qu'elle continue d'augmenter tandis que l'ensemble de travail ci-dessus diminue sous la pagination."
               }
@@ -14488,6 +14494,7 @@
             "prepareSessionResumeFailed": "Impossible de préparer cette session pour la reprise.",
             "sessionDeleted": "Session supprimée",
             "sessionDeleteFailed": "Impossible de supprimer la session",
+            "sessionDeleteCheckingHost": "Vérification de {{value0}}…",
             "resumeInChatConflict": "Un autre chat tient déjà cette conversation.",
             "resumeInChatTranscriptMissing": "L'historique de cette conversation n'a pas pu être chargé, elle ne peut donc pas être reprise dans le chat.",
             "resumeInChatFailed": "Impossible de reprendre cette session dans un nouveau chat.",
@@ -14629,6 +14636,7 @@
             "subagentCountPlural": "{{value0}} sous-agents",
             "delete": "Supprimer",
             "deleteReasonNonLocalHost": "Seules les sessions de cet appareil peuvent être supprimées.",
+            "deleteReasonHostUpdateRequired": "Mettez à jour {{value0}} pour supprimer ses sessions depuis ici.",
             "deleteReasonSyntheticPath": "Cette session ne peut pas être supprimée depuis Orca.",
             "deleteReasonUnsupportedAgent": "{{value0}} sessions ne peuvent pas être supprimées depuis Orca.",
             "resumeInNewNativeChat": "Reprendre dans un nouveau chat",
@@ -14639,6 +14647,7 @@
           "AiVaultSessionDeleteDialog": {
             "title": "Supprimer cette session ?",
             "description": "« {{value0}} » sera supprimée. Une fois supprimée, elle ne pourra plus être reprise depuis la ligne de commande de {{value1}} non plus.",
+            "remoteDescription": "« {{value0}} » sera supprimée de {{value2}}. Une fois supprimée, elle ne pourra plus être reprise depuis la ligne de commande de {{value1}} non plus.",
             "confirm": "Supprimer"
           },
           "FileExplorerNameFilter": {
@@ -18785,6 +18794,7 @@
         "claudeAccountSetupFailed": "Le compte Claude sélectionné n'a pas pu être configuré. Réessayez ou choisissez un autre compte.",
         "agentCommandNotRunnable": "{{agent}} : la Commande dans Paramètres → Agents doit être le chemin ou le nom d'un programme qu'Orca peut trouver, sans arguments ni variables. Modifiez-la ou réinitialisez-la.",
         "runtimeNotInstalled": "{{agent}} n'est pas installé sur l'ordinateur qui exécute ce chat. Installez-le depuis le chat dans une version récente d'Orca.",
+        "fullAccessAsRoot": "{{agent}} n'utilisera pas l'Accès complet tant qu'il s'exécute en tant que root. Choisissez une autre autorisation pour {{agent}} dans Paramètres → Agents pour l'ordinateur qui exécute ce chat, puis démarrez un nouveau chat.",
         "conversationOpenElsewhere": "Codex maintient encore cette conversation ouverte. Réessayez dans un instant ou fermez les autres terminaux Codex.",
         "conversationOpenInTerminal": "{{agent}} exécute déjà cette conversation dans un autre terminal. Quittez {{agent}} là-bas ou fermez ce terminal pour continuer ici.",
         "chooseClaudeAccount": "Choisissez-en un ou ajoutez-en un dans les paramètres Comptes Claude.",
@@ -19486,8 +19496,7 @@
         "continue": "Continuer",
         "failed": "Impossible de poursuivre cette conversation. Réessayez ou envoyez un message.",
         "explanation": "Continuez, et l'agent vérifiera d'abord si sa dernière étape s'est terminée.",
-        "unconfirmed": "Impossible de confirmer si {{agent}} a reçu Continuer. Vérifiez le chat avant de réessayer.",
-        "usageLimitExplanation": "Demande à l’agent de reprendre là où il s’était arrêté. À utiliser une fois la limite réinitialisée."
+        "unconfirmed": "Impossible de confirmer si {{agent}} a reçu Continuer. Vérifiez le chat avant de réessayer."
       },
       "rewind": {
         "unsupported": "Ce chat ne peut pas revenir à un message antérieur.",
@@ -19537,7 +19546,13 @@
       "explicitChatSsh": "Le chat n’est pas disponible via SSH. Ouvrez plutôt l’agent dans un terminal.",
       "explicitChatWsl": "Le chat n'est pas disponible dans WSL. Ouvrez plutôt l'agent dans un terminal.",
       "structuredSessionTerminalNotVisible": "Orca a ouvert {{value0}} dans un terminal, mais n'a pas pu l'afficher ici une fois le lancement terminé. Votre brouillon de chat a été conservé.",
-      "explicitChatUnavailable": "Cet espace de travail ne peut pas exécuter le chat. Vérifiez l'installation de l'agent ou ouvrez-le dans un terminal."
+      "explicitChatUnavailable": "Cet espace de travail ne peut pas exécuter le chat. Vérifiez l'installation de l'agent ou ouvrez-le dans un terminal.",
+      "goalControl": {
+        "settingsRejected": "Codex n’a pas pu appliquer le modèle et l’effort sélectionnés. Ce changement d’objectif n’a pas été envoyé. Vérifiez la sélection et réessayez.",
+        "settingsUnconfirmed": "Codex n’a pas confirmé le modèle et l’effort sélectionnés. Ce changement d’objectif n’a pas été envoyé. Vérifiez le chat et réessayez.",
+        "pauseUnconfirmed": "Codex s’est arrêté, mais la mise en pause de son objectif n’a pas été confirmée. Vérifiez l’objectif avant de continuer.",
+        "stopUnconfirmed": "Codex n’a pas pu confirmer l’arrêt. Vérifiez le chat avant de continuer."
+      }
     },
     "tab": {
       "bar": {

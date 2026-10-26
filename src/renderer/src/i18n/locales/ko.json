@@ -133,6 +133,11 @@
         }
       },
       "chat": {
+        "fontFamily": "글꼴",
+        "fontFamilyDescription": "메시지, 활동 및 메시지 입력란에 사용하는 글꼴입니다.",
+        "inheritFont": "IDE와 같은 글꼴",
+        "fontPreviewLabel": "채팅 글꼴 미리보기",
+        "fontPreview": "이 문장에서 채팅 글꼴을 미리 볼 수 있습니다.",
         "title": "채팅",
         "textSize": "텍스트 크기",
         "textSizeDescription": "메시지, 도구 활동 및 메시지 입력란. 채팅에서 {{increase}} / {{decrease}} 키로도 변경할 수 있습니다.",
@@ -4286,6 +4291,7 @@
               "metric": {
                 "workingSetDescription": "합산된 워킹 세트(WS): 지금 RAM에 상주 중인 페이지입니다. 공유 페이지가 둘 이상의 프로세스에 나타날 수 있으며, Windows가 페이지 아웃한 메모리는 여기에 포함되지 않습니다.",
                 "privateBytesDescription": "합산된 프라이빗 바이트: 이 프로세스들이 커밋한 메모리로, 상주 여부와 관계없이 계산됩니다. 호스트가 커밋 한도에 반영하는 값이므로, 페이징으로 위의 워킹 세트가 줄어드는 동안에도 계속 늘어납니다.",
+                "footprintDescription": "합산된 메모리 사용 공간으로, 활성 상태 보기에 표시되는 값과 같습니다. 그래픽 메모리를 포함해 각 프로세스가 소유한 메모리이며, 프로세스 간에 공유되는 페이지는 중복으로 계산되지 않습니다.",
                 "rssDescription": "합산된 레지던트 세트 크기(RSS). 공유 또는 별칭된 페이지가 둘 이상의 프로세스에 나타날 수 있습니다."
               }
             },
@@ -14311,6 +14317,7 @@
             "prepareSessionResumeFailed": "재개를 위해 이 세션을 준비할 수 없습니다.",
             "sessionDeleted": "세션이 삭제되었습니다",
             "sessionDeleteFailed": "세션을 삭제하지 못했습니다",
+            "sessionDeleteCheckingHost": "{{value0}} 확인 중…",
             "resumeInChatConflict": "다른 채팅에서 이미 이 대화를 진행 중입니다.",
             "resumeInChatTranscriptMissing": "이 대화 기록을 로드할 수 없어 채팅에서 재개할 수 없습니다.",
             "resumeInChatFailed": "새 채팅에서 이 세션을 재개할 수 없습니다.",
@@ -14452,6 +14459,7 @@
             "subagentCountPlural": "서브에이전트 {{value0}}개",
             "delete": "삭제",
             "deleteReasonNonLocalHost": "이 기기에 있는 세션만 삭제할 수 있습니다.",
+            "deleteReasonHostUpdateRequired": "여기에서 세션을 삭제하려면 {{value0}}을(를) 업데이트하세요.",
             "deleteReasonSyntheticPath": "이 세션은 Orca에서 삭제할 수 없습니다.",
             "deleteReasonUnsupportedAgent": "{{value0}} 세션은 Orca에서 삭제할 수 없습니다.",
             "resumeInNewNativeChat": "새 채팅에서 재개",
@@ -14462,6 +14470,7 @@
           "AiVaultSessionDeleteDialog": {
             "title": "이 세션을 삭제할까요?",
             "description": "\"{{value0}}\"이(가) 삭제됩니다. 삭제하면 {{value1}}의 자체 명령줄에서도 더 이상 재개할 수 없습니다.",
+            "remoteDescription": "\"{{value0}}\"이(가) {{value2}}에서 삭제됩니다. 삭제하면 {{value1}}의 자체 명령줄에서도 더 이상 재개할 수 없습니다.",
             "confirm": "삭제"
           },
           "FileExplorerNameFilter": {
@@ -18675,6 +18684,7 @@
         "claudeAccountSetupFailed": "선택한 Claude 계정을 설정할 수 없습니다. 다시 시도하거나 다른 계정을 선택하세요.",
         "agentCommandNotRunnable": "{{agent}}의 설정 → 에이전트 → 명령은 Orca가 찾을 수 있는 프로그램 경로나 이름이어야 하며, 인수나 변수를 포함할 수 없습니다. 변경하거나 재설정하세요.",
         "runtimeNotInstalled": "{{agent}}이(가) 이 채팅을 실행하는 컴퓨터에 설치되어 있지 않습니다. 최신 버전의 Orca에서 채팅을 통해 설치하세요.",
+        "fullAccessAsRoot": "{{agent}}은(는) root로 실행되는 동안 전체 액세스를 사용하지 않습니다. 이 채팅을 실행하는 컴퓨터의 설정 → 에이전트에서 {{agent}}에 다른 권한을 선택한 다음 새 채팅을 시작하세요.",
         "conversationOpenElsewhere": "Codex가 아직 이 대화를 열어 두고 있습니다. 잠시 후 다시 시도하거나 다른 Codex 터미널을 닫으세요.",
         "conversationOpenInTerminal": "{{agent}}이(가) 다른 터미널에서 이미 이 대화를 실행 중입니다. 그곳에서 {{agent}}을(를) 종료하거나 해당 터미널을 닫은 후 여기서 계속하세요.",
         "chooseClaudeAccount": "Claude 계정 설정에서 선택하거나 추가하세요.",
@@ -19376,8 +19386,7 @@
         "continue": "계속",
         "failed": "이 채팅을 계속할 수 없습니다. 다시 시도하거나 메시지를 보내세요.",
         "explanation": "계속하면 에이전트가 먼저 마지막 단계가 완료되었는지 확인합니다.",
-        "unconfirmed": "{{agent}}에 계속 요청이 전달되었는지 확인할 수 없습니다. 다시 시도하기 전에 채팅을 확인하세요.",
-        "usageLimitExplanation": "중단한 곳부터 계속하도록 에이전트에 요청합니다. 한도가 초기화된 후 사용하세요."
+        "unconfirmed": "{{agent}}에 계속 요청이 전달되었는지 확인할 수 없습니다. 다시 시도하기 전에 채팅을 확인하세요."
       },
       "rewind": {
         "unsupported": "이 채팅은 이전 메시지로 돌아갈 수 없습니다.",
@@ -19431,7 +19440,13 @@
       "explicitChatWsl": "WSL에서는 채팅을 사용할 수 없습니다. 대신 터미널에서 에이전트를 여세요.",
       "explicitChatSsh": "SSH 연결에서는 채팅을 사용할 수 없습니다. 대신 터미널에서 에이전트를 여세요.",
       "structuredSessionTerminalNotVisible": "Orca가 터미널에서 {{value0}}을(를) 열었지만 실행이 완료된 후 여기에 표시하지 못했습니다. 채팅 초안은 보관되었습니다.",
-      "explicitChatUnavailable": "이 워크스페이스에서는 채팅을 실행할 수 없습니다. 에이전트 설치 상태를 확인하거나 터미널에서 여세요."
+      "explicitChatUnavailable": "이 워크스페이스에서는 채팅을 실행할 수 없습니다. 에이전트 설치 상태를 확인하거나 터미널에서 여세요.",
+      "goalControl": {
+        "settingsRejected": "Codex가 선택한 모델과 추론 수준을 적용하지 못했습니다. 이 목표 변경은 전송되지 않았습니다. 선택 항목을 확인하고 다시 시도하세요.",
+        "settingsUnconfirmed": "Codex가 선택한 모델과 추론 수준의 적용을 확인하지 않았습니다. 이 목표 변경은 전송되지 않았습니다. 채팅을 확인하고 다시 시도하세요.",
+        "pauseUnconfirmed": "Codex 실행은 중지되었지만 목표 일시 중지는 확인되지 않았습니다. 계속하기 전에 목표를 확인하세요.",
+        "stopUnconfirmed": "Codex 중지를 확인하지 못했습니다. 계속하기 전에 채팅을 확인하세요."
+      }
     },
     "tab": {
       "bar": {

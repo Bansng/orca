@@ -672,6 +672,11 @@
         }
       },
       "chat": {
+        "fontFamily": "Fonte",
+        "fontFamilyDescription": "Fonte usada nas mensagens, na atividade e na caixa de mensagem.",
+        "inheritFont": "Mesma fonte do IDE",
+        "fontPreviewLabel": "Prévia da fonte do chat",
+        "fontPreview": "A rápida raposa marrom salta sobre o cão preguiçoso.",
         "title": "Chat",
         "textSize": "Tamanho do texto",
         "textSizeDescription": "Mensagens, atividade das ferramentas e caixa de mensagem. {{increase}} / {{decrease}} em um chat também alteram este tamanho.",
@@ -2570,6 +2575,7 @@
               "metric": {
                 "workingSetDescription": "Working set somado (WS): páginas residentes na RAM agora. Páginas compartilhadas podem aparecer em mais de um processo, e a memória que o Windows paginou para o disco não é contada aqui.",
                 "privateBytesDescription": "Bytes privados somados: memória que esses processos comprometeram, contada esteja ela residente ou paginada para o disco. É isso que o host cobra contra seu limite de comprometimento, então continua subindo enquanto o working set acima diminui sob paginação.",
+                "footprintDescription": "Pegada de memória somada, o mesmo valor que o Monitor de Atividade mostra: a memória de cada processo, incluindo memória gráfica. Páginas compartilhadas entre processos não são contadas duas vezes.",
                 "rssDescription": "Tamanho do conjunto residente somado (RSS). Páginas compartilhadas ou com alias podem aparecer em mais de um processo."
               }
             },
@@ -9886,6 +9892,7 @@
             "prepareSessionResumeFailed": "Não foi possível preparar esta sessão para retomada.",
             "sessionDeleted": "Sessão excluída",
             "sessionDeleteFailed": "Não foi possível excluir a sessão",
+            "sessionDeleteCheckingHost": "Verificando {{value0}}…",
             "resumeInChatConflict": "Outro chat já está mantendo esta conversa.",
             "resumeInChatTranscriptMissing": "O histórico desta conversa não pôde ser carregado, então ela não pode ser retomada no chat.",
             "resumeInChatFailed": "Não foi possível retomar esta sessão em um novo chat.",
@@ -9923,6 +9930,7 @@
             "subagentCountPlural": "{{value0}} subagentes",
             "delete": "Excluir",
             "deleteReasonNonLocalHost": "Somente sessões neste dispositivo podem ser excluídas.",
+            "deleteReasonHostUpdateRequired": "Atualize {{value0}} para excluir as sessões dele daqui.",
             "deleteReasonSyntheticPath": "Esta sessão não pode ser excluída do Orca.",
             "deleteReasonUnsupportedAgent": "Sessões de {{value0}} não podem ser excluídas do Orca.",
             "resumeInNewNativeChat": "Retomar em novo chat",
@@ -10370,6 +10378,7 @@
           "AiVaultSessionDeleteDialog": {
             "title": "Excluir esta sessão?",
             "description": "\"{{value0}}\" será excluída. Depois de excluída, ela também não poderá mais ser retomada pela própria linha de comando de {{value1}}.",
+            "remoteDescription": "\"{{value0}}\" será excluída de {{value2}}. Depois de excluída, também não poderá mais ser retomada pela linha de comando do {{value1}}.",
             "confirm": "Excluir"
           },
           "FileExplorerNameFilter": {
@@ -19624,6 +19633,7 @@
         "claudeAccountSetupFailed": "Não foi possível configurar a conta do Claude selecionada. Tente novamente ou escolha outra conta.",
         "agentCommandNotRunnable": "O Comando de {{agent}} em Configurações → Agentes deve ser o caminho ou nome de um programa que o Orca possa encontrar, sem argumentos nem variáveis. Altere-o ou redefina-o.",
         "runtimeNotInstalled": "{{agent}} não está instalado no computador que executa este chat. Instale-o pelo chat em uma versão atual do Orca.",
+        "fullAccessAsRoot": "{{agent}} não usará Acesso total enquanto for executado como root. Escolha outra permissão para {{agent}} em Configurações → Agentes para o computador que executa este chat e inicie um novo chat.",
         "chooseClaudeAccount": "Escolha ou adicione uma nas configurações de Contas do Claude.",
         "chooseClaudeAccountThenRunCommand": "Escolha ou adicione uma nas configurações de Contas do Claude e execute /{{command}} novamente.",
         "chooseClaudeAccountThenSend": "Escolha ou adicione uma nas configurações de Contas do Claude e envie sua mensagem novamente.",
@@ -19931,8 +19941,7 @@
         "continue": "Continuar",
         "failed": "Não foi possível continuar este chat. Tente novamente ou envie uma mensagem.",
         "explanation": "Ao continuar, o agente verifica primeiro se a última etapa foi concluída.",
-        "unconfirmed": "Não foi possível confirmar se o {{agent}} recebeu Continuar. Confira o chat antes de tentar novamente.",
-        "usageLimitExplanation": "Pede ao agente para continuar de onde parou. Use quando o limite for restabelecido."
+        "unconfirmed": "Não foi possível confirmar se o {{agent}} recebeu Continuar. Confira o chat antes de tentar novamente."
       },
       "antigravitySignIn": {
         "sentence": "Você não está conectado ao Antigravity. Entre em <settings>Configurações → Contas → Antigravity</settings>. Depois envie sua mensagem novamente."
@@ -19958,6 +19967,12 @@
       "imagePreview": {
         "fileActions": "Ações do arquivo",
         "linkActions": "Ações do link"
+      },
+      "goalControl": {
+        "settingsRejected": "O Codex não conseguiu aplicar o modelo e o esforço selecionados. Esta alteração de objetivo não foi enviada. Confira a seleção e tente novamente.",
+        "settingsUnconfirmed": "O Codex não confirmou o modelo e o esforço selecionados. Esta alteração de objetivo não foi enviada. Confira o chat e tente novamente.",
+        "pauseUnconfirmed": "O Codex parou de executar, mas a pausa do objetivo não foi confirmada. Confira o objetivo antes de continuar.",
+        "stopUnconfirmed": "O Codex não conseguiu confirmar a parada. Confira o chat antes de continuar."
       }
     },
     "tab": {

@@ -133,6 +133,11 @@
         }
       },
       "chat": {
+        "fontFamily": "字体",
+        "fontFamilyDescription": "用于消息、活动和消息输入框的字体。",
+        "inheritFont": "与 IDE 字体相同",
+        "fontPreviewLabel": "聊天字体预览",
+        "fontPreview": "这段文字用于预览聊天字体。",
         "title": "聊天",
         "textSize": "文字大小",
         "textSizeDescription": "消息、工具活动和消息输入框。在聊天中按 {{increase}} / {{decrease}} 也会更改此设置。",
@@ -4286,6 +4291,7 @@
               "metric": {
                 "workingSetDescription": "工作集 (WS) 的总和：当前驻留在 RAM 中的页。共享页可能会出现在多个进程中，被 Windows 换出到页面文件的内存不计入其中。",
                 "privateBytesDescription": "专用字节的总和：这些进程已提交的内存，无论驻留还是已换出都会计入。这是主机计入提交限制的数值，因此在分页导致上方工作集缩小时它仍会继续上升。",
+                "footprintDescription": "内存占用的总和，与“活动监视器”显示的数值相同：每个进程自身占用的内存，包括图形内存。进程之间共享的页不会被重复计算。",
                 "rssDescription": "驻留集大小 (RSS) 的总和。共享页或别名映射页可能会出现在多个进程中。"
               }
             },
@@ -14311,6 +14317,7 @@
             "prepareSessionResumeFailed": "无法为恢复准备此会话。",
             "sessionDeleted": "会话已删除",
             "sessionDeleteFailed": "无法删除会话",
+            "sessionDeleteCheckingHost": "正在检查 {{value0}}…",
             "resumeInChatConflict": "另一个聊天室已经在进行此对话。",
             "resumeInChatTranscriptMissing": "无法加载此对话的历史记录，因此无法在聊天中恢复。",
             "resumeInChatFailed": "无法在新聊天中恢复此会话。",
@@ -14452,6 +14459,7 @@
             "subagentCountPlural": "{{value0}} 个子智能体",
             "delete": "删除",
             "deleteReasonNonLocalHost": "只能删除此设备上的会话。",
+            "deleteReasonHostUpdateRequired": "请更新 {{value0}}，以便从这里删除其会话。",
             "deleteReasonSyntheticPath": "此会话无法在 Orca 中删除。",
             "deleteReasonUnsupportedAgent": "{{value0}} 会话无法在 Orca 中删除。",
             "resumeInNewNativeChat": "在新聊天中恢复",
@@ -14462,6 +14470,7 @@
           "AiVaultSessionDeleteDialog": {
             "title": "要删除此会话吗？",
             "description": "“{{value0}}”将被删除。删除后，也将无法通过 {{value1}} 自身的命令行恢复。",
+            "remoteDescription": "“{{value0}}”将从 {{value2}} 删除。删除后，也无法再从 {{value1}} 自己的命令行恢复。",
             "confirm": "删除"
           },
           "FileExplorerNameFilter": {
@@ -18640,6 +18649,7 @@
         "claudeAccountSetupFailed": "无法设置所选 Claude 账户。请重试或选择其他账户。",
         "agentCommandNotRunnable": "{{agent}} 在设置 → 智能体中的命令必须是 Orca 能找到的程序路径或名称，且不能包含参数或变量。请修改或重置。",
         "runtimeNotInstalled": "运行此聊天的计算机上未安装 {{agent}}。请在最新版本的 Orca 中从聊天里安装。",
+        "fullAccessAsRoot": "{{agent}} 以 root 身份运行时不会使用完全访问。请在运行此聊天的计算机的“设置”→“智能体”中为 {{agent}} 选择其他权限，然后开始新的聊天。",
         "conversationOpenElsewhere": "Codex 仍在保持此对话打开。请稍后重试，或关闭其他 Codex 终端。",
         "conversationOpenInTerminal": "{{agent}} 已在另一个终端中运行此对话。请退出那里的 {{agent}} 或关闭该终端，然后在这里继续。",
         "chooseClaudeAccount": "请在 Claude 账户设置中选择或添加一个。",
@@ -19345,8 +19355,7 @@
         "continue": "继续",
         "failed": "无法继续此聊天。请重试，或发送一条消息。",
         "explanation": "继续后，智能体会先检查其上一步是否已完成。",
-        "unconfirmed": "无法确认 {{agent}} 是否收到“继续”。在重试之前请检查聊天记录。",
-        "usageLimitExplanation": "让智能体从中断处继续。请在上限重置后使用。"
+        "unconfirmed": "无法确认 {{agent}} 是否收到“继续”。在重试之前请检查聊天记录。"
       },
       "rewind": {
         "unsupported": "此聊天无法返回到更早的消息。",
@@ -19396,7 +19405,13 @@
       "explicitChatSsh": "无法通过 SSH 进行聊天。请改为在终端中打开智能体。",
       "explicitChatWsl": "WSL 中无法使用聊天功能。请改为在终端中打开智能体。",
       "explicitChatUnavailable": "此工作区无法运行聊天。检查智能体安装或在终端中打开它。",
-      "structuredSessionTerminalNotVisible": "Orca 已在终端中打开 {{value0}}，但启动完成后无法在此处显示。您的聊天草稿已保留。"
+      "structuredSessionTerminalNotVisible": "Orca 已在终端中打开 {{value0}}，但启动完成后无法在此处显示。您的聊天草稿已保留。",
+      "goalControl": {
+        "settingsRejected": "Codex 无法应用所选模型和推理强度。此目标更改尚未发送。请检查选择后重试。",
+        "settingsUnconfirmed": "Codex 未确认所选模型和推理强度。此目标更改尚未发送。请检查聊天后重试。",
+        "pauseUnconfirmed": "Codex 已停止运行，但尚未确认目标已暂停。请在继续前检查目标。",
+        "stopUnconfirmed": "Codex 无法确认停止。请在继续前检查聊天。"
+      }
     },
     "tab": {
       "bar": {
