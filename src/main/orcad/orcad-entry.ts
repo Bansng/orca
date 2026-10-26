@@ -14,6 +14,7 @@ import {
   flushOrcadProfileStoreForShutdown,
   installOrcadShutdownSignals,
   startOrcadWithHost,
+  stopOrcadStructuredAgentSessions,
   type OrcadShutdownTrigger
 } from './orcad-lifecycle'
 import { ORCAD_USAGE, parseArgs, resolveOrcadWebClientRoot } from './orcad-command-arguments'
@@ -127,13 +128,10 @@ async function startOrcadRuntime(
   registerCleanup(async () => {
     // A SQLite-backed orcad has no JSON mirror to absorb a debounced write after SIGTERM.
     if (profileStoreForShutdown) {
-      const paneGrids = paneGridsForShutdown?.flushPaneGrids()
-      if (paneGrids) {
-        await paneGrids
-      }
-      await flushOrcadProfileStoreForShutdown(profileStoreForShutdown)
+      await flushOrcadProfileStoreForShutdown(profileStoreForShutdown, paneGridsForShutdown)
     }
   })
+  registerCleanup(stopOrcadStructuredAgentSessions)
   registerCleanup(() => disposeWatcherProcessAndWait())
   const { DesktopPushService } = await import('../runtime/push/desktop-push-service')
   const { resolvePushGatewayOrigin } = await import('../runtime/push/push-gateway-origin')
