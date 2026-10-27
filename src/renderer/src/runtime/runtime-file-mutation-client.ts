@@ -23,7 +23,7 @@ import {
 import { writeRemoteFileIfUnchanged } from './runtime-file-write-disk-precondition'
 
 /** Refuses a save the host's frame cap would reject by dropping the whole connection. */
-function assertRemoteWriteFitsOneRequest(content: string): void {
+export function assertRemoteWriteFitsOneRequest(content: string): void {
   // Why: one UTF-16 unit escapes to at most 6 bytes, so most saves skip encoding.
   if (content.length * 6 + 2 <= REMOTE_RUNTIME_MAX_FILE_WRITE_CONTENT_BYTES) {
     return
