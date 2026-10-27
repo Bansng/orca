@@ -6,7 +6,7 @@ import {
   type SessionOptionDescriptor,
   type SessionOptionValueMarker,
   type SessionOptionValue
-} from '../../../../../src/shared/native-chat-session-options'
+} from '../../../../../src/shared/native-chat/input/native-chat-session-options'
 
 export function SessionOptionCaption({ children }: { children: string }): React.JSX.Element {
   return <Text style={styles.caption}>{children}</Text>

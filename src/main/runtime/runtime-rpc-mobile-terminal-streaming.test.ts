@@ -9,7 +9,7 @@ import { OrcaRuntimeService } from './orca-runtime'
 import { readRuntimeMetadata } from './runtime-metadata'
 import { OrcaRuntimeRpcServer } from './runtime-rpc'
 import { parsePairingCode } from '../../shared/pairing'
-import { subscribeRemoteRuntimeRequest } from '../../shared/remote-runtime-client'
+import { subscribeRemoteRuntimeRequest } from '../../shared/remote-runtime/remote-runtime-client'
 import {
   TerminalStreamOpcode,
   decodeTerminalStreamFrame,

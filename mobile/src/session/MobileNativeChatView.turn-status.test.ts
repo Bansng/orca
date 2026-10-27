@@ -1,3 +1,4 @@
+import './MobileNativeChatView.harness.test-fixture'
 import { createElement, type ReactNode } from 'react'
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -64,28 +65,18 @@ vi.mock('lucide-react-native', () => ({
 
 vi.mock('./MobileNativeChatMessage', () => ({ MobileNativeChatMessage: 'ChatMessage' }))
 vi.mock('./MobileNativeChatLiveLine', () => ({ MobileNativeChatLiveLine: 'LiveStatus' }))
-vi.mock('./MobileNativeChatAsk', () => ({ MobileNativeChatAsk: 'ChatAsk' }))
-vi.mock('./MobileNativeChatPermission', () => ({ MobileNativeChatPermission: 'ChatPermission' }))
-vi.mock('./MobileNativeChatQuestion', () => ({ MobileNativeChatQuestion: 'ChatQuestion' }))
+vi.mock('./native-chat/input/MobileNativeChatAsk', () => ({ MobileNativeChatAsk: 'ChatAsk' }))
+vi.mock('./native-chat/input/MobileNativeChatPermission', () => ({
+  MobileNativeChatPermission: 'ChatPermission'
+}))
+vi.mock('./native-chat/input/MobileNativeChatQuestion', () => ({
+  MobileNativeChatQuestion: 'ChatQuestion'
+}))
 vi.mock('../components/ActionSheetModal', () => ({ ActionSheetModal: 'ActionSheetModal' }))
 
 vi.mock('./native-chat/composer/MobileNativeChatComposer', async () => {
-  const React = await import('react')
-  const { MobileNativeChatStopButton } =
-    await import('./native-chat/input/MobileNativeChatStopButton')
-  return {
-    MobileNativeChatComposer: (props: {
-      onSend: (text: string) => Promise<boolean>
-      disabled?: boolean
-      placeholder?: string
-      stop?: { onStop?: () => void; held: boolean } | null
-    }) =>
-      React.createElement(
-        'Composer',
-        { ...props, accessibilityLabel: 'Send message', onPress: () => props.onSend('hi') },
-        props.stop ? React.createElement(MobileNativeChatStopButton, props.stop) : null
-      )
-  }
+  const { composerStub } = await import('./MobileNativeChatView.render-stubs.test-fixture')
+  return composerStub()
 })
 
 type Overrides = {
@@ -125,7 +116,7 @@ function chatViewElement(overrides: Overrides): ReturnType<typeof createElement>
     getSendCompletionGeneration: () => 0,
     getComposerEditGeneration: () => 0,
     pending: [],
-    composerText: '',
+    draftKey: null,
     onComposerTextChange: vi.fn(),
     ...overrides
   })

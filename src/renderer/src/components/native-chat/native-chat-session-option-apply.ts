@@ -10,22 +10,23 @@ import type {
   SessionOptionDescriptor,
   SessionOptionSetResult,
   SessionOptionValue
-} from '../../../../shared/native-chat-session-options'
-import { buildNativeChatSessionOptionCommand } from '../../../../shared/native-chat-session-option-commands'
+} from '../../../../shared/native-chat/input/native-chat-session-options'
+import { buildNativeChatSessionOptionCommand } from '../../../../shared/native-chat/input/native-chat-session-option-commands'
 import {
   getTrackedSessionOption as getTrackedOption,
   isFlipOnlyMidSession,
-  type NativeChatSessionOptionRecord
-} from '../../../../shared/native-chat-session-option-state'
+  type NativeChatSessionOptionRecord,
+  flattenNativeChatSessionOptionRecord
+} from '../../../../shared/native-chat/input/native-chat-session-option-state'
 import type {
   NativeChatSessionOptionDispatchCommand,
   NativeChatSessionOptionDispatchResult
 } from './native-chat-session-option-command-dispatch'
+
 import {
-  flattenNativeChatSessionOptionRecord,
   resolveEffectiveNativeChatModelId,
   type NativeChatSessionOptionMode
-} from './native-chat-session-option-snapshot'
+} from '../../../../shared/native-chat/input/native-chat-session-option-snapshot'
 
 type SessionOptionApplyContext = {
   mode: NativeChatSessionOptionMode

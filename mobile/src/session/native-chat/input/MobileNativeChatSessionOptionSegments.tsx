@@ -5,7 +5,7 @@ import {
   sessionOptionDispatchUnconfirmed,
   type SessionOptionDescriptor,
   type SessionOptionValue
-} from '../../../../../src/shared/native-chat-session-options'
+} from '../../../../../src/shared/native-chat/input/native-chat-session-options'
 import { SessionOptionCaption } from './MobileNativeChatSessionOptionRows'
 
 // Five fit across a phone's sheet; more read better as a list on their own page.

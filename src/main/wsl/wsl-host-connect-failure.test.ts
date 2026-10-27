@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { RemoteRuntimeClientError } from '../../shared/remote-runtime-client-error'
+import { RemoteRuntimeClientError } from '../../shared/remote-runtime/remote-runtime-client-error'
 import { isRecoverableRemoteRuntimeConnectionError } from '../../shared/remote-runtime/remote-runtime-client-error-classification'
 import { OrcadHostUnsupportedError } from '../orcad/orcad-host-unavailable'
 import {

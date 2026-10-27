@@ -25,7 +25,7 @@ vi.mock('./MobileNativeChatMessageActionsSheet', () => ({
 }))
 vi.mock('./MobileNativeChatReasoningRow', () => ({ MobileNativeChatReasoningRow: 'Reasoning' }))
 vi.mock('./MobileNativeChatTurnStatus', () => ({ MobileNativeChatTurnStatus: 'TurnStatus' }))
-vi.mock('./MobileNativeChatToolRun', () => ({ ToolRun: 'ToolRun' }))
+vi.mock('./native-chat/transcript/MobileNativeChatToolRun', () => ({ ToolRun: 'ToolRun' }))
 
 import { MobileNativeChatMessage } from './MobileNativeChatMessage'
 import { MobileNativeChatLongPressContent } from './MobileNativeChatLongPressContent'

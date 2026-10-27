@@ -20,7 +20,7 @@ import {
   stopJournal
 } from './mobile-native-chat-stop-journal.test-fixture'
 import { useMobileNativeChatDrafts } from './native-chat/composer/use-mobile-native-chat-drafts'
-import type { MobileNativeChatController } from './use-mobile-native-chat-controller'
+import type { MobileNativeChatController } from './mobile-native-chat-controller-contract'
 import { useMobileStructuredAgentSession } from './use-mobile-structured-agent-session'
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
@@ -65,16 +65,22 @@ vi.mock('./MobileNativeChatMessageActionsSheet', () => ({
 }))
 vi.mock('./MobileNativeChatLiveLine', () => ({ MobileNativeChatLiveLine: 'LiveStatus' }))
 vi.mock('./native-chat/composer/MobileNativeChatComposer', () => ({
-  MobileNativeChatComposer: 'Composer'
+  MobileNativeChatDraftComposer: 'Composer'
 }))
 vi.mock('./native-chat/input/MobileNativeChatQueuedMessages', () => ({
   MobileNativeChatQueuedMessages: 'Queued'
 }))
-vi.mock('./MobileNativeChatVisual', () => ({ useMobileNativeChatVisualRenderer: () => null }))
+vi.mock('./native-chat/visual/MobileNativeChatVisual', () => ({
+  useMobileNativeChatVisualRenderer: () => null
+}))
 vi.mock('../components/ActionSheetModal', () => ({ ActionSheetModal: 'ActionSheetModal' }))
-vi.mock('./MobileNativeChatAsk', () => ({ MobileNativeChatAsk: 'ChatAsk' }))
-vi.mock('./MobileNativeChatPermission', () => ({ MobileNativeChatPermission: 'ChatPermission' }))
-vi.mock('./MobileNativeChatQuestion', () => ({ MobileNativeChatQuestion: 'ChatQuestion' }))
+vi.mock('./native-chat/input/MobileNativeChatAsk', () => ({ MobileNativeChatAsk: 'ChatAsk' }))
+vi.mock('./native-chat/input/MobileNativeChatPermission', () => ({
+  MobileNativeChatPermission: 'ChatPermission'
+}))
+vi.mock('./native-chat/input/MobileNativeChatQuestion', () => ({
+  MobileNativeChatQuestion: 'ChatQuestion'
+}))
 
 const STOP_ROW = `stopped-before-start:orca:${NEVER_OPENED}`
 
@@ -218,7 +224,7 @@ async function mountPhone(): Promise<Phone> {
       nativeChatStreamScopeKey: 'host\0workspace\0tab',
       chatPending: drafts.pending,
       chatImagePreviewsByMessageId: drafts.imagePreviewsByMessageId,
-      chatComposerText: drafts.composerText,
+      chatDraftKey: drafts.draftKey,
       setChatComposerText: drafts.setComposerText,
       getChatComposerEditGeneration: drafts.getComposerEditGeneration,
       nativeChatQueued: session.queued

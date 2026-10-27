@@ -7,11 +7,11 @@ import { createNativeChatPtySessionOptions } from './native-chat-pty-session-opt
 import {
   resolveNativeChatSessionOptionDefaults,
   updateNativeChatSessionOptionDefaults
-} from '../../../../shared/native-chat-session-option-defaults'
+} from '../../../../shared/native-chat/input/native-chat-session-option-defaults'
 import type {
   PersistedNativeChatSessionOptions,
   SessionOptionValue
-} from '../../../../shared/native-chat-session-options'
+} from '../../../../shared/native-chat/input/native-chat-session-options'
 
 describe('native chat launch-default adoption', () => {
   beforeEach(() => clearNativeChatSessionOptionCacheForTests())

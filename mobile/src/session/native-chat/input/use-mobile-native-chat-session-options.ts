@@ -11,16 +11,16 @@ import type {
   SessionOptionsSurface,
   SessionOptionDescriptor,
   SessionOptionValue
-} from '../../../../../src/shared/native-chat-session-options'
+} from '../../../../../src/shared/native-chat/input/native-chat-session-options'
 import type { MobileNativeChatSendOutcome } from '../mobile-native-chat-send'
 import {
   buildNativeChatSessionOptionCommand,
   recordNativeChatSessionOptionCommand
-} from '../../../../../src/shared/native-chat-session-option-commands'
+} from '../../../../../src/shared/native-chat/input/native-chat-session-option-commands'
 import {
   buildNativeChatSessionOptionSnapshot,
   withTrackedNativeChatModel
-} from '../../../../../src/shared/native-chat-session-option-snapshot'
+} from '../../../../../src/shared/native-chat/input/native-chat-session-option-snapshot'
 import {
   applyNativeChatReportedSessionOptions,
   clearNativeChatSessionModel,
@@ -28,7 +28,7 @@ import {
   isFlipOnlyMidSession,
   matchNativeChatCatalogModelId,
   setTrackedSessionOption
-} from '../../../../../src/shared/native-chat-session-option-state'
+} from '../../../../../src/shared/native-chat/input/native-chat-session-option-state'
 
 export type MobileNativeChatSessionOptionsController = {
   optionSurface?: SessionOptionsSurface

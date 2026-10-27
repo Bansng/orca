@@ -9,7 +9,7 @@ import {
   CommandList
 } from '@/components/ui/command'
 import { translate } from '@/i18n/i18n'
-import type { SessionOptionSelectChoice } from '../../../../shared/native-chat-session-options'
+import type { SessionOptionSelectChoice } from '../../../../shared/native-chat/input/native-chat-session-options'
 import { nativeChatSessionChoiceLabel } from './native-chat-session-option-labels'
 import { NativeChatSessionOptionChoiceBody } from './NativeChatSessionOptionChoiceBody'
 import { NativeChatSessionOptionWriteGroup } from './NativeChatSessionOptionWriteGroup'

@@ -3,7 +3,7 @@ import {
   type SessionOptionDescriptor,
   type SessionOptionDisabledReason,
   type SessionOptionSelectChoice
-} from '../../../../../src/shared/native-chat-session-options'
+} from '../../../../../src/shared/native-chat/input/native-chat-session-options'
 
 export function mobileSessionOptionDisabledReason(
   reason: SessionOptionDisabledReason | undefined

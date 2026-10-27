@@ -15,7 +15,7 @@ import { liftActionPermissionArgs } from '../../../../shared/source-control-acti
 import { sourceControlActionAgentArgs } from '../../../../shared/source-control-action-launch-preferences'
 import { agentPermissionArgsForLaunch } from '../../../../shared/tui-agent-launch-defaults'
 import { SourceControlActionArguments } from './SourceControlActionArguments'
-import { useRepositorySourceControlAiGlobalUx } from './repository-source-control-ai-global-ux'
+import { useRepositorySourceControlAiGlobalUx } from './repository/source-control/repository-source-control-ai-global-ux'
 import { TooltipProvider } from '../ui/tooltip'
 
 const model = { agentId: 'claude', model: 'sonnet', options: { effort: 'high' } } as const
@@ -166,6 +166,32 @@ it('disables the menu, input, reset and chip keyboard path while preserving geom
   expect(screen.getByRole('menuitemradio', { name: /Same as Claude ·/ })).toBeDefined()
   await userEvent.click(screen.getByRole('menuitemradio', { name: /Use Claude's own settings/ }))
   expect(preferences).toHaveBeenLastCalledWith({ ...model, permissionMode: 'own' })
+})
+
+it.each([undefined, null])('keeps untouched %s arguments unowned until the user edits', (value) => {
+  const onArgsChange = vi.fn()
+  const view = (args: string | null | undefined) => (
+    <TooltipProvider>
+      <SourceControlActionArguments
+        agent="claude"
+        value={args}
+        onArgsChange={onArgsChange}
+        onPreferencesChange={vi.fn()}
+      />
+    </TooltipProvider>
+  )
+  const rendered = render(view(value))
+  const input = screen.getByRole('textbox', { name: 'Arguments' })
+  fireEvent.focus(input)
+  fireEvent.blur(input)
+  expect(onArgsChange).not.toHaveBeenCalled()
+  fireEvent.change(input, { target: { value: '--verbose' } })
+  expect(onArgsChange).toHaveBeenLastCalledWith('--verbose')
+  rendered.rerender(view('--verbose'))
+  fireEvent.change(input, { target: { value: '' } })
+  rendered.rerender(view(''))
+  fireEvent.blur(input)
+  expect(onArgsChange).toHaveBeenLastCalledWith('', true)
 })
 
 it('keeps the old Codex workspace-write Ask literal and explains that terminal text wins', () => {

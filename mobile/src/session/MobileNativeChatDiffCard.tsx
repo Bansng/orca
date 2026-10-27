@@ -14,9 +14,12 @@ import {
 import { NATIVE_CHAT_TOOL_ROW_VERB_COPY } from '../../../src/shared/native-chat/tools/native-chat-tool-line-label'
 import { MobileSourceCopyButton } from '../components/MobileSourceCopyButton'
 import { colors } from '../theme/mobile-theme'
-import { useMobileNativeChatOpenedDetail } from './mobile-native-chat-opened-detail'
+import { useMobileNativeChatOpenedDetail } from './native-chat/visual/mobile-native-chat-opened-detail'
 import { useMobileNativeChatDisclosure } from './mobile-native-chat-disclosure-store'
-import { toolStyles as styles, toolType } from './mobile-native-chat-tool-styles'
+import {
+  toolStyles as styles,
+  toolType
+} from './native-chat/transcript/mobile-native-chat-tool-styles'
 
 function baseName(path: string): string {
   return path.split(/[\\/]/).at(-1) || path

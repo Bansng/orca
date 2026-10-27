@@ -58,7 +58,9 @@ vi.mock('../components/MobileMarkdown', () => ({ MobileMarkdown: 'MobileMarkdown
 vi.mock('./MobileNativeChatMessageActionsSheet', () => ({
   MobileNativeChatMessageActionsSheet: 'MessageActionsSheet'
 }))
-vi.mock('./MobileNativeChatImageViewer', () => ({ MobileNativeChatImageViewer: 'ImageViewer' }))
+vi.mock('./native-chat/visual/MobileNativeChatImageViewer', () => ({
+  MobileNativeChatImageViewer: 'ImageViewer'
+}))
 
 import { MobileNativeChatMessage } from './MobileNativeChatMessage'
 import { MobileNativeChatRowOverlaysHost } from './MobileNativeChatRowOverlaysHost'

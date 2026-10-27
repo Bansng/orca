@@ -5,11 +5,11 @@ import {
   mergeDiscoveredAuthoritativeModels,
   type CatalogModel
 } from '../../../../shared/agent-session-option-catalog'
-import { resolveNativeChatSessionOptionDefaults } from '../../../../shared/native-chat-session-option-defaults'
+import { resolveNativeChatSessionOptionDefaults } from '../../../../shared/native-chat/input/native-chat-session-option-defaults'
 import type {
   PersistedNativeChatSessionOptions,
   SessionOptionValue
-} from '../../../../shared/native-chat-session-options'
+} from '../../../../shared/native-chat/input/native-chat-session-options'
 
 type CatalogEnrichmentEntry = {
   agent: AgentType

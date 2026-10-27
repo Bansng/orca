@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import type { AgentSessionOptionResult } from '../../../../shared/agent-session-wire'
 import { structuredAgentSessionSeedCatalog } from '../../../../shared/structured-agent-session-seed-catalog'
-import type { SessionOptionsSurface } from '../../../../shared/native-chat-session-options'
+import type { SessionOptionsSurface } from '../../../../shared/native-chat/input/native-chat-session-options'
 import { AGENT_CHAT_PERMISSION_MODE_OPTION_ID } from '../../../../shared/agent-chat-permission-mode'
 import {
   canSetStructuredAgentSessionOption,

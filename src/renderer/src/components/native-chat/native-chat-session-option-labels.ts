@@ -3,7 +3,7 @@ import {
   type SessionOptionDescriptor,
   type SessionOptionDisabledReason,
   type SessionOptionSelectChoice
-} from '../../../../shared/native-chat-session-options'
+} from '../../../../shared/native-chat/input/native-chat-session-options'
 import { translate } from '@/i18n/i18n'
 
 export function nativeChatSessionOptionLabel(descriptor: SessionOptionDescriptor): string {

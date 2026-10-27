@@ -9,7 +9,7 @@ import {
   type MobileNativeChatRowLookups
 } from './use-mobile-native-chat-row-props'
 import { equalMobileNativeChatRowContent } from './mobile-native-chat-row-projection'
-import type { MobileNativeChatVisualSource } from './mobile-native-chat-visual-read'
+import type { MobileNativeChatVisualSource } from './native-chat/visual/mobile-native-chat-visual-read'
 import type { MobileNativeChatMessageDetail } from './use-mobile-native-chat-message-detail'
 import type { NativeChatMessage } from '../../../src/shared/native-chat-types'
 

@@ -350,7 +350,9 @@
     "help": "帮助",
     "paste": "粘贴",
     "copy": "复制",
-    "selectAll": "全选"
+    "selectAll": "全选",
+    "quitAndStopAllSessions": "完全退出...",
+    "quitAndStopAllSessionsTooltip": "同时停止所有终端会话，包括正在运行的智能体。普通退出会保留这些会话，以便 Orca 下次启动时重新连接。"
   },
   "tray": {
     "openOrca": "打开 Orca",
@@ -1088,8 +1090,6 @@
         "cookie": {
           "import": {
             "toast": {
-              "restartFallbackUnavailableNone": "{{value0}} 个 Cookie 均无法加载，且重启回退不可用。此配置文件的旧 Cookie 已被替换。请重试导入。",
-              "restartFallbackUnavailablePartial": "已导入 {{value1}} 个 Cookie 中的 {{value0}} 个。其余无法加载，且重启回退不可用。请重试导入。",
               "googleCookiesSkipped": "未导入 Google cookie。使用此配置文件在 {{value0}} 上的 Orca 中打开浏览器，然后登录 Google。",
               "undecryptableAppBound": "Orca 无法解密此浏览器 cookie 的 {{value0}}，因为它们使用应用程序绑定加密。您可以使用“从文件...”从文件导入 cookie。",
               "undecryptableAppBoundMixed": "Orca 无法解密该浏览器 cookie 的 {{value0}}，因为它们使用应用程序绑定加密；由于其他原因，{{value1}} more 无法解密。您可以使用“从文件...”从文件导入 cookie。",
@@ -1098,7 +1098,8 @@
               "undecryptableUnknown": "{{value0}} cookie 无法解密并被跳过。完全关闭源浏览器并再次尝试导入。",
               "unrecognizedWarning": "cookie 导入结束时出现此版本的 Orca 无法识别的警告。更新 Orca 以查看详细信息，然后在依赖其 cookie 之前检查此配置文件。",
               "undecryptableUnrecognizedReason": "{{value0}} cookies 无法解密并被跳过，原因是此版本的 Orca 无法识别。更新 Orca 以查看详细信息，然后再次尝试导入。",
-              "partitionSkippedBreakdown": "无法读取网站分区的 Cookie：{{value0}}。为保护现有会话而未导入的相关 Cookie：{{value1}}。这些网站现有的 Cookie 保持不变。再次登录前，请在此配置文件中检查这些网站。",
+              "cookiesSkipped": "已跳过 {{value0}} 个 Cookie。",
+              "partitionSkippedCounts": "无法读取网站分区的 Cookie：{{value0}}。同时跳过的相关 Cookie：{{value1}}。再次登录前，请在此配置文件中检查这些网站。",
               "partitionSkipped": "{{value0}} cookie 未导入，因为无法读取其站点分区。在 Orca 中再次登录这些网站。",
               "locationClientHosted": "从此设备读取并存储在此处以供 {{value0}} 工作区使用。",
               "locationRemoteHost": "从 {{value0}} 上的浏览​​器读取并存储在那里。",
@@ -5522,9 +5523,10 @@
           "b2bc47c080": "更多位置",
           "b47ba1a9d2": "{{value0}} 预览",
           "2251d41ebb": "隐藏的工作树组",
-          "f54f2bec5d": "{{value0}} 隐藏 {{value1}} 的工作树",
           "5a9688802a": "显示 {{value0}} 更多",
-          "294de4aeb2": "显示较少"
+          "294de4aeb2": "显示较少",
+          "collapseAriaLabel": "折叠 {{repo}} 的隐藏工作树",
+          "expandAriaLabel": "展开 {{repo}} 的隐藏工作树"
         },
         "NonGitFolderDialog": {
           "e52454b7f6": "作为文件夹打开",
@@ -8123,6 +8125,10 @@
           "heartbeatDescription": "已分派的工作者每隔几分钟报告一次，让协调者能区分正在工作的智能体和卡住的智能体。关闭后发给协调者的消息会减少，但协调者也不再收到这一报告信号。仅对更改后分派的工作者生效。",
           "heartbeatKeywordHeartbeat": "心跳",
           "heartbeatKeywordStalled": "卡住",
+          "heartbeatKeywordInterval": "间隔",
+          "heartbeatIntervalTitle": "心跳间隔",
+          "heartbeatIntervalDescription": "间隔越短，协调者收到报告越频繁，但消息也越多。间隔越长，消息越少，但两次报告之间的空档也越长。仅对更改后分派的工作者生效。",
+          "heartbeatIntervalSuffix": "分钟",
           "7bc082f4de": "复制安装命令"
         },
         "OrchestrationSetupCard": {
@@ -8333,8 +8339,6 @@
           "c7ef4415de": "显示名称",
           "b0a0c14a1c": "侧边栏和选项卡的项目特定显示详细信息。",
           "removeProjectAllHosts": "从所有已配置主机的 Orca 中删除该项目。",
-          "removeProjectCheckout": "从 Orca 中删除此检出。此项目的其他检出将保留。",
-          "removeProjectKeepCheckouts": "从 Orca 中删除该项目。拥有独立设置的检出将保留。",
           "0909e5d650": "删除项目",
           "ee5a290616": "作为文件夹打开。 Git 功能对此工作区不可用。",
           "323debba71": "类型：",
@@ -16813,6 +16817,99 @@
                     }
                   }
                 }
+              },
+              "step": {
+                "copy": {
+                  "workspace": {
+                    "board": {
+                      "plan": {
+                        "title": "在看板中规划工作",
+                        "body": "想按状态而不是按项目查看工作区时，请使用看板。"
+                      },
+                      "lanes": {
+                        "title": "在泳道之间移动工作",
+                        "body": "状态变化时，把工作区拖到相应的泳道。"
+                      }
+                    },
+                    "creation": {
+                      "project": {
+                        "title": "选择项目",
+                        "body": "Orca 会把每个任务隔离到基于基础分支创建的独立工作树中。"
+                      },
+                      "name": {
+                        "title": "命名，或从已有工作开始",
+                        "body": "从关联的任务开始可获得简短的 issue 或 PR 名称。留空则会根据你的第一条智能体消息自动命名。"
+                      },
+                      "agent": {
+                        "title": "选择由哪个智能体开始工作",
+                        "body": "选择创建此工作树时要打开的智能体。"
+                      }
+                    }
+                  },
+                  "agent": {
+                    "sessions": {
+                      "split": {
+                        "title": "拆分终端窗格",
+                        "body": "使用 {terminal.splitRight} 打开第二个终端窗格，或右键点击窗格查看拆分选项。",
+                        "action": "拆分终端"
+                      },
+                      "parallel": {
+                        "title": "并行开始另一个任务",
+                        "body": "每个工作树都有自己的分支，因此并行进行的工作互不干扰。"
+                      }
+                    }
+                  },
+                  "browser": {
+                    "grab": {
+                      "title": "为智能体抓取页面上下文",
+                      "body": "使用抓取工具复制页面元素的上下文，供智能体使用。"
+                    },
+                    "annotate": {
+                      "title": "就地标注设计反馈",
+                      "body": "为元素添加批注，并把这些备注发送给智能体。"
+                    },
+                    "logins": {
+                      "title": "保持登录状态",
+                      "body": "把现有登录信息导入 Orca，立即保持登录状态。"
+                    }
+                  },
+                  "tasks": {
+                    "source": {
+                      "title": "选择工作来源",
+                      "body": "无需切换页面即可在已连接的提供方和项目筛选之间切换。"
+                    },
+                    "filter": {
+                      "title": "筛选出你需要的工作",
+                      "body": "使用预设和搜索来缩小 issues、评审、merge requests 或任务的范围。"
+                    },
+                    "start": {
+                      "title": "从工作项开始",
+                      "body": "在任务、issue、评审或 merge request 上点击开始或打开，即可把其上下文带入工作区。"
+                    }
+                  },
+                  "floating": {
+                    "workspace": {
+                      "repos": {
+                        "title": "在所有存储库中运行智能体",
+                        "body": "这里的智能体可在你选择的任意文件夹中运行。把它指向服务所在目录的上一级，即可一次性处理所有存储库。"
+                      },
+                      "scratchpad": {
+                        "title": "也可当作草稿区使用",
+                        "body": "打开智能体、临时终端、笔记和浏览器标签页，同时不会弄乱你正在专注的工作树。"
+                      }
+                    }
+                  },
+                  "client": {
+                    "hosted": {
+                      "browser": {
+                        "intro": {
+                          "action": "知道了",
+                          "secondaryAction": "浏览器设置"
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }
@@ -20237,7 +20334,8 @@
       "streamedDetail": "该页面在远程主机上运行并流式传输到该设备。"
     },
     "remote": {
-      "findUnavailable": "当此页面从远程主机流式传输时，在页面中查找不可用。"
+      "findUnavailable": "当此页面从远程主机流式传输时，在页面中查找不可用。",
+      "selectionTooLargeToCopy": "所选内容太大，无法从远程主机流式传输的页面中复制。"
     },
     "userAgentMigration": {
       "degradedDescription": "无法检查旧的浏览器身份选择。在浏览器设置中选择 Cleaned 或 Native；更改在重新启动后生效。",
@@ -20290,6 +20388,31 @@
       "stopped": "已停止",
       "failed": "已失败",
       "finished": "已完成"
+    },
+    "bell": {
+      "attentionRequested": "需要关注",
+      "title": "{{worktree}} 中的终端响铃"
+    },
+    "test": {
+      "title": "Orca 通知已开启",
+      "body": "这是一条来自 Orca 的测试通知。"
+    },
+    "workspaceFallback": "工作区",
+    "agentTool": {
+      "usingWithInput": "正在使用 {{tool}}：{{input}}",
+      "using": "正在使用 {{tool}}",
+      "input": "工具输入：{{input}}"
+    },
+    "taskComplete": {
+      "title": "{{worktree}} 中的任务已完成",
+      "body": "一个编程智能体已完成工作。"
+    },
+    "permissionProbe": {
+      "body": "当智能体完成工作或终端需要关注时，Orca 会提醒你。"
+    },
+    "startupRegistration": {
+      "title": "Orca 已准备好向你发送通知",
+      "body": "允许通知后，当智能体完成工作或终端需要关注时，Orca 会提醒你。"
     }
   },
   "sidebar": {
@@ -20405,6 +20528,7 @@
     }
   },
   "sourceControl": {
+    "actionSaveFailed": "无法保存此操作。请在设置中重试保存。",
     "unlinkedPr": {
       "status": "PR #{{number}} 未链接"
     },
@@ -20415,6 +20539,36 @@
       "unstagedChangesDescription": "这将恢复对此文件的未暂存更改。此操作无法撤消。",
       "unstagedSelectionIncludingUntrackedDescription": "这将还原未暂存的更改，并永久删除此选择中的任何未跟踪文件。此操作无法撤销。",
       "unstagedFilesIncludingUntrackedDescription": "这将还原未暂存的更改，并永久删除这 {{count}} 个文件中的任何未跟踪文件。此操作无法撤销。"
+    },
+    "createReviewFailure": {
+      "authRequiredCommand": "{{providerName}} 未通过身份验证。下一步：在此环境中运行 {{command}}。",
+      "authRequiredVariable": "{{providerName}} 未通过身份验证。下一步：在此环境中设置 {{variable}}。",
+      "authRequiredBitbucket": "Bitbucket 未通过身份验证。下一步：在“设置 > 集成”中连接 Bitbucket，或在此环境中设置 ORCA_BITBUCKET_*。",
+      "signInHintCommand": "在此环境中运行 {{command}}",
+      "signInHintVariable": "在此环境中设置 {{variable}}",
+      "signInHintBitbucket": "在“设置 > 集成”中连接 Bitbucket",
+      "dirty": "请在创建 {{reviewLabel}} 之前提交或放弃本地更改。",
+      "detachedHead": "请在创建 {{reviewLabel}} 之前切换到某个分支。",
+      "defaultBranch": "请在创建 {{reviewLabel}} 之前选择功能分支。",
+      "noUpstream": "请在创建 {{reviewLabel}} 之前发布此分支。",
+      "needsPush": "请在创建 {{reviewLabel}} 之前推送此分支。",
+      "needsSync": "请在创建 {{reviewLabel}} 之前同步此分支。",
+      "refreshStatus": "请刷新源代码控制状态后重试。",
+      "namedBaseNotOnRemote": "基础分支“{{base}}”尚未推送到远程。请选择已推送的基础分支，或先推送它。",
+      "baseNotOnRemote": "基础分支尚未推送到远程。请选择已推送的基础分支，或先推送它。",
+      "branchChanged": "请在创建 {{reviewLabel}} 之前切换回所选分支。",
+      "branchStatusUnverified": "无法验证分支状态。请刷新源代码控制后重试。",
+      "reviewLookupUnavailable": "Orca 无法确认此分支是否已有 {{reviewLabel}}。请在 {{providerName}} 查询成功后重试。",
+      "sameBaseBranch": "请在创建 {{reviewLabel}} 之前选择其他基础分支。",
+      "rejected": "{{providerName}} 拒绝了该 {{reviewLabel}}。请检查基础分支和分支状态，然后重试。",
+      "repositoryNotFound": "{{providerName}} 找不到该仓库。请确认凭据对该仓库具有写入权限。",
+      "createFailed": "{{providerName}} 无法创建 {{reviewLabel}}。请稍后重试。",
+      "unsupportedProvider": "创建 {{reviewLabel}} 需要托管在 {{providerName}} 上的远程仓库。",
+      "providerNotSupported": "尚不支持为此提供商创建评审。",
+      "existingReview": "此分支已存在 {{reviewLabel}}。",
+      "creationUnconfirmed": "{{shortLabel}} 可能已创建完成。正在刷新分支评审状态...",
+      "withDetail": "创建 {{shortLabel}} 失败：{{detail}}",
+      "pushFailed": "推送失败。请解决推送错误后重试。"
     }
   },
   "rendererRecovery": {
@@ -20552,6 +20706,12 @@
       "findInFolder": "在 {{path}} 中查找",
       "folderLoadError": "无法加载此文件夹：",
       "emptyFolder": "此文件夹中没有文件"
+    },
+    "trashFailed": {
+      "titleRecycleBin": "无法将“{{name}}”移到回收站。是否永久删除？",
+      "titleTrash": "无法将“{{name}}”移到废纸篓。是否永久删除？",
+      "description": "此操作无法撤销。",
+      "confirm": "永久删除"
     }
   },
   "sparsePreset": {
@@ -21291,5 +21451,17 @@
   },
   "browserTab": {
     "agentDriving": "智能体正在使用此页面"
+  },
+  "quitAndStopAllSessions": {
+    "title": "完全退出",
+    "message": "停止所有终端会话并退出 Orca？",
+    "detail": "Orca 会关闭所有终端标签页并停止其会话（包括在终端中运行的智能体），然后退出。普通退出会保留这些会话，以便 Orca 下次启动时重新连接。远程主机上的终端会话可能会在远程继续运行。未保存的终端工作将丢失，关闭的标签页在下次启动时不会恢复。此操作不可撤销。",
+    "confirm": "停止会话并退出",
+    "cancel": "取消",
+    "failed": "未能停止所有终端会话，因此 Orca 仍保持打开。",
+    "stopping": "正在停止终端会话，然后退出…",
+    "ok": "确定",
+    "unavailableMessage": "Orca 目前无法停止所有终端会话。",
+    "unavailableDetail": "未停止任何内容。请在终端打开后重试。如果某个终端显示它是在较新版本的 Orca 中打开的，请先重新打开它。如果终端已经打开，请退出并重新打开 Orca，然后重试。"
   }
 }

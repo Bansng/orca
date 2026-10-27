@@ -3,13 +3,13 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { sortNativeChatSessionOptions } from '../../../../shared/native-chat-session-option-snapshot'
+import { sortNativeChatSessionOptions } from '../../../../shared/native-chat/input/native-chat-session-option-snapshot'
 import {
   isReadOnlySessionOptionValue,
   type SessionOptionDescriptor,
   type SessionOptionSelectChoice,
   type SessionOptionValue
-} from '../../../../shared/native-chat-session-options'
+} from '../../../../shared/native-chat/input/native-chat-session-options'
 import {
   nativeChatSessionChoiceLabel,
   nativeChatSessionChoiceShortLabel,

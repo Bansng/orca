@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mergeDiscoveredAuthoritativeModels } from '../../../../shared/agent-session-option-catalog'
 import { GROK_SESSION_OPTION_CATALOG } from '../../../../shared/agent-session-option-catalog-grok'
-import { updateNativeChatSessionOptionDefaults } from '../../../../shared/native-chat-session-option-defaults'
-import type { PersistedNativeChatSessionOptions } from '../../../../shared/native-chat-session-options'
+import { updateNativeChatSessionOptionDefaults } from '../../../../shared/native-chat/input/native-chat-session-option-defaults'
+import type { PersistedNativeChatSessionOptions } from '../../../../shared/native-chat/input/native-chat-session-options'
 import {
   clearNativeChatSessionOptionCacheForTests,
   readNativeChatSessionOptionCache,

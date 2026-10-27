@@ -1,4 +1,4 @@
-import { isRemoteRuntimePtyId } from '../../../../../shared/remote-runtime-pty-id'
+import { isRemoteRuntimePtyId } from '../../../../../shared/remote-runtime/remote-runtime-pty-id'
 import { useAppStore } from '@/store'
 import { ambiguousWorkspaceOwnerMessage } from '@/lib/duplicate-paired-servers'
 import { createIpcPtyTransport } from '../pty-transport'

@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { translate } from '@/i18n/i18n'
-import { sortNativeChatSessionOptions } from '../../../../shared/native-chat-session-option-snapshot'
+import { sortNativeChatSessionOptions } from '../../../../shared/native-chat/input/native-chat-session-option-snapshot'
 import {
   sessionOptionDispatchUnconfirmed,
   type SessionOptionDescriptor,
   type SessionOptionsSurface,
   type SessionOptionValue
-} from '../../../../shared/native-chat-session-options'
+} from '../../../../shared/native-chat/input/native-chat-session-options'
 import {
   nativeChatModelPillLabel,
   nativeChatOptionValuesLabel,

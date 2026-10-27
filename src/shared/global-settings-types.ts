@@ -15,7 +15,7 @@ import type { ClaudeAgentTeamsMode } from './claude-agent-teams-tmux-compat'
 import type { TerminalCustomTheme } from './terminal-custom-themes'
 import type { UiLanguage } from './ui-language'
 import type { GlobalWindowsRuntimeDefault } from './project-execution-runtime'
-import type { PersistedNativeChatSessionOptions } from './native-chat-session-options'
+import type { PersistedNativeChatSessionOptions } from './native-chat/input/native-chat-session-options'
 import type { AgentChatPermissionMode } from './agent-chat-permission-mode'
 import type { ComputerAwakeMode } from './computer-awake-mode'
 import type { CommitMessageAiSettings } from './commit-message-ai-types'
@@ -249,8 +249,6 @@ export type GlobalSettings = GlobalSettingsBase & {
   nestedWorkerMaxDepth?: number
   /** Escalate native-chat worker turn errors to the dispatching Run; absent means on. Renderer-only so workers cannot silence failures via CLI. */
   orchestrationChatErrorEscalationEnabled?: boolean
-  /** Tell dispatched workers to send periodic heartbeats; absent means on. Renderer-only so workers cannot change it via CLI. */
-  orchestrationHeartbeatsEnabled?: boolean
   /** Only toggles the sidebar shortcut; Artifacts stay reachable from Settings. */
   showArtifactsButton?: boolean
   /** Only toggles the sidebar shortcut; Skills stay reachable from Settings. */

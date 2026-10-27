@@ -1,4 +1,4 @@
-import { structuredLaunchRequestedOptions } from '../../../../shared/native-chat-session-option-defaults'
+import { structuredLaunchRequestedOptions } from '../../../../shared/native-chat/input/native-chat-session-option-defaults'
 import { useCallback } from 'react'
 import { structuredAgentSessionSendSelection } from '../../../../shared/structured-agent-session-option-view'
 import { getStructuredAgentSessionLaunchSelection } from '@/lib/structured-agent-session-launch-options'

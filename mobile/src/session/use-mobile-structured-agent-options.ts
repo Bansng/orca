@@ -4,7 +4,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef } from 'react'
 import { isAgentSessionHandleProvider } from '../../../src/shared/agent-session-provider-handle'
 import { structuredAgentSessionSeedCatalog } from '../../../src/shared/structured-agent-session-seed-catalog'
 import type { AgentSessionOptionResult } from '../../../src/shared/agent-session-wire'
-import type { SessionOptionValue } from '../../../src/shared/native-chat-session-options'
+import type { SessionOptionValue } from '../../../src/shared/native-chat/input/native-chat-session-options'
 import {
   canSetStructuredAgentSessionOption,
   commitStructuredAgentSessionOption,

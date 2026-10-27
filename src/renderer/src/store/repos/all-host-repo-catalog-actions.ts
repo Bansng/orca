@@ -40,6 +40,7 @@ export function createAllHostRepoCatalogActions(
 ): Pick<RepoSlice, 'fetchReposForAllHosts'> {
   return {
     fetchReposForAllHosts: async (options) => {
+      const hostRefreshes: Promise<void>[] = []
       const settleLocalCatalog = startLocalRepoCatalogFetch(get)
       let generation = 0
       set((s) => {
@@ -67,9 +68,9 @@ export function createAllHostRepoCatalogActions(
           const finalizedRepos = applyManualRepoOrder(reconciliation.repos, s.manualRepoOrder)
           const mergedProjectCompatibility = mergeFetchedHostProjectCatalog({
             previous: {
-              projects: s.projects,
+              projects: s.endpointProjects,
               projectHostSetups: filterSetupsForPrunedRepoRows(
-                s.projectHostSetups,
+                s.endpointProjectHostSetups,
                 result.repos,
                 finalizedRepos
               )
@@ -85,7 +86,8 @@ export function createAllHostRepoCatalogActions(
             repos: finalizedRepos,
             pendingSshRepoReadoptions: reconciliation.pendingReadoptions,
             ...reconcileFetchedCatalogWorktreeState(s, catalog, finalizedRepos),
-            ...mergedProjectCompatibility,
+            endpointProjects: mergedProjectCompatibility.projects,
+            endpointProjectHostSetups: mergedProjectCompatibility.projectHostSetups,
             ...(arrayElementsUnchanged(finalizedRepos, s.repos)
               ? {}
               : { folderWorkspacePathStatuses: {} }),
@@ -96,6 +98,20 @@ export function createAllHostRepoCatalogActions(
         })
         // Why: keep the safe-auto fork sync (as fetchRepos does) so cold-start, which now routes here, still updates safe-auto forks.
         scheduleSafeAutoForkSync(hostRepos)
+        if (options?.onHostLoaded) {
+          const onHostLoaded = options.onHostLoaded
+          hostRefreshes.push(
+            Promise.resolve()
+              .then(async () => {
+                if (isCurrent(fence)) {
+                  await onHostLoaded(catalog.hostId)
+                }
+              })
+              .catch((err: unknown) => {
+                console.warn(`Failed to refresh worktrees for host ${catalog.hostId}:`, err)
+              })
+          )
+        }
         return true
       }
       const validateRepoScopedUi = (): void => {
@@ -134,9 +150,11 @@ export function createAllHostRepoCatalogActions(
       settleLocalCatalog(localCatalogOutcome)
       // Why: a newer local-only refresh must not cancel this load's unrelated remote catalogs.
       if (latestAllHostRepoCatalogGenerationByStore.get(get) !== generation) {
+        await Promise.all(hostRefreshes)
         return
       }
       if (options?.remoteHosts === 'skip') {
+        await Promise.all(hostRefreshes)
         return
       }
 
@@ -187,6 +205,7 @@ export function createAllHostRepoCatalogActions(
         },
         () => latestAllHostRepoCatalogGenerationByStore.get(get) === generation
       )
+      await Promise.all(hostRefreshes)
       // Validate saved repo UI only after all hosts answer; local-first paint otherwise erases offline-runtime filters.
       if (!failed && get().reposFetchGeneration === generation) {
         validateRepoScopedUi()

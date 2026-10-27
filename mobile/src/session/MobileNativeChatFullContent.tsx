@@ -14,7 +14,7 @@ import type {
 } from '../../../src/shared/agent-session-journal-types'
 import { INLINE_TEXT_SELECTION } from '../components/inline-text-selection'
 import { styles } from './mobile-native-chat-message-styles'
-import { toolStyles } from './mobile-native-chat-tool-styles'
+import { toolStyles } from './native-chat/transcript/mobile-native-chat-tool-styles'
 import { MobileNativeChatOwnedScrollView } from './MobileNativeChatOwnedScrollView'
 import {
   MobileNativeChatItemSourceContext,

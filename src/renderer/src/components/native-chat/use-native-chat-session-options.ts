@@ -4,8 +4,8 @@ import {
   getAgentSessionOptionCatalog,
   type CatalogModel
 } from '../../../../shared/agent-session-option-catalog'
-import { matchNativeChatCatalogModelId } from '../../../../shared/native-chat-session-option-state'
-import type { SessionOptionDescriptor } from '../../../../shared/native-chat-session-options'
+import { matchNativeChatCatalogModelId } from '../../../../shared/native-chat/input/native-chat-session-option-state'
+import type { SessionOptionDescriptor } from '../../../../shared/native-chat/input/native-chat-session-options'
 import { useAppStore } from '../../store'
 import {
   createNativeChatPtySessionOptions,

@@ -1,7 +1,7 @@
 import {
   createNativeChatSessionOptionRecord,
   type NativeChatSessionOptionRecord
-} from '../../../src/shared/native-chat-session-option-state'
+} from '../../../src/shared/native-chat/input/native-chat-session-option-state'
 
 // Bound per-tab records that outlive chat/terminal switches and remounts.
 const MOBILE_SESSION_OPTION_RECORD_CAP = 32

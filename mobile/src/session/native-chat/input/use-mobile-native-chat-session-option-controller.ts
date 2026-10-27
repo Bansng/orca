@@ -6,7 +6,7 @@ import type {
   SessionOptionDescriptor,
   SessionOptionValue,
   SessionOptionsSurface
-} from '../../../../../src/shared/native-chat-session-options'
+} from '../../../../../src/shared/native-chat/input/native-chat-session-options'
 import { mobileNativeChatScopeKey } from '../mobile-native-chat-scope-key'
 import type { MobileNativeChatSendOutcome } from '../mobile-native-chat-send'
 import type { MobileNativeChatSessionOptionPickersProps } from './MobileNativeChatSessionOptionPickers'

@@ -7,25 +7,25 @@ import type {
   SessionOptionDescriptor,
   SessionOptionsSurface,
   SessionOptionValue
-} from '../../../../shared/native-chat-session-options'
-import { recordNativeChatSessionOptionCommand } from '../../../../shared/native-chat-session-option-commands'
+} from '../../../../shared/native-chat/input/native-chat-session-options'
+import { recordNativeChatSessionOptionCommand } from '../../../../shared/native-chat/input/native-chat-session-option-commands'
 import {
   applyNativeChatReportedSessionOptions,
   clearNativeChatSessionModel,
   createNativeChatSessionOptionRecord,
   setTrackedSessionOption
-} from '../../../../shared/native-chat-session-option-state'
+} from '../../../../shared/native-chat/input/native-chat-session-option-state'
 import {
   readNativeChatSessionOptionCache,
   writeNativeChatSessionOptionCache
 } from './native-chat-session-option-cache'
 import { createSessionOptionAppliers } from './native-chat-session-option-apply'
+import { buildNativeChatSessionOptionSnapshot } from './native-chat-session-option-snapshot'
 import {
-  buildNativeChatSessionOptionSnapshot,
   resolveEffectiveNativeChatModelId,
   withTrackedNativeChatModel,
   type NativeChatSessionOptionMode
-} from './native-chat-session-option-snapshot'
+} from '../../../../shared/native-chat/input/native-chat-session-option-snapshot'
 import type { NativeChatSessionOptionDispatchCommand } from './native-chat-session-option-command-dispatch'
 
 type PersistSelection = (args: {

@@ -1,6 +1,6 @@
 import type { AgentType } from './agent-status-types'
-import type { SessionOptionValue } from './native-chat-session-options'
-import type { TrackedNativeChatSessionOption } from './native-chat-session-option-state'
+import type { SessionOptionValue } from './native-chat/input/native-chat-session-options'
+import type { TrackedNativeChatSessionOption } from './native-chat/input/native-chat-session-option-state'
 
 /** Independent host-held values need no model parent. Mutate the record in place so session identity stays stable across picker fences. */
 export type StructuredAgentSessionOptionRecord = {
