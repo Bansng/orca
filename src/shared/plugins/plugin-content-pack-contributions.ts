@@ -29,7 +29,9 @@ export const pluginLocaleIdSchema = z
 export const pluginLanguagePackContributionSchema = z
   .object({
     locale: pluginLocaleIdSchema,
-    path: pluginRelativePathSchema
+    path: pluginRelativePathSchema,
+    // Native-language label for the Settings picker; omitted packs show `{locale} — {pluginKey}`.
+    displayName: z.string().trim().min(1).max(80).optional()
   })
   .strict()
 

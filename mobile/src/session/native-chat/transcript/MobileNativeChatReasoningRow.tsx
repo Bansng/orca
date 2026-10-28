@@ -7,7 +7,7 @@ import {
   nativeChatReasoningDisclosureKey,
   nativeChatReasoningHeadline,
   nativeChatReasoningHeadlineText
-} from '../../../../../src/shared/native-chat-reasoning-row'
+} from '../../../../../src/shared/native-chat/transcript/native-chat-reasoning-row'
 import type { NativeChatMessage } from '../../../../../src/shared/native-chat-types'
 import { deriveNativeChatRowContent } from '../../../../../src/shared/native-chat-row-content'
 import { useMobileNativeChatFullMessage } from '../../MobileNativeChatFullContent'

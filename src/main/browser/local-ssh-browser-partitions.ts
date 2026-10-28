@@ -184,20 +184,39 @@ function ensureLocalSshWebRtcGuard(): void {
 /** Stops guests and releases route records; the caller clears storage afterward. */
 export async function releaseLocalSshBrowserPartitionsForTarget(targetId: string): Promise<void> {
   await closeLocalSshBrowserRouteForTarget(targetId)
-  for (const [identityKey, pending] of preparedByIdentityKey) {
-    const prepared = await pending.catch(() => null)
-    if (prepared?.targetId === targetId) {
-      preparedByIdentityKey.delete(identityKey)
-      preparedByPartition.delete(prepared.partition)
-      // Close guests before clearing storage so they cannot recreate cookies after bindings are removed.
-      const partitionSession = session.fromPartition(prepared.partition)
-      for (const contents of webContents.getAllWebContents()) {
-        if (!contents.isDestroyed() && contents.session === partitionSession) {
-          closeRouteGuest(contents)
+  let contentsBySession: Map<Session, WebContents[]> | null = null
+  const invalidateContents = (): void => {
+    contentsBySession = null
+  }
+  app.on('web-contents-created', invalidateContents)
+  try {
+    for (const [identityKey, pending] of preparedByIdentityKey) {
+      const prepared = await pending.catch(() => null)
+      if (prepared?.targetId === targetId) {
+        preparedByIdentityKey.delete(identityKey)
+        preparedByPartition.delete(prepared.partition)
+        // Close guests before clearing storage so they cannot recreate cookies after bindings are removed.
+        const partitionSession = session.fromPartition(prepared.partition)
+        if (!contentsBySession) {
+          contentsBySession = new Map()
+          for (const contents of webContents.getAllWebContents()) {
+            if (!contents.isDestroyed()) {
+              const peers = contentsBySession.get(contents.session) ?? []
+              peers.push(contents)
+              contentsBySession.set(contents.session, peers)
+            }
+          }
         }
+        for (const contents of contentsBySession.get(partitionSession) ?? []) {
+          if (!contents.isDestroyed()) {
+            closeRouteGuest(contents)
+          }
+        }
+        browserSessionRegistry.clearRoutePartitionPolicies(prepared.partition)
       }
-      browserSessionRegistry.clearRoutePartitionPolicies(prepared.partition)
     }
+  } finally {
+    app.removeListener('web-contents-created', invalidateContents)
   }
 }
 

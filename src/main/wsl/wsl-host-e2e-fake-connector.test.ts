@@ -49,8 +49,20 @@ it('drops the bridge of a distro the test stops and refuses a no-boot reconnect'
   writeState('stopped')
   expect(await fake.reachability('Ubuntu', 'wsl:ubuntu')).toBe('stopped')
   expect(fake.get('Ubuntu')).toBeNull()
-  expect(onChange).toHaveBeenLastCalledWith('Ubuntu', null, { state: 'closed' })
+  // Matches production liveness, which reports the stop rather than a plain close.
+  expect(onChange).toHaveBeenLastCalledWith('Ubuntu', null, {
+    state: 'distro-stopped',
+    terminals: 'exited',
+    recovering: false
+  })
   await expect(fake.connect('Ubuntu', { noBoot: true })).rejects.toThrow('Ubuntu is not running.')
+})
+
+it('still reports a plain close for an explicit disconnect of a running distro', async () => {
+  const { fake, onChange } = connector()
+  await fake.connect('Ubuntu')
+  await fake.disconnect('Ubuntu')
+  expect(onChange).toHaveBeenLastCalledWith('Ubuntu', null, { state: 'closed' })
 })
 
 it('boots a stopped distro on a plain connect', async () => {

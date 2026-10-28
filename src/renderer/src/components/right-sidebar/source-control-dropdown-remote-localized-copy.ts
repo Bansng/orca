@@ -1,5 +1,14 @@
 import { translate } from '@/i18n/i18n'
 import type { RemoteDropdownCopy } from '../../../../shared/source-control-dropdown-remote-copy'
+import {
+  localizedFastForwardCount,
+  localizedForcePushWithLease,
+  localizedManualForcePush,
+  localizedPullCount,
+  localizedPushCount,
+  localizedSyncCounts,
+  localizedUnpublishedForcePush
+} from './source-control-count-localized-copy'
 
 export function localizedRemoteCopy(): RemoteDropdownCopy {
   return {
@@ -198,6 +207,13 @@ export function localizedRemoteCopy(): RemoteDropdownCopy {
     publishToOrigin: translate(
       'auto.components.right.sidebar.source.control.primary.action.1884cf34af',
       'Publish this branch to origin'
-    )
+    ),
+    pushCount: localizedPushCount,
+    pullCount: localizedPullCount,
+    fastForwardCount: localizedFastForwardCount,
+    syncCounts: localizedSyncCounts,
+    forcePushWithLease: localizedForcePushWithLease,
+    manualForcePush: localizedManualForcePush,
+    unpublishedForcePush: localizedUnpublishedForcePush
   }
 }

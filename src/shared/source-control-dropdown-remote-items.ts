@@ -1,15 +1,9 @@
 import type { DropdownItem } from './source-control-dropdown-item-types'
 import type { DropdownActionContext } from './source-control-dropdown-action-context'
 import {
-  describeFastForwardCount,
-  describePullCount,
-  describePushCount,
-  describeSyncCounts,
   formatCountLabel,
-  formatManualForcePushTitle,
   formatRebaseBaseRef,
-  formatSyncLabel,
-  formatUnpublishedForcePushTitle
+  formatSyncLabel
 } from './source-control-dropdown-labels'
 import {
   ENGLISH_REMOTE_DROPDOWN_COPY,
@@ -49,8 +43,7 @@ export function buildRemoteDropdownItems(
     ahead,
     behind,
     shouldForcePushWithLease,
-    pushLabelCount,
-    forcePushTitle
+    pushLabelCount
   } = ctx
 
   const push: DropdownItem = {
@@ -74,7 +67,7 @@ export function buildRemoteDropdownItems(
                     ? upstreamStatus?.upstreamName
                       ? copy.nothingToPushTo(upstreamStatus.upstreamName)
                       : copy.nothingToPush
-                    : describePushCount(ahead),
+                    : copy.pushCount(ahead),
     // Push can set upstream and coexist with force-with-lease; detached HEAD and unknown review targets still block it.
     disabled: globalBusy || publishBlockedByDetachedHead || pushBlockedByOpenHostedReviewTarget
   }
@@ -87,16 +80,16 @@ export function buildRemoteDropdownItems(
       : pushBlockedByOpenHostedReviewTarget
         ? copy.linkedReviewTargetUnavailable
         : upstreamLoading
-          ? formatUnpublishedForcePushTitle(branchCommitsAhead)
+          ? copy.unpublishedForcePush(branchCommitsAhead)
           : !hasUpstream
-            ? formatUnpublishedForcePushTitle(branchCommitsAhead)
+            ? copy.unpublishedForcePush(branchCommitsAhead)
             : pushLabelCount === 0
               ? upstreamStatus?.upstreamName
                 ? copy.nothingToForcePushTo(upstreamStatus.upstreamName)
                 : copy.nothingToForcePush
               : shouldForcePushWithLease
-                ? forcePushTitle
-                : formatManualForcePushTitle(pushLabelCount, behind, upstreamStatus?.upstreamName),
+                ? copy.forcePushWithLease(branchCommitsAhead, upstreamStatus?.upstreamName)
+                : copy.manualForcePush(pushLabelCount, behind, upstreamStatus?.upstreamName),
     // Match Push target safety; force-with-lease must not push the wrong review head.
     disabled: globalBusy || publishBlockedByDetachedHead || pushBlockedByOpenHostedReviewTarget
   }
@@ -118,7 +111,7 @@ export function buildRemoteDropdownItems(
                 ? copy.nothingNewToPull
                 : behind === 0
                   ? copy.nothingToPull
-                  : describePullCount(behind),
+                  : copy.pullCount(behind),
     disabled: globalBusy || upstreamLoading || !hasUpstream || publishBlockedByDetachedHead
   }
 
@@ -141,7 +134,7 @@ export function buildRemoteDropdownItems(
                   ? copy.nothingToFastForward
                   : ahead > 0
                     ? copy.tryFastForwardPull
-                    : describeFastForwardCount(behind),
+                    : copy.fastForwardCount(behind),
     disabled: globalBusy || upstreamLoading || !hasUpstream || publishBlockedByDetachedHead
   }
 
@@ -162,7 +155,7 @@ export function buildRemoteDropdownItems(
                 ? copy.useForcePushToSync
                 : ahead === 0 && behind === 0
                   ? copy.branchUpToDate
-                  : describeSyncCounts(ahead, behind),
+                  : copy.syncCounts(ahead, behind),
     disabled:
       globalBusy ||
       upstreamLoading ||

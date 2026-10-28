@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { parsePairingCode } from '../../shared/pairing'
 import type { WslHostConnector } from './wsl-host-service'
 import type { WslOrcadConnection, WslOrcadConnectionDependencies } from './wsl-orcad-connection'
-import type { WslOrcadConnectIntent } from './wsl-orcad-connection-status'
+import type { WslOrcadConnectIntent, WslOrcadConnectionStatus } from './wsl-orcad-connection-status'
 import { defaultWslOrcadEnvironmentId } from './wsl-orcad-deploy'
 import {
   stopWslHostServer,
@@ -58,9 +58,9 @@ export function createFakeWslHostConnector(
   const isStopped = (distro: string): boolean =>
     Boolean(config.distrosFile) &&
     readDistros().some((entry) => key(entry.name) === key(distro) && entry.state === 'stopped')
-  const dropBridge = (distro: string): void => {
+  const dropBridge = (distro: string, status: WslOrcadConnectionStatus): void => {
     if (active.delete(key(distro))) {
-      onChange(distro, null, { state: 'closed' })
+      onChange(distro, null, status)
     }
   }
   const connect = async (
@@ -123,12 +123,13 @@ export function createFakeWslHostConnector(
     // A running fake distro's missing server is reachable by a reconnect; a stopped one's bridge is gone.
     reachability: async (distro) => {
       if (isStopped(distro)) {
-        dropBridge(distro)
+        // As production liveness reports a stopped distro's lost bridge.
+        dropBridge(distro, { state: 'distro-stopped', terminals: 'exited', recovering: false })
         return 'stopped'
       }
       return active.has(key(distro)) ? 'available' : 'unreachable'
     },
-    disconnect: async (distro) => dropBridge(distro),
+    disconnect: async (distro) => dropBridge(distro, { state: 'closed' }),
     // Use real terminal RPCs against the headless fixture server for removal proof; fake only decommission.
     stopServer: async (distro, environmentId) => {
       // As the real connector: the fake distro always runs, so an unbridged server is reconnected

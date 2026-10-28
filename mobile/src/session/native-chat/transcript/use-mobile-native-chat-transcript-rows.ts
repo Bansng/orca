@@ -6,7 +6,7 @@ import {
   nativeChatTurnFold,
   nativeChatTurnFoldRow,
   type NativeChatTurnFold
-} from '../../../../../src/shared/native-chat-turn-fold'
+} from '../../../../../src/shared/native-chat/transcript/native-chat-turn-fold'
 import {
   nativeChatRowRendersProse,
   nativeChatRowSpeaksOrActs

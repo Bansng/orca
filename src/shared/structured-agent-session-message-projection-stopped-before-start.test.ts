@@ -22,7 +22,7 @@ import {
   projectNativeChatTranscript,
   projectNativeChatTranscriptMessages
 } from './native-chat-transcript-projection'
-import { nativeChatRowsInDrawOrder } from './native-chat-turn-grouping'
+import { nativeChatRowsInDrawOrder } from './native-chat/transcript/native-chat-turn-grouping'
 import { nativeChatTurnMembership } from './native-chat-turn-membership'
 
 let sequence = 0

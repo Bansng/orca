@@ -1,3 +1,13 @@
+import {
+  describeFastForwardCount,
+  describePullCount,
+  describePushCount,
+  describeSyncCounts,
+  formatForcePushTitle,
+  formatManualForcePushTitle,
+  formatUnpublishedForcePushTitle
+} from './source-control-dropdown-labels'
+
 // Desktop localizes these strings; other clients pass their own copy.
 export type RemoteDropdownCopy = {
   push: string
@@ -47,6 +57,13 @@ export type RemoteDropdownCopy = {
   checkOutBranchToPublish: string
   branchAlreadyPublished: string
   publishToOrigin: string
+  pushCount: (ahead: number) => string
+  pullCount: (behind: number) => string
+  fastForwardCount: (behind: number) => string
+  syncCounts: (ahead: number, behind: number) => string
+  forcePushWithLease: (branchCommitsAhead: number | undefined, upstreamName?: string) => string
+  manualForcePush: (ahead: number, behind: number, upstreamName?: string) => string
+  unpublishedForcePush: (branchCommitsAhead: number | undefined) => string
 }
 
 export const ENGLISH_REMOTE_DROPDOWN_COPY: RemoteDropdownCopy = {
@@ -97,5 +114,12 @@ export const ENGLISH_REMOTE_DROPDOWN_COPY: RemoteDropdownCopy = {
   linkedReviewBranchExists: 'Linked review branch already exists',
   checkOutBranchToPublish: 'Check out a branch before publishing commits',
   branchAlreadyPublished: 'Branch is already published',
-  publishToOrigin: 'Publish this branch to origin'
+  publishToOrigin: 'Publish this branch to origin',
+  pushCount: describePushCount,
+  pullCount: describePullCount,
+  fastForwardCount: describeFastForwardCount,
+  syncCounts: describeSyncCounts,
+  forcePushWithLease: formatForcePushTitle,
+  manualForcePush: formatManualForcePushTitle,
+  unpublishedForcePush: formatUnpublishedForcePushTitle
 }
