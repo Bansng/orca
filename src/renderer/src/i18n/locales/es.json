@@ -3347,6 +3347,7 @@
             "78b79d854d": "¿Cerrar terminal?",
             "stop_agent_title": "¿Detener este agente?",
             "stop_command_title": "¿Detener comando en ejecución?",
+            "stop_chat_description": "Al cerrar este chat, se detendrá el trabajo actual del agente.",
             "stop_agent_description": "Al cerrar esta terminal, se detendrá el trabajo actual del agente.",
             "stop_command_description": "Al cerrar esta terminal, se detendrá el comando que se está ejecutando en ella.",
             "dont_ask_again": "No volver a preguntar para terminales en ejecución",
@@ -7686,6 +7687,8 @@
           "projectRuntimeDescription": "Runtime predeterminado para proyectos locales de Windows que no lo sobrescriben.",
           "editor_preview_tabs": "Reutilice una pestaña de vista previa al explorar archivos",
           "editor_preview_tabs_description": "Al hacer un solo clic en un archivo en el Explorador o al seguir un enlace en la fuente de Markdown, se reutiliza una pestaña de vista previa en cursiva por grupo en lugar de abrir una nueva. Editar, hacer doble clic o fijar mantiene esa pestaña abierta. Desactívelo para darle a cada archivo su propia pestaña.",
+          "confirm_running_work_close": "Confirmar antes de cerrar chats o terminales activos",
+          "confirm_running_work_close_description": "Preguntar antes de detener un agente o comando activo al cerrar su chat o terminal.",
           "confirm_running_terminal_close": "Confirmar antes de cerrar terminales en funcionamiento",
           "confirm_running_terminal_close_description": "Pregunte antes de detener un agente o comando en ejecución al cerrar una terminal."
         },
@@ -14192,7 +14195,49 @@
                   "226b85a3a7": "Fetch",
                   "323bb614aa": "Commit y sincronizar",
                   "2b8e6595fd": "Commit",
-                  "04d709801d": "Fetch del remoto sin hacer merge"
+                  "04d709801d": "Fetch del remoto sin hacer merge",
+                  "titleCheckOutBranchToPush": "Haz checkout de una rama antes de hacer push de commits",
+                  "titleLinkedReviewTargetUnavailable": "El destino de la rama de review vinculada no está disponible",
+                  "titlePublishBranchFirstToPush": "Publica la rama primero para hacer push de commits",
+                  "titleCommitAndForcePush": "Hacer commit de los cambios staged y force push con lease",
+                  "titleCommitAndTryPush": "Hacer commit de los cambios staged e intentar hacer push",
+                  "titleCommitAndPush": "Hacer commit de los cambios staged y push",
+                  "commitForcePush": "Commit y Force Push",
+                  "commitPush": "Commit y push",
+                  "titleOperationInProgress": "Operación en curso…",
+                  "titleAbortRebaseInProgress": "Abortar el rebase en curso",
+                  "titleAbortMergeInProgress": "Abortar el merge en curso",
+                  "titleNothingToPushTo": "No hay nada para hacer push a {{upstreamName}}",
+                  "titleNothingToPush": "No hay nada para hacer push",
+                  "titleNothingToForcePushTo": "No hay nada para hacer force push a {{upstreamName}}",
+                  "titleNothingToForcePush": "No hay nada para hacer force push",
+                  "titlePushAndSetUpstream": "Haz push de esta rama y configura un upstream si es necesario",
+                  "titleTryRegularPush": "Intenta un push normal; git puede requerir force push",
+                  "titlePushMayNeedSync": "Haz push de los commits locales; git puede requerir sincronizar primero",
+                  "titleCheckOutBranchToForcePush": "Haz checkout de una rama antes de hacer force push de commits",
+                  "titleCheckOutBranchToPull": "Haz checkout de una rama antes de hacer pull de commits",
+                  "titlePublishBranchFirstToPull": "Publica la rama primero para hacer pull de commits",
+                  "titleNothingNewToPull": "No hay nada nuevo para hacer pull — el remoto solo tiene copias antiguas de commits locales",
+                  "titleNothingToPull": "No hay nada para hacer pull",
+                  "fastForward": "Fast-forward",
+                  "titleCheckOutBranchToFastForward": "Haz checkout de una rama antes de hacer fast-forward",
+                  "titlePublishBranchFirstToFastForward": "Publica la rama primero para hacer fast-forward",
+                  "titleNothingNewToFastForward": "No hay nada nuevo para hacer fast-forward — el remoto solo tiene copias antiguas de commits locales",
+                  "titleNothingToFastForward": "No hay nada para hacer fast-forward",
+                  "titleTryFastForwardPull": "Intenta un pull con fast-forward; git puede rechazar los commits locales",
+                  "titleUseForcePushToSync": "Usa Force Push — el remoto solo tiene copias antiguas de commits locales",
+                  "titleBranchUpToDate": "La rama está actualizada",
+                  "publishPrStatus": "Estado del PR",
+                  "publishLinkedReview": "Review vinculada",
+                  "publishNoBranch": "Sin rama",
+                  "titleLinkedReviewBranchExists": "La rama de review vinculada ya existe",
+                  "titleCheckOutBranchToPublish": "Haz checkout de una rama antes de publicar commits",
+                  "titleBranchAlreadyPublished": "La rama ya está publicada",
+                  "titleCreateReviewForBranch": "Crear un {{reviewLabel}} para esta rama",
+                  "forcePushBeforeReview": "Force Push antes de {{shortLabel}}",
+                  "pushBeforeReview": "Push antes de {{shortLabel}}",
+                  "titleForcePushBeforeCreatingReview": "Haz force push con lease antes de crear un {{reviewLabel}}",
+                  "titlePushBeforeCreatingReview": "Haz push de los commits locales antes de crear un {{reviewLabel}}"
                 }
               },
               "primary": {
@@ -18967,7 +19012,8 @@
         "clearAfterRetry": "Reintente su mensaje anterior y luego ejecute /clear.",
         "compactAfterRetry": "Reintente su mensaje anterior y luego ejecute /compact.",
         "clearAfterSending": "Su mensaje anterior todavía se está enviando. Ejecute /clear cuando se haya enviado.",
-        "compactAfterSending": "Su mensaje anterior todavía se está enviando. Ejecute /compact cuando se haya enviado."
+        "compactAfterSending": "Su mensaje anterior todavía se está enviando. Ejecute /compact cuando se haya enviado.",
+        "pendingWork": "Espera a que terminen el trabajo y los mensajes pendientes antes de usar este comando."
       },
       "composer": {
         "imageUnavailable": "Vista previa no disponible",
@@ -19469,9 +19515,6 @@
         "asked": "Preguntó:",
         "questionCount": "{{value0}} preguntas"
       },
-      "conversationCommand": {
-        "pendingWork": "Espera a que terminen el trabajo y los mensajes pendientes antes de usar este comando."
-      },
       "drop": {
         "messageTitle": "Suelta para adjuntar a este mensaje",
         "title": "Suelta para adjuntar a este chat",
@@ -19883,6 +19926,7 @@
       }
     },
     "agentSessionContinuation": {
+      "preparingContext": "Preparando el contexto guardado del chat…",
       "handOffToAnotherAgent": "Pasar a otro agente",
       "dialogTitle": "Pasar a otro agente",
       "dialogDescription": "Inicia una sesión nueva del agente desde este punto. La sesión original no cambia.",
@@ -19896,6 +19940,8 @@
       "context": "Contexto",
       "modeFocused": "Traspaso enfocado (recomendado)",
       "modeFocusedDescription": "Usa el estado más reciente y el espacio de trabajo actual, y consulta detalles anteriores solo cuando hacen falta.",
+      "modeLoadedDescription": "Usa los mensajes recientes cargados en este chat y el espacio de trabajo actual.",
+      "modeCapturedDescription": "Usa el texto capturado y el espacio de trabajo actual.",
       "modeFull": "Transcripción completa de la sesión",
       "modeFullDescription": "Pide al nuevo agente que lea toda la sesión guardada antes de continuar. Puede tardar más y consumir una cantidad considerable de contexto, uso del plan o créditos de API.",
       "startsIn": "Se inicia en:",
@@ -20348,6 +20394,28 @@
     },
     "managedProfile": {
       "createFailed": "No se pudo crear el perfil del navegador de este espacio de trabajo. Cierra esta pestaña y abre una nueva para volver a intentarlo."
+    },
+    "history": {
+      "clear": "Borrar el historial de navegación",
+      "clearAllTime": "Todo el tiempo",
+      "clearLastHour": "Última hora",
+      "clearRange": "Borrar historial desde",
+      "clearToday": "Hoy",
+      "cleared": "Historial de navegación borrado",
+      "close": "Cerrar",
+      "description": "Busca y administra el historial de navegación",
+      "empty": "Las páginas que visites aparecerán aquí",
+      "enterKey": "Intro",
+      "escKey": "Esc",
+      "menuItem": "Historial",
+      "noMatches": "Ninguna página coincide con tu búsqueda",
+      "open": "Abrir",
+      "remove": "Eliminar del historial",
+      "removeShort": "Eliminar",
+      "search": "Buscar en el historial",
+      "title": "Historial",
+      "today": "Hoy",
+      "yesterday": "Ayer"
     }
   },
   "runtimeRpc": {
@@ -20569,7 +20637,8 @@
       "openAnyway": "Abrir de todos modos"
     },
     "fileLoad": {
-      "hostUnresolved": "El host no pudo encontrar el espacio de trabajo de este archivo. Puede que se haya eliminado o que el host aún no lo conozca. Reintenta o cierra esta pestaña desde la barra de pestañas."
+      "hostUnresolved": "El host no pudo encontrar el espacio de trabajo de este archivo. Puede que se haya eliminado o que el host aún no lo conozca. Reintenta o cierra esta pestaña desde la barra de pestañas.",
+      "remoteTooLarge": "Este archivo es demasiado grande para abrirlo desde su host."
     }
   },
   "accounts": {
@@ -20645,6 +20714,8 @@
       "added": "Cuenta agregada. Selecciónala para usarla en el próximo Claude que inicies.",
       "nextLaunch": "{{value0}} → {{value1}}. El próximo Claude que inicies la usará. Las sesiones en ejecución conservan su cuenta.",
       "profileSwitching": "El cambio se aplica al próximo Claude que inicies en cualquier pestaña. Las sesiones en ejecución conservan su cuenta.",
+      "systemDefault": "Predeterminado del sistema",
+      "unnamedAccount": "Cuenta de Claude",
       "systemDefaultNamed": "Predeterminado del sistema: {{value0}}",
       "systemDefaultIsSaved": "Predeterminado del sistema ha iniciado sesión como {{value0}}, que también es una cuenta guardada. Puede que una versión anterior de Orca haya copiado ese inicio de sesión allí. Si no es tu propio inicio de sesión, selecciona Predeterminado del sistema y ejecuta claude /login.",
       "systemDefaultIsSavedDismiss": "Descartar",
@@ -21132,11 +21203,71 @@
   },
   "projectViews": {
     "layout": {
-      "board": "Tablero"
+      "board": "Tablero",
+      "roadmap": "Hoja de ruta",
+      "table": "Tabla"
     },
     "unsupported": {
       "switchLayout": "Cambia a una vista de Tabla, Tablero o Hoja de ruta para trabajar con este proyecto en Orca.",
-      "description": "Orca representa vistas de proyectos de tabla, tablero y hoja de ruta. Esta vista usa un diseño que aún no puede representar."
+      "description": "Orca representa vistas de proyectos de tabla, tablero y hoja de ruta. Esta vista usa un diseño que aún no puede representar.",
+      "layoutNotSupported": "Orca aún no admite vistas de proyecto de tipo {{layout}}."
+    },
+    "authHelp": {
+      "hostSignedOut": "`gh` no ha iniciado sesión en {{host}}.",
+      "hostSignedOutDetail": "Los hosts de GitHub Enterprise necesitan su propio inicio de sesión de `gh`, independiente de github.com. Ejecuta el comando de inicio de sesión en una terminal, completa el flujo del navegador en {{host}} y luego recarga.",
+      "ghMissing": "GitHub CLI (`gh`) no está instalado o no está en el PATH.",
+      "ghMissingDetail": "Orca usa `gh` para comunicarse con GitHub Projects. Instálalo desde cli.github.com y luego inicia sesión.",
+      "envTokenKeyringFallback": "Tu llavero ya tiene un inicio de sesión de `gh` que se usará cuando quites la variable de entorno.",
+      "envTokenLoginAfterUnset": "Después de quitarla, ejecuta `gh auth login` para iniciar sesión normalmente y vuelve a intentarlo.",
+      "envTokenRemoveWindows": "Busca dónde está definida `{{varName}}` (variables de entorno del sistema o del usuario, o tu perfil de PowerShell), elimínala y reinicia Orca para que cargue el nuevo entorno.",
+      "envTokenRemovePosix": "Busca dónde se exporta `{{varName}}` (normalmente `~/.zshrc`, `~/.zshenv`, `~/.bashrc`, `~/.profile` o el gestor de secretos de tu shell), elimínala y reinicia Orca para que cargue el nuevo entorno.",
+      "envTokenActive": "`{{varName}}` está definida en tu entorno, así que `gh` usa ese token en lugar del inicio de sesión de tu llavero. `gh auth refresh` no puede modificar tokens que vienen del entorno; por eso ejecutarlo no sirvió.",
+      "envTokenInherited": "Orca heredó `{{varName}}` de tu shell y `gh` está usando ese token. `gh auth refresh` no se aplica a tokens que vienen del entorno.",
+      "envTokenInheritedDetailWindows": "Quita `{{varName}}` en el shell que inicia Orca (o en tus variables de entorno de usuario) y luego reinicia Orca.",
+      "envTokenInheritedDetailPosix": "Quita `{{varName}}` en el shell que inicia Orca (o en el archivo rc de tu shell) y luego reinicia Orca.",
+      "signedOut": "No has iniciado sesión en GitHub con `gh`.",
+      "missingScopes": "A tu token de `gh` le faltan permisos necesarios para GitHub Projects: {{scopes}}.",
+      "missingScopesDetail": "Ejecuta el comando de actualización en una terminal. Abrirá un navegador para autorizar los nuevos permisos; después vuelve aquí y recarga.",
+      "accessDeniedDetail": "Tu token tiene los permisos necesarios, pero GitHub sigue denegando el acceso. Si el proyecto está en una organización con SAML SSO, debes autorizar este token para la organización en Settings → Developer settings → Personal access tokens → Configure SSO."
+    },
+    "picker": {
+      "pasteUnparseable": "Se esperaba una URL de proyecto o owner/number",
+      "ownerLoadFailed": "No se pudieron cargar los proyectos de {{owner}}.",
+      "organizationsLoadFailed": "Algunas organizaciones no se cargaron ({{failureCount}})."
+    },
+    "error": {
+      "notFoundState": "No se pudo encontrar este proyecto o vista.",
+      "schemaDrift": "No se pudo leer esta vista del proyecto.",
+      "projectOrViewNotFound": "No se encontró el proyecto o la vista.",
+      "projectNotFound": "No se encontró el proyecto.",
+      "viewNotFound": "No se pudo encontrar la vista seleccionada.",
+      "ownerNotFound": "No se encontró el propietario.",
+      "itemNotFound": "No se encontró el elemento.",
+      "issueNotFound": "No se encontró el issue.",
+      "inputRequired": "Se requiere un valor.",
+      "inputTooLarge": "La referencia del proyecto es demasiado larga para resolverla.",
+      "inputUnparseable": "No se pudo interpretar la entrada. Se esperaba una URL de proyecto de GitHub o `owner/number`.",
+      "invalidSlug": "{{field}} no válido: \"{{value}}\" no es un identificador de GitHub válido.",
+      "invalidPositiveInteger": "{{field}} no válido: debe ser un entero positivo.",
+      "invalidOwnerType": "Tipo de propietario no válido.",
+      "invalidItemType": "Tipo de elemento no válido.",
+      "missingIds": "Faltan identificadores.",
+      "updatesRequired": "Se requieren cambios.",
+      "commentBodyRequired": "El comentario no puede estar vacío.",
+      "duplicateTargetNotAllowed": "El destino duplicado solo es válido al cerrar como duplicado.",
+      "duplicateTargetRequired": "Se requiere el número del issue de destino duplicado.",
+      "requestInvalid": "Solicitud no válida — {{detail}}",
+      "requestFailedDetail": "La solicitud a GitHub falló: {{detail}}",
+      "requestFailed": "La solicitud a GitHub falló.",
+      "unexpectedRestResponse": "Respuesta REST inesperada: {{detail}}",
+      "authRequired": "Inicia sesión en GitHub para cargar las tareas del proyecto. Ejecuta `{{command}}`.",
+      "scopeMissing": "El acceso a proyectos de GitHub necesita permisos adicionales. Ejecuta `{{command}}`.",
+      "rateLimitNearlyExhausted": "El límite de velocidad de GitHub está casi agotado (quedan {{remaining}}/{{limit}}). Se restablece en unos {{minutes}} min.",
+      "rateLimited": "Se alcanzó el límite de velocidad de GitHub. Inténtalo de nuevo en unos minutos.",
+      "network": "Error de red — comprueba tu conexión.",
+      "tooLargeUnknownCount": "Esta vista tiene demasiados elementos para mostrarla en Orca. Restringe el filtro de la vista en GitHub.",
+      "tooLarge": "Esta vista tiene {{itemCount}} elementos, demasiados para mostrarla en Orca. Restringe el filtro de la vista en GitHub.",
+      "schemaDriftDetail": "No se pudo leer esta vista del proyecto: {{detail}}."
     }
   },
   "projectField": {

@@ -93,7 +93,8 @@
       "openAnyway": "Abrir assim mesmo"
     },
     "fileLoad": {
-      "hostUnresolved": "O host não encontrou o espaço de trabalho deste arquivo. Ele pode ter sido removido, ou o host ainda não sabe da sua existência. Tente novamente ou feche esta aba na barra de abas."
+      "hostUnresolved": "O host não encontrou o espaço de trabalho deste arquivo. Ele pode ter sido removido, ou o host ainda não sabe da sua existência. Tente novamente ou feche esta aba na barra de abas.",
+      "remoteTooLarge": "Este arquivo é grande demais para ser aberto a partir do host."
     },
     "markdownPreview": {
       "tooLarge": "O arquivo excede o limite de prévia de {{limit}}. Abra o arquivo para ver o código-fonte.",
@@ -558,6 +559,28 @@
     }
   },
   "browser": {
+    "history": {
+      "clear": "Limpar histórico de navegação",
+      "clearAllTime": "Todo o período",
+      "clearLastHour": "Última hora",
+      "clearRange": "Limpar histórico a partir de",
+      "clearToday": "Hoje",
+      "cleared": "Histórico de navegação limpo",
+      "close": "Fechar",
+      "description": "Pesquise e gerencie o histórico de navegação",
+      "empty": "As páginas visitadas aparecerão aqui",
+      "enterKey": "Enter",
+      "escKey": "Esc",
+      "menuItem": "Histórico",
+      "noMatches": "Nenhuma página corresponde à sua pesquisa",
+      "open": "Abrir",
+      "remove": "Remover do histórico",
+      "removeShort": "Remover",
+      "search": "Pesquisar histórico",
+      "title": "Histórico",
+      "today": "Hoje",
+      "yesterday": "Ontem"
+    },
     "loadFailure": {
       "connectionNotSecure": "A conexão não é segura",
       "cantReachHost": "Não é possível acessar {{value0}}",
@@ -8065,6 +8088,8 @@
           "f97b986b7f": "wsl"
         },
         "GeneralPane": {
+          "confirm_running_work_close": "Confirmar antes de fechar chats ou terminais ativos",
+          "confirm_running_work_close_description": "Perguntar antes de parar um agente ou comando ativo ao fechar o chat ou terminal.",
           "confirm_running_terminal_close": "Confirmar antes de fechar terminais em execução",
           "confirm_running_terminal_close_description": "Pergunta antes de interromper um agente ou comando em execução ao fechar um terminal.",
           "d58fccfd84": "Navegação",
@@ -9598,7 +9623,49 @@
                   "226b85a3a7": "Fetch",
                   "323bb614aa": "Commit e Sincronizar",
                   "2b8e6595fd": "Commit",
-                  "04d709801d": "Fetch do remoto sem fazer merge"
+                  "04d709801d": "Fetch do remoto sem fazer merge",
+                  "titleCheckOutBranchToPush": "Faça checkout de uma branch antes de fazer push de commits",
+                  "titleLinkedReviewTargetUnavailable": "O destino da branch de review vinculada não está disponível",
+                  "titlePublishBranchFirstToPush": "Publique a branch primeiro para fazer push de commits",
+                  "titleCommitAndForcePush": "Fazer commit das alterações staged e force push com lease",
+                  "titleCommitAndTryPush": "Fazer commit das alterações staged e tentar fazer push",
+                  "titleCommitAndPush": "Fazer commit das alterações staged e push",
+                  "commitForcePush": "Commit e Force Push",
+                  "commitPush": "Commit e Push",
+                  "titleOperationInProgress": "Operação em andamento…",
+                  "titleAbortRebaseInProgress": "Abortar o rebase em andamento",
+                  "titleAbortMergeInProgress": "Abortar o merge em andamento",
+                  "titleNothingToPushTo": "Nada para fazer push para {{upstreamName}}",
+                  "titleNothingToPush": "Nada para fazer push",
+                  "titleNothingToForcePushTo": "Nada para fazer force push para {{upstreamName}}",
+                  "titleNothingToForcePush": "Nada para fazer force push",
+                  "titlePushAndSetUpstream": "Faça push desta branch e defina um upstream se necessário",
+                  "titleTryRegularPush": "Tente um push normal; o git pode exigir force push",
+                  "titlePushMayNeedSync": "Faça push dos commits locais; o git pode exigir sincronizar primeiro",
+                  "titleCheckOutBranchToForcePush": "Faça checkout de uma branch antes de fazer force push de commits",
+                  "titleCheckOutBranchToPull": "Faça checkout de uma branch antes de fazer pull de commits",
+                  "titlePublishBranchFirstToPull": "Publique a branch primeiro para fazer pull de commits",
+                  "titleNothingNewToPull": "Nada novo para fazer pull — o remoto só tem cópias antigas de commits locais",
+                  "titleNothingToPull": "Nada para fazer pull",
+                  "fastForward": "Fast-forward",
+                  "titleCheckOutBranchToFastForward": "Faça checkout de uma branch antes de fazer fast-forward",
+                  "titlePublishBranchFirstToFastForward": "Publique a branch primeiro para fazer fast-forward",
+                  "titleNothingNewToFastForward": "Nada novo para fazer fast-forward — o remoto só tem cópias antigas de commits locais",
+                  "titleNothingToFastForward": "Nada para fazer fast-forward",
+                  "titleTryFastForwardPull": "Tente um pull com fast-forward; o git pode rejeitar commits locais",
+                  "titleUseForcePushToSync": "Use Force Push — o remoto só tem cópias antigas de commits locais",
+                  "titleBranchUpToDate": "A branch está atualizada",
+                  "publishPrStatus": "Status do PR",
+                  "publishLinkedReview": "Review vinculada",
+                  "publishNoBranch": "Sem branch",
+                  "titleLinkedReviewBranchExists": "A branch de review vinculada já existe",
+                  "titleCheckOutBranchToPublish": "Faça checkout de uma branch antes de publicar commits",
+                  "titleBranchAlreadyPublished": "A branch já está publicada",
+                  "titleCreateReviewForBranch": "Criar um(a) {{reviewLabel}} para esta branch",
+                  "forcePushBeforeReview": "Force Push antes de {{shortLabel}}",
+                  "pushBeforeReview": "Push antes de {{shortLabel}}",
+                  "titleForcePushBeforeCreatingReview": "Faça force push com lease antes de criar um(a) {{reviewLabel}}",
+                  "titlePushBeforeCreatingReview": "Faça push dos commits locais antes de criar um(a) {{reviewLabel}}"
                 }
               },
               "primary": {
@@ -15677,6 +15744,7 @@
             "78b79d854d": "Fechar Terminal?",
             "stop_agent_title": "Parar este agente?",
             "stop_command_title": "Parar o comando em execução?",
+            "stop_chat_description": "Fechar este chat vai parar o trabalho atual do agente.",
             "stop_agent_description": "Fechar este terminal vai parar o trabalho atual do agente.",
             "stop_command_description": "Fechar este terminal vai parar o comando em execução dentro dele.",
             "dont_ask_again": "Não perguntar novamente para terminais em execução",
@@ -19790,9 +19858,6 @@
         "tokens": "{{value0}} tokens",
         "unnamed": "Subagente"
       },
-      "conversationCommand": {
-        "pendingWork": "Aguarde a conclusão do trabalho e das mensagens pendentes antes de usar este comando."
-      },
       "drop": {
         "title": "Solte para anexar a este chat",
         "subtitle": "Os arquivos são adicionados à sua mensagem como caminhos que o agente pode ler.",
@@ -19982,7 +20047,8 @@
         "clearAfterRetry": "Tente enviar sua mensagem anterior novamente e execute /clear.",
         "compactAfterRetry": "Tente enviar sua mensagem anterior novamente e execute /compact.",
         "clearAfterSending": "Sua mensagem anterior ainda está sendo enviada. Execute /clear após o envio.",
-        "compactAfterSending": "Sua mensagem anterior ainda está sendo enviada. Execute /compact após o envio."
+        "compactAfterSending": "Sua mensagem anterior ainda está sendo enviada. Execute /compact após o envio.",
+        "pendingWork": "Aguarde a conclusão do trabalho e das mensagens pendentes antes de usar este comando."
       },
       "newRowsAnnouncement": "Novas mensagens chegaram enquanto você estava ausente",
       "newRowsMarker": "Novas",
@@ -20937,6 +21003,8 @@
       "added": "Conta adicionada. Selecione-a para usar no próximo Claude que iniciar.",
       "nextLaunch": "{{value0}} → {{value1}}. O próximo Claude que você iniciar usará essa conta. Sessões em execução mantêm suas contas.",
       "profileSwitching": "A troca se aplica ao próximo Claude que você iniciar em qualquer aba.",
+      "systemDefault": "Padrão do sistema",
+      "unnamedAccount": "Conta do Claude",
       "systemDefaultNamed": "Padrão do sistema: {{value0}}",
       "systemDefaultIsSaved": "O Padrão do sistema está conectado como {{value0}}, que também é uma conta salva. Uma versão anterior do Orca pode ter copiado esse login para lá. Se não for seu próprio login, selecione Padrão do sistema e execute claude /login.",
       "systemDefaultIsSavedDismiss": "Dispensar",
@@ -21062,11 +21130,71 @@
   },
   "projectViews": {
     "layout": {
-      "board": "Quadro"
+      "board": "Quadro",
+      "roadmap": "Roteiro",
+      "table": "Tabela"
     },
     "unsupported": {
       "switchLayout": "Mude para uma visualização de Tabela, Quadro ou Roteiro para trabalhar com este projeto no Orca.",
-      "description": "O Orca exibe visualizações de projetos em tabela, quadro e roteiro. Esta visualização usa um layout que ele ainda não pode exibir."
+      "description": "O Orca exibe visualizações de projetos em tabela, quadro e roteiro. Esta visualização usa um layout que ele ainda não pode exibir.",
+      "layoutNotSupported": "O Orca ainda não oferece suporte a visualizações de projeto do tipo {{layout}}."
+    },
+    "authHelp": {
+      "hostSignedOut": "O `gh` não está conectado a {{host}}.",
+      "hostSignedOutDetail": "Hosts do GitHub Enterprise precisam de um login próprio no `gh`, separado do github.com. Execute o comando de login em um terminal, conclua o fluxo no navegador em {{host}} e depois recarregue.",
+      "ghMissing": "O GitHub CLI (`gh`) não está instalado ou não está no PATH.",
+      "ghMissingDetail": "O Orca usa o `gh` para se comunicar com o GitHub Projects. Instale-o em cli.github.com e depois faça login.",
+      "envTokenKeyringFallback": "Seu chaveiro já tem um login do `gh` que passará a ser usado assim que a variável de ambiente for removida.",
+      "envTokenLoginAfterUnset": "Depois de removê-la, execute `gh auth login` para fazer login normalmente e tente novamente.",
+      "envTokenRemoveWindows": "Encontre onde `{{varName}}` está definida (variáveis de ambiente do sistema ou do usuário, ou seu perfil do PowerShell), remova-a e reinicie o Orca para que o novo ambiente seja carregado.",
+      "envTokenRemovePosix": "Encontre onde `{{varName}}` é exportada (geralmente `~/.zshrc`, `~/.zshenv`, `~/.bashrc`, `~/.profile` ou o gerenciador de segredos do seu shell), remova-a e reinicie o Orca para que o novo ambiente seja carregado.",
+      "envTokenActive": "`{{varName}}` está definida no seu ambiente, então o `gh` está usando esse token em vez do login do seu chaveiro. O `gh auth refresh` não consegue alterar tokens fornecidos pelo ambiente — por isso executá-lo não ajudou.",
+      "envTokenInherited": "O Orca herdou `{{varName}}` do seu shell, e o `gh` está usando esse token. O `gh auth refresh` não se aplica a tokens fornecidos pelo ambiente.",
+      "envTokenInheritedDetailWindows": "Remova `{{varName}}` no shell que inicia o Orca (ou nas suas variáveis de ambiente de usuário) e depois reinicie o Orca.",
+      "envTokenInheritedDetailPosix": "Remova `{{varName}}` no shell que inicia o Orca (ou no arquivo rc do seu shell) e depois reinicie o Orca.",
+      "signedOut": "Você não está conectado ao GitHub pelo `gh`.",
+      "missingScopes": "Seu token do `gh` não tem escopos necessários para o GitHub Projects: {{scopes}}.",
+      "missingScopesDetail": "Execute o comando de atualização em um terminal. Ele abrirá um navegador para autorizar os novos escopos; depois volte aqui e recarregue.",
+      "accessDeniedDetail": "Seu token tem os escopos necessários, mas o GitHub ainda negou o acesso. Se o projeto estiver em uma organização com SAML SSO, você precisa autorizar este token para a organização em Settings → Developer settings → Personal access tokens → Configure SSO."
+    },
+    "picker": {
+      "pasteUnparseable": "Esperava-se uma URL de projeto ou owner/number",
+      "ownerLoadFailed": "Não foi possível carregar os projetos de {{owner}}.",
+      "organizationsLoadFailed": "Algumas organizações não foram carregadas ({{failureCount}})."
+    },
+    "error": {
+      "notFoundState": "Não foi possível encontrar este projeto ou visualização.",
+      "schemaDrift": "Não foi possível ler esta visualização do projeto.",
+      "projectOrViewNotFound": "Projeto ou visualização não encontrado.",
+      "projectNotFound": "Projeto não encontrado.",
+      "viewNotFound": "Não foi possível encontrar a visualização selecionada.",
+      "ownerNotFound": "Proprietário não encontrado.",
+      "itemNotFound": "Item não encontrado.",
+      "issueNotFound": "Issue não encontrada.",
+      "inputRequired": "Entrada obrigatória.",
+      "inputTooLarge": "A referência do projeto é longa demais para ser resolvida.",
+      "inputUnparseable": "Não foi possível interpretar a entrada. Esperava-se uma URL de projeto do GitHub ou `owner/number`.",
+      "invalidSlug": "{{field}} inválido: \"{{value}}\" não é um identificador válido do GitHub.",
+      "invalidPositiveInteger": "{{field}} inválido: deve ser um inteiro positivo.",
+      "invalidOwnerType": "Tipo de proprietário inválido.",
+      "invalidItemType": "Tipo de item inválido.",
+      "missingIds": "IDs ausentes.",
+      "updatesRequired": "Alterações obrigatórias.",
+      "commentBodyRequired": "O conteúdo do comentário é obrigatório.",
+      "duplicateTargetNotAllowed": "O destino duplicado só é válido ao fechar como duplicada.",
+      "duplicateTargetRequired": "O número da issue de destino duplicada é obrigatório.",
+      "requestInvalid": "Solicitação inválida — {{detail}}",
+      "requestFailedDetail": "A solicitação ao GitHub falhou: {{detail}}",
+      "requestFailed": "A solicitação ao GitHub falhou.",
+      "unexpectedRestResponse": "Resposta REST inesperada: {{detail}}",
+      "authRequired": "Faça login no GitHub para carregar as tarefas do projeto. Execute `{{command}}`.",
+      "scopeMissing": "O acesso a projetos do GitHub precisa de escopos adicionais. Execute `{{command}}`.",
+      "rateLimitNearlyExhausted": "O limite de taxa do GitHub está quase esgotado (restam {{remaining}}/{{limit}}). Será redefinido em cerca de {{minutes}} min.",
+      "rateLimited": "Limite de taxa do GitHub atingido. Tente novamente em alguns minutos.",
+      "network": "Erro de rede — verifique sua conexão.",
+      "tooLargeUnknownCount": "Esta visualização tem itens demais para ser exibida no Orca. Restrinja o filtro da visualização no GitHub.",
+      "tooLarge": "Esta visualização tem {{itemCount}} itens, demais para ser exibida no Orca. Restrinja o filtro da visualização no GitHub.",
+      "schemaDriftDetail": "Não foi possível ler esta visualização do projeto: {{detail}}."
     }
   },
   "projectField": {

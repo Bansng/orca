@@ -157,6 +157,28 @@
     },
     "managedProfile": {
       "createFailed": "Impossible de créer le profil de navigateur de cet espace de travail. Fermez cet onglet et ouvrez-en un nouveau pour réessayer."
+    },
+    "history": {
+      "clear": "Effacer l’historique de navigation",
+      "clearAllTime": "Toutes les périodes",
+      "clearLastHour": "Dernière heure",
+      "clearRange": "Effacer l’historique depuis",
+      "clearToday": "Aujourd’hui",
+      "cleared": "Historique de navigation effacé",
+      "close": "Fermer",
+      "description": "Recherchez et gérez l’historique de navigation",
+      "empty": "Les pages que vous consultez apparaîtront ici",
+      "enterKey": "Entrée",
+      "escKey": "Échap.",
+      "menuItem": "Historique",
+      "noMatches": "Aucune page ne correspond à votre recherche",
+      "open": "Ouvrir",
+      "remove": "Supprimer de l’historique",
+      "removeShort": "Supprimer",
+      "search": "Rechercher dans l’historique",
+      "title": "Historique",
+      "today": "Aujourd’hui",
+      "yesterday": "Hier"
     }
   },
   "githubChecks": {
@@ -3492,6 +3514,7 @@
             "78b79d854d": "Fermer le terminal ?",
             "stop_agent_title": "Arrêter cet agent ?",
             "stop_command_title": "Arrêter la commande en cours ?",
+            "stop_chat_description": "Fermer cette conversation interrompra le travail en cours de l'agent.",
             "stop_agent_description": "Fermer ce terminal interrompra le travail en cours de l'agent.",
             "stop_command_description": "Fermer ce terminal interrompra la commande qui s'y exécute.",
             "dont_ask_again": "Ne plus demander pour les terminaux en cours d'exécution",
@@ -7831,6 +7854,8 @@
           "projectRuntimeDescription": "Runtime par défaut pour les projets Windows locaux qui ne le remplacent pas.",
           "editor_preview_tabs": "Réutiliser un onglet d'aperçu lors de la navigation dans les fichiers",
           "editor_preview_tabs_description": "Un simple clic sur un fichier dans l'Explorateur ou en suivant un lien dans la source Markdown réutilise un onglet d'aperçu en italique par groupe au lieu d'en ouvrir un nouveau. La modification, le double-clic ou l’épinglage maintiennent cet onglet ouvert. Désactivez cette option pour donner à chaque fichier son propre onglet.",
+          "confirm_running_work_close": "Confirmer avant de fermer des conversations ou terminaux actifs",
+          "confirm_running_work_close_description": "Demander avant d'arrêter un agent ou une commande en cours lors de la fermeture de sa conversation ou de son terminal.",
           "confirm_running_terminal_close": "Confirmer avant de fermer les terminaux en cours d'exécution",
           "confirm_running_terminal_close_description": "Demandez avant d'arrêter un agent ou une commande en cours d'exécution lors de la fermeture d'un terminal."
         },
@@ -14337,7 +14362,49 @@
                   "226b85a3a7": "Fetch",
                   "323bb614aa": "Commit & Sync",
                   "2b8e6595fd": "Commit",
-                  "04d709801d": "Fetch depuis le remote sans fusionner"
+                  "04d709801d": "Fetch depuis le remote sans fusionner",
+                  "titleCheckOutBranchToPush": "Effectuez un checkout d'une branche avant de pousser des commits",
+                  "titleLinkedReviewTargetUnavailable": "La cible de la branche de revue liée est indisponible",
+                  "titlePublishBranchFirstToPush": "Publiez d'abord la branche pour pousser des commits",
+                  "titleCommitAndForcePush": "Committer les modifications indexées et faire un force push avec lease",
+                  "titleCommitAndTryPush": "Committer les modifications indexées et tenter un push",
+                  "titleCommitAndPush": "Committer les modifications indexées et pousser",
+                  "commitForcePush": "Commit & Force Push",
+                  "commitPush": "Commit & Push",
+                  "titleOperationInProgress": "Opération en cours…",
+                  "titleAbortRebaseInProgress": "Abandonner le rebase en cours",
+                  "titleAbortMergeInProgress": "Abandonner le merge en cours",
+                  "titleNothingToPushTo": "Rien à pousser vers {{upstreamName}}",
+                  "titleNothingToPush": "Rien à pousser",
+                  "titleNothingToForcePushTo": "Rien à pousser en force vers {{upstreamName}}",
+                  "titleNothingToForcePush": "Rien à pousser en force",
+                  "titlePushAndSetUpstream": "Poussez cette branche et définissez un upstream si nécessaire",
+                  "titleTryRegularPush": "Tentez un push normal ; git peut exiger un force push",
+                  "titlePushMayNeedSync": "Poussez les commits locaux ; git peut exiger une synchronisation d'abord",
+                  "titleCheckOutBranchToForcePush": "Effectuez un checkout d'une branche avant de pousser des commits en force",
+                  "titleCheckOutBranchToPull": "Effectuez un checkout d'une branche avant de tirer des commits",
+                  "titlePublishBranchFirstToPull": "Publiez d'abord la branche pour tirer des commits",
+                  "titleNothingNewToPull": "Rien de nouveau à tirer — le remote n'a que d'anciennes copies des commits locaux",
+                  "titleNothingToPull": "Rien à tirer",
+                  "fastForward": "Fast-forward",
+                  "titleCheckOutBranchToFastForward": "Effectuez un checkout d'une branche avant un fast-forward",
+                  "titlePublishBranchFirstToFastForward": "Publiez d'abord la branche pour faire un fast-forward",
+                  "titleNothingNewToFastForward": "Rien de nouveau pour un fast-forward — le remote n'a que d'anciennes copies des commits locaux",
+                  "titleNothingToFastForward": "Rien à avancer en fast-forward",
+                  "titleTryFastForwardPull": "Tentez un pull en fast-forward ; git peut rejeter les commits locaux",
+                  "titleUseForcePushToSync": "Utilisez Force Push — le remote n'a que d'anciennes copies des commits locaux",
+                  "titleBranchUpToDate": "La branche est à jour",
+                  "publishPrStatus": "Statut de la PR",
+                  "publishLinkedReview": "Revue liée",
+                  "publishNoBranch": "Aucune branche",
+                  "titleLinkedReviewBranchExists": "La branche de revue liée existe déjà",
+                  "titleCheckOutBranchToPublish": "Effectuez un checkout d'une branche avant de publier des commits",
+                  "titleBranchAlreadyPublished": "La branche est déjà publiée",
+                  "titleCreateReviewForBranch": "Créer une {{reviewLabel}} pour cette branche",
+                  "forcePushBeforeReview": "Force Push avant {{shortLabel}}",
+                  "pushBeforeReview": "Push avant {{shortLabel}}",
+                  "titleForcePushBeforeCreatingReview": "Faites un force push avec lease avant de créer une {{reviewLabel}}",
+                  "titlePushBeforeCreatingReview": "Poussez les commits locaux avant de créer une {{reviewLabel}}"
                 }
               },
               "primary": {
@@ -19108,7 +19175,8 @@
         "clearAfterRetry": "Réessayez votre message précédent, puis lancez /clear.",
         "compactAfterRetry": "Réessayez votre message précédent, puis lancez /compact.",
         "clearAfterSending": "Votre message précédent est encore en cours d'envoi. Lancez /clear une fois qu'il est parti.",
-        "compactAfterSending": "Votre message précédent est encore en cours d'envoi. Lancez /compact une fois qu'il est parti."
+        "compactAfterSending": "Votre message précédent est encore en cours d'envoi. Lancez /compact une fois qu'il est parti.",
+        "pendingWork": "Attendez la fin du travail et des messages en attente avant d'utiliser cette commande."
       },
       "composer": {
         "imageUnavailable": "Aperçu indisponible",
@@ -19549,9 +19617,6 @@
         "ranN": "A exécuté {{value0}} sous-agents",
         "tokens": "Jetons {{value0}}",
         "unnamed": "Sous-agent"
-      },
-      "conversationCommand": {
-        "pendingWork": "Attendez la fin du travail et des messages en attente avant d'utiliser cette commande."
       },
       "drop": {
         "messageTitle": "Déposez pour joindre à ce message",
@@ -20024,6 +20089,7 @@
       }
     },
     "agentSessionContinuation": {
+      "preparingContext": "Préparation du contexte enregistré du chat…",
       "handOffToAnotherAgent": "Transférer à un autre Agent",
       "dialogTitle": "Transférer à un autre Agent",
       "dialogDescription": "Démarrez une nouvelle session d'Agent depuis ce point d'arrêt. La session d'origine reste inchangée.",
@@ -20037,6 +20103,8 @@
       "context": "Contexte",
       "modeFocused": "Transfert ciblé (recommandé)",
       "modeFocusedDescription": "Utilise le statut le plus récent et l'espace de travail actuel, en ne lisant les détails anciens de la transcription qu'en cas de besoin.",
+      "modeLoadedDescription": "Utilise les messages récents chargés dans cette conversation et l’espace de travail actuel.",
+      "modeCapturedDescription": "Utilise le texte capturé et l’espace de travail actuel.",
       "modeFull": "Transcription complète de la session",
       "modeFullDescription": "Demande au nouvel Agent de lire la session sauvegardée complète avant de continuer. Cela peut prendre plus de temps et consommer beaucoup de contexte, d'utilisation du plan ou de crédits API.",
       "startsIn": "Démarre dans :",
@@ -20491,7 +20559,8 @@
       "openAnyway": "Ouvert quand même"
     },
     "fileLoad": {
-      "hostUnresolved": "L'hôte n'a pas pu trouver l'espace de travail de ce fichier. Il a peut-être été supprimé ou l'hôte n'en est peut-être pas encore au courant. Réessayez ou fermez cet onglet à partir de la bande d'onglets."
+      "hostUnresolved": "L'hôte n'a pas pu trouver l'espace de travail de ce fichier. Il a peut-être été supprimé ou l'hôte n'en est peut-être pas encore au courant. Réessayez ou fermez cet onglet à partir de la bande d'onglets.",
+      "remoteTooLarge": "Ce fichier est trop volumineux pour être ouvert depuis son hôte."
     },
     "markdownPreview": {
       "tooLarge": "Le fichier dépasse la limite d'aperçu de {{limit}}. Ouvrez le fichier pour afficher sa source.",
@@ -20826,6 +20895,8 @@
       "added": "Compte ajouté. Sélectionnez-le pour l'utiliser pour le prochain Claude que vous démarrez.",
       "nextLaunch": "{{value0}} → {{value1}}. Le prochain Claude que vous démarrez l'utilise. Les sessions en cours conservent leur compte.",
       "profileSwitching": "Le changement s'applique au prochain Claude que vous démarrez dans n'importe quel onglet. Les sessions en cours conservent leur compte.",
+      "systemDefault": "Valeur par défaut du système",
+      "unnamedAccount": "Compte Claude",
       "systemDefaultNamed": "Système par défaut : {{value0}}",
       "systemDefaultIsSaved": "Système par défaut est connecté en tant que {{value0}}, qui est aussi un compte enregistré. Une version antérieure d'Orca a peut-être copié cette connexion à cet endroit. S'il ne s'agit pas de votre propre connexion, sélectionnez Système par défaut et exécutez claude /login.",
       "systemDefaultIsSavedDismiss": "Ignorer",
@@ -21132,11 +21203,71 @@
   },
   "projectViews": {
     "layout": {
-      "board": "Board"
+      "board": "Board",
+      "roadmap": "Feuille de route",
+      "table": "Tableau"
     },
     "unsupported": {
       "switchLayout": "Basculez vers une vue Tableau, Board ou Feuille de route pour travailler avec ce projet dans Orca.",
-      "description": "Orca affiche les vues de projet de type Tableau, Board et Feuille de route. Cette vue utilise une mise en page qu'Orca ne peut pas encore restituer."
+      "description": "Orca affiche les vues de projet de type Tableau, Board et Feuille de route. Cette vue utilise une mise en page qu'Orca ne peut pas encore restituer.",
+      "layoutNotSupported": "Orca ne prend pas encore en charge les vues de projet de type {{layout}}."
+    },
+    "authHelp": {
+      "hostSignedOut": "`gh` n'est pas connecté à {{host}}.",
+      "hostSignedOutDetail": "Les hôtes GitHub Enterprise nécessitent leur propre connexion `gh`, distincte de github.com. Exécutez la commande de connexion dans un terminal, terminez le parcours dans le navigateur sur {{host}}, puis rechargez.",
+      "ghMissing": "GitHub CLI (`gh`) n'est pas installé ou n'est pas dans le PATH.",
+      "ghMissingDetail": "Orca utilise `gh` pour communiquer avec GitHub Projects. Installez-le depuis cli.github.com, puis connectez-vous.",
+      "envTokenKeyringFallback": "Votre trousseau contient déjà une connexion `gh` qui prendra le relais une fois la variable d'environnement supprimée.",
+      "envTokenLoginAfterUnset": "Après l'avoir supprimée, exécutez `gh auth login` pour vous connecter normalement, puis réessayez.",
+      "envTokenRemoveWindows": "Trouvez où `{{varName}}` est définie (variables d'environnement système ou utilisateur, ou votre profil PowerShell), supprimez-la, puis redémarrez Orca pour qu'il prenne en compte le nouvel environnement.",
+      "envTokenRemovePosix": "Trouvez où `{{varName}}` est exportée (souvent `~/.zshrc`, `~/.zshenv`, `~/.bashrc`, `~/.profile` ou le gestionnaire de secrets de votre shell), supprimez-la, puis redémarrez Orca pour qu'il prenne en compte le nouvel environnement.",
+      "envTokenActive": "`{{varName}}` est définie dans votre environnement, donc `gh` utilise ce jeton au lieu de la connexion de votre trousseau. `gh auth refresh` ne peut pas modifier les jetons fournis par l'environnement — c'est pourquoi l'exécuter n'a rien changé.",
+      "envTokenInherited": "Orca a hérité de `{{varName}}` depuis votre shell, et `gh` utilise ce jeton. `gh auth refresh` ne s'applique pas aux jetons fournis par l'environnement.",
+      "envTokenInheritedDetailWindows": "Supprimez `{{varName}}` dans le shell qui lance Orca (ou dans vos variables d'environnement utilisateur), puis redémarrez Orca.",
+      "envTokenInheritedDetailPosix": "Supprimez `{{varName}}` dans le shell qui lance Orca (ou dans le fichier rc de votre shell), puis redémarrez Orca.",
+      "signedOut": "Vous n'êtes pas connecté à GitHub via `gh`.",
+      "missingScopes": "Il manque à votre jeton `gh` des autorisations nécessaires pour GitHub Projects : {{scopes}}.",
+      "missingScopesDetail": "Exécutez la commande d'actualisation dans un terminal. Elle ouvrira un navigateur pour autoriser les nouvelles autorisations ; revenez ensuite ici et rechargez.",
+      "accessDeniedDetail": "Votre jeton dispose des autorisations requises, mais GitHub refuse toujours l'accès. Si le projet appartient à une organisation avec SAML SSO, vous devez autoriser ce jeton pour l'organisation dans Settings → Developer settings → Personal access tokens → Configure SSO."
+    },
+    "picker": {
+      "pasteUnparseable": "URL de projet ou owner/number attendu",
+      "ownerLoadFailed": "Impossible de charger les projets de {{owner}}.",
+      "organizationsLoadFailed": "Certaines organisations n'ont pas été chargées ({{failureCount}})."
+    },
+    "error": {
+      "notFoundState": "Impossible de trouver ce projet ou cette vue.",
+      "schemaDrift": "Impossible de lire cette vue de projet.",
+      "projectOrViewNotFound": "Projet ou vue introuvable.",
+      "projectNotFound": "Projet introuvable.",
+      "viewNotFound": "Impossible de trouver la vue sélectionnée.",
+      "ownerNotFound": "Propriétaire introuvable.",
+      "itemNotFound": "Élément introuvable.",
+      "issueNotFound": "Issue introuvable.",
+      "inputRequired": "Saisie requise.",
+      "inputTooLarge": "La référence du projet est trop longue pour être résolue.",
+      "inputUnparseable": "Impossible d'analyser la saisie. URL de projet GitHub ou `owner/number` attendu.",
+      "invalidSlug": "{{field}} invalide : « {{value}} » n'est pas un identifiant GitHub valide.",
+      "invalidPositiveInteger": "{{field}} invalide : doit être un entier positif.",
+      "invalidOwnerType": "Type de propriétaire invalide.",
+      "invalidItemType": "Type d'élément invalide.",
+      "missingIds": "Identifiants manquants.",
+      "updatesRequired": "Modifications requises.",
+      "commentBodyRequired": "Le contenu du commentaire est requis.",
+      "duplicateTargetNotAllowed": "Une cible de doublon n'est valide que lors d'une fermeture comme doublon.",
+      "duplicateTargetRequired": "Le numéro de l'issue cible du doublon est requis.",
+      "requestInvalid": "Requête invalide — {{detail}}",
+      "requestFailedDetail": "La requête GitHub a échoué : {{detail}}",
+      "requestFailed": "La requête GitHub a échoué.",
+      "unexpectedRestResponse": "Réponse REST inattendue : {{detail}}",
+      "authRequired": "Connectez-vous à GitHub pour charger les tâches du projet. Exécutez `{{command}}`.",
+      "scopeMissing": "L'accès aux projets GitHub nécessite des autorisations supplémentaires. Exécutez `{{command}}`.",
+      "rateLimitNearlyExhausted": "Limite de débit GitHub presque atteinte (il reste {{remaining}}/{{limit}}). Réinitialisation dans environ {{minutes}} min.",
+      "rateLimited": "Limite de débit GitHub atteinte. Réessayez dans quelques minutes.",
+      "network": "Erreur réseau — vérifiez votre connexion.",
+      "tooLargeUnknownCount": "Cette vue contient trop d'éléments pour être affichée dans Orca. Restreignez le filtre de la vue sur GitHub.",
+      "tooLarge": "Cette vue contient {{itemCount}} éléments, trop pour être affichée dans Orca. Restreignez le filtre de la vue sur GitHub.",
+      "schemaDriftDetail": "Impossible de lire cette vue de projet : {{detail}}."
     }
   },
   "projectField": {

@@ -3332,6 +3332,7 @@
             "78b79d854d": "ターミナルを閉じますか?",
             "stop_agent_title": "この Agent を停止しますか?",
             "stop_command_title": "実行中のコマンドを停止しますか?",
+            "stop_chat_description": "このチャットを閉じると、Agent の現在の作業が停止します。",
             "stop_agent_description": "このターミナルを閉じると、Agent の現在の作業が停止します。",
             "stop_command_description": "このターミナルを閉じると、その中で実行中のコマンドが停止します。",
             "dont_ask_again": "実行中のターミナルでは今後確認しない",
@@ -7717,6 +7718,8 @@
           "projectRuntimeDescription": "個別に指定していないローカル Windows プロジェクトの既定のランタイム。",
           "editor_preview_tabs": "ファイルを参照するときにプレビュータブを再利用する",
           "editor_preview_tabs_description": "エクスプローラーでファイルをシングルクリックするか、Markdown ソースのリンクをたどると、新規タブを開くのではなく、グループごとに 1 つの斜体のプレビュータブが再利用されます。編集、ダブルクリック、または固定すると、そのタブは開いたままになります。これをオフにすると、すべてのファイルに独自のタブが与えられます。",
+          "confirm_running_work_close": "実行中のチャットやターミナルを閉じる前に確認する",
+          "confirm_running_work_close_description": "チャットやターミナルを閉じる際、実行中の Agent やコマンドを停止する前に確認します。",
           "confirm_running_terminal_close": "実行中のターミナルを閉じる前に確認してください",
           "confirm_running_terminal_close_description": "ターミナルを閉じるときに、実行中の Agent またはコマンドを停止する前に確認してください。"
         },
@@ -14221,7 +14224,49 @@
                   "226b85a3a7": "フェッチ",
                   "323bb614aa": "コミットと同期",
                   "2b8e6595fd": "Commit",
-                  "04d709801d": "マージせずにリモートから取得"
+                  "04d709801d": "マージせずにリモートから取得",
+                  "titleCheckOutBranchToPush": "コミットをプッシュする前にブランチをチェックアウトしてください",
+                  "titleLinkedReviewTargetUnavailable": "リンクされたレビューブランチのターゲットを利用できません",
+                  "titlePublishBranchFirstToPush": "コミットをプッシュするには、先にブランチを公開してください",
+                  "titleCommitAndForcePush": "ステージ済みの変更をコミットし、lease 付きで強制プッシュ",
+                  "titleCommitAndTryPush": "ステージ済みの変更をコミットし、プッシュを試行",
+                  "titleCommitAndPush": "ステージ済みの変更をコミットしてプッシュ",
+                  "commitForcePush": "コミットとフォースプッシュ",
+                  "commitPush": "コミットとプッシュ",
+                  "titleOperationInProgress": "操作が進行中です…",
+                  "titleAbortRebaseInProgress": "進行中のリベースを中止",
+                  "titleAbortMergeInProgress": "進行中のマージを中止",
+                  "titleNothingToPushTo": "{{upstreamName}} にプッシュするものはありません",
+                  "titleNothingToPush": "プッシュするものはありません",
+                  "titleNothingToForcePushTo": "{{upstreamName}} に強制プッシュするものはありません",
+                  "titleNothingToForcePush": "強制プッシュするものはありません",
+                  "titlePushAndSetUpstream": "このブランチをプッシュし、必要に応じてアップストリームを設定",
+                  "titleTryRegularPush": "通常のプッシュを試行します。git が強制プッシュを要求する場合があります",
+                  "titlePushMayNeedSync": "ローカルのコミットをプッシュします。git が先に同期を要求する場合があります",
+                  "titleCheckOutBranchToForcePush": "コミットを強制プッシュする前にブランチをチェックアウトしてください",
+                  "titleCheckOutBranchToPull": "コミットをプルする前にブランチをチェックアウトしてください",
+                  "titlePublishBranchFirstToPull": "コミットをプルするには、先にブランチを公開してください",
+                  "titleNothingNewToPull": "プルする新しいものはありません — リモートにはローカルコミットの古いコピーしかありません",
+                  "titleNothingToPull": "プルするものはありません",
+                  "fastForward": "Fast-forward",
+                  "titleCheckOutBranchToFastForward": "fast-forward する前にブランチをチェックアウトしてください",
+                  "titlePublishBranchFirstToFastForward": "fast-forward するには、先にブランチを公開してください",
+                  "titleNothingNewToFastForward": "fast-forward する新しいものはありません — リモートにはローカルコミットの古いコピーしかありません",
+                  "titleNothingToFastForward": "fast-forward するものはありません",
+                  "titleTryFastForwardPull": "fast-forward プルを試行します。git がローカルコミットを拒否する場合があります",
+                  "titleUseForcePushToSync": "強制プッシュを使用してください — リモートにはローカルコミットの古いコピーしかありません",
+                  "titleBranchUpToDate": "ブランチは最新です",
+                  "publishPrStatus": "PR ステータス",
+                  "publishLinkedReview": "リンク済みレビュー",
+                  "publishNoBranch": "ブランチなし",
+                  "titleLinkedReviewBranchExists": "リンクされたレビューブランチは既に存在します",
+                  "titleCheckOutBranchToPublish": "コミットを公開する前にブランチをチェックアウトしてください",
+                  "titleBranchAlreadyPublished": "ブランチは既に公開されています",
+                  "titleCreateReviewForBranch": "このブランチの {{reviewLabel}} を作成します",
+                  "forcePushBeforeReview": "強制プッシュしてから {{shortLabel}} を作成",
+                  "pushBeforeReview": "プッシュしてから {{shortLabel}} を作成",
+                  "titleForcePushBeforeCreatingReview": "{{reviewLabel}} を作成する前に lease 付きで強制プッシュ",
+                  "titlePushBeforeCreatingReview": "{{reviewLabel}} を作成する前にローカルのコミットをプッシュ"
                 }
               },
               "primary": {
@@ -19059,7 +19104,8 @@
         "clearAfterRetry": "以前のメッセージを再試行してから、/clear を実行してください。",
         "compactAfterRetry": "以前のメッセージを再試行してから、/compact を実行してください。",
         "clearAfterSending": "以前のメッセージはまだ送信中です。送信が終わったら /clear を実行してください。",
-        "compactAfterSending": "以前のメッセージはまだ送信中です。送信が終わったら /compact を実行してください。"
+        "compactAfterSending": "以前のメッセージはまだ送信中です。送信が終わったら /compact を実行してください。",
+        "pendingWork": "このコマンドを使用する前に、保留中の作業とメッセージが完了するまで待ってください。"
       },
       "composer": {
         "imageUnsupported": "この Agent では画像の貼り付けはサポートされていません。",
@@ -19501,9 +19547,6 @@
         "ranN": "{{value0}} 個のサブ Agent を実行しました",
         "tokens": "{{value0}} トークン",
         "unnamed": "サブ Agent"
-      },
-      "conversationCommand": {
-        "pendingWork": "このコマンドを使用する前に、保留中の作業とメッセージが完了するまで待ってください。"
       },
       "drop": {
         "messageTitle": "ドロップしてこのメッセージに添付",
@@ -19980,6 +20023,7 @@
       }
     },
     "agentSessionContinuation": {
+      "preparingContext": "保存されたチャットのコンテキストを準備中…",
       "handOffToAnotherAgent": "別の Agent に引き継ぐ",
       "dialogTitle": "別の Agent に引き継ぐ",
       "dialogDescription": "この時点から新しい Agent セッションを開始します。元のセッションは変更されません。",
@@ -19993,6 +20037,8 @@
       "context": "コンテキスト",
       "modeFocused": "要点を引き継ぐ（推奨）",
       "modeFocusedDescription": "最新の状態と現在のワークスペースを使い、必要な場合だけ過去の詳細を読みます。",
+      "modeLoadedDescription": "このチャットに読み込まれている最近のメッセージと現在のワークスペースを使います。",
+      "modeCapturedDescription": "キャプチャしたテキストと現在のワークスペースを使います。",
       "modeFull": "セッション全文",
       "modeFullDescription": "続行前に、保存されたセッション全体を新規 Agent に読ませます。時間がかかり、多くのコンテキスト、プラン使用量、またはAPIクレジットを消費する可能性があります。",
       "startsIn": "開始場所:",
@@ -20410,6 +20456,28 @@
     },
     "managedProfile": {
       "createFailed": "このワークスペースのブラウザプロファイルを作成できませんでした。このタブを閉じて、新規タブを開いてもう一度試してください。"
+    },
+    "history": {
+      "clear": "閲覧履歴を消去",
+      "clearAllTime": "すべての期間",
+      "clearLastHour": "過去 1 時間",
+      "clearRange": "次の期間から履歴を消去",
+      "clearToday": "今日",
+      "cleared": "閲覧履歴を消去しました",
+      "close": "閉じる",
+      "description": "閲覧履歴を検索・管理します",
+      "empty": "アクセスしたページがここに表示されます",
+      "enterKey": "Enter",
+      "escKey": "Esc",
+      "menuItem": "履歴",
+      "noMatches": "検索に一致するページはありません",
+      "open": "オープン",
+      "remove": "履歴から削除",
+      "removeShort": "削除",
+      "search": "履歴を検索",
+      "title": "履歴",
+      "today": "今日",
+      "yesterday": "昨日"
     }
   },
   "runtimeRpc": {
@@ -20491,7 +20559,8 @@
       "openAnyway": "とにかく開ける"
     },
     "fileLoad": {
-      "hostUnresolved": "ホストはこのファイルのワークスペースを見つけることができませんでした。削除されたか、ホストがまだそれを認識していない可能性があります。再試行するか、タブストリップからこのタブを閉じてください。"
+      "hostUnresolved": "ホストはこのファイルのワークスペースを見つけることができませんでした。削除されたか、ホストがまだそれを認識していない可能性があります。再試行するか、タブストリップからこのタブを閉じてください。",
+      "remoteTooLarge": "このファイルは大きすぎるため、ホストから開けません。"
     },
     "markdownPreview": {
       "tooLarge": "ファイルがプレビュー上限の {{limit}} を超えています。ソースを表示するにはファイルを開いてください。",
@@ -20888,6 +20957,8 @@
       "added": "アカウントを追加しました。次に起動する Claude で使用するには、これを選択してください。",
       "nextLaunch": "{{value0}} → {{value1}}。次に起動する Claude はこれを使用します。実行中のセッションはそれぞれのアカウントを維持します。",
       "profileSwitching": "切り替えは、任意のタブで次に起動する Claude に適用されます。実行中のセッションはそれぞれのアカウントを維持します。",
+      "systemDefault": "システムのデフォルト",
+      "unnamedAccount": "Claude アカウント",
       "systemDefaultNamed": "システムのデフォルト: {{value0}}",
       "systemDefaultIsSaved": "システムのデフォルトは {{value0}} としてサインインしており、これは保存済みのアカウントでもあります。以前のバージョンの Orca がそのログインをここにコピーした可能性があります。自分のログインでない場合は、システムのデフォルトを選択して claude /login を実行してください。",
       "systemDefaultIsSavedDismiss": "閉じる",
@@ -21136,11 +21207,71 @@
   },
   "projectViews": {
     "layout": {
-      "board": "ボード"
+      "board": "ボード",
+      "roadmap": "ロードマップ",
+      "table": "テーブル"
     },
     "unsupported": {
       "switchLayout": "Orca でこのプロジェクトを操作するには、テーブル、ボード、またはロードマップビューに切り替えます。",
-      "description": "Orca はテーブル、ボード、ロードマップのプロジェクトビューをレンダリングします。このビューは、まだレンダリングできないレイアウトを使用しています。"
+      "description": "Orca はテーブル、ボード、ロードマップのプロジェクトビューをレンダリングします。このビューは、まだレンダリングできないレイアウトを使用しています。",
+      "layoutNotSupported": "Orca は{{layout}}のプロジェクトビューにはまだ対応していません。"
+    },
+    "authHelp": {
+      "hostSignedOut": "`gh` は {{host}} にサインインしていません。",
+      "hostSignedOutDetail": "GitHub Enterprise ホストには github.com とは別に `gh` のログインが必要です。ターミナルでログインコマンドを実行し、{{host}} でブラウザーのフローを完了してから再読み込みしてください。",
+      "ghMissing": "GitHub CLI（`gh`）がインストールされていないか、PATH にありません。",
+      "ghMissingDetail": "Orca は `gh` を使って GitHub Projects と通信します。cli.github.com からインストールしてサインインしてください。",
+      "envTokenKeyringFallback": "キーリングにはすでに `gh` のログインがあり、環境変数を削除するとそちらが使われます。",
+      "envTokenLoginAfterUnset": "削除したら `gh auth login` を実行して通常どおりサインインし、もう一度お試しください。",
+      "envTokenRemoveWindows": "`{{varName}}` が設定されている場所（システムまたはユーザーの環境変数、あるいは PowerShell プロファイル）を見つけて削除し、新しい環境を読み込むために Orca を再起動してください。",
+      "envTokenRemovePosix": "`{{varName}}` を export している場所（一般的には `~/.zshrc`、`~/.zshenv`、`~/.bashrc`、`~/.profile`、またはシェルのシークレットマネージャー）を見つけて削除し、新しい環境を読み込むために Orca を再起動してください。",
+      "envTokenActive": "環境に `{{varName}}` が設定されているため、`gh` はキーリングのログインではなくそのトークンを使っています。`gh auth refresh` は環境変数で渡されたトークンを変更できないため、実行しても効果がありませんでした。",
+      "envTokenInherited": "Orca はシェルから `{{varName}}` を引き継いでおり、`gh` はそのトークンを使っています。`gh auth refresh` は環境変数で渡されたトークンには適用されません。",
+      "envTokenInheritedDetailWindows": "Orca を起動するシェル（またはユーザー環境変数）で `{{varName}}` を削除してから、Orca を再起動してください。",
+      "envTokenInheritedDetailPosix": "Orca を起動するシェル（またはシェルの rc ファイル）で `{{varName}}` を削除してから、Orca を再起動してください。",
+      "signedOut": "`gh` で GitHub にサインインしていません。",
+      "missingScopes": "`gh` トークンに GitHub Projects に必要なスコープがありません: {{scopes}}。",
+      "missingScopesDetail": "ターミナルで refresh コマンドを実行してください。ブラウザーが開いて新しいスコープを承認できます。完了したらここに戻って再読み込みしてください。",
+      "accessDeniedDetail": "トークンには必要なスコープがありますが、GitHub がアクセスを拒否しました。プロジェクトが SAML SSO を使う組織にある場合は、Settings → Developer settings → Personal access tokens → Configure SSO でこのトークンをその組織に対して承認する必要があります。"
+    },
+    "picker": {
+      "pasteUnparseable": "プロジェクトの URL または owner/number を入力してください",
+      "ownerLoadFailed": "{{owner}} のプロジェクトを読み込めませんでした。",
+      "organizationsLoadFailed": "一部の組織を読み込めませんでした（{{failureCount}}）。"
+    },
+    "error": {
+      "notFoundState": "このプロジェクトまたはビューが見つかりませんでした。",
+      "schemaDrift": "このプロジェクトビューを読み取れませんでした。",
+      "projectOrViewNotFound": "プロジェクトまたはビューが見つかりません。",
+      "projectNotFound": "プロジェクトが見つかりません。",
+      "viewNotFound": "選択したビューが見つかりませんでした。",
+      "ownerNotFound": "所有者が見つかりません。",
+      "itemNotFound": "アイテムが見つかりません。",
+      "issueNotFound": "Issue が見つかりません。",
+      "inputRequired": "入力が必要です。",
+      "inputTooLarge": "プロジェクトの参照が長すぎるため解決できません。",
+      "inputUnparseable": "入力を解析できませんでした。GitHub プロジェクトの URL または `owner/number` を入力してください。",
+      "invalidSlug": "{{field}} が無効です: \"{{value}}\" は有効な GitHub のスラッグではありません。",
+      "invalidPositiveInteger": "{{field}} が無効です: 正の整数を指定してください。",
+      "invalidOwnerType": "所有者の種類が無効です。",
+      "invalidItemType": "アイテムの種類が無効です。",
+      "missingIds": "ID がありません。",
+      "updatesRequired": "更新内容が必要です。",
+      "commentBodyRequired": "コメント本文が必要です。",
+      "duplicateTargetNotAllowed": "重複先は、重複としてクローズする場合にのみ指定できます。",
+      "duplicateTargetRequired": "重複先の Issue 番号が必要です。",
+      "requestInvalid": "無効なリクエスト — {{detail}}",
+      "requestFailedDetail": "GitHub へのリクエストが失敗しました: {{detail}}",
+      "requestFailed": "GitHub へのリクエストが失敗しました。",
+      "unexpectedRestResponse": "予期しない REST レスポンス: {{detail}}",
+      "authRequired": "プロジェクトのタスクを読み込むには GitHub にサインインしてください。`{{command}}` を実行します。",
+      "scopeMissing": "GitHub プロジェクトへのアクセスには追加のスコープが必要です。`{{command}}` を実行します。",
+      "rateLimitNearlyExhausted": "GitHub のレート制限がまもなく上限に達します（残り {{remaining}}/{{limit}}）。約 {{minutes}} 分後にリセットされます。",
+      "rateLimited": "GitHub のレート制限に達しました。数分後にもう一度お試しください。",
+      "network": "ネットワークエラー — 接続を確認してください。",
+      "tooLargeUnknownCount": "このビューはアイテムが多すぎて Orca で表示できません。GitHub でビューのフィルターを絞り込んでください。",
+      "tooLarge": "このビューには {{itemCount}} 件のアイテムがあり、Orca で表示するには多すぎます。GitHub でビューのフィルターを絞り込んでください。",
+      "schemaDriftDetail": "このプロジェクトビューを読み取れませんでした: {{detail}}。"
     }
   },
   "projectField": {

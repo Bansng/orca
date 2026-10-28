@@ -644,7 +644,7 @@ describe('useMobileStructuredAgentSession', () => {
     expect(retryId).not.toBe(firstId)
   })
 
-  it('keeps structured option changes dispatched after unknown delivery', async () => {
+  it('does not commit a structured option change after unknown delivery, as desktop does', async () => {
     act(() => {
       renderer = create(createElement(Harness))
     })
@@ -665,14 +665,11 @@ describe('useMobileStructuredAgentSession', () => {
     onSendError.mockClear()
 
     await act(async () => {
-      expect(await hook!.setStructuredOption('model', 'gpt-slow')).toBe(true)
+      expect(await hook!.setStructuredOption('model', 'gpt-slow')).toBe(false)
     })
 
     const model = hook!.optionSnapshot.find((descriptor) => descriptor.id === 'model')
-    expect(model).toMatchObject({
-      valueSource: 'dispatched',
-      kind: expect.objectContaining({ currentValue: 'gpt-slow' })
-    })
+    expect(model?.kind).not.toMatchObject({ currentValue: 'gpt-slow' })
     expect(onSendError).not.toHaveBeenCalled()
   })
 

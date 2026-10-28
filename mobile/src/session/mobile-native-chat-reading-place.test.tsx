@@ -12,14 +12,14 @@ import { foldMobileNativeChatMessages } from './mobile-native-chat-render-data'
 import {
   useMobileNativeChatRowKeys,
   type MobileNativeChatRowKeys
-} from './mobile-native-chat-row-keys'
+} from './native-chat/transcript/mobile-native-chat-row-keys'
 import {
   mobileNativeChatReadingPlace,
   mobileNativeChatRowId
 } from './mobile-native-chat-reading-place'
 import { MobileNativeChatPageList } from './MobileNativeChatPageList'
 import { ToolRun } from './native-chat/transcript/MobileNativeChatToolRun'
-import { useMobileNativeChatTurnDisclosure } from './use-mobile-native-chat-turn-disclosure'
+import { useMobileNativeChatTurnDisclosure } from './native-chat/transcript/use-mobile-native-chat-turn-disclosure'
 
 const platform = vi.hoisted(() => ({ OS: 'web' }))
 const scrollable = vi.hoisted(() => {

@@ -3332,6 +3332,7 @@
             "78b79d854d": "关闭终端？",
             "stop_agent_title": "停止此智能体？",
             "stop_command_title": "停止运行中的命令？",
+            "stop_chat_description": "关闭此聊天将停止智能体当前任务。",
             "stop_agent_description": "关闭此终端将停止智能体当前任务。",
             "stop_command_description": "关闭此终端将停止其中正在运行的命令。",
             "dont_ask_again": "对有运行中进程的终端不再询问",
@@ -7655,6 +7656,8 @@
           "projectRuntimeDescription": "不覆盖此项的本地 Windows 项目的默认运行时。",
           "editor_preview_tabs": "浏览文件时重复使用预览选项卡",
           "editor_preview_tabs_description": "单击资源管理器中的文件，或点击 Markdown 源中的链接，可以重复使用每组一个斜体预览选项卡，而不是打开一个新选项卡。编辑、双击或固定可以使该选项卡保持打开状态。关闭此选项可为每个文件提供自己的选项卡。",
+          "confirm_running_work_close": "关闭活动聊天或终端前确认",
+          "confirm_running_work_close_description": "关闭聊天或终端时，在停止正在运行的智能体或命令前询问。",
           "confirm_running_terminal_close": "关闭运行终端前确认",
           "confirm_running_terminal_close_description": "关闭终端时，在停止正在运行的智能体或命令之前询问。"
         },
@@ -14159,7 +14162,49 @@
                   "226b85a3a7": "fetch",
                   "323bb614aa": "提交并同步",
                   "2b8e6595fd": "提交",
-                  "04d709801d": "从远程获取但不合并"
+                  "04d709801d": "从远程获取但不合并",
+                  "titleCheckOutBranchToPush": "请先检出分支再推送提交",
+                  "titleLinkedReviewTargetUnavailable": "已关联的评审分支目标不可用",
+                  "titlePublishBranchFirstToPush": "请先发布分支再推送提交",
+                  "titleCommitAndForcePush": "提交已暂存的更改并使用 lease 强制推送",
+                  "titleCommitAndTryPush": "提交已暂存的更改并尝试推送",
+                  "titleCommitAndPush": "提交已暂存的更改并推送",
+                  "commitForcePush": "提交并强制推送",
+                  "commitPush": "提交并推送",
+                  "titleOperationInProgress": "操作正在进行中…",
+                  "titleAbortRebaseInProgress": "中止正在进行的变基",
+                  "titleAbortMergeInProgress": "中止正在进行的合并",
+                  "titleNothingToPushTo": "没有要推送到 {{upstreamName}} 的内容",
+                  "titleNothingToPush": "没有要推送的内容",
+                  "titleNothingToForcePushTo": "没有要强制推送到 {{upstreamName}} 的内容",
+                  "titleNothingToForcePush": "没有要强制推送的内容",
+                  "titlePushAndSetUpstream": "推送此分支，并在需要时设置上游",
+                  "titleTryRegularPush": "尝试常规推送；git 可能要求强制推送",
+                  "titlePushMayNeedSync": "推送本地提交；git 可能要求先同步",
+                  "titleCheckOutBranchToForcePush": "请先检出分支再强制推送提交",
+                  "titleCheckOutBranchToPull": "请先检出分支再拉取提交",
+                  "titlePublishBranchFirstToPull": "请先发布分支再拉取提交",
+                  "titleNothingNewToPull": "没有新内容可拉取——远程只有本地提交的旧副本",
+                  "titleNothingToPull": "没有要拉取的内容",
+                  "fastForward": "快进",
+                  "titleCheckOutBranchToFastForward": "请先检出分支再快进",
+                  "titlePublishBranchFirstToFastForward": "请先发布分支再快进",
+                  "titleNothingNewToFastForward": "没有新内容可快进——远程只有本地提交的旧副本",
+                  "titleNothingToFastForward": "没有可快进的内容",
+                  "titleTryFastForwardPull": "尝试快进拉取；git 可能会拒绝本地提交",
+                  "titleUseForcePushToSync": "请使用强制推送——远程只有本地提交的旧副本",
+                  "titleBranchUpToDate": "分支已是最新状态",
+                  "publishPrStatus": "PR 状态",
+                  "publishLinkedReview": "已关联的评审",
+                  "publishNoBranch": "无分支",
+                  "titleLinkedReviewBranchExists": "已关联的评审分支已存在",
+                  "titleCheckOutBranchToPublish": "请先检出分支再发布提交",
+                  "titleBranchAlreadyPublished": "分支已发布",
+                  "titleCreateReviewForBranch": "为此分支创建 {{reviewLabel}}",
+                  "forcePushBeforeReview": "先强制推送再创建 {{shortLabel}}",
+                  "pushBeforeReview": "先推送再创建 {{shortLabel}}",
+                  "titleForcePushBeforeCreatingReview": "在创建 {{reviewLabel}} 之前使用 lease 强制推送",
+                  "titlePushBeforeCreatingReview": "在创建 {{reviewLabel}} 之前推送本地提交"
                 }
               },
               "primary": {
@@ -18962,7 +19007,8 @@
         "clearAfterRetry": "请先重试您之前的消息，然后再运行 /clear。",
         "compactAfterRetry": "请先重试您之前的消息，然后再运行 /compact。",
         "clearAfterSending": "您之前的消息仍在发送中。发送完成后再运行 /clear。",
-        "compactAfterSending": "您之前的消息仍在发送中。发送完成后再运行 /compact。"
+        "compactAfterSending": "您之前的消息仍在发送中。发送完成后再运行 /compact。",
+        "pendingWork": "在使用此命令之前，请等待挂起的工作和消息完成。"
       },
       "composer": {
         "imageUnsupported": "此智能体不支持粘贴图片。",
@@ -19408,9 +19454,6 @@
         "ranN": "已运行 {{value0}} 个子智能体",
         "tokens": "{{value0}} 代币",
         "unnamed": "子智能体"
-      },
-      "conversationCommand": {
-        "pendingWork": "在使用此命令之前，请等待挂起的工作和消息完成。"
       },
       "drop": {
         "messageTitle": "拖放以附加到此消息",
@@ -19883,6 +19926,7 @@
       }
     },
     "agentSessionContinuation": {
+      "preparingContext": "正在准备已保存的聊天上下文…",
       "handOffToAnotherAgent": "移交给另一个智能体",
       "dialogTitle": "移交给另一个智能体",
       "dialogDescription": "从当前进度启动一个新的智能体会话，原会话保持不变。",
@@ -19896,6 +19940,8 @@
       "context": "上下文",
       "modeFocused": "聚焦交接（推荐）",
       "modeFocusedDescription": "使用最新进度和当前工作区，仅在需要时读取更早的会话细节。",
+      "modeLoadedDescription": "使用此聊天中当前已加载的最近消息和当前工作区。",
+      "modeCapturedDescription": "使用捕获的文本和当前工作区。",
       "modeFull": "完整会话记录",
       "modeFullDescription": "让新智能体在继续前读取完整的已保存会话。这可能需要更长时间，并消耗大量上下文、套餐用量或 API 额度。",
       "startsIn": "启动目录：",
@@ -20348,6 +20394,28 @@
     },
     "managedProfile": {
       "createFailed": "无法创建此工作区的浏览器配置文件。关闭此选项卡并打开一个新选项卡以重试。"
+    },
+    "history": {
+      "clear": "清除浏览记录",
+      "clearAllTime": "所有时间",
+      "clearLastHour": "过去一小时",
+      "clearRange": "清除以下时间之后的历史记录",
+      "clearToday": "今天",
+      "cleared": "已清除浏览记录",
+      "close": "关闭",
+      "description": "搜索和管理浏览记录",
+      "empty": "您访问的页面将显示在这里",
+      "enterKey": "Enter",
+      "escKey": "Esc",
+      "menuItem": "历史记录",
+      "noMatches": "没有页面与您的搜索匹配",
+      "open": "打开",
+      "remove": "从历史记录中移除",
+      "removeShort": "移除",
+      "search": "搜索历史记录",
+      "title": "历史记录",
+      "today": "今天",
+      "yesterday": "昨天"
     }
   },
   "runtimeRpc": {
@@ -20429,7 +20497,8 @@
       "openAnyway": "无论如何打开"
     },
     "fileLoad": {
-      "hostUnresolved": "主机找不到该文件的工作区。它可能已被删除，或者主机可能还不知道。重试，或从选项卡栏中关闭此选项卡。"
+      "hostUnresolved": "主机找不到该文件的工作区。它可能已被删除，或者主机可能还不知道。重试，或从选项卡栏中关闭此选项卡。",
+      "remoteTooLarge": "此文件过大，无法从其主机打开。"
     },
     "markdownPreview": {
       "tooLarge": "文件超过 {{limit}} 预览限制。请打开文件查看源代码。",
@@ -20826,6 +20895,8 @@
       "added": "已添加账户。选择它即可将其用于您下次启动的 Claude。",
       "nextLaunch": "{{value0}} → {{value1}}。您下次启动的 Claude 将使用它。正在运行的会话会保留其账户。",
       "profileSwitching": "切换会应用于您在任何标签页中下次启动的 Claude。正在运行的会话会保留其账户。",
+      "systemDefault": "系统默认",
+      "unnamedAccount": "Claude 账户",
       "systemDefaultNamed": "系统默认：{{value0}}",
       "systemDefaultIsSaved": "系统默认已登录为 {{value0}}，它同时也是一个已保存的账户。较早版本的 Orca 可能已将那个登录信息复制到那里。如果它不是您自己的登录信息，请选择系统默认并运行 claude /login。",
       "systemDefaultIsSavedDismiss": "关闭",
@@ -21074,11 +21145,71 @@
   },
   "projectViews": {
     "layout": {
-      "board": "看板"
+      "board": "看板",
+      "roadmap": "路线图",
+      "table": "表格"
     },
     "unsupported": {
       "switchLayout": "切换到表格、看板或路线图视图以在 Orca 中处理此项目。",
-      "description": "Orca 可渲染表格、看板和路线图项目视图。此视图使用的布局尚无法渲染。"
+      "description": "Orca 可渲染表格、看板和路线图项目视图。此视图使用的布局尚无法渲染。",
+      "layoutNotSupported": "Orca 尚不支持{{layout}}项目视图。"
+    },
+    "authHelp": {
+      "hostSignedOut": "`gh` 尚未登录 {{host}}。",
+      "hostSignedOutDetail": "GitHub Enterprise 主机需要单独的 `gh` 登录，与 github.com 分开。请在终端中运行登录命令，在 {{host}} 上完成浏览器流程，然后重新加载。",
+      "ghMissing": "GitHub CLI（`gh`）未安装或不在 PATH 中。",
+      "ghMissingDetail": "Orca 使用 `gh` 与 GitHub Projects 通信。请从 cli.github.com 安装，然后登录。",
+      "envTokenKeyringFallback": "你的钥匙串中已有 `gh` 登录，移除该环境变量后会自动接管。",
+      "envTokenLoginAfterUnset": "取消设置后，请运行 `gh auth login` 正常登录，然后重试。",
+      "envTokenRemoveWindows": "找到设置 `{{varName}}` 的位置（系统或用户环境变量，或你的 PowerShell 配置文件），将其移除，然后重启 Orca 以加载新的环境。",
+      "envTokenRemovePosix": "找到导出 `{{varName}}` 的位置（通常是 `~/.zshrc`、`~/.zshenv`、`~/.bashrc`、`~/.profile` 或你的 shell 密钥管理器），将其移除，然后重启 Orca 以加载新的环境。",
+      "envTokenActive": "你的环境中设置了 `{{varName}}`，因此 `gh` 使用的是该令牌，而不是钥匙串中的登录。`gh auth refresh` 无法修改来自环境变量的令牌，所以运行它没有效果。",
+      "envTokenInherited": "Orca 从你的 shell 继承了 `{{varName}}`，`gh` 正在使用该令牌。`gh auth refresh` 不适用于来自环境变量的令牌。",
+      "envTokenInheritedDetailWindows": "在启动 Orca 的 shell 中（或在用户环境变量中）取消设置 `{{varName}}`，然后重启 Orca。",
+      "envTokenInheritedDetailPosix": "在启动 Orca 的 shell 中（或在 shell rc 文件中）取消设置 `{{varName}}`，然后重启 Orca。",
+      "signedOut": "你尚未通过 `gh` 登录 GitHub。",
+      "missingScopes": "你的 `gh` 令牌缺少 GitHub Projects 所需的权限范围：{{scopes}}。",
+      "missingScopesDetail": "请在终端中运行刷新命令。它会打开浏览器以授权新的权限范围，完成后回到这里并重新加载。",
+      "accessDeniedDetail": "你的令牌已具备所需权限范围，但 GitHub 仍拒绝访问。如果项目所在组织启用了 SAML SSO，你需要在 Settings → Developer settings → Personal access tokens → Configure SSO 中为该组织授权此令牌。"
+    },
+    "picker": {
+      "pasteUnparseable": "应为项目 URL 或 owner/number",
+      "ownerLoadFailed": "无法加载 {{owner}} 的项目。",
+      "organizationsLoadFailed": "部分组织未能加载（{{failureCount}}）。"
+    },
+    "error": {
+      "notFoundState": "找不到此项目或视图。",
+      "schemaDrift": "无法读取此项目视图。",
+      "projectOrViewNotFound": "未找到项目或视图。",
+      "projectNotFound": "未找到项目。",
+      "viewNotFound": "找不到所选视图。",
+      "ownerNotFound": "未找到所有者。",
+      "itemNotFound": "未找到条目。",
+      "issueNotFound": "未找到议题。",
+      "inputRequired": "请输入内容。",
+      "inputTooLarge": "项目引用过长，无法解析。",
+      "inputUnparseable": "无法解析输入。应为 GitHub 项目 URL 或 `owner/number`。",
+      "invalidSlug": "无效的 {{field}}：“{{value}}”不是有效的 GitHub 标识。",
+      "invalidPositiveInteger": "无效的 {{field}}：必须是正整数。",
+      "invalidOwnerType": "无效的所有者类型。",
+      "invalidItemType": "无效的条目类型。",
+      "missingIds": "缺少 ID。",
+      "updatesRequired": "需要提供更新内容。",
+      "commentBodyRequired": "评论内容不能为空。",
+      "duplicateTargetNotAllowed": "仅在以重复关闭时才能指定重复目标。",
+      "duplicateTargetRequired": "需要提供重复目标的议题编号。",
+      "requestInvalid": "无效请求 — {{detail}}",
+      "requestFailedDetail": "GitHub 请求失败：{{detail}}",
+      "requestFailed": "GitHub 请求失败。",
+      "unexpectedRestResponse": "意外的 REST 响应：{{detail}}",
+      "authRequired": "请登录 GitHub 以加载项目任务。运行 `{{command}}`。",
+      "scopeMissing": "访问 GitHub 项目需要额外的权限范围。运行 `{{command}}`。",
+      "rateLimitNearlyExhausted": "GitHub 速率限制即将用尽（剩余 {{remaining}}/{{limit}}）。约 {{minutes}} 分钟后重置。",
+      "rateLimited": "已达到 GitHub 速率限制。请几分钟后重试。",
+      "network": "网络错误 — 请检查你的网络连接。",
+      "tooLargeUnknownCount": "此视图条目过多，无法在 Orca 中渲染。请在 GitHub 上缩小视图的筛选范围。",
+      "tooLarge": "此视图有 {{itemCount}} 个条目，过多而无法在 Orca 中渲染。请在 GitHub 上缩小视图的筛选范围。",
+      "schemaDriftDetail": "无法读取此项目视图：{{detail}}。"
     }
   },
   "projectField": {

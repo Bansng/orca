@@ -58,11 +58,11 @@ vi.mock('lucide-react-native', () => ({
   Wrench: 'Wrench'
 }))
 vi.mock('../../../components/MobileMarkdown', () => ({ MobileMarkdown: 'MobileMarkdown' }))
-vi.mock('../../MobileNativeChatMessageActionsSheet', () => ({
+vi.mock('../transcript/MobileNativeChatMessageActionsSheet', () => ({
   MobileNativeChatMessageActionsSheet: 'MessageActionsSheet'
 }))
 
-import { MobileNativeChatMessage } from '../../MobileNativeChatMessage'
+import { MobileNativeChatMessage } from '../transcript/MobileNativeChatMessage'
 
 const renderVisual: MobileNativeChatVisualRender = () => 'visual'
 

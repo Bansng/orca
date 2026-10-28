@@ -58,6 +58,7 @@ async function mount(initial: Props) {
       enabled: true,
       fence: props.fence,
       mutate,
+      turnId: null,
       hostSupport: { permissionModes: true, coherentModelCatalog: true, statusFeed: false }
     })
     latest = options
