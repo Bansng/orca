@@ -22,6 +22,7 @@ import {
   type AuthenticatedMobileWs
 } from './runtime-rpc-mobile-ws-test-harness'
 import { makeStore } from './runtime-rpc-worktree-store-fixtures'
+import { DECLARED_CLIENT_RECONNECT_GRACE_MS } from './declared-desktop-clients'
 import { partialRuntimeStore } from './runtime-store-partial-fixture'
 
 vi.mock('../git/worktree', () => ({
@@ -157,5 +158,37 @@ describe(ORCAD_PEER_DESKTOPS_METHOD, () => {
     })
     expect(refused.ok).not.toBe(true)
     expect(await peerNames(stable, STABLE)).toEqual(['OrcaDev'])
+  })
+
+  // R39 follow-up: Stable removed the host while Dev used it, so the server was kept. Once Stable
+  // is gone past the reconnect grace, Dev is the last Orca, and its own Remove may tear down.
+  it('lets the last Orca tear down once the other one has been gone past the grace', async () => {
+    const server = await startServer()
+    const startup = pair(server, 'CLI 10/28/2026', 'runtime')
+    const stable = await socket(startup)
+    await stable.request(ORCAD_DECLARE_CLIENT_METHOD, { clientInstanceId: STABLE })
+    const dev = await socket(startup)
+    await dev.request(ORCAD_DECLARE_CLIENT_METHOD, { clientInstanceId: DEV })
+    // Stable's Remove: Dev is connected, so the server is kept.
+    expect(await peerNames(startup, STABLE)).toEqual(['another Orca'])
+
+    // Stable lets go of the host.
+    const declared = () => server['declaredDesktopClients']['byConnection'].size
+    const closed = waitForWsClose(stable.session.ws)
+    stable.session.ws.close()
+    await closed
+    await expect.poll(declared).toBe(1)
+    // Within the grace, Stable could still be reconnecting, so Dev's Remove keeps the server.
+    expect(await peerNames(startup, DEV)).toEqual(['another Orca'])
+
+    const real = performance.now.bind(performance)
+    const clock = vi
+      .spyOn(performance, 'now')
+      .mockImplementation(() => real() + DECLARED_CLIENT_RECONNECT_GRACE_MS)
+    try {
+      expect(await peerNames(startup, DEV)).toEqual([])
+    } finally {
+      clock.mockRestore()
+    }
   })
 })

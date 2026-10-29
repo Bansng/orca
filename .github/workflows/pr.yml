@@ -81,6 +81,7 @@ jobs:
             /config/scripts/pr-layout-oracle-route.mjs
             /config/scripts/pr-e2e-source-routing.mjs
             /config/scripts/pr-browser-e2e-source-routes.mjs
+            /config/scripts/pr-editor-preview-e2e-source-routes.mjs
             /config/scripts/ci-e2e-job-selection.mjs
             /config/scripts/pr-ready-check-reuse.mjs
           sparse-checkout-cone-mode: false
@@ -501,6 +502,14 @@ jobs:
       - name: Verify localization coverage
         if: needs.code_paths.outputs.static_analysis == 'true'
         run: bun config/scripts/audit-localization-coverage.mjs --check
+
+      - name: Verify mobile localization
+        if: needs.code_paths.outputs.static_analysis == 'true'
+        run: bun config/scripts/verify-mobile-localization.mjs
+
+      - name: Verify mobile localization coverage
+        if: needs.code_paths.outputs.static_analysis == 'true'
+        run: bun run verify:mobile-localization-coverage
 
       - wait: [localization-catalogs, localization-extraction]
 
@@ -1104,6 +1113,7 @@ jobs:
           src/main/browser/browser-client-page-renderer-lifecycle.electron.test.ts
           src/main/browser/browser-route-webrtc-egress.electron.test.ts
           src/main/persistence/profile-state/profile-state-writer-stall.electron.test.ts
+          src/main/browser/cookies/browser-google-cookie-clear.electron.test.ts
           src/main/browser/popup-origin-chrome.electron.test.ts
           src/main/browser/browser-link-materialization.electron.test.ts
           src/main/browser/browser-popup-compatibility.electron.test.ts

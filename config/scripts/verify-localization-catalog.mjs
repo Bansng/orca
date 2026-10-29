@@ -7,6 +7,7 @@ import process from 'node:process'
 import ts from 'typescript-api'
 
 import { canonicalGenericRenderings } from './locale-generic-ui-terms.mjs'
+import { LOCALIZATION_SURFACES, readLocalizationSurface } from './localization-surfaces.mjs'
 import { repairTranslatedValue } from './locale-translation-policy.mjs'
 
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts'])
@@ -18,11 +19,7 @@ const LOCALIZATION_FUNCTION_NAMES = new Set([
   'translateSearchKeyword'
 ])
 const PLACEHOLDER_RE = /\{\{[^}]+\}\}/g
-const LOCALES_RELATIVE_DIR = path.join('src', 'renderer', 'src', 'i18n', 'locales')
-export const LOCALIZATION_SOURCE_ROOTS = [
-  path.join('src', 'renderer', 'src'),
-  path.join('src', 'main')
-]
+export const LOCALIZATION_SOURCE_ROOTS = LOCALIZATION_SURFACES.desktop.sourceRoots
 
 function normalizePath(root, filePath) {
   return path.relative(root, filePath).split(path.sep).join('/')
@@ -32,6 +29,8 @@ function isSkippedFile(root, filePath) {
   const relative = normalizePath(root, filePath)
   if (
     relative.endsWith('.d.ts') ||
+    // Build output (bundled engines, protocol schemas) is not translatable source.
+    relative.includes('.generated.') ||
     relative.includes('.test.') ||
     relative.includes('.spec.') ||
     relative.includes('/__tests__/')
@@ -509,7 +508,8 @@ function parseArgs(argv) {
   }
   return {
     fix: argv.includes('--fix'),
-    pluginCatalogs
+    pluginCatalogs,
+    surface: readLocalizationSurface(argv)
   }
 }
 
@@ -547,8 +547,8 @@ async function reportPluginCatalog(root, catalog, pluginCatalogPath) {
   return interpolationMismatches.length > 0 ? 1 : 0
 }
 
-export async function collectLocalizationReferences(root) {
-  const sourceRoots = LOCALIZATION_SOURCE_ROOTS.map((sourceRoot) => path.join(root, sourceRoot))
+export async function collectLocalizationReferences(root, roots = LOCALIZATION_SOURCE_ROOTS) {
+  const sourceRoots = roots.map((sourceRoot) => path.join(root, sourceRoot))
   const references = []
 
   for (const sourceRoot of sourceRoots) {
@@ -568,8 +568,10 @@ export async function main(
   options = parseArgs(process.argv.slice(2)),
   sharedReferences
 ) {
-  const localesDir = path.join(root, LOCALES_RELATIVE_DIR)
+  const surface = options.surface ?? LOCALIZATION_SURFACES.desktop
+  const localesDir = path.join(root, surface.localesDir)
   const catalogPath = path.join(localesDir, 'en.json')
+  const enCatalogLabel = normalizePath(root, catalogPath)
   const catalog = await readCatalogFile(catalogPath)
   if (catalog === undefined) {
     return 1
@@ -592,7 +594,8 @@ export async function main(
     return 1
   }
   let catalogKeys = new Set(flattenCatalogKeys(catalog))
-  const references = sharedReferences ?? (await collectLocalizationReferences(root))
+  const references =
+    sharedReferences ?? (await collectLocalizationReferences(root, surface.sourceRoots))
 
   // Why: runs before --fix so an ambiguous key never gets its first sentence written to en.json.
   if (reportReusedFallbackKeys(references)) {
@@ -614,18 +617,18 @@ export async function main(
         console.error(formatMissingReferences(missingFallbacks))
         return 1
       }
-      console.error('Localization keys are missing from src/renderer/src/i18n/locales/en.json.')
+      console.error(`Localization keys are missing from ${enCatalogLabel}.`)
       console.error('')
       console.error(formatMissingReferences(missing))
       console.error('')
-      console.error('Run `pnpm run sync:localization-catalog` to add keys with string fallbacks.')
+      console.error(`Run \`${surface.syncCatalogCommand}\` to add keys with string fallbacks.`)
       return 1
     }
   }
 
   const remainingMissing = references.filter((reference) => !catalogKeys.has(reference.key))
   if (remainingMissing.length > 0) {
-    console.error('Localization keys are missing from src/renderer/src/i18n/locales/en.json.')
+    console.error(`Localization keys are missing from ${enCatalogLabel}.`)
     console.error('')
     console.error(formatMissingReferences(remainingMissing))
     return 1

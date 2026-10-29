@@ -8,6 +8,19 @@
     "userInterfaceStyle": "automatic",
     "scheme": "orca",
     "newArchEnabled": true,
+    "locales": {
+      "en": "./locales/en.json",
+      "zh-Hans": "./locales/zh-Hans.json",
+      "zh-Hant": "./locales/zh-Hant.json",
+      "ja": "./locales/ja.json",
+      "ko": "./locales/ko.json",
+      "es": "./locales/es.json",
+      "fr": "./locales/fr.json",
+      "pt-BR": "./locales/pt-BR.json",
+      "ru": "./locales/ru.json",
+      "tr": "./locales/tr.json",
+      "de": "./locales/de.json"
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -18,6 +31,7 @@
       "bundleIdentifier": "com.stably.orca.mobile",
       "buildNumber": "1",
       "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true,
         "NSLocalNetworkUsageDescription": "Orca connects to the desktop app on your LAN.",
         "NSMicrophoneUsageDescription": "Allow Orca to record voice dictation and transcribe it on your paired desktop.",
         "NSPhotoLibraryUsageDescription": "Allow Orca to attach photos from your library to a terminal session on your paired desktop.",
@@ -80,6 +94,20 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": ["en", "zh-Hans", "zh-Hant", "ja", "ko", "es", "fr", "pt-BR", "ru", "tr", "de"]
+          }
+        }
+      ],
+      [
+        "./plugins/android-locale-config.js",
+        {
+          "locales": ["en", "zh-Hans", "zh-Hant", "ja", "ko", "es", "fr", "pt-BR", "ru", "tr", "de"]
+        }
+      ],
       "expo-notifications",
       "./plugins/android-respect-rotation-lock.js",
       [

@@ -108,9 +108,9 @@ function transport(target: WslOrcadHostTarget): OrcadHostTransport {
 
 function launch(kernel = '5.15.167.4-microsoft-standard-WSL2', options = {}) {
   mocks.exec.mockImplementation(async (_conn: unknown, command: string) => {
-    if (command === 'uname -r') {
+    if (command.includes('uname -r')) {
       mocks.steps.push('uname')
-      return `${kernel}\n`
+      return `__ORCA_WSL_KERNEL__ ${kernel}\n__ORCA_WSL_HOME__ /home/u\n\n__ORCA_REMOTE_PLATFORM__ Linux x86_64\n\n__ORCA_WSL_LIBC__\nldd (GNU libc) 2.39\n`
     }
     return '4242\n'
   })

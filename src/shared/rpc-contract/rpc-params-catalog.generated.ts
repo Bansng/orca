@@ -123,6 +123,7 @@ import {
   MouseButton,
   MouseWheel,
   MouseXY,
+  ProfileClearGoogleCookies,
   ProfileDelete,
   ProfileImportFromBrowser,
   Screencast,
@@ -224,6 +225,7 @@ import {
 } from './files-mutation-params'
 import {
   DocPreviewFileRead,
+  FileDirRead,
   FileListAll,
   FileOpenDiff,
   FileOpenTab,
@@ -236,6 +238,12 @@ import {
   ResolveTerminalPath,
   ServerDirectoryBrowse
 } from './files-params'
+import {
+  FileSaveAbort,
+  FileSaveBegin,
+  FileSaveChunk,
+  FileSaveCommit
+} from './files-staged-save-params'
 import { FileOpen, FileWatch, WorktreeSelector } from './files-target-params'
 import { TerminalArtifactFile, TerminalArtifactFileWrite } from './files-terminal-artifact-params'
 import {
@@ -860,6 +868,7 @@ export const RPC_PARAMS_BY_METHOD = {
   'browser.openUrl': BrowserOpenUrlParams,
   'browser.pdf': BrowserTarget,
   'browser.profileClearDefaultCookies': null,
+  'browser.profileClearGoogleCookies': ProfileClearGoogleCookies,
   'browser.profileCreate': ProfileCreate,
   'browser.profileDelete': ProfileDelete,
   'browser.profileDetectBrowsers': null,
@@ -961,13 +970,17 @@ export const RPC_PARAMS_BY_METHOD = {
   'files.pathsExist': FilePathsExist,
   'files.read': FileOpen,
   'files.readChunk': FileReadChunk,
-  'files.readDir': FileTreePath,
+  'files.readDir': FileDirRead,
   'files.readDocPreview': DocPreviewFileRead,
   'files.readPreview': FileOpen,
   'files.readTerminalArtifact': TerminalArtifactFile,
   'files.readTerminalArtifactPreview': TerminalArtifactFile,
   'files.rename': FileRename,
   'files.resolveTerminalPath': ResolveTerminalPath,
+  'files.saveAbort': FileSaveAbort,
+  'files.saveBegin': FileSaveBegin,
+  'files.saveChunk': FileSaveChunk,
+  'files.saveCommit': FileSaveCommit,
   'files.search': FileSearch,
   'files.searchPaths': FilePathSearch,
   'files.stat': FileTreePath,
